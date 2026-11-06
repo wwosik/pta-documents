@@ -281,6 +281,9 @@ def _render_run(run: etree._Element, context: _Context, segments: list[Segment])
             content.append(md.escape(child.text or ""))
         elif child.tag == w("tab"):
             content.append("\t")
+        elif child.tag == w("br") and child.get(w("type")) in ("page", "column"):
+            # PTA: page and column breaks are layout, not text (DocLibs wrote a line break).
+            continue
         elif child.tag in (w("br"), w("cr")):
             content.append(HARD_BREAK)
         elif child.tag == w("noBreakHyphen"):

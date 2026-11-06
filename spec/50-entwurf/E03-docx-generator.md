@@ -19,7 +19,7 @@ auch wenn es danach weiterbearbeitet wird.
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
 | [E03-S01](../60-prüfung/E03-S01-docx-auf-pta-vorlage.md) | Dokument aus der Vorlage: Beispielinhalt entfernen, Varianten, Deckblatt, Kopf-/Fußzeile, Metadaten, Inhaltsverzeichnis | in Prüfung |
-| [E03-S02](../55-in-arbeit/port-1/E03-S02-docx-inhalte.md) | Inhalte: Überschriften, Absätze, Listen, Tabellen mit Beschriftung, Bilder, Code, Links, Fußnoten, Zitate | in Bearbeitung (port-1) |
+| [E03-S02](../60-prüfung/E03-S02-docx-inhalte.md) | Inhalte: Überschriften, Absätze, Listen, Tabellen mit Beschriftung, Bilder, Code, Links, Fußnoten, Zitate | in Prüfung |
 | E03-S03 | Folien-Syntax in Word: Container, Alerts, `==mark==`, Status-Labels, Bildreihen | noch nicht ausgearbeitet |
 | E03-S04 | Diagramme und Charts im DOCX (als Bild bzw. natives Word-Diagramm) | noch nicht ausgearbeitet |
 | E03-S05 | Authoring Guide DOCX | noch nicht ausgearbeitet |
