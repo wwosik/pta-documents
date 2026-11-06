@@ -19,7 +19,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge.
 | [E02-S01](../60-prüfung/E02-S01-markdown-parser-und-front-matter.md) | Markdown-Parser und Front Matter | in Prüfung |
 | [E07-S02](../60-prüfung/E07-S02-docx-nach-markdown.md) | DOCX → Markdown (für die Rundreise-Tests) | in Prüfung |
 | [E03-S01](../60-prüfung/E03-S01-docx-auf-pta-vorlage.md) | DOCX auf der PTA-Vorlage | in Prüfung |
-| [E03-S02](E03-S02-docx-inhalte.md) | DOCX-Inhalte | Entwurf |
+| [E03-S02](../55-in-arbeit/port-1/E03-S02-docx-inhalte.md) | DOCX-Inhalte | in Bearbeitung (port-1) |
 | E07-S03 | PPTX → Markdown (für die Rundreise-Tests) | noch nicht ausgearbeitet |
 | [E04-S01](E04-S01-pptx-auf-pta-vorlage.md) | PPTX auf der PTA-Vorlage | Entwurf |
 | [E04-S02](E04-S02-pptx-inhalte-und-fitting.md) | PPTX-Inhalte und Fitting | Entwurf |

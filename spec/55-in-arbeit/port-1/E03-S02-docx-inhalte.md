@@ -1,8 +1,8 @@
 # E03-S02 DOCX-Inhalte
 
-> Status: Entwurf
-> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](E03-docx-generator.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](M01-pta-dokumente-aus-markdown.md)
+> Status: in Bearbeitung (port-1)
+> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](../../50-entwurf/E03-docx-generator.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -12,7 +12,7 @@ Tabellen, Bilder und Links folgen den Regeln der Vorlage.
 ## Kontext
 
 Formatvorlagen der PTA-Word-Vorlagen und ihre Werte stehen in der
-[Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md#word). Stil-IDs sind die
+[Designanalyse](../../10-analysen/2026-11-06%20pta-designstandards.md#word). Stil-IDs sind die
 deutschen IDs der Vorlage (`berschrift1` für „Überschrift 1", `Aufzhlungszeichen`, …) — sie werden
 über den Stilnamen gesucht, nicht hart codiert.
 
