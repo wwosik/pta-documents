@@ -27,7 +27,7 @@ Dokument-ID`).
 
 ## Vorgeschlagener Ansatz
 
-1. **Vorlage laden** aus den Paketdaten, bereinigt nach [E01-S02](E01-S02-vorlagen-einbetten.md)
+1. **Vorlage laden** aus den Paketdaten, bereinigt nach [E01-S02](../55-in-arbeit/port-1/E01-S02-vorlagen-einbetten.md)
    (ohne SharePoint-Ballast, Inhaltstyp `.docx`).
 2. **Körper leeren** bis auf das abschließende `w:sectPr` (Seitenformat, Ränder, Kopf-/
    Fußzeilenbezüge bleiben).
