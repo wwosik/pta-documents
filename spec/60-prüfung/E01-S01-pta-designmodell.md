@@ -1,8 +1,8 @@
 # E01-S01 PTA-Designmodell
 
-> Status: in Bearbeitung (port-1)
-> Epic: [E01 PTA-Design als einziges Design](../../50-entwurf/E01-pta-design.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
+> Status: in Prüfung
+> Epic: [E01 PTA-Design als einziges Design](../50-entwurf/E01-pta-design.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -11,7 +11,7 @@ wählbaren Vorlagenvarianten — die einzige Stelle, an der Code Designwerte ken
 
 ## Kontext
 
-Werte: [Designanalyse](../../10-analysen/2026-11-06%20pta-designstandards.md). In DocLibs übernahm das
+Werte: [Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md). In DocLibs übernahm das
 `ResolvedBrand` (425 Zeilen) samt Validierung und Standardwerten; davon bleibt nur ein Bruchteil,
 weil nichts mehr validiert oder ergänzt werden muss.
 
@@ -38,10 +38,10 @@ weil nichts mehr validiert oder ergänzt werden muss.
 
 ## Akzeptanzkriterien
 
-- [ ] Alle Farbwerte der Designanalyse sind als benannte Konstanten verfügbar; keine weitere Datei
+- [x] Alle Farbwerte der Designanalyse sind als benannte Konstanten verfügbar; keine weitere Datei
       im Code enthält Hex-Farben.
-- [ ] Der Vergleichstest Modell ↔ Vorlagen läuft grün.
-- [ ] `vorlage: <unbekannt>` wirft `DocumentConversionError` mit den gültigen Varianten.
+- [x] Der Vergleichstest Modell ↔ Vorlagen läuft grün.
+- [x] `vorlage: <unbekannt>` wirft `DocumentConversionError` mit den gültigen Varianten.
 
 ## Offene Fragen
 
@@ -57,3 +57,26 @@ weil nichts mehr validiert oder ergänzt werden muss.
 
 ## Notizen
 
+
+## Implementierungsnotizen
+
+- Module: `design/colors.py` (einzige Datei mit Farbwerten; ein Test durchsucht `src/` nach
+  Hex-Literalen), `design/variants.py` (`WordVariant`, `SlidesVariant`, `Language`,
+  `GeneratedTexts`), `design/word.py`, `design/slides.py`.
+- Varianten sind `StrEnum`s, deren Wert der deutsche Front-Matter-Name ist; `parse()` wirft
+  `DocumentConversionError` mit Liste der gültigen Werte. Das Einlesen von `vorlage:`/`sprache:`
+  aus dem Front Matter geschieht in den Generatoren (E03-S01, E04-S01).
+- `sprache: en` wählt für `basis` die eingebettete englische Titelfolienvorlage
+  (`slides-basis-en.pptx`); für `schulung` gibt es keine englische Fassung — dort schaltet
+  `sprache: en` nur die erzeugten Texte um.
+- **Abweichung von der Designanalyse:** Die beiden Querformat-Vorlagen enthalten die Formatvorlagen
+  `Hyperlink`, `toc 1` und `toc 2` nicht (Word legt sie erst bei Gebrauch an).
+  `word.BORROWED_STYLES` nennt sie; der DOCX-Generator übernimmt sie aus der Hochformat-Vorlage.
+- Stilnamen sind die internen Namen aus `styles.xml` (`heading 1`, `List Bullet`, `caption` …),
+  nicht die deutschen Anzeigenamen — python-docx sucht über `w:name`.
+- `Code` und `Zitat` gibt es in keiner Vorlage; der Generator legt sie an (E03-S02).
+- Der Vergleichstest liest direkt aus `source-templates/` (Theme-Farben, Schriften, Signalfarben,
+  Formatvorlagen, Tabellenformat `PTA`, Layoutnamen, Platzhalter-Indizes, Inhaltsfläche,
+  Schriftgrößen der fünf Textebenen).
+- ruff: `RUF001`–`RUF003` sind abgeschaltet, weil deutsche Texte bewusst Gedankenstriche und
+  typografische Anführungszeichen enthalten.

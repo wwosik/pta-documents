@@ -48,3 +48,8 @@ weil ihm vertraut wird.
   (Aufforderung „x"); sie müssen auf jeder Folie leer angelegt werden.
 - Word und PowerPoint der PTA unterscheiden sich: Text `000000` vs. `404040`, Tabellenkopf
   `006FB9` vs. `004676`.
+- Die Querformat-Word-Vorlagen haben die Formatvorlagen `Hyperlink`, `toc 1`, `toc 2` nicht; sie
+  werden aus der Hochformat-Vorlage übernommen (`design/word.py`, `BORROWED_STYLES`).
+- Stilnamen in `styles.xml` sind die internen englischen (`heading 1`, `List Bullet`,
+  `caption`); nur eigene Formatvorlagen der PTA heißen deutsch (`Autor`, `Standard fett`,
+  `Zwischenüberschrift`, `PTA`).
