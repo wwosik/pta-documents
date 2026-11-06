@@ -1,8 +1,8 @@
 # E02-S01 Markdown-Parser und Front Matter
 
-> Status: Entwurf
-> Epic: [E02 Markdown-Grundlagen der Generatoren](E02-markdown-grundlagen.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](M01-pta-dokumente-aus-markdown.md)
+> Status: in Bearbeitung (port-1)
+> Epic: [E02 Markdown-Grundlagen der Generatoren](../../50-entwurf/E02-markdown-grundlagen.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
