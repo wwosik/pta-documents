@@ -1,0 +1,66 @@
+# E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage
+
+> Status: Entwurf
+
+## Ziel
+
+Markdown → `.pptx` auf der PTA-Basisvorlage (bzw. Schulungsvorlage, englische Titelfolie), mit
+den PTA-Layouts statt des eingebauten Masters von DocLibs.
+
+## Motivation
+
+DocLibs baut Folien auf einem selbst erzeugten Master (`TemplateBuilder`) oder auf einer fremden
+Vorlage, deren Layouts es nach `type` sucht. Die PTA-Layouts haben **keinen** `type`, zeichnen ihre
+Erkennungszeichen teils über unsichtbare Platzhalter und belegen die Textebenen anders (Ebene 1
+Subheadline, Ebene 2 Einleitungstext, Aufzählung erst ab Ebene 3) — siehe
+[Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md#powerpoint). Der Generator wird
+deshalb auf diese eine Vorlage zugeschnitten.
+
+## Scope
+
+| Story | Inhalt | Status |
+| ----- | ------ | ------ |
+| [E04-S01](E04-S01-pptx-auf-pta-vorlage.md) | Deck auf der PTA-Vorlage: Layoutwahl, Titel-, Kapitel-, Inhalts-, Abschlussfolien, Fußzeile | Entwurf |
+| [E04-S02](E04-S02-pptx-inhalte-und-fitting.md) | Inhalte: Textebenen, Listen, Tabellen im PTA-Stil, Bilder in Bildplatzhaltern, Code; Fitting | Entwurf |
+| E04-S03 | Flow-Layouts aus DocLibs im PTA-Stil: `cards`, `rows`, `panel`, `statement`, `columns`, Alerts, Fazit-Box, Kommentarbox, `==mark==` (Gelb), Status-Labels (Signalfarben) | noch nicht ausgearbeitet |
+| E04-S04 | Weitere Layouts aus Markdown: Agenda, Zwischenfazit, Zitat, Kontakt, Diagramm-Layouts | noch nicht ausgearbeitet |
+| E04-S05 | Schulungsvorlage und englische Titelfolie; Sticker „VERTRAULICH" per Front Matter | noch nicht ausgearbeitet |
+| E04-S06 | Authoring Guide PPTX | noch nicht ausgearbeitet |
+
+## Bereichsweite Entscheidungen
+
+- Layouts werden **über ihren Namen** in der PTA-Vorlage gewählt; die Zuordnung steht im
+  Designmodell (E01-S01), einschließlich des Tippfehlers `Abbschlussfolie`.
+- Die PTA-Regel „nur die in der Vorlage vorgegebenen Layouts" gilt auch für den Generator: freie
+  Formen nur auf `Nur Titel` und innerhalb der Inhaltsfläche, ausgerichtet am Raster.
+- Schrifteinbettung (EOT) aus DocLibs entfällt: Segoe UI ist auf den PTA-Rechnern installiert
+  und darf nicht weitergegeben werden.
+- Folientabellen werden mit Direktformatierung nach der Mustertabelle gezeichnet (Kopf
+  `004676`), nicht über einen Tabellenstil.
+
+## Akzeptanz
+
+Das Beispiel-Deck (`deck.md` aus DocLibs, um PTA-Fälle ergänzt) ergibt eine Präsentation, die
+PowerPoint ohne Reparatur öffnet, nur PTA-Layouts verwendet und beim Rücklesen mit dem
+PPTX-Konverter (E07) den Markdown-Inhalt ergibt.
+
+## Offene Fragen
+
+1. Welche Titelfolie ist Standard: `Titelfolie ohne Bild` (Verlauf, kein Foto) oder
+   `Titelfolie mit Bild 01`? Per Front Matter wählbar (`cover: bild-01 | bild-02 | ohne-bild |
+   branche`)?
+
+>
+
+2. Soll `# Kapitel` (oberste Überschrift nach dem Titel) automatisch eine `Trennfolie` mit
+   Kapitelnummer „01", „02" … erzeugen?
+
+>
+
+3. Soll aus den Kapiteln automatisch eine Agenda-Folie entstehen (`Agenda (kurz)` bis 4,
+   `Agenda (lang)` bis 8 Kapitel)?
+
+>
+
+## Notizen
+
