@@ -1,8 +1,8 @@
 # E04-S02 PPTX-Inhalte und Fitting
 
-> Status: Entwurf
-> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](E04-pptx-generator.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](M01-pta-dokumente-aus-markdown.md)
+> Status: in Bearbeitung (port-1)
+> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](../../50-entwurf/E04-pptx-generator.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -13,7 +13,7 @@ Bilder in Bildplatzhaltern, und was nicht passt, wird verkleinert oder auf Folge
 
 PTA-Textebenen: 1 Subheadline (18 pt Segoe UI blau), 2 Einleitungstext (18 pt Light), 3–5
 Aufzählungen (■ 18 pt, − 16 pt, − 14 pt). DocLibs-Fitting: `DeckWriter.Fitting.cs`, `TextMetrics.cs`.
-Werte in der [Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md#powerpoint).
+Werte in der [Designanalyse](../../10-analysen/2026-11-06%20pta-designstandards.md#powerpoint).
 
 ## Vorgeschlagener Ansatz
 

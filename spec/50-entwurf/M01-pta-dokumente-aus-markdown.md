@@ -22,7 +22,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge.
 | [E03-S02](../60-prüfung/E03-S02-docx-inhalte.md) | DOCX-Inhalte | in Prüfung |
 | [E07-S03](../60-prüfung/E07-S03-pptx-nach-markdown.md) | PPTX → Markdown (für die Rundreise-Tests) | in Prüfung |
 | [E04-S01](../60-prüfung/E04-S01-pptx-auf-pta-vorlage.md) | PPTX auf der PTA-Vorlage | in Prüfung |
-| [E04-S02](E04-S02-pptx-inhalte-und-fitting.md) | PPTX-Inhalte und Fitting | Entwurf |
+| [E04-S02](../55-in-arbeit/port-1/E04-S02-pptx-inhalte-und-fitting.md) | PPTX-Inhalte und Fitting | in Bearbeitung (port-1) |
 
 ## Nicht in M01
 

@@ -21,7 +21,7 @@ deshalb auf diese eine Vorlage zugeschnitten.
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
 | [E04-S01](../60-prüfung/E04-S01-pptx-auf-pta-vorlage.md) | Deck auf der PTA-Vorlage: Layoutwahl, Titel-, Kapitel-, Inhalts-, Abschlussfolien, Fußzeile | in Prüfung |
-| [E04-S02](E04-S02-pptx-inhalte-und-fitting.md) | Inhalte: Textebenen, Listen, Tabellen im PTA-Stil, Bilder in Bildplatzhaltern, Code; Fitting | Entwurf |
+| [E04-S02](../55-in-arbeit/port-1/E04-S02-pptx-inhalte-und-fitting.md) | Inhalte: Textebenen, Listen, Tabellen im PTA-Stil, Bilder in Bildplatzhaltern, Code; Fitting | in Bearbeitung (port-1) |
 | E04-S03 | Flow-Layouts aus DocLibs im PTA-Stil: `cards`, `rows`, `panel`, `statement`, `columns`, Alerts, Fazit-Box, Kommentarbox, `==mark==` (Gelb), Status-Labels (Signalfarben) | noch nicht ausgearbeitet |
 | E04-S04 | Weitere Layouts aus Markdown: Agenda (nur ausdrücklich, keine automatische), Zwischenfazit, Zitat, Kontakt, Diagramm-Layouts | noch nicht ausgearbeitet |
 | E04-S05 | Schulungsvorlage (`vorlage: schulung`) und englische Titelfolie (`sprache: en`); Sticker „VERTRAULICH" per Front Matter | noch nicht ausgearbeitet |
