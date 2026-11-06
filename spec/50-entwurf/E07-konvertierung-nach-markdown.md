@@ -16,12 +16,12 @@ Außerdem nützen sie allein: vorhandene PTA-Dokumente als Markdown lesbar mache
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| E07-S01 | Formaterkennung, Registry, `ConversionOptions`, Ressourcensammlung | noch nicht ausgearbeitet |
+| [E07-S01](E07-S01-formaterkennung-und-registry.md) | Formaterkennung, Registry, `ConversionOptions`, Ressourcensammlung | Entwurf |
 | [E07-S02](../60-prüfung/E07-S02-docx-nach-markdown.md) | DOCX → Markdown (deutsche und englische Stilnamen, Nummerierung, Tabellen, Bilder) — vorgezogen für die Rundreise-Tests in M01 | in Prüfung |
 | [E07-S03](../60-prüfung/E07-S03-pptx-nach-markdown.md) | PPTX → Markdown | in Prüfung |
-| E07-S04 | PDF → Markdown (pdfplumber; Absatz-, Silbentrennungs- und Listenheuristik) | noch nicht ausgearbeitet |
+| [E07-S04](E07-S04-pdf-nach-markdown.md) | PDF → Markdown (pdfplumber; Absatz-, Silbentrennungs- und Listenheuristik) | Entwurf |
 | E07-S05 | ~~Markdown ↔ JIRA-Wiki~~ | entfällt (2026-11-06) |
-| E07-S06 | Markdown-Hilfen (`escape`, `code`, `table`, `normalize` …) | noch nicht ausgearbeitet |
+| [E07-S06](E07-S06-markdown-hilfen.md) | Markdown-Hilfen (`escape`, `code`, `table`, `normalize` …) | Entwurf |
 
 ## Bereichsweite Entscheidungen
 

@@ -22,10 +22,10 @@ deshalb auf diese eine Vorlage zugeschnitten.
 | ----- | ------ | ------ |
 | [E04-S01](../60-prüfung/E04-S01-pptx-auf-pta-vorlage.md) | Deck auf der PTA-Vorlage: Layoutwahl, Titel-, Kapitel-, Inhalts-, Abschlussfolien, Fußzeile | in Prüfung |
 | [E04-S02](../60-prüfung/E04-S02-pptx-inhalte-und-fitting.md) | Inhalte: Textebenen, Listen, Tabellen im PTA-Stil, Bilder in Bildplatzhaltern, Code; Fitting | in Prüfung |
-| E04-S03 | Flow-Layouts aus DocLibs im PTA-Stil: `cards`, `rows`, `panel`, `statement`, `columns`, Alerts, Fazit-Box, Kommentarbox, `==mark==` (Gelb), Status-Labels (Signalfarben) | noch nicht ausgearbeitet |
-| E04-S04 | Weitere Layouts aus Markdown: Agenda (nur ausdrücklich, keine automatische), Zwischenfazit, Zitat, Kontakt, Diagramm-Layouts | noch nicht ausgearbeitet |
-| E04-S05 | Schulungsvorlage (`vorlage: schulung`) und englische Titelfolie (`sprache: en`); Sticker „VERTRAULICH" per Front Matter | noch nicht ausgearbeitet |
-| E04-S06 | Authoring Guide PPTX | noch nicht ausgearbeitet |
+| [E04-S03](E04-S03-flow-layouts-im-pta-stil.md) | Flow-Layouts aus DocLibs im PTA-Stil: `cards`, `rows`, `panel`, `statement`, `columns`, Alerts, Fazit-Box, Kommentarbox, `==mark==` (Gelb), Status-Labels (Signalfarben) | Entwurf |
+| [E04-S04](E04-S04-weitere-layouts.md) | Weitere Layouts aus Markdown: Agenda (nur ausdrücklich, keine automatische), Zwischenfazit, Zitat, Kontakt, Diagramm-Layouts | Entwurf |
+| [E04-S05](E04-S05-schulungsvorlage-und-sticker.md) | Schulungsvorlage (`vorlage: schulung`) und englische Titelfolie (`sprache: en`); Sticker „VERTRAULICH" per Front Matter | Entwurf |
+| [E04-S06](E04-S06-authoring-guide-pptx.md) | Authoring Guide PPTX | Entwurf |
 
 ## Bereichsweite Entscheidungen
 

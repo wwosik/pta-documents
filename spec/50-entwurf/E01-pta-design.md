@@ -21,8 +21,8 @@ diesem Paket soll von einem von Hand erstellten PTA-Dokument nicht zu unterschei
 | ----- | ------ | ------ |
 | [E01-S01](../60-prüfung/E01-S01-pta-designmodell.md) | PTA-Designmodell: Farben, Schriften, Maße, Varianten | in Prüfung |
 | [E01-S02](../60-prüfung/E01-S02-vorlagen-einbetten.md) | Vorlagen bereinigen und als Paketdaten einbetten | in Prüfung |
-| E01-S03 | Schriften für PDF und SVG: Selawik (OFL) gebündelt, Segoe UI aus dem System, wenn vorhanden; Georgia-Ersatz | noch nicht ausgearbeitet |
-| E01-S04 | Logos als SVG/PNG für PDF und SVG-Ausgabe, aus den EMF der Vorlagen gewandelt | noch nicht ausgearbeitet |
+| [E01-S03](E01-S03-schriften-fuer-pdf-und-svg.md) | Schriften für PDF und SVG: Selawik (OFL) gebündelt, Segoe UI aus dem System, wenn vorhanden; Georgia-Ersatz | Entwurf |
+| [E01-S04](E01-S04-logos-als-svg-und-png.md) | Logos als SVG/PNG für PDF und SVG-Ausgabe, aus den EMF der Vorlagen gewandelt | Entwurf |
 
 ## Bereichsweite Entscheidungen
 
