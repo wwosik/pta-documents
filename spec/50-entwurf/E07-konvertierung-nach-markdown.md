@@ -18,7 +18,7 @@ Außerdem nützen sie allein: vorhandene PTA-Dokumente als Markdown lesbar mache
 | ----- | ------ | ------ |
 | E07-S01 | Formaterkennung, Registry, `ConversionOptions`, Ressourcensammlung | noch nicht ausgearbeitet |
 | [E07-S02](../60-prüfung/E07-S02-docx-nach-markdown.md) | DOCX → Markdown (deutsche und englische Stilnamen, Nummerierung, Tabellen, Bilder) — vorgezogen für die Rundreise-Tests in M01 | in Prüfung |
-| E07-S03 | PPTX → Markdown | noch nicht ausgearbeitet |
+| [E07-S03](E07-S03-pptx-nach-markdown.md) | PPTX → Markdown | Entwurf |
 | E07-S04 | PDF → Markdown (pdfplumber; Absatz-, Silbentrennungs- und Listenheuristik) | noch nicht ausgearbeitet |
 | E07-S05 | ~~Markdown ↔ JIRA-Wiki~~ | entfällt (2026-11-06) |
 | E07-S06 | Markdown-Hilfen (`escape`, `code`, `table`, `normalize` …) | noch nicht ausgearbeitet |
