@@ -27,6 +27,7 @@ einem Verweis auf ein anderes Repo oder ein lokales Laufwerk.
 | `src/pta_documents/` | Das Python-Paket (`src`-Layout) |
 | `tests/` | Tests, Spiegelbaum von `src/pta_documents/`, Beispieldateien in `tests/**/samples/` |
 | `tools/` | Werkzeuge des Repos, je eines in `tools/<name>/<name>.py`, gestartet über `run.sh <name>` |
+| `samples/` | Beispielinhalte zum Ausprobieren der Generatoren, je Thema ein Ordner mit Markdown, `images/` und `QUELLEN.md` (Lizenzen); erzeugt mit `./run.sh generate-samples` nach `.tmp/samples/` |
 | `source-templates/` | Die offiziellen PTA-Vorlagen (`.dotx`, `.potx`, `.pptx`), unverändert — Quelle der Designstandards (siehe `spec/10-analysen/`) |
 
 ## Werkzeuge
