@@ -97,9 +97,7 @@ class DeckParser:
 
     def _section(self, heading: tuple[Token, Token] | None, section: _Section) -> None:
         if heading is None:
-            if any(not isinstance(i, Separator) for i in section.items):
-                # Content before the first heading: a slide without title, as in DocLibs.
-                self._content(heading_runs=(), items=section.items, line=None)
+            # Text before the first heading is ignored, as in DocLibs.
             return
         open_token, inline = heading
         title, attributes = self._title(inline)

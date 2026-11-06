@@ -19,9 +19,11 @@ from pta_documents.design import slides as design
 from pta_documents.design import templates
 from pta_documents.design.variants import GeneratedTexts, Language, SlidesVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.pptx import fitting, visuals
 from pta_documents.generation.pptx.model import (
     ChapterSlide,
     ClosingSlide,
+    Code,
     ContentSlide,
     Images,
     Kind,
@@ -29,7 +31,9 @@ from pta_documents.generation.pptx.model import (
     Paragraph,
     Run,
     Slide,
+    Table,
     TitleSlide,
+    Visual,
     VisualSlide,
     plain_text,
 )
@@ -74,6 +78,7 @@ class DeckWriter:
         self.lang = "en-US" if options.language is Language.EN else "de-DE"
         self.layouts = {layout.name: layout for layout in presentation.slide_layouts}
         self.number = 0
+        self.body_style = fitting.BodyStyle.read(presentation)
 
     # ------------------------------------------------------------------ entry
 
@@ -132,10 +137,29 @@ class DeckWriter:
         self.finish(target)
 
     def content_slide(self, slide: ContentSlide) -> None:
+        area = design.CONTENT_AREA
+        body = list(slide.body)
+        scale = fitting.text_scale(self.body_style, body, area.width, area.height)
+        if scale is not None or not body:
+            self.text_slide(slide.title, body, scale or 1.0, slide)
+            return
+        smallest = self.body_style.scales()[-1]
+
+        def fits(part: list[Paragraph]) -> bool:
+            height = fitting.text_height(self.body_style, part, smallest, area.width)
+            return height <= area.height
+
+        for n, part in enumerate(fitting.pack(fitting.groups(body), fits)):
+            part_scale = fitting.text_scale(self.body_style, part, area.width, area.height)
+            self.text_slide(self.continued(slide.title, n), part, part_scale or smallest, slide)
+
+    def text_slide(
+        self, title: tuple[Run, ...], body: list[Paragraph], scale: float, slide: Slide
+    ) -> None:
         target = self.new_slide(design.LAYOUTS.title_and_text, slide)
-        self.set_title(target, slide.title)
-        if slide.body:
-            self.set_paragraphs(target, design.PLACEHOLDERS.body, list(slide.body))
+        self.set_title(target, title)
+        if body:
+            self.set_paragraphs(target, design.PLACEHOLDERS.body, body, scale)
         self.finish(target, footer=True)
 
     def visual_slide(self, slide: VisualSlide) -> None:
@@ -147,15 +171,120 @@ class DeckWriter:
             target = self.new_slide(layout, slide)
             self.set_title(target, slide.title)
             if text:
-                self.set_paragraphs(target, design.PLACEHOLDERS.body, text)
+                shape = self.placeholder(target, design.PLACEHOLDERS.body)
+                width, height = int(shape.width), int(shape.height)
+                scale = fitting.text_scale(self.body_style, text, width, height)
+                self.set_paragraphs(
+                    target,
+                    design.PLACEHOLDERS.body,
+                    text,
+                    scale or self.body_style.scales()[-1],
+                )
             self.fill_picture(target, design.PLACEHOLDERS.picture, image.resource, image.alt, slide)
             self.finish(target, footer=True)
             return
         self.visual_on_content_area(slide)
 
     def visual_on_content_area(self, slide: VisualSlide) -> None:
-        """Table, code or several images in the content area, with text above and below."""
-        raise DocumentConversionError(FORMAT, "Tables and code on slides come with E04-S02.")
+        """Table, code or a row of pictures in the content area, text above and below.
+
+        What does not fit at the smallest size is split: table rows (header repeated), code
+        lines, pictures beyond four; the text above goes on the first part, below on the last.
+        """
+        area = design.CONTENT_AREA
+        above, below = list(slide.above), list(slide.below)
+        above_height = self.text_block_height(above)
+        below_height = self.text_block_height(below)
+        room = area.height - (above_height + fitting.GAP if above else 0)
+        room -= below_height + fitting.GAP if below else 0
+        room_rest = area.height - (below_height + fitting.GAP if below else 0)
+        visual = slide.visual
+        parts: list[Visual] = []
+        if isinstance(visual, Table):
+            if fitting.fit_table(visual, area.width, room) is not None:
+                parts = [visual]
+            else:
+                parts = list(fitting.split_table(visual, area.width, room, room_rest))
+        elif isinstance(visual, Code):
+            if fitting.fit_code(len(visual.lines), room) is not None:
+                parts = [visual]
+            else:
+                first = fitting.code_lines_per_slide(room)
+                rest = fitting.code_lines_per_slide(room_rest)
+                lines = list(visual.lines)
+                parts = [Code(tuple(lines[:first]))]
+                for start in range(first, len(lines), rest):
+                    parts.append(Code(tuple(lines[start : start + rest])))
+        elif isinstance(visual, Images):
+            per_row = design.MAX_PICTURES_PER_ROW
+            parts = [
+                Images(visual.images[i : i + per_row])
+                for i in range(0, len(visual.images), per_row)
+            ]
+        for n, part in enumerate(parts):
+            self.visual_part(
+                slide,
+                self.continued(slide.title, n),
+                above if n == 0 else [],
+                part,
+                below if n == len(parts) - 1 else [],
+            )
+
+    def text_block_height(self, paragraphs: list[Paragraph]) -> int:
+        if not paragraphs:
+            return 0
+        area = design.CONTENT_AREA
+        scale = fitting.text_scale(self.body_style, paragraphs, area.width, area.height / 2)
+        scale = scale or self.body_style.scales()[-1]
+        return int(fitting.text_height(self.body_style, paragraphs, scale, area.width))
+
+    def visual_part(
+        self,
+        slide: VisualSlide,
+        title: tuple[Run, ...],
+        above: list[Paragraph],
+        visual: Visual,
+        below: list[Paragraph],
+    ) -> None:
+        area = design.CONTENT_AREA
+        layout = design.LAYOUTS.title_and_text if above else design.LAYOUTS.title_only
+        target = self.new_slide(layout, slide)
+        self.set_title(target, title)
+        y = area.top
+        if above:
+            height = self.text_block_height(above)
+            shape = self.placeholder(target, design.PLACEHOLDERS.body)
+            shape.left, shape.top = Emu(area.left), Emu(y)
+            shape.width, shape.height = Emu(area.width), Emu(height)
+            scale = fitting.text_scale(self.body_style, above, area.width, height + 1)
+            self.set_paragraphs(target, design.PLACEHOLDERS.body, above, scale or 1.0)
+            y += height + fitting.GAP
+        below_height = self.text_block_height(below)
+        room = area.bottom - y - (below_height + fitting.GAP if below else 0)
+        if isinstance(visual, Table):
+            table_layout = fitting.fit_table(visual, area.width, room) or fitting.table_layout(
+                visual, area.width, *fitting.table_steps()[-1]
+            )
+            used = visuals.draw_table(
+                target, visual, table_layout, area.left, y, self.run_element, self.lang
+            )
+        elif isinstance(visual, Code):
+            size = fitting.fit_code(len(visual.lines), room) or fitting.CODE_SIZES[-1]
+            used = visuals.draw_code(target, visual, size, area.left, y, area.width, self.lang)
+        else:
+            used = visuals.draw_pictures(
+                target, list(visual.images), area.left, y, area.width, room
+            )
+        y += used + fitting.GAP
+        if below:
+            body = visuals.text_box(target, area.left, y, area.width, below_height)
+            self.write_paragraphs(target, body, below)
+        self.finish(target, footer=True)
+
+    def continued(self, title: tuple[Run, ...], index: int) -> tuple[Run, ...]:
+        if index == 0:
+            return title
+        return (*title, Run(" " + self.texts.continued))
 
     def layout_slide(self, slide: LayoutSlide) -> None:
         target = self.new_slide(slide.layout, slide)
@@ -233,9 +362,11 @@ class DeckWriter:
     def set_text(self, slide: PptxSlide, idx: int, text: str) -> None:
         self.set_paragraphs(slide, idx, [Paragraph((Run(text),), Kind.SUBHEADLINE)])
 
-    def set_paragraphs(self, slide: PptxSlide, idx: int, paragraphs: list[Paragraph]) -> None:
+    def set_paragraphs(
+        self, slide: PptxSlide, idx: int, paragraphs: list[Paragraph], scale: float = 1.0
+    ) -> None:
         shape = self.placeholder(slide, idx)
-        self.write_paragraphs(slide, shape._element.txBody, paragraphs)
+        self.write_paragraphs(slide, shape._element.txBody, paragraphs, scale)
 
     def fill_picture(
         self, slide: PptxSlide, idx: int, resource: Any, alt: str, where: Slide
@@ -303,14 +434,23 @@ class DeckWriter:
         paragraphs: list[Paragraph],
         scale: float = 1.0,
     ) -> None:
+        """Replace the paragraphs; a scale below 1 shrinks the text the way PowerPoint's
+        "shrink text on overflow" does (``normAutofit``), so it stays fitted when edited."""
         for old in body.findall(a("p")):
             body.remove(old)
+        if scale < 1.0:
+            body_pr = body.find(a("bodyPr"))
+            if body_pr is None:
+                body_pr = etree.Element(a("bodyPr"))
+                body.insert(0, body_pr)
+            for child in list(body_pr):
+                body_pr.remove(child)
+            autofit = etree.SubElement(body_pr, a("normAutofit"))
+            autofit.set("fontScale", str(round(scale * 100000)))
         for paragraph in paragraphs or [Paragraph(())]:
-            body.append(self.paragraph_element(slide, paragraph, scale))
+            body.append(self.paragraph_element(slide, paragraph))
 
-    def paragraph_element(
-        self, slide: PptxSlide, paragraph: Paragraph, scale: float
-    ) -> etree._Element:
+    def paragraph_element(self, slide: PptxSlide, paragraph: Paragraph) -> etree._Element:
         element = etree.Element(a("p"))
         p_pr = etree.SubElement(element, a("pPr"))
         if paragraph.level:
@@ -322,19 +462,14 @@ class DeckWriter:
                 auto.set("startAt", str(paragraph.start))
         if not len(p_pr) and not p_pr.attrib:
             element.remove(p_pr)
-        size = None
-        if scale != 1.0:
-            size = round(design.LEVEL_SIZES_PT[paragraph.level] * scale * 100)
         for run in paragraph.runs:
             if run.is_break:
                 br = etree.SubElement(element, a("br"))
                 etree.SubElement(br, a("rPr")).set("lang", self.lang)
                 continue
-            element.append(self.run_element(slide, run, size))
+            element.append(self.run_element(slide, run, None))
         end = etree.SubElement(element, a("endParaRPr"))
         end.set("lang", self.lang)
-        if size is not None:
-            end.set("sz", str(size))
         return element
 
     def run_element(self, slide: PptxSlide, run: Run, size: int | None) -> etree._Element:
