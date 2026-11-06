@@ -138,3 +138,10 @@ TABLE: Final = TableStyle()
 
 FOOTER_PREFIX: Final = "PTA – "
 """The slide footer reads "PTA – <presentation title>"."""
+
+ENGLISH_LOGO_AREA: Final = Area(cm(1.40), cm(1.30), cm(6.35), cm(3.59))
+"""Where the English title slide template places the English logo (its sample slide)."""
+
+PICTURE_GAP: Final = cm(0.50)
+"""Room between pictures side by side on a slide."""
+MAX_PICTURES_PER_ROW: Final = 4

@@ -1,0 +1,394 @@
+"""Writes slides onto the PTA layouts of the template."""
+
+from __future__ import annotations
+
+import copy
+import io
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import Any, Final
+
+from lxml import etree
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.presentation import Presentation
+from pptx.slide import Slide as PptxSlide
+from pptx.slide import SlideLayout
+from pptx.util import Emu
+
+from pta_documents.design import slides as design
+from pta_documents.design import templates
+from pta_documents.design.variants import GeneratedTexts, Language, SlidesVariant
+from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.pptx.model import (
+    ChapterSlide,
+    ClosingSlide,
+    ContentSlide,
+    Images,
+    Kind,
+    LayoutSlide,
+    Paragraph,
+    Run,
+    Slide,
+    TitleSlide,
+    VisualSlide,
+    plain_text,
+)
+from pta_documents.generation.pptx.options import PptxOptions
+
+FORMAT: Final = DocumentFormat.PPTX
+A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
+P: Final = "http://schemas.openxmlformats.org/presentationml/2006/main"
+R: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+FOOTER_TYPES: Final = ("ftr", "sldNum")
+PICTURE_TYPES: Final = ("image/png", "image/jpeg", "image/gif", "image/bmp", "image/tiff")
+
+
+def a(name: str) -> str:
+    return f"{{{A}}}{name}"
+
+
+def p(name: str) -> str:
+    return f"{{{P}}}{name}"
+
+
+@dataclass(frozen=True)
+class DeckInfo:
+    title: str | None
+    subtitle: str | None
+    byline: str | None
+    footer: str
+
+
+class DeckWriter:
+    def __init__(
+        self,
+        presentation: Presentation,
+        options: PptxOptions,
+        texts: GeneratedTexts,
+        info: DeckInfo,
+    ) -> None:
+        self.presentation = presentation
+        self.options = options
+        self.texts = texts
+        self.info = info
+        self.lang = "en-US" if options.language is Language.EN else "de-DE"
+        self.layouts = {layout.name: layout for layout in presentation.slide_layouts}
+        self.number = 0
+
+    # ------------------------------------------------------------------ entry
+
+    def write(self, slides: Sequence[Slide]) -> None:
+        for slide in slides:
+            self.slide(slide)
+
+    def slide(self, slide: Slide) -> None:
+        match slide:
+            case TitleSlide():
+                self.title_slide(slide)
+            case ChapterSlide():
+                target = self.new_slide(slide.layout or design.LAYOUTS.chapter, slide)
+                self.set_text(target, design.PLACEHOLDERS.chapter_number, f"{slide.number:02d}")
+                self.set_title(target, slide.title)
+                self.finish(target)
+            case ClosingSlide():
+                target = self.new_slide(slide.layout or design.LAYOUTS.closing, slide)
+                self.set_title(target, slide.title)
+                self.finish(target)
+            case ContentSlide():
+                self.content_slide(slide)
+            case VisualSlide():
+                self.visual_slide(slide)
+            case LayoutSlide():
+                self.layout_slide(slide)
+            case _:
+                raise TypeError(slide)
+
+    # ------------------------------------------------------------------ slide kinds
+
+    def title_slide(self, slide: TitleSlide) -> None:
+        layout = slide.layout or design.TITLE_SLIDES[self.options.title_slide]
+        target = self.new_slide(layout, slide)
+        self.set_title(target, slide.title)
+        ph = design.PLACEHOLDERS
+        if self.info.subtitle:
+            self.set_text(target, ph.subtitle, self.info.subtitle)
+        elif slide.subtitle:
+            self.set_paragraphs(target, ph.subtitle, [_flat(p) for p in slide.subtitle])
+        if self.info.byline:
+            self.set_text(target, ph.byline, self.info.byline)
+        if (
+            self.options.language is Language.EN
+            and self.options.variant is SlidesVariant.BASIC
+            and layout in design.TITLE_SLIDES.values()
+        ):
+            area = design.ENGLISH_LOGO_AREA
+            target.shapes.add_picture(
+                io.BytesIO(templates.read(templates.ENGLISH_LOGO)),
+                Emu(area.left),
+                Emu(area.top),
+                Emu(area.width),
+                Emu(area.height),
+            )
+        self.finish(target)
+
+    def content_slide(self, slide: ContentSlide) -> None:
+        target = self.new_slide(design.LAYOUTS.title_and_text, slide)
+        self.set_title(target, slide.title)
+        if slide.body:
+            self.set_paragraphs(target, design.PLACEHOLDERS.body, list(slide.body))
+        self.finish(target, footer=True)
+
+    def visual_slide(self, slide: VisualSlide) -> None:
+        visual = slide.visual
+        text = [*slide.above, *slide.below]
+        if isinstance(visual, Images) and len(visual.images) == 1:
+            image = visual.images[0]
+            layout = design.LAYOUTS.title_text_image if text else design.LAYOUTS.title_image
+            target = self.new_slide(layout, slide)
+            self.set_title(target, slide.title)
+            if text:
+                self.set_paragraphs(target, design.PLACEHOLDERS.body, text)
+            self.fill_picture(target, design.PLACEHOLDERS.picture, image.resource, image.alt, slide)
+            self.finish(target, footer=True)
+            return
+        self.visual_on_content_area(slide)
+
+    def visual_on_content_area(self, slide: VisualSlide) -> None:
+        """Table, code or several images in the content area, with text above and below."""
+        raise DocumentConversionError(FORMAT, "Tables and code on slides come with E04-S02.")
+
+    def layout_slide(self, slide: LayoutSlide) -> None:
+        target = self.new_slide(slide.layout, slide)
+        self.set_title(target, slide.title)
+        layout = self.layouts[slide.layout]
+        decorative = _decorative(layout)
+        bodies = [
+            ph
+            for ph in _placeholders(layout)
+            if ph[1] in ("body", "obj")
+            and ph[0] not in decorative
+            and ph[0] not in (design.PLACEHOLDERS.title,)
+        ]
+        pictures = [ph for ph in _placeholders(layout) if ph[1] == "pic"]
+        body_index = picture_index = 0
+        for segment in slide.segments:
+            paragraphs = [item for item in segment if isinstance(item, Paragraph)]
+            visuals = [item for item in segment if not isinstance(item, Paragraph)]
+            if paragraphs:
+                if body_index >= len(bodies):
+                    raise self.error(
+                        f"The layout '{slide.layout}' has {len(bodies)} text placeholders; the "
+                        "slide has more text parts (split at '---')",
+                        slide,
+                    )
+                self.set_paragraphs(target, bodies[body_index][0], paragraphs)
+                body_index += 1
+            for visual in visuals:
+                if isinstance(visual, Images) and picture_index + len(visual.images) <= len(
+                    pictures
+                ):
+                    for image in visual.images:
+                        self.fill_picture(
+                            target, pictures[picture_index][0], image.resource, image.alt, slide
+                        )
+                        picture_index += 1
+                else:
+                    raise self.error(
+                        f"The layout '{slide.layout}' has no place for this "
+                        f"{type(visual).__name__.lower()}",
+                        slide,
+                    )
+        self.finish(target, footer=True)
+
+    # ------------------------------------------------------------------ slides and placeholders
+
+    def error(self, reason: str, slide: Slide) -> DocumentConversionError:
+        where = f" (line {slide.line})" if slide.line else ""
+        return DocumentConversionError(FORMAT, f"{reason}{where}.")
+
+    def new_slide(self, layout_name: str, slide: Slide) -> PptxSlide:
+        layout = self.layouts.get(layout_name)
+        if layout is None:
+            valid = ", ".join(f"'{name}'" for name in self.layouts)
+            raise self.error(
+                f"The PTA template has no layout '{layout_name}'. Valid layouts: {valid}", slide
+            )
+        self.number += 1
+        return self.presentation.slides.add_slide(layout)
+
+    def placeholder(self, slide: PptxSlide, idx: int) -> Any:
+        for shape in slide.placeholders:
+            if shape.placeholder_format.idx == idx:
+                return shape
+        raise DocumentConversionError(
+            FORMAT, f"The layout '{slide.slide_layout.name}' has no placeholder {idx}."
+        )
+
+    def set_title(self, slide: PptxSlide, runs: tuple[Run, ...]) -> None:
+        title: Any = slide.shapes.title
+        if title is None:
+            return
+        self.write_paragraphs(slide, title._element.txBody, [Paragraph(runs, Kind.SUBHEADLINE)])
+
+    def set_text(self, slide: PptxSlide, idx: int, text: str) -> None:
+        self.set_paragraphs(slide, idx, [Paragraph((Run(text),), Kind.SUBHEADLINE)])
+
+    def set_paragraphs(self, slide: PptxSlide, idx: int, paragraphs: list[Paragraph]) -> None:
+        shape = self.placeholder(slide, idx)
+        self.write_paragraphs(slide, shape._element.txBody, paragraphs)
+
+    def fill_picture(
+        self, slide: PptxSlide, idx: int, resource: Any, alt: str, where: Slide
+    ) -> None:
+        if resource.content_type not in PICTURE_TYPES:
+            raise self.error(
+                f"The image '{resource.path}' is a {resource.content_type}; PPTX takes PNG, JPEG, "
+                "GIF, BMP and TIFF",
+                where,
+            )
+        placeholder = self.placeholder(slide, idx)
+        picture = placeholder.insert_picture(io.BytesIO(resource.content))
+        picture._element.nvPicPr.cNvPr.set("descr", alt)
+
+    def finish(self, slide: PptxSlide, footer: bool = False) -> None:
+        """Remove placeholders left empty (decorative ones stay) and add footer and number."""
+        decorative = _decorative(slide.slide_layout)
+        for shape in list(slide.placeholders):
+            fmt = shape.placeholder_format
+            if fmt.idx in decorative:
+                continue
+            element = shape._element
+            parent = element.getparent()
+            if element.tag == p("sp") and not _text(element).strip() and parent is not None:
+                parent.remove(element)
+        if footer:
+            self.add_footer(slide)
+
+    def add_footer(self, slide: PptxSlide) -> None:
+        tree = slide.shapes._spTree
+        for layout_shape in slide.slide_layout.placeholders:
+            ph = layout_shape._element.find(f"{p('nvSpPr')}/{p('nvPr')}/{p('ph')}")
+            ph_type = ph.get("type") if ph is not None else None
+            if ph_type not in FOOTER_TYPES:
+                continue
+            if ph_type == "sldNum" and not self.options.show_slide_numbers:
+                continue
+            shape = copy.deepcopy(layout_shape._element)
+            c_nv_pr = shape.find(f"{p('nvSpPr')}/{p('cNvPr')}")
+            assert c_nv_pr is not None
+            c_nv_pr.set("id", str(slide.shapes._next_shape_id))
+            for ext in c_nv_pr.findall(a("extLst")):
+                c_nv_pr.remove(ext)
+            sp_pr = shape.find(p("spPr"))
+            if sp_pr is not None:
+                for child in list(sp_pr):
+                    sp_pr.remove(child)
+            texts = list(shape.iter(a("t")))
+            if ph_type == "ftr" and texts:
+                texts[0].text = self.info.footer
+                for extra in texts[1:]:
+                    extra.text = ""
+            elif ph_type == "sldNum" and texts:
+                texts[0].text = str(self.number)
+            for r_pr in shape.iter(a("rPr"), a("endParaRPr")):
+                r_pr.set("lang", self.lang)
+            tree.append(shape)
+
+    # ------------------------------------------------------------------ text
+
+    def write_paragraphs(
+        self,
+        slide: PptxSlide,
+        body: etree._Element,
+        paragraphs: list[Paragraph],
+        scale: float = 1.0,
+    ) -> None:
+        for old in body.findall(a("p")):
+            body.remove(old)
+        for paragraph in paragraphs or [Paragraph(())]:
+            body.append(self.paragraph_element(slide, paragraph, scale))
+
+    def paragraph_element(
+        self, slide: PptxSlide, paragraph: Paragraph, scale: float
+    ) -> etree._Element:
+        element = etree.Element(a("p"))
+        p_pr = etree.SubElement(element, a("pPr"))
+        if paragraph.level:
+            p_pr.set("lvl", str(paragraph.level))
+        if paragraph.kind is Kind.NUMBERED:
+            auto = etree.SubElement(p_pr, a("buAutoNum"))
+            auto.set("type", "arabicPeriod")
+            if paragraph.start != 1:
+                auto.set("startAt", str(paragraph.start))
+        if not len(p_pr) and not p_pr.attrib:
+            element.remove(p_pr)
+        size = None
+        if scale != 1.0:
+            size = round(design.LEVEL_SIZES_PT[paragraph.level] * scale * 100)
+        for run in paragraph.runs:
+            if run.is_break:
+                br = etree.SubElement(element, a("br"))
+                etree.SubElement(br, a("rPr")).set("lang", self.lang)
+                continue
+            element.append(self.run_element(slide, run, size))
+        end = etree.SubElement(element, a("endParaRPr"))
+        end.set("lang", self.lang)
+        if size is not None:
+            end.set("sz", str(size))
+        return element
+
+    def run_element(self, slide: PptxSlide, run: Run, size: int | None) -> etree._Element:
+        r = etree.Element(a("r"))
+        r_pr = etree.SubElement(r, a("rPr"))
+        r_pr.set("lang", self.lang)
+        if size is not None:
+            r_pr.set("sz", str(size))
+        if run.bold:
+            r_pr.set("b", "1")
+        if run.italic:
+            r_pr.set("i", "1")
+        if run.strike:
+            r_pr.set("strike", "sngStrike")
+        r_pr.set("dirty", "0")
+        if run.code:
+            etree.SubElement(r_pr, a("latin")).set("typeface", design.CODE_FONT)
+        elif run.bold:
+            # PTA rule: emphasis in Segoe UI (the heading font), not in Segoe UI Light.
+            etree.SubElement(r_pr, a("latin")).set("typeface", "+mj-lt")
+        if run.link:
+            r_id = slide.part.relate_to(run.link, RT.HYPERLINK, is_external=True)
+            etree.SubElement(r_pr, a("hlinkClick")).set(f"{{{R}}}id", r_id)
+        t = etree.SubElement(r, a("t"))
+        t.text = run.text
+        return r
+
+
+def _flat(paragraph: Paragraph) -> Paragraph:
+    """A paragraph as plain text at the placeholder's own first level."""
+    return Paragraph(paragraph.runs, Kind.SUBHEADLINE)
+
+
+def _placeholders(layout: SlideLayout) -> list[tuple[int, str]]:
+    """(idx, type) of the layout's placeholders, in the order they are drawn."""
+    result: list[tuple[int, str]] = []
+    for ph in layout._element.iter(p("ph")):
+        result.append((int(ph.get("idx", "0")), ph.get("type", "obj")))
+    return result
+
+
+def _decorative(layout: SlideLayout) -> set[int]:
+    """Placeholders that only draw graphics: their prompt is "x" (see the design analysis)."""
+    result: set[int] = set()
+    for shape in layout.placeholders:
+        if _text(shape._element).strip() == design.DECORATIVE_PROMPT:
+            result.add(shape.placeholder_format.idx)
+    return result
+
+
+def _text(element: etree._Element) -> str:
+    # itertext() on python-pptx elements repeats text; read the a:t elements instead.
+    return "".join(t.text or "" for t in element.iter(a("t")))
+
+
+def title_text(runs: tuple[Run, ...]) -> str:
+    return plain_text(runs)
