@@ -1,8 +1,8 @@
 # E07-S02 DOCX → Markdown
 
-> Status: Entwurf
-> Epic: [E07 Konvertierung nach Markdown](E07-konvertierung-nach-markdown.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](M01-pta-dokumente-aus-markdown.md)
+> Status: in Bearbeitung (port-1)
+> Epic: [E07 Konvertierung nach Markdown](../../50-entwurf/E07-konvertierung-nach-markdown.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 

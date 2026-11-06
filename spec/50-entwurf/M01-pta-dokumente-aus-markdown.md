@@ -17,7 +17,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge.
 | [E01-S01](../60-prüfung/E01-S01-pta-designmodell.md) | PTA-Designmodell aus den Vorlagen | in Prüfung |
 | [E01-S02](../60-prüfung/E01-S02-vorlagen-einbetten.md) | Vorlagen bereinigen und als Paketdaten einbetten | in Prüfung |
 | [E02-S01](../60-prüfung/E02-S01-markdown-parser-und-front-matter.md) | Markdown-Parser und Front Matter | in Prüfung |
-| [E07-S02](E07-S02-docx-nach-markdown.md) | DOCX → Markdown (für die Rundreise-Tests) | Entwurf |
+| [E07-S02](../55-in-arbeit/port-1/E07-S02-docx-nach-markdown.md) | DOCX → Markdown (für die Rundreise-Tests) | in Bearbeitung (port-1) |
 | [E03-S01](E03-S01-docx-auf-pta-vorlage.md) | DOCX auf der PTA-Vorlage | Entwurf |
 | [E03-S02](E03-S02-docx-inhalte.md) | DOCX-Inhalte | Entwurf |
 | E07-S03 | PPTX → Markdown (für die Rundreise-Tests) | noch nicht ausgearbeitet |
