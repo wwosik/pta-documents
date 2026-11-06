@@ -35,7 +35,8 @@ Bilder: PNG, JPEG, GIF, BMP, TIFF. **SVG wird abgelehnt** — vorher nach PNG wa
 Dateinamen mit `--docx`/`--pptx`; Ausgabe woanders mit `--out <ordner>`.
 
 Vollständige, funktionierende Beispiele: `samples/gsb/gsb-bericht.md` und
-`samples/gsb/gsb-praesentation.md`. Bei Unsicherheit an ihnen orientieren.
+`samples/gsb/gsb-praesentation.md`; jede unterstützte Funktion einmal zeigt
+`samples/funktionen/` (siehe dessen `README.md`). Bei Unsicherheit an ihnen orientieren.
 
 ## Front Matter
 

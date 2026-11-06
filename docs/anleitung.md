@@ -25,7 +25,9 @@ Ob alles läuft, zeigt das Beispiel zum Hauptbeskidenweg:
 ```
 
 Danach liegen `gsb-bericht.docx` und `gsb-praesentation.pptx` in `documents/gsb/`. Die
-Markdown-Dateien in `samples/gsb/` sind die beste Vorlage für eigene Dokumente.
+Markdown-Dateien in `samples/gsb/` sind die beste Vorlage für eigene Dokumente; alles, was
+die Generatoren können, zeigt `samples/funktionen/`
+(`./run.sh generate samples/funktionen --out documents/funktionen`).
 
 Später holst du Neuerungen mit `git pull` und danach einmal `./run.sh setup`.
 
