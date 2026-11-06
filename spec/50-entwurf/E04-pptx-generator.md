@@ -23,8 +23,8 @@ deshalb auf diese eine Vorlage zugeschnitten.
 | [E04-S01](E04-S01-pptx-auf-pta-vorlage.md) | Deck auf der PTA-Vorlage: Layoutwahl, Titel-, Kapitel-, Inhalts-, Abschlussfolien, Fußzeile | Entwurf |
 | [E04-S02](E04-S02-pptx-inhalte-und-fitting.md) | Inhalte: Textebenen, Listen, Tabellen im PTA-Stil, Bilder in Bildplatzhaltern, Code; Fitting | Entwurf |
 | E04-S03 | Flow-Layouts aus DocLibs im PTA-Stil: `cards`, `rows`, `panel`, `statement`, `columns`, Alerts, Fazit-Box, Kommentarbox, `==mark==` (Gelb), Status-Labels (Signalfarben) | noch nicht ausgearbeitet |
-| E04-S04 | Weitere Layouts aus Markdown: Agenda, Zwischenfazit, Zitat, Kontakt, Diagramm-Layouts | noch nicht ausgearbeitet |
-| E04-S05 | Schulungsvorlage und englische Titelfolie; Sticker „VERTRAULICH" per Front Matter | noch nicht ausgearbeitet |
+| E04-S04 | Weitere Layouts aus Markdown: Agenda (nur ausdrücklich, keine automatische), Zwischenfazit, Zitat, Kontakt, Diagramm-Layouts | noch nicht ausgearbeitet |
+| E04-S05 | Schulungsvorlage (`vorlage: schulung`) und englische Titelfolie (`sprache: en`); Sticker „VERTRAULICH" per Front Matter | noch nicht ausgearbeitet |
 | E04-S06 | Authoring Guide PPTX | noch nicht ausgearbeitet |
 
 ## Bereichsweite Entscheidungen
@@ -35,6 +35,8 @@ deshalb auf diese eine Vorlage zugeschnitten.
   Formen nur auf `Nur Titel` und innerhalb der Inhaltsfläche, ausgerichtet am Raster.
 - Schrifteinbettung (EOT) aus DocLibs entfällt: Segoe UI ist auf den PTA-Rechnern installiert
   und darf nicht weitergegeben werden.
+- Standard-Titelfolie ist `Titelfolie mit Bild 02`; jedes weitere `#` wird eine `Trennfolie` mit
+  zweistelliger Kapitelnummer; eine Agenda entsteht nie automatisch (Entscheidungen 2026-11-06).
 - Folientabellen werden mit Direktformatierung nach der Mustertabelle gezeichnet (Kopf
   `004676`), nicht über einen Tabellenstil.
 
@@ -50,17 +52,17 @@ PPTX-Konverter (E07) den Markdown-Inhalt ergibt.
    `Titelfolie mit Bild 01`? Per Front Matter wählbar (`cover: bild-01 | bild-02 | ohne-bild |
    branche`)?
 
->
+> (2026-11-06) `Titelfolie mit Bild 02` ist Standard.
 
 2. Soll `# Kapitel` (oberste Überschrift nach dem Titel) automatisch eine `Trennfolie` mit
    Kapitelnummer „01", „02" … erzeugen?
 
->
+> (2026-11-06) Ja, `Trennfolie` mit „01", „02" ….
 
 3. Soll aus den Kapiteln automatisch eine Agenda-Folie entstehen (`Agenda (kurz)` bis 4,
    `Agenda (lang)` bis 8 Kapitel)?
 
->
+> (2026-11-06) Nein, keine automatische Agenda.
 
 ## Notizen
 

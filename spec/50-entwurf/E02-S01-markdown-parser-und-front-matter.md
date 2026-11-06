@@ -37,9 +37,9 @@ kommen als Ressourcen im Dokument, nie von der Platte.
 
 ## Offene Fragen
 
-1. Siehe E02, Frage 1 (Sprache der Front-Matter-Schlüssel).
+1. Sprache der Front-Matter-Schlüssel?
 
->
+> (2026-11-06) Deutsch, siehe E02.
 
 ## Notizen
 

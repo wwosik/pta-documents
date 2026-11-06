@@ -20,10 +20,10 @@ und Bearbeiternamen; die PowerPoint-Dateien zusätzlich 39–93 Musterfolien (Vo
 
 1. Werkzeug `tools/prepare-templates/` (Python, über `run.sh prepare-templates`), das aus
    `source-templates/` die Paketdaten erzeugt:
-   - **Word** (alle fünf): `[trash]/`, `customXml/` samt Beziehungen, SharePoint-Eigenschaften
+   - **Word** (die vier PTA-Vorlagen; BPS-PTA-DATIS nicht): `[trash]/`, `customXml/` samt Beziehungen, SharePoint-Eigenschaften
      entfernen; Kerneigenschaften leeren; Körper bis auf `w:sectPr` leeren; Inhaltstyp auf
      Dokument (`.docx`) umstellen.
-   - **PowerPoint** (Basis, Schulung, EN): alle Musterfolien entfernen (Teile, Beziehungen,
+   - **PowerPoint** (Basis, Schulung, Titelfolie EN für `sprache: en`): alle Musterfolien entfernen (Teile, Beziehungen,
      `sldIdLst`, Notizen), nicht mehr referenzierte Medien löschen (Anleitungs-Screenshots), die
      35 Layouts, Master, Theme und die Layout-Medien behalten; Inhaltstyp auf Präsentation
      (`.pptx`). Die Vorlagensammlung wird nicht eingebettet (gleiche Layouts wie die Basis).
@@ -44,10 +44,9 @@ und Bearbeiternamen; die PowerPoint-Dateien zusätzlich 39–93 Musterfolien (Vo
 
 ## Offene Fragen
 
-1. Siehe E03-S01, Frage 4: Dürfen die Vorlagen (mit den Hintergrundfotos) im Paket weitergegeben
-   werden?
+1. Dürfen die Vorlagen (mit den Hintergrundfotos) im Paket liegen?
 
->
+> (2026-11-06) Ja, im Paket.
 
 ## Notizen
 

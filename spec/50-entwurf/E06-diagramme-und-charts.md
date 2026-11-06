@@ -19,7 +19,7 @@ der C#-Bibliothek Mermaider, für die es kein Python-Gegenstück gibt.
 | ----- | ------ | ------ |
 | E06-S01 | `chart`-Blöcke: Parser, `ChartSpec`, Zeichnung; native Diagramme in PPTX (python-pptx) und DOCX | noch nicht ausgearbeitet |
 | E06-S02 | Finanzdiagramme (Entwicklung, Wachstum je Zeile, Ist vs. Referenz, Trend, zwei Jahre, Übersichtstabelle), auch als SVG | noch nicht ausgearbeitet |
-| E06-S03 | Mermaid: Weg festlegen (siehe Offene Fragen), SVG → `Drawing`, editierbare Formen in Folien | noch nicht ausgearbeitet |
+| E06-S03 | Mermaid über mermaid-cli (Extra `[diagrams]`, Node.js + Chromium, lokal), SVG → `Drawing`, editierbare Formen in Folien | noch nicht ausgearbeitet |
 | E06-S04 | SVG → PNG (resvg) und SVG-Bilder in Folien (`asvg:svgBlip`) und Dokumenten | noch nicht ausgearbeitet |
 
 ## Bereichsweite Entscheidungen
@@ -40,11 +40,11 @@ Formaten Grafiken in den PTA-Farben.
    (c) Mermaid vorerst weglassen. Wichtig: keine Online-Dienste (mermaid.ink o. Ä.), damit kein
    Inhalt das Haus verlässt.
 
->
+> (2026-11-06) (a) mermaid-cli.
 
 2. Werden die Finanzdiagramme bei der PTA gebraucht, oder genügen die einfachen Charts?
 
->
+> (2026-11-06) Ja, werden gebraucht.
 
 ## Notizen
 

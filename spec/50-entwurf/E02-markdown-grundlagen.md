@@ -30,7 +30,12 @@ deutlich: `Brand`, `BrandPack`, `BrandRegistry`, `ResolvedBrand` entfallen (sieh
 - Front Matter bleibt die flache YAML-Teilmenge von DocLibs (kein echtes YAML, keine
   Verschachtelung); unbekannte Schlüssel und Werte werfen mit Liste der gültigen.
 - Front Matter wählt **keinen Brand** mehr, sondern die Variante der PTA-Vorlage
-  (`vorlage:`/`template:` — Name siehe E01-S01) und nennt nie einen Dateipfad.
+  (`vorlage:` — Namen siehe E01-S01) und nennt nie einen Dateipfad.
+- **Front-Matter-Schlüssel und -Werte sind deutsch** (Entscheidung 2026-11-06): `vorlage`,
+  `titel`, `untertitel`, `autor`, `ort`, `datum`, `firma`, `sprache`, `inhaltsverzeichnis`,
+  `fusszeile`, `status.<kategorie>`; Wahrheitswerte `ja`/`nein`. Die Markdown-Syntax selbst
+  (Container `cards`, Klassen `.dark`, `.success`, Alerts `[!NOTE]`) bleibt wie in DocLibs, weil
+  sie Syntax und keine Einstellung ist.
 - Ein Fehler in einem Dokument ist immer eine `DocumentConversionError` mit `reason` und Format.
 
 ## Akzeptanz
@@ -42,7 +47,7 @@ Die Generatoren E03–E05 nutzen ausschließlich diese Bausteine zum Lesen von M
 1. Sollen die Front-Matter-Schlüssel englisch bleiben (`title`, `author`, `template`) wie in
    DocLibs, oder deutsch (`titel`, `autor`, `vorlage`)? Vorschlag: englisch, wie Code.
 
->
+> (2026-11-06) Deutsch.
 
 ## Notizen
 

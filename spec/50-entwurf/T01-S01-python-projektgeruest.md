@@ -29,7 +29,7 @@ sinngemäß auf Python übertragen. Siehe
      __init__.py
      errors.py                 # DocumentConversionError (Reason, Format)
      markdown/                 # MarkdownDocument, Ressourcen, Hilfen, Front Matter
-     conversions/              # pdf, docx, pptx -> Markdown; jira
+     conversions/              # pdf, docx, pptx -> Markdown
      design/                   # PTA-Designmodell + eingebettete Vorlagen (E01)
      generation/
        common/                 # Parser, Folien-Syntax, Drawing, SVG, Authoring Guides
@@ -40,7 +40,9 @@ sinngemäß auf Python übertragen. Siehe
    ```
 
    Optionale Abhängigkeiten als Extras (`[pdf]`, `[diagrams]`, `[svg]`), damit der Kern
-   (DOCX/PPTX) schlank bleibt.
+   (DOCX/PPTX) schlank bleibt. Es wird **nichts veröffentlicht**: kein Feed, keine Tags als
+   Versionen; das Paket wird aus dem Repo heraus verwendet (`uv sync`, als Pfad- oder
+   Workspace-Abhängigkeit).
 3. **pytest** für Tests, **ruff** für Linting und Formatierung, **pyright** (strict) für Typen;
    vollständige Typannotationen, `py.typed`.
 4. `run.sh` / `run.ps1` mit den Verben `test`, `lint`, `format`, `typecheck`, `build`
@@ -57,28 +59,29 @@ sinngemäß auf Python übertragen. Siehe
 
 - [ ] `uv sync` richtet die Umgebung ein; `./run.sh test` läuft grün (ein Rauchtest).
 - [ ] `./run.sh lint` und `./run.sh typecheck` laufen fehlerfrei.
-- [ ] `uv build` erzeugt Wheel und sdist; das Wheel enthält die PTA-Vorlagen als Paketdaten.
+- [ ] `uv build` erzeugt ein Wheel, das die PTA-Vorlagen als Paketdaten enthält (Prüfung, dass
+      das Paket vollständig ist — veröffentlicht wird es nicht).
 - [ ] `ai/Standards.md` beschreibt die Python-Konventionen in sich geschlossen.
 
 ## Offene Fragen
 
 1. Mindestversion Python 3.12 — oder gibt es bei der PTA ältere Zielumgebungen (z. B. 3.10)?
 
->
+> (2026-11-06) Python 3.12.
 
 2. Ein Distributionspaket mit Extras — oder, wie DocLibs, mehrere getrennte Pakete?
 
->
+> (2026-11-06) Ein Distributionspaket mit Extras.
 
 3. Wie wird verteilt: internes Paket-Repository der PTA (welches?), Installation aus Git, oder
    gar nicht (nur Quellcode)?
 
->
+> (2026-11-06) Gar nicht veröffentlichen — nur Quellcode im Repo.
 
 4. Wohin kommt das Git-Remote dieses Repos, und gibt es dort CI (GitHub Actions, Azure DevOps,
    Forgejo Actions)?
 
->
+> (2026-11-06) Vorerst kein Remote und kein CI; kommt später.
 
 ## Notizen
 

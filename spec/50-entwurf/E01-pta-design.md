@@ -21,8 +21,8 @@ diesem Paket soll von einem von Hand erstellten PTA-Dokument nicht zu unterschei
 | ----- | ------ | ------ |
 | [E01-S01](E01-S01-pta-designmodell.md) | PTA-Designmodell: Farben, Schriften, Maße, Varianten | Entwurf |
 | [E01-S02](E01-S02-vorlagen-einbetten.md) | Vorlagen bereinigen und als Paketdaten einbetten | Entwurf |
-| E01-S03 | Schriften für PDF und SVG (Selawik/Segoe UI, Georgia-Ersatz) | noch nicht ausgearbeitet |
-| E01-S04 | Logos als SVG/PNG für PDF und SVG-Ausgabe | noch nicht ausgearbeitet |
+| E01-S03 | Schriften für PDF und SVG: Selawik (OFL) gebündelt, Segoe UI aus dem System, wenn vorhanden; Georgia-Ersatz | noch nicht ausgearbeitet |
+| E01-S04 | Logos als SVG/PNG für PDF und SVG-Ausgabe, aus den EMF der Vorlagen gewandelt | noch nicht ausgearbeitet |
 
 ## Bereichsweite Entscheidungen
 
@@ -53,7 +53,8 @@ Pfad, über den ein anderes Design eingeschleust werden kann.
 2. Sollen BPS und DATIS (Gruppenvorlage) später eigene Varianten mit eigenem Logo bekommen, oder
    bleibt es bei der einen BPS-PTA-DATIS-Word-Vorlage?
 
->
+> (2026-11-06) BPS-PTA-DATIS wird keine wählbare Variante; die Vorlage bleibt nur in
+> `source-templates/` als Referenz.
 
 ## Notizen
 

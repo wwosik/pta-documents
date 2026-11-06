@@ -17,7 +17,7 @@ PTA-Dokument, ohne dass Word nötig ist.
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| E05-S01 | Entscheidung PDF-Weg und Schrift (siehe Offene Fragen), Grundgerüst mit PDF/A-2b-Nachweis (veraPDF) | noch nicht ausgearbeitet |
+| E05-S01 | Grundgerüst: reportlab + pikepdf, Selawik/Segoe UI (E01-S03), PDF/A-2b-Nachweis mit veraPDF | noch nicht ausgearbeitet |
 | E05-S02 | Layout-Engine portieren: Absätze, Listen, Tabellen, Bilder, Code, Seitenumbruchregeln, Lesezeichen, Links | noch nicht ausgearbeitet |
 | E05-S03 | PTA-Seitenrahmen: Deckblatt, Kopfzeile mit Logo und Verlaufslinie, Fußzeile, Hoch/Quer | noch nicht ausgearbeitet |
 | E05-S04 | Fehlende Zeichen (`replace_unsupported`), Folien-Syntax, Diagramme/Charts als Vektoren | noch nicht ausgearbeitet |
@@ -25,6 +25,8 @@ PTA-Dokument, ohne dass Word nötig ist.
 
 ## Bereichsweite Entscheidungen
 
+- **Eigene Layout-Engine** (Portierung aus DocLibs) auf reportlab + pikepdf, kein LibreOffice
+  (Entscheidung 2026-11-06). Überschriften wie im DOCX: `#` = „Überschrift 1".
 - Maße und Stile kommen aus dem PTA-Designmodell (E01-S01), das sie aus der Word-Vorlage liest —
   keine zweite Wertetabelle im PDF-Code.
 - Seitenumbruchregeln von DocLibs bleiben: Überschriften bei ihrem Folgeinhalt, keine
@@ -41,18 +43,18 @@ nebeneinandergelegt dasselbe Design zeigen; veraPDF bestätigt PDF/A-2b.
    Systemabhängigkeit) — Vorschlag; oder (b) DOCX aus E03 erzeugen und mit LibreOffice nach PDF/A
    wandeln (exakt wie Word, aber LibreOffice auf jedem Rechner nötig)?
 
->
+> (2026-11-06) (a) Layout-Engine portieren.
 
 2. Schrift im PDF: Segoe UI darf nicht mitgeliefert werden. Vorschlag: **Selawik** (OFL,
    metrikkompatibler Segoe-UI-Ersatz von Microsoft) bündeln und Segoe UI nehmen, wenn sie auf dem
    System liegt. Erlaubt die Schriftlizenz der PTA das Einbetten von Segoe UI in PDFs?
 
->
+> (2026-11-06) Selawik bündeln, Segoe UI aus dem System nehmen, wenn vorhanden.
 
 3. Gibt es das PTA-Logo als SVG oder hochaufgelöstes PNG? (Die Word-Vorlagen haben es nur als
    kleines EMF.)
 
->
+> (2026-11-06) Logo aus dem EMF der Vorlage wandeln (E01-S04).
 
 ## Notizen
 

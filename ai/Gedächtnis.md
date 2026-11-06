@@ -26,6 +26,12 @@ weil ihm vertraut wird.
 - **Nur das PTA-Design.** Die Standardvorlagen von DocLibs (neutraler Brand, Brand-Packs,
   eingebauter Folienmaster, fremde Vorlagen) entfallen; die Standards stammen aus
   `source-templates/` (siehe `spec/10-analysen/2026-11-06 pta-designstandards.md`).
+- **Weitere Entscheidungen vom 2026-11-06** (Einzelheiten in den Plänen und unter
+  *Entscheidungen* in `spec/10-analysen/2026-11-06 portierung-doclibs-python.md`): keine
+  Veröffentlichung, ein Paket mit Extras, Python ≥ 3.12, vorerst kein Remote/CI; PDF über eine
+  portierte Layout-Engine mit Selawik/Segoe UI; Mermaid über mermaid-cli; JIRA-Wiki entfällt;
+  BPS-PTA-DATIS ist keine Variante; Front Matter deutsch; in Word und PDF ist `#` „Überschrift 1",
+  in Folien die Titel- bzw. Trennfolie.
 
 ## Fallen
 

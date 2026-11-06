@@ -38,15 +38,16 @@ Testmuster (Beispieldateien + `*.expected.md`, Roundtrip-Tests der Generatoren,
 | Vorlagen | PPTX: eingebauter Master oder Fremdvorlage | DOCX und PPTX werden **auf den PTA-Vorlagen selbst** erzeugt; PDF zeichnet das Design der Word-Vorlage nach |
 | Formate | PPTX, PDF | **DOCX (neu)**, PPTX, PDF |
 | WindowsOnly | `.doc`/`.rtf`/`.xls`/`.xlsx` per COM | entfällt (Entscheidung 2026-11-06) |
+| JIRA-Wiki | Markdown ↔ JIRA | entfällt (Entscheidung 2026-11-06) |
 | Schriften | Liberation (gebündelt) bzw. Brand-Schriften | Segoe UI (PTA-Hausschrift, proprietär) — Strategie siehe E01 |
-| Verteilung | nuget.org per Tag | offen (siehe Offene Punkte) |
+| Verteilung | nuget.org per Tag | keine; Quellcode im Repo |
 
 „Standardvorlagen entfernen" heißt konkret: entfallen ersatzlos `Brand.Neutral`, der Testbrand
 `sample`, `BrandPack`/`brand.json`, `BrandRegistry` und die Front-Matter-Auswahl `template:
 <brand>`, der eingebaute PPTX-Master (`TemplateBuilder`), `CustomTemplateOptions` für beliebige
 Fremdvorlagen und die Liberation-Schriften als Standard. An ihre Stelle tritt ein festes
 PTA-Designmodell; die Front-Matter-Wahl betrifft nur noch die **Variante** der PTA-Vorlage
-(Hochformat/Querformat, mit/ohne Deckblatt, BPS-PTA-DATIS; Basis-/Schulungsfolien).
+(Hochformat/Querformat, mit/ohne Deckblatt; Basis-/Schulungsfolien).
 
 ## Abbildung der Abhängigkeiten
 
@@ -67,8 +68,8 @@ wurden bewusst nicht gewählt.
 
 ## Was wörtlich portiert wird, was neu entsteht
 
-- **Portierung mit gleichem Verhalten:** Formaterkennung, die drei Konverter nach Markdown, JIRA
-  hin und zurück, Markdown-Hilfen, Front Matter, Heading-Attribute und Container-Syntax,
+- **Portierung mit gleichem Verhalten:** Formaterkennung, die drei Konverter nach Markdown,
+  Markdown-Hilfen, Front Matter, Heading-Attribute und Container-Syntax,
   Zeichenmodell und SVG-Ausgabe, Charts samt Finanzdiagrammen, Fitting-Regeln der Folien,
   PDF-Seitenumbruchregeln (Überschriften bleiben beim Folgenden, keine Hurenkinder/Schusterjungen),
   Authoring Guides, Testmuster. Die `*.expected.md` der Konverter können als Startpunkt der
@@ -88,22 +89,21 @@ kürzer, der DOCX-Generator kommt hinzu (geschätzt 1 500–2 500 Zeilen). Die R
 ist so gewählt, dass nach Meilenstein M01 ein nutzbares Werkzeug (Markdown → PTA-Word und
 PTA-PowerPoint) steht, bevor PDF, Diagramme und Konverter folgen.
 
-## Offene Punkte
+## Entscheidungen (2026-11-06)
 
-Diese Punkte sind als *Offene Fragen* in den Plänen gestellt:
+Die offenen Punkte dieser Analyse hat der Mensch so entschieden; die Pläne sind angepasst.
 
-1. **Schrift für PDF:** Segoe UI ist proprietär (Microsoft) und darf nicht mitgeliefert werden.
-   Vorschlag: im PDF **Selawik** (Microsofts metrikkompatibler Open-Source-Ersatz, OFL) bündeln;
-   Segoe UI verwenden, wenn sie auf dem System gefunden wird und die Lizenz der PTA das Einbetten
-   erlaubt. DOCX/PPTX nennen nur den Namen `Segoe UI` — Office hat ihn.
-2. **PDF-Weg:** eigene Layout-Engine portieren (reportlab + pikepdf, keine Systemabhängigkeit,
-   PDF/A-2b wie bisher) **oder** DOCX erzeugen und über LibreOffice nach PDF/A wandeln (identisch
-   mit Word, aber LibreOffice auf jedem Rechner nötig).
-3. **Mermaid:** mermaid-cli (Node/Chromium als Laufzeitabhängigkeit) oder Portierung von
-   Mermaider nach Python (großer Aufwand) — oder Diagramme zunächst weglassen.
-4. **Verteilung:** internes Paket-Repository der PTA, Installation direkt aus Git, oder nur als
-   Quellcode im Repo?
-5. **Git-Remote** dieses Repos (noch keiner eingerichtet).
-6. **Logo:** Die Word-Vorlagen enthalten das PTA-Logo nur als EMF (1 KB, Vektor), die
-   BPS-PTA-DATIS-Vorlage als PNG. Für PDF und SVG wird das Logo als SVG/PNG gebraucht — Zuschnitt
-   aus der Vorlage oder offizielle Logodateien von der PTA?
+| Punkt | Entscheidung |
+| ----- | ------------ |
+| Schrift im PDF | **Selawik** (OFL) bündeln, **Segoe UI** aus dem System nehmen, wenn vorhanden |
+| PDF-Weg | eigene **Layout-Engine portieren** (reportlab + pikepdf), kein LibreOffice |
+| Mermaid | **mermaid-cli** als optionale Abhängigkeit (Node.js + Chromium), keine Online-Dienste |
+| Vorlagen | bereinigt **im Paket** |
+| Verteilung | **keine Veröffentlichung** — nur Quellcode im Repo; ein Paket mit Extras |
+| Git-Remote, CI | vorerst keins |
+| Logo | aus den **EMF der Vorlagen** nach SVG/PNG wandeln |
+| Python | ab **3.12** |
+| JIRA-Wiki | **entfällt** |
+| Finanzdiagramme | werden portiert |
+| BPS-PTA-DATIS | keine wählbare Variante |
+| Front Matter | Schlüssel und Variantennamen **deutsch** |

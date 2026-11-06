@@ -31,12 +31,15 @@ auch wenn es danach weiterbearbeitet wird.
   kursiv, Code, Links).
 - Die Vorlage wird als Ganzes übernommen (Stile, Nummerierung, Theme, Kopf-/Fußzeilen, Logo);
   nur der Beispieltext im Körper wird ersetzt.
+- **`#` ist „Überschrift 1"** (Entscheidung 2026-11-06), nicht der Dokumenttitel wie in den
+  Folien; Titel, Untertitel, Autor, Ort und Datum kommen aus dem Front Matter. Das PDF (E05) folgt
+  dem.
 - python-docx für das Grobe, lxml für Felder (TOC, STYLEREF, SEQ, PAGE), Nummerierung und
   Abschnittseigenschaften.
 
 ## Akzeptanz
 
-Ein Markdown-Bericht ergibt in jeder der fünf Vorlagenvarianten ein DOCX, das Word ohne
+Ein Markdown-Bericht ergibt in jeder der vier Vorlagenvarianten ein DOCX, das Word ohne
 Reparaturmeldung öffnet, dessen Stile ausschließlich PTA-Formatvorlagen sind und das beim
 Rücklesen mit dem DOCX-Konverter (E07) wieder den Markdown-Inhalt ergibt.
 
@@ -45,12 +48,12 @@ Rücklesen mit dem DOCX-Konverter (E07) wieder den Markdown-Inhalt ergibt.
 1. Welche Vorlage ist der Standard, wenn das Front Matter nichts sagt — Hochformat **mit**
    Deckblatt?
 
->
+> (2026-11-06) Ja: `hoch` (Hochformat mit Deckblatt).
 
 2. Wofür wird die BPS-PTA-DATIS-Vorlage verwendet (Gruppen-Dokumente)? Soll sie als eigene
    Variante wählbar sein?
 
->
+> (2026-11-06) Nein, keine wählbare Variante.
 
 ## Notizen
 

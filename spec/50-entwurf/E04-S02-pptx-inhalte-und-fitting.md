@@ -34,10 +34,10 @@ Werte in der [Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md#
    PTA-Blau). Spaltenbreiten nach DocLibs-Regel (längstes Wort).
 3. **Bilder** in Bildplatzhaltern füllen und beschneiden (PTA-Verhalten); freie Bilder auf
    `Nur Titel` passen in die Inhaltsfläche, Seitenverhältnis bleibt.
-4. **Code** in Consolas 14 pt auf `E6E6E6`-Fläche (keine PTA-Vorgabe — siehe Frage).
+4. **Code** in Consolas 14 pt auf `E6E6E6`-Fläche (keine PTA-Vorgabe; Entscheidung 2026-11-06).
 5. **Fitting** aus DocLibs portieren: Text verkleinern bis zu einer Untergrenze, sonst Folgefolie
-   „(Forts.)"; Tabellen zeilenweise auf Folgefolien mit wiederholtem Kopf. Untergrenze 14 pt
-   (kleinste Textebene der Vorlage).
+   „(Forts.)"; Tabellen zeilenweise auf Folgefolien mit wiederholtem Kopf. Untergrenze **12 pt**
+   (Entscheidung 2026-11-06, wie in dichten Schaubildern der Vorlagensammlung).
 6. Rundreise-Test `deck.md` → PPTX → PPTX-Konverter → `deck.roundtrip.expected.md`; Dateien nach
    `.tmp/review/`.
 
@@ -52,12 +52,12 @@ Werte in der [Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md#
 
 1. Codeblöcke auf Folien: kommen sie bei der PTA überhaupt vor, und gibt es eine Vorgabe?
 
->
+> (2026-11-06) Consolas 14 pt auf `E6E6E6`, wie vorgeschlagen.
 
 2. Untergrenze beim Verkleinern: 14 pt (Vorschlag) oder 12 pt, wie in dichten Schaubildern der
    Vorlagensammlung?
 
->
+> (2026-11-06) 12 pt.
 
 ## Notizen
 

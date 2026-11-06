@@ -27,13 +27,13 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge.
 ## Nicht in M01
 
 PDF ([E05](E05-pdf-generator.md)), Diagramme und Charts ([E06](E06-diagramme-und-charts.md)),
-Flow-Layouts der Folien (E04-S03), PDF- und JIRA-Konverter (E07).
+Flow-Layouts der Folien (E04-S03), PDF-Konverter (E07).
 
 ## Offene Fragen
 
 1. Passt dieser Zuschnitt — Word und PowerPoint zuerst, PDF danach?
 
->
+> (2026-11-06) Ja.
 
 ## Notizen
 

@@ -23,15 +23,17 @@ weil nichts mehr validiert oder ergänzt werden muss.
    Zuordnung der Status-Kategorien aus DocLibs (`success` → Grün, `warning` → Gelb-Orange,
    `danger` → Rot, `info` → PTA-Blau, `neutral` → Mittelgrau).
 2. `design/variants.py`: Aufzählungen der Varianten —
-   Word `hoch`, `hoch-ohne-deckblatt`, `quer`, `quer-ohne-deckblatt`, `bps-pta-datis`;
-   PowerPoint `basis`, `schulung`, `basis-en` (englische Titelfolie) — mit Vorlagendatei und
-   Eigenschaften (Deckblatt ja/nein, Seitenformat, Logo).
+   Word `hoch` (Standard), `hoch-ohne-deckblatt`, `quer`, `quer-ohne-deckblatt`;
+   PowerPoint `basis` (Standard), `schulung` — mit Vorlagendatei und Eigenschaften (Deckblatt
+   ja/nein, Seitenformat, Logo). `sprache: en` schaltet in PowerPoint auf die englische
+   Titelfolie und in beiden Formaten die erzeugten Texte um („Seite"/„Page", „Stand"/„As of",
+   „Tabelle"/„Table", „Abbildung"/„Figure").
 3. `design/word.py`, `design/slides.py`: nur Werte, die kein Generator aus der Vorlage lesen kann —
    Folientabelle, Fazit-Box, Kommentarbox, Inhaltsfläche und Raster, Layoutnamen, PDF-Seitenaufbau
    (aus der Word-Vorlage abgeleitet).
 4. Ein Test liest Theme und Formatvorlagen aus den Vorlagen und vergleicht sie mit dem Modell —
    ändert die PTA eine Vorlage, schlägt er fehl statt still abzuweichen.
-5. Front Matter: `template:` wählt die **Variante** (z. B. `template: quer`); unbekannte Namen
+5. Front Matter: `vorlage:` wählt die **Variante** (z. B. `vorlage: quer`); unbekannte Namen
    werfen mit Liste der gültigen.
 
 ## Akzeptanzkriterien
@@ -39,19 +41,19 @@ weil nichts mehr validiert oder ergänzt werden muss.
 - [ ] Alle Farbwerte der Designanalyse sind als benannte Konstanten verfügbar; keine weitere Datei
       im Code enthält Hex-Farben.
 - [ ] Der Vergleichstest Modell ↔ Vorlagen läuft grün.
-- [ ] `template: <unbekannt>` wirft `DocumentConversionError` mit den gültigen Varianten.
+- [ ] `vorlage: <unbekannt>` wirft `DocumentConversionError` mit den gültigen Varianten.
 
 ## Offene Fragen
 
 1. Namen der Varianten im Front Matter: deutsch wie oben (`hoch`, `quer`, `schulung`) oder
    englisch (`portrait`, `landscape`, `training`)?
 
->
+> (2026-11-06) Deutsch (`hoch`, `quer`, `schulung` …).
 
 2. Ist die englische Titelfolie eine eigene Variante, oder folgt sie aus `lang: en` im Front
    Matter (und schaltet dann auch Texte wie „Seite"/„Stand" in Word um)?
 
->
+> (2026-11-06) Über `sprache: en`, das auch die erzeugten Texte umschaltet.
 
 ## Notizen
 

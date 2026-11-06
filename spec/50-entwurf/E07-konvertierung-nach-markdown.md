@@ -4,8 +4,8 @@
 
 ## Ziel
 
-`.pdf`, `.docx` und `.pptx` → Markdown mit Bildern, Formaterkennung, Markdown ↔ JIRA-Wiki und die
-Markdown-Hilfen — portiert aus `wwosik.DocLibs.DocumentConversions`, ohne den Windows-Teil.
+`.pdf`, `.docx` und `.pptx` → Markdown mit Bildern, Formaterkennung und die Markdown-Hilfen —
+portiert aus `wwosik.DocLibs.DocumentConversions`, ohne den Windows-Teil und ohne JIRA-Wiki.
 
 ## Motivation
 
@@ -20,7 +20,7 @@ Außerdem nützen sie allein: vorhandene PTA-Dokumente als Markdown lesbar mache
 | E07-S02 | DOCX → Markdown (deutsche und englische Stilnamen, Nummerierung, Tabellen, Bilder) — vorgezogen für die Rundreise-Tests in M01 | noch nicht ausgearbeitet |
 | E07-S03 | PPTX → Markdown | noch nicht ausgearbeitet |
 | E07-S04 | PDF → Markdown (pdfplumber; Absatz-, Silbentrennungs- und Listenheuristik) | noch nicht ausgearbeitet |
-| E07-S05 | Markdown ↔ JIRA-Wiki | noch nicht ausgearbeitet |
+| E07-S05 | ~~Markdown ↔ JIRA-Wiki~~ | entfällt (2026-11-06) |
 | E07-S06 | Markdown-Hilfen (`escape`, `code`, `table`, `normalize` …) | noch nicht ausgearbeitet |
 
 ## Bereichsweite Entscheidungen
@@ -39,7 +39,7 @@ dokumentierte Abweichung.
 
 1. Wird Markdown ↔ JIRA-Wiki bei der PTA gebraucht?
 
->
+> (2026-11-06) Nein, entfällt.
 
 ## Notizen
 
