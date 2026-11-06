@@ -91,4 +91,5 @@ for image in document.resources:
 
 `samples/` enthält Beispielinhalte, z. B. `samples/gsb/` (Hauptbeskidenweg, mit CC-Fotos).
 `./run.sh generate-samples [name]` erzeugt daraus DOCX (`*-bericht.md`) und PPTX
-(`*-praesentation.md`) nach `.tmp/samples/<name>/`.
+(`*-praesentation.md`) nach `.tmp/samples/<name>/`. Für beliebige Ordner und Dateien gibt es
+`./run.sh generate <pfad> [--docx|--pptx] [--out <ordner>]` (siehe [anleitung.md](anleitung.md)).

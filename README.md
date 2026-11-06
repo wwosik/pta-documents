@@ -5,3 +5,11 @@ Python-Bibliothek, die Dokumente in Markdown umwandelt und aus Markdown Dokument
 ## Für KI-Assistenten und Mitwirkende
 
 Beginne bei [AGENTS.md](AGENTS.md).
+
+## Für Anwender
+
+- [docs/anleitung.md](docs/anleitung.md) — einrichten, Dokumente in `documents/` schreiben,
+  `./run.sh generate documents/<thema>`.
+- [docs/ki-anleitung.md](docs/ki-anleitung.md) — Anleitung für eine KI, die im Klon Dokumente
+  erzeugt.
+

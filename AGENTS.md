@@ -2,7 +2,11 @@
 
 Python-Bibliothek, die Dokumente in Markdown umwandelt und aus Markdown Dokumente im Design der PTA erzeugt — Word (`.docx`), PowerPoint (`.pptx`) und PDF auf Basis der offiziellen PTA-Vorlagen. Eigenständig weitergeführte Portierung von DocLibs (.NET) nach Python 3.
 
-Hier beginnen, dann den Verweisen folgen:
+**Sollst du nur Dokumente erzeugen** (Markdown schreiben, Word/PowerPoint daraus machen) und
+nicht an der Bibliothek entwickeln: lies [docs/ki-anleitung.md](docs/ki-anleitung.md) und
+arbeite ausschließlich in `documents/`. Alles Weitere hier gilt dann nicht für dich.
+
+Für die Entwicklung hier beginnen, dann den Verweisen folgen:
 
 - [ai/Standards.md](ai/Standards.md) — die Konventionen, denen dieses Repo folgt.
 - [ai/Gedächtnis.md](ai/Gedächtnis.md) — gesammelte Fakten zu dieser Codebasis.
