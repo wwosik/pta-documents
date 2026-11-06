@@ -14,7 +14,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge.
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
 | [T01-S01](../60-prüfung/T01-S01-python-projektgeruest.md) | Python-Projektgerüst | in Prüfung |
-| [E01-S01](E01-S01-pta-designmodell.md) | PTA-Designmodell aus den Vorlagen | Entwurf |
+| [E01-S01](../55-in-arbeit/port-1/E01-S01-pta-designmodell.md) | PTA-Designmodell aus den Vorlagen | in Bearbeitung (port-1) |
 | [E01-S02](E01-S02-vorlagen-einbetten.md) | Vorlagen bereinigen und als Paketdaten einbetten | Entwurf |
 | [E02-S01](E02-S01-markdown-parser-und-front-matter.md) | Markdown-Parser und Front Matter | Entwurf |
 | E07-S02 | DOCX → Markdown (für die Rundreise-Tests) | noch nicht ausgearbeitet |

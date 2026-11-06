@@ -1,8 +1,8 @@
 # E01-S01 PTA-Designmodell
 
-> Status: Entwurf
-> Epic: [E01 PTA-Design als einziges Design](E01-pta-design.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](M01-pta-dokumente-aus-markdown.md)
+> Status: in Bearbeitung (port-1)
+> Epic: [E01 PTA-Design als einziges Design](../../50-entwurf/E01-pta-design.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -11,7 +11,7 @@ wählbaren Vorlagenvarianten — die einzige Stelle, an der Code Designwerte ken
 
 ## Kontext
 
-Werte: [Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md). In DocLibs übernahm das
+Werte: [Designanalyse](../../10-analysen/2026-11-06%20pta-designstandards.md). In DocLibs übernahm das
 `ResolvedBrand` (425 Zeilen) samt Validierung und Standardwerten; davon bleibt nur ein Bruchteil,
 weil nichts mehr validiert oder ergänzt werden muss.
 
