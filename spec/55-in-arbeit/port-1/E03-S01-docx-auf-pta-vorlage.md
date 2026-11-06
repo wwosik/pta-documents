@@ -1,8 +1,8 @@
 # E03-S01 DOCX auf der PTA-Vorlage
 
-> Status: Entwurf
-> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](E03-docx-generator.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](M01-pta-dokumente-aus-markdown.md)
+> Status: in Bearbeitung (port-1)
+> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](../../50-entwurf/E03-docx-generator.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -12,7 +12,7 @@ füllen und als `.docx` (nicht `.dotx`) speichern.
 
 ## Kontext
 
-Die Vorlagen (Werte in der [Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md)):
+Die Vorlagen (Werte in der [Designanalyse](../../10-analysen/2026-11-06%20pta-designstandards.md)):
 
 | Variante | Datei | Seite | Deckblatt | Kopfzeile Folgeseiten | Fußzeile |
 | -------- | ----- | ----- | --------- | --------------------- | -------- |
