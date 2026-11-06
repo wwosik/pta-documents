@@ -1,8 +1,8 @@
 # E07-S02 DOCX → Markdown
 
-> Status: in Bearbeitung (port-1)
-> Epic: [E07 Konvertierung nach Markdown](../../50-entwurf/E07-konvertierung-nach-markdown.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
+> Status: in Prüfung
+> Epic: [E07 Konvertierung nach Markdown](../50-entwurf/E07-konvertierung-nach-markdown.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -38,9 +38,9 @@ DocLibs: `OpenXml/DocxConverter.cs` (461 Zeilen), `OpenXmlPackage.cs`, `Resource
 
 ## Akzeptanzkriterien
 
-- [ ] `sample.docx` ergibt exakt `sample.docx.expected.md` aus DocLibs.
-- [ ] Ressourcen und Bildverweise im Markdown stimmen überein.
-- [ ] Ein beschädigtes Paket wirft `DocumentConversionError` mit Format `docx`.
+- [x] `sample.docx` ergibt exakt `sample.docx.expected.md` aus DocLibs.
+- [x] Ressourcen und Bildverweise im Markdown stimmen überein.
+- [x] Ein beschädigtes Paket wirft `DocumentConversionError` mit Format `docx`.
 
 ## Offene Fragen
 
@@ -49,3 +49,20 @@ Keine — Zuschnitt folgt E07 und der Anweisung vom 2026-11-06, M01 vollständig
 ## Notizen
 
 Plan während der Umsetzung von M01 geschrieben (2026-11-06).
+
+## Implementierungsnotizen
+
+- `conversions/docx.py` (`DocxConverter.convert(bytes | BinaryIO, ConversionOptions)`),
+  `conversions/openxml.py` (`OpenXmlPackage`, `guard`), `conversions/options.py`
+  (`ConversionOptions`, `ResourceCollector`), `markdown/text.py` (DocLibs `MarkdownText`;
+  **vorgezogen aus E07-S06**). Formaterkennung und Registry (E07-S01) sind noch nicht portiert.
+- Verhalten 1:1 wie DocLibs; das DocLibs-Beispiel ergibt byte-gleich `sample.docx.expected.md`.
+- **Abweichung (PTA):** `Zwischenüberschrift` → `####` (in DocLibs wäre es `#`, weil der Name
+  „überschrift" ohne Ziffer enthält).
+- Wie in DocLibs gehen verloren: Durchstreichung, Inline-Code, Fußnotenzeichen,
+  Beschriftungsfelder bleiben als Text („Tabelle 1: …"). Für die Rundreise des Generators ist
+  das in den `*.roundtrip.expected.md` sichtbar.
+- Tests: `tests/expected.py` mit `assert_matches_expected` (`PTA_DOCUMENTS_UPDATE_EXPECTED=1`
+  schreibt neu) und `assert_resources_match_references`; die DocLibs-Testfälle für DOCX und
+  `MarkdownText` sind übernommen. Beispiele unter `tests/conversions/samples/` (aus DocLibs,
+  neutral).
