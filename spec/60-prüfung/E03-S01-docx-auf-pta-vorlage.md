@@ -1,8 +1,8 @@
 # E03-S01 DOCX auf der PTA-Vorlage
 
-> Status: in Bearbeitung (port-1)
-> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](../../50-entwurf/E03-docx-generator.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
+> Status: in Prüfung
+> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](../50-entwurf/E03-docx-generator.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -12,7 +12,7 @@ füllen und als `.docx` (nicht `.dotx`) speichern.
 
 ## Kontext
 
-Die Vorlagen (Werte in der [Designanalyse](../../10-analysen/2026-11-06%20pta-designstandards.md)):
+Die Vorlagen (Werte in der [Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md)):
 
 | Variante | Datei | Seite | Deckblatt | Kopfzeile Folgeseiten | Fußzeile |
 | -------- | ----- | ----- | --------- | --------------------- | -------- |
@@ -56,9 +56,9 @@ Dokument-ID`).
 
 - [ ] Für jede der vier Varianten entsteht aus einem Markdown mit Titel und zwei Kapiteln ein `.docx`,
       das Word und LibreOffice ohne Reparaturmeldung öffnen.
-- [ ] Kein Lorem-ipsum, kein „Titel des Dokuments", kein „xx.xx.xxxx" bleibt im Ergebnis.
-- [ ] Keine SharePoint-Kennungen und keine `[trash]`-Teile im Ergebnis.
-- [ ] Seitenformat, Ränder, Logo, Kopf-/Fußzeilenlinie entsprechen der Vorlage unverändert.
+- [x] Kein Lorem-ipsum, kein „Titel des Dokuments", kein „xx.xx.xxxx" bleibt im Ergebnis.
+- [x] Keine SharePoint-Kennungen und keine `[trash]`-Teile im Ergebnis.
+- [x] Seitenformat, Ränder, Logo, Kopf-/Fußzeilenlinie entsprechen der Vorlage unverändert.
 
 ## Offene Fragen
 
@@ -84,3 +84,35 @@ Dokument-ID`).
 
 ## Notizen
 
+
+## Implementierungsnotizen
+
+- `generation/docx/generator.py` (`DocxGenerator.generate(document, output, options)`),
+  `generation/docx/options.py` (`DocxOptions`: `variant`, `language`, `date`, `company`, `toc`),
+  `generation/docx/writer.py` (Inhalt, in E03-S02 ausgebaut), Hilfen für WordprocessingML in
+  `generation/common/openxml.py` (Text über mehrere Runs ersetzen, Feldcodes, `updateFields`
+  an der schemagerechten Stelle).
+- Gültige Front-Matter-Schlüssel: `vorlage`, `titel`, `untertitel`, `autor`, `ort`, `datum`,
+  `firma`, `sprache`, `inhaltsverzeichnis` (+ `status.*` für E03-S03). `titelfolie` und
+  `fusszeile` gehören nur zu den Folien und werden in Word abgelehnt.
+- Titel und Autor fallen auf die Metadaten des `MarkdownDocument` zurück (wie DocLibs).
+- **Deckblatt:** `Titel`, `Untertitel` (nur wenn angegeben), `Autor` mit „Autor, Ort, Datum" —
+  das Datum erscheint dort nur, wenn `datum` (oder `DocxOptions.date`) gesetzt ist; die Fußzeile
+  nimmt sonst das heutige Datum. Danach ein Seitenumbruch wie in der Vorlage.
+- **Kopfzeile ohne Untertitel:** Der Absatz mit `STYLEREF Untertitel` wird entfernt, weil Word
+  sonst „Fehler! Kein Text mit angegebener Formatvorlage …" anzeigt. Ohne Deckblatt wird ein
+  fehlender Titel zu leerem Text.
+- **Inhaltsverzeichnis:** „Inhalt"/„Contents" in `Zwischenüberschrift`, ein leeres TOC-Feld in
+  `toc 1` und `w:updateFields` — Word füllt es beim Öffnen (mit der üblichen Rückfrage, ob Felder
+  aktualisiert werden sollen). Danach ein Seitenumbruch.
+- `sprache: en` ersetzt „Stand:" → „As of:" und „Seite " → „Page "; `firma` ersetzt
+  „PTA IT-Beratung".
+- Die Querformat-Vorlagen erhalten `Hyperlink`, `toc 1`, `toc 2` aus der Hochformat-Vorlage
+  (`borrow_styles`).
+- Eigenschaften: Titel, Betreff (= Untertitel), Autor, zuletzt geändert von (= Autor), Revision 1,
+  Zeitstempel jetzt (UTC). „Firma" in `app.xml` bleibt „PTA GmbH" aus der Vorlage.
+- **Prüfpunkt (offen):** Auf dieser Maschine gibt es weder Word noch LibreOffice. Geprüft ist,
+  dass python-docx jedes Ergebnis wieder öffnet und dass Abschnittseigenschaften und Medien
+  der Vorlage unverändert sind. Ein Test konvertiert mit LibreOffice nach PDF, wenn `soffice`
+  vorhanden ist (sonst übersprungen). Bitte die Dateien aus `.tmp/review/frame-*.docx` einmal in
+  Word öffnen — erstes Akzeptanzkriterium daher noch nicht abgehakt.
