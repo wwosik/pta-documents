@@ -19,7 +19,7 @@ deutlich: `Brand`, `BrandPack`, `BrandRegistry`, `ResolvedBrand` entfallen (sieh
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| [E02-S01](../55-in-arbeit/port-1/E02-S01-markdown-parser-und-front-matter.md) | `MarkdownDocument`, Parser (markdown-it-py), Front Matter, Fehlerklasse | in Bearbeitung (port-1) |
+| [E02-S01](../60-prüfung/E02-S01-markdown-parser-und-front-matter.md) | `MarkdownDocument`, Parser (markdown-it-py), Front Matter, Fehlerklasse | in Prüfung |
 | E02-S02 | Folien-Syntax: Heading-Attribute, `:::`-Container, Alerts, `==mark==`, `[Wörter]{.success}`, Status-Labels | noch nicht ausgearbeitet |
 | E02-S03 | Zeichenmodell `Drawing` und SVG-Ausgabe mit Tooltips | noch nicht ausgearbeitet |
 | E02-S04 | Code-Block-Renderer und Bildkonverter (Schnittstellen, Fehlerweitergabe) | noch nicht ausgearbeitet |
