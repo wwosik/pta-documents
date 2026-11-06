@@ -1,8 +1,8 @@
 # E04-S01 PPTX auf der PTA-Vorlage
 
-> Status: Entwurf
-> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](E04-pptx-generator.md)
-> Milestone: [M01 PTA-Dokumente aus Markdown](M01-pta-dokumente-aus-markdown.md)
+> Status: in Bearbeitung (port-1)
+> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](../../50-entwurf/E04-pptx-generator.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -13,7 +13,7 @@ Folien auf den passenden PTA-Layouts anlegen und Fußzeile, Foliennummer und Met
 
 DocLibs `PptxGenerator`, `DeckParser`, `DeckWriter` (zusammen ~2 400 Zeilen) — dort für einen
 selbst erzeugten Master. Hier: 35 PTA-Layouts ohne `type`, Werte in der
-[Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md#powerpoint).
+[Designanalyse](../../10-analysen/2026-11-06%20pta-designstandards.md#powerpoint).
 
 ## Vorgeschlagener Ansatz
 
