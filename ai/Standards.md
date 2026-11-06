@@ -35,6 +35,10 @@ einem Verweis auf ein anderes Repo oder ein lokales Laufwerk.
   ein eigener Commit.
 - Commit-Nachrichten sind in der Projektsprache, wie die übrige Prosa.
 - Commit-Nachrichten niemals um einen `Co-Authored-By`-Trailer ergänzen.
+  Der versionierte Hook `.githooks/commit-msg` weist solche Commits ab; in jedem frischen Klon
+  einmal `git config core.hooksPath .githooks` setzen.
+- Autor und Committer aller Commits: `Wojciech Wosik <wojciech.wosik@pta.de>` — im Klon per
+  `git config user.email wojciech.wosik@pta.de` setzen.
 - **Niemals Secrets, Build-Ausgaben oder etwas committen, das `.gitignore` abdeckt.** Muss etwas
   Ignoriertes wirklich versioniert werden, ist das eine Frage an den Menschen und keine eigene
   Entscheidung.
