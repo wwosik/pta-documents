@@ -19,9 +19,12 @@ In einem anderen Projekt wird das Paket aus dem Repo heraus installiert:
 from pta_documents.generation.docx.generator import DocxGenerator
 from pta_documents.markdown import DocumentResource, MarkdownDocument
 
-document = MarkdownDocument(markdown_text, resources=[
-    DocumentResource("images/bild.png", "image/png", png_bytes),
-])
+document = MarkdownDocument(
+    markdown_text,
+    resources=[
+        DocumentResource("images/bild.png", "image/png", png_bytes),
+    ],
+)
 with open("bericht.docx", "wb") as output:
     DocxGenerator().generate(document, output)
 ```
@@ -77,9 +80,15 @@ from pta_documents.conversions.docx import DocxConverter
 from pta_documents.conversions.pptx import PptxConverter
 
 document = DocxConverter().convert(open("datei.docx", "rb"))
-print(document.text)            # Markdown
+print(document.text)  # Markdown
 for image in document.resources:
-    ...                         # images/image1.png usw.
+    ...  # images/image1.png usw.
 ```
 
 `ConversionOptions(resource_path_prefix="images/", include_images=True)` steuert die Bilder.
+
+## Beispiele
+
+`samples/` enthält Beispielinhalte, z. B. `samples/gsb/` (Hauptbeskidenweg, mit CC-Fotos).
+`./run.sh generate-samples [name]` erzeugt daraus DOCX (`*-bericht.md`) und PPTX
+(`*-praesentation.md`) nach `.tmp/samples/<name>/`.
