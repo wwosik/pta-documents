@@ -119,3 +119,7 @@ deutschen IDs der Vorlage (`berschrift1` für „Überschrift 1", `Aufzhlungszei
   (`w:br w:type="page|column"`); vorher wurde daraus ein `\`-Zeilenumbruch.
 - Erzeugte Beispiele zum Ansehen: `.tmp/review/report-hoch.docx`, `report-quer.docx`.
   **Prüfpunkt:** in Word öffnen (keine Reparaturmeldung, Listen, Tabelle, Fußnote, Bild).
+- **Nachtrag (2026-11-06):** python-docx erkennt nur JPEGs mit JFIF- oder Exif-Kopf; Fotos von
+  Wikimedia Commons beginnen teils mit ICC-Profil oder direkt mit der Quantisierungstabelle.
+  Solche Bilder speichert der Generator mit Pillow neu (JPEG Qualität 92 bzw. PNG); Test
+  `test_jpeg_without_jfif_header_is_accepted`.

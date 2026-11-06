@@ -182,3 +182,18 @@ def test_schema_order_of_paragraph_properties() -> None:
             ("pStyle", "keepNext", "numPr", "pBdr", "spacing", "ind", "jc").index(t) for t in top
         ]
         assert ranks == sorted(ranks), match.group(0)
+
+
+def jpeg_without_jfif() -> bytes:
+    buffer = io.BytesIO()
+    Image.new("RGB", (300, 200), (0, 111, 185)).save(buffer, "JPEG")
+    data = buffer.getvalue()
+    assert data[2:4] == b"\xff\xe0"  # APP0 (JFIF) right after SOI
+    length = int.from_bytes(data[4:6], "big")
+    return data[:2] + data[4 + length :]  # drop the APP0 segment
+
+
+def test_jpeg_without_jfif_header_is_accepted() -> None:
+    image = DocumentResource("images/a.jpg", "image/jpeg", jpeg_without_jfif())
+    data = generate("---\ntitel: T\n---\n![Foto](images/a.jpg)\n", resources=(image,))
+    assert any(name.startswith("word/media/") for name in parts(data))

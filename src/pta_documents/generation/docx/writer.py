@@ -15,6 +15,7 @@ from typing import Any, Final, cast
 from docx.document import Document
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.image.exceptions import UnrecognizedImageError
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.opc.part import Part
 from docx.shared import Cm, Emu, Pt
@@ -347,7 +348,14 @@ class BodyWriter:
             )
         width, height = self._image_size(resource.content)
         run = paragraph.add_run()
-        run.add_picture(io.BytesIO(resource.content), width=Emu(width), height=Emu(height))
+        try:
+            run.add_picture(io.BytesIO(resource.content), width=Emu(width), height=Emu(height))
+        except UnrecognizedImageError:
+            # python-docx only knows JPEGs with a JFIF or Exif header (not e.g. ICC first).
+            run._r.clear()
+            run.add_picture(
+                io.BytesIO(_reencode(resource.content)), width=Emu(width), height=Emu(height)
+            )
         for doc_pr in run._r.iter(
             "{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}docPr"
         ):
@@ -619,6 +627,17 @@ class BodyWriter:
 
 
 # ---------------------------------------------------------------------- helpers
+
+
+def _reencode(content: bytes) -> bytes:
+    """The picture saved again by Pillow: JPEG with a JFIF header, everything else as PNG."""
+    with Image.open(io.BytesIO(content)) as picture:
+        buffer = io.BytesIO()
+        if picture.format == "JPEG":
+            picture.save(buffer, "JPEG", quality=92, dpi=picture.info.get("dpi", (96, 96)))
+        else:
+            picture.save(buffer, "PNG")
+        return buffer.getvalue()
 
 
 def _only_images(children: list[Token]) -> bool:
