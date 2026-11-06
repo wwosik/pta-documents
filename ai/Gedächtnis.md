@@ -24,6 +24,13 @@ weil ihm vertraut wird.
   `DocumentFormat`), `markdown/` (Dokumentmodell, Front Matter, Parser), `design/`
   (Designmodell, eingebettete Vorlagen), `conversions/` (→ Markdown), `generation/`
   (`common/`, `docx/`, `pptx/`).
+- **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
+  PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
+  eingebettete Vorlagen. PDF, Diagramme/Charts, PDF-Konverter, Folien-Syntax und Flow-Layouts
+  sind nur geplant. Bedienung: `docs/verwendung.md`.
+- Erzeugte Beispieldateien zum Ansehen schreiben die Tests nach `.tmp/review/`. Auf der
+  Entwicklungsmaschine gibt es weder Word/PowerPoint noch LibreOffice; das Öffnen in Office ist
+  ein offener Prüfpunkt der Stories.
 
 ## Entscheidungen
 
@@ -53,3 +60,9 @@ weil ihm vertraut wird.
 - Stilnamen in `styles.xml` sind die internen englischen (`heading 1`, `List Bullet`,
   `caption`); nur eigene Formatvorlagen der PTA heißen deutsch (`Autor`, `Standard fett`,
   `Zwischenüberschrift`, `PTA`).
+- python-pptx: `itertext()` auf seinen Elementen liefert Text mehrfach — Text immer über die
+  `a:t`-Elemente lesen.
+- python-pptx legt Fußzeilen- und Foliennummer-Platzhalter beim Anlegen einer Folie nicht an;
+  der Generator kopiert sie aus dem Layout.
+- python-docx zeigt Stilnamen als UI-Namen („Heading 1"); verglichen wird mit dem `w:name` aus
+  `styles.xml` („heading 1").
