@@ -20,8 +20,10 @@ sinngemäß auf Python übertragen. Siehe
 
 ## Vorgeschlagener Ansatz
 
-1. **uv** als einziges Werkzeug für Python-Version, virtuelle Umgebung, Abhängigkeiten und Build;
-   `pyproject.toml` im Repo-Root, `uv.lock` versioniert. Mindestversion **Python 3.12**.
+1. **venv + pip** (Entscheidung 2026-11-06, uv ist nicht vorhanden): `pyproject.toml` im
+   Repo-Root mit Build-Backend **hatchling**, virtuelle Umgebung in `.venv/` über
+   `python3 -m venv`, Installation mit `pip install -e '.[dev]'`; die Launcher richten die
+   Umgebung bei Bedarf selbst ein. Mindestversion **Python 3.12**.
 2. Ein Distributionspaket `pta-documents`, Importname `pta_documents`, im `src/`-Layout:
 
    ```
@@ -41,11 +43,11 @@ sinngemäß auf Python übertragen. Siehe
 
    Optionale Abhängigkeiten als Extras (`[pdf]`, `[diagrams]`, `[svg]`), damit der Kern
    (DOCX/PPTX) schlank bleibt. Es wird **nichts veröffentlicht**: kein Feed, keine Tags als
-   Versionen; das Paket wird aus dem Repo heraus verwendet (`uv sync`, als Pfad- oder
-   Workspace-Abhängigkeit).
+   Versionen; das Paket wird aus dem Repo heraus verwendet (als Pfad-
+   Abhängigkeit, `pip install -e <pfad>`).
 3. **pytest** für Tests, **ruff** für Linting und Formatierung, **pyright** (strict) für Typen;
    vollständige Typannotationen, `py.typed`.
-4. `run.sh` / `run.ps1` mit den Verben `test`, `lint`, `format`, `typecheck`, `build`
+4. `run.sh` / `run.ps1` mit den Verben `setup`, `test`, `lint`, `format`, `typecheck`, `build`
    (beide Launcher im Gleichschritt, ohne Argumente listen sie die Verben).
 5. `.gitignore` um `.venv/`, `__pycache__/`, `dist/`, `.pytest_cache/`, `.ruff_cache/` ergänzen.
 6. `ai/Standards.md`: Abschnitte *Werkzeuge* und *Python-Konventionen* ergänzen (Bibliotheken
@@ -57,9 +59,9 @@ sinngemäß auf Python übertragen. Siehe
 
 ## Akzeptanzkriterien
 
-- [ ] `uv sync` richtet die Umgebung ein; `./run.sh test` läuft grün (ein Rauchtest).
+- [ ] `./run.sh setup` richtet `.venv/` ein; `./run.sh test` läuft grün (ein Rauchtest).
 - [ ] `./run.sh lint` und `./run.sh typecheck` laufen fehlerfrei.
-- [ ] `uv build` erzeugt ein Wheel, das die PTA-Vorlagen als Paketdaten enthält (Prüfung, dass
+- [ ] `./run.sh build` erzeugt ein Wheel, das die PTA-Vorlagen als Paketdaten enthält (Prüfung, dass
       das Paket vollständig ist — veröffentlicht wird es nicht).
 - [ ] `ai/Standards.md` beschreibt die Python-Konventionen in sich geschlossen.
 
@@ -82,6 +84,10 @@ sinngemäß auf Python übertragen. Siehe
    Forgejo Actions)?
 
 > (2026-11-06) Vorerst kein Remote und kein CI; kommt später.
+
+5. uv ist auf dieser Maschine nicht installiert — uv installieren oder ohne uv arbeiten?
+
+> (2026-11-06) Ohne uv: venv + pip.
 
 ## Notizen
 
