@@ -107,7 +107,7 @@ deutschen IDs der Vorlage (`berschrift1` für „Überschrift 1", `Aufzhlungszei
   - `Code` und `Zitat` legt der Generator als Formatvorlagen an (Consolas 9 pt, Fläche
     `E6E6E6`, einfacher Zeilenabstand bzw. 1,25 cm Einzug); Codeblöcke sind ein Absatz mit
     Zeilenumbrüchen.
-  - Aufgabenlisten: „☒ "/„☐ " vor dem Text. Definitionslisten: Begriff `Standard fett`,
+  - Aufgabenlisten: „☒"/„☐" vor dem Text. Definitionslisten: Begriff `Standard fett`,
     Erklärung `Standard`. Alerts, `==mark==` und Container bleiben für E03-S03.
   - Fußnoten werden echte Word-Fußnoten in `footnotes.xml` (`footnote text`,
     `footnote reference`); mehrfach referenzierte Fußnoten werden je Verweis angelegt.

@@ -499,7 +499,7 @@ class BodyWriter:
                     self._footnote_reference(context, child)
                 case "html_inline":
                     if "checkbox" in child.content:
-                        self._run(context, "☒ " if "checked" in child.content else "☐ ")
+                        self._run(context, "☒" if "checked" in child.content else "☐")
                     else:
                         self._run(context, child.content)
                 case _:

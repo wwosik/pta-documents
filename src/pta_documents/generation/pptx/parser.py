@@ -356,7 +356,7 @@ class DeckParser:
                         add(child.content)
                 case "html_inline":
                     if "checkbox" in child.content:
-                        add("☒ " if "checked" in child.content else "☐ ")
+                        add("☒" if "checked" in child.content else "☐")
                     else:
                         add(child.content)
                 case "footnote_ref" | "footnote_anchor":
