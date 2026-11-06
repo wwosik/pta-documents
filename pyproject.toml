@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pta-documents"
+version = "0.1.0"
+description = "Markdown to and from Word, PowerPoint and PDF in the PTA corporate design."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [{ name = "Wojciech Wosik", email = "wojciech.wosik@pta.de" }]
+dependencies = [
+    "lxml>=5.2",
+    "markdown-it-py>=3.0",
+    "mdit-py-plugins>=0.4",
+    "pillow>=10.0",
+    "python-docx>=1.1",
+    "python-pptx>=1.0",
+]
+
+[project.optional-dependencies]
+pdf = ["pikepdf>=9.0", "pdfplumber>=0.11", "reportlab>=4.2"]
+svg = ["resvg-py>=0.1"]
+diagrams = []
+dev = ["lxml-stubs>=0.5", "pyright>=1.1.380", "pytest>=8.0", "ruff>=0.6"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pta_documents"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/pta_documents", "tests", "README.md", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+# python-docx, python-pptx and markdown-it tokens are only partially typed; unknown types
+# coming from them are accepted, everything written here is fully annotated.
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportUnknownLambdaType = false
+reportPrivateUsage = false

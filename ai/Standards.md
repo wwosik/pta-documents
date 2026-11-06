@@ -24,7 +24,55 @@ einem Verweis auf ein anderes Repo oder ein lokales Laufwerk.
 | `logs/` | Täglich rollierende Logs (git-ignoriert) |
 | `.tmp/` | Scratchpad (git-ignoriert) |
 | `spec/` | Spezifikationen und der Aufgaben-Lebenszyklus (siehe [Arbeitsablauf.md](Arbeitsablauf.md)) |
+| `src/pta_documents/` | Das Python-Paket (`src`-Layout) |
+| `tests/` | Tests, Spiegelbaum von `src/pta_documents/`, Beispieldateien in `tests/**/samples/` |
+| `tools/` | Werkzeuge des Repos, je eines in `tools/<name>/<name>.py`, gestartet über `run.sh <name>` |
 | `source-templates/` | Die offiziellen PTA-Vorlagen (`.dotx`, `.potx`, `.pptx`), unverändert — Quelle der Designstandards (siehe `spec/10-analysen/`) |
+
+## Werkzeuge
+
+- **Python ≥ 3.12**, virtuelle Umgebung in `.venv/` (git-ignoriert), Abhängigkeiten in
+  `pyproject.toml` (Build-Backend hatchling). Kein uv, kein Lockfile: `pip install -e '.[dev,pdf,svg]'`.
+- **Launcher** `run.sh` und `run.ps1` — beide im Gleichschritt, ohne Argumente listen sie Verben
+  und Werkzeuge:
+
+  | Verb | Wirkung |
+  | ---- | ------- |
+  | `setup` | `.venv/` anlegen bzw. aktualisieren, Paket editierbar mit allen Extras installieren |
+  | `test` | pytest (Argumente werden durchgereicht) |
+  | `lint` | `ruff check` |
+  | `format` | Importe sortieren und `ruff format` |
+  | `typecheck` | pyright im Modus `strict` |
+  | `build` | Wheel nach `dist/` (nur zur Prüfung, dass das Paket vollständig ist — es wird nichts veröffentlicht) |
+  | `<werkzeug>` | `tools/<werkzeug>/<werkzeug>.py` in der `.venv` |
+
+  Jedes andere Verb richtet `.venv/` bei Bedarf selbst ein.
+- Vor jedem Commit laufen `test`, `lint` und `typecheck` grün.
+
+## Python-Konventionen
+
+- **Ein Distributionspaket** `pta-documents`, Importname `pta_documents`; optionale Teile als
+  Extras (`pdf`, `svg`, `diagrams`). Der Kern (DOCX, PPTX, Konverter) braucht keine Extras.
+- **Englischer Code:** Bezeichner, Kommentare, Docstrings, Fehlermeldungstexte der API sind
+  englisch; was ein Schreiber von Markdown liest (Front-Matter-Schlüssel und -Werte, erzeugte
+  Texte wie „Seite"/„Tabelle"), ist deutsch.
+- **Bibliotheken halten keinen Laufzeitzustand.** Kein globaler veränderlicher Zustand, keine
+  Caches, die das Ergebnis ändern; jeder Aufruf ist unabhängig.
+- **Stream rein, Stream raus.** Öffentliche Funktionen nehmen `bytes`/`BinaryIO` bzw.
+  `MarkdownDocument` und schreiben in einen übergebenen Stream; Dateizugriffe gibt es nur in
+  Werkzeugen und Tests. Paketdaten werden über `importlib.resources` gelesen.
+- **Ein Fehlertyp:** Fehler in einem Dokument sind `DocumentConversionError(format, reason)`;
+  `reason` sagt dem Schreiber, was er ändern muss (mit Liste der gültigen Werte, wo es eine gibt).
+  Programmierfehler bleiben gewöhnliche Python-Ausnahmen.
+- **Vollständige Typannotationen**, `py.typed`; pyright `strict`. Nur unbekannte Typen *aus*
+  python-docx, python-pptx und markdown-it werden hingenommen (Einstellungen in
+  `pyproject.toml`).
+- **Tests** spiegeln `src/pta_documents/` in `tests/`. Beispieldateien liegen in
+  `tests/**/samples/`; Erwartungsdateien heißen `*.expected.md` und werden mit
+  `PTA_DOCUMENTS_UPDATE_EXPECTED=1 ./run.sh test` neu geschrieben — der Diff ist dann zu prüfen,
+  bevor er committet wird. Erzeugte Dateien zum Ansehen schreiben Tests nach `.tmp/review/`.
+- Formatierung und Importreihenfolge macht ruff (Zeilenlänge 100); keine Handformatierung
+  dagegen.
 
 ## Git
 
@@ -71,4 +119,5 @@ Konkretes es erfordert hat. Was hier steht, ist Absicht: nicht ohne Rückfrage �
 
 | Konvention | Was dieses Repo stattdessen tut | Warum |
 | ---------- | ------------------------------- | ----- |
+| Projektgerüst aus dem Katalog `projekt-init` | Der Katalog hat keine Python-Komponente; Gerüst und Python-Konventionen stammen aus T01-S01 | Der Katalog kennt nur .NET-Projekte. |
 | Nur Text und Code im Repo | `source-templates/` enthält binäre Office-Vorlagen, unverändert versioniert; `.gitattributes` markiert sie als binär | Sie sind die verbindliche Quelle des PTA-Designs; Änderungen daran kommen von PTA, nicht aus diesem Repo. |

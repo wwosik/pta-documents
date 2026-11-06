@@ -1,8 +1,8 @@
 # T01-S01 Python-Projektgerüst
 
-> Status: in Bearbeitung (port-1)
+> Status: in Prüfung
 > Epic: T01 (technisch)
-> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -16,7 +16,7 @@ Der Projektkatalog `projekt-init` hat keine Python-Komponente; das Repo wurde nu
 `spec-workflow` angelegt. Die .NET-Konventionen von DocLibs (`src/*.slnx`, zentrale Paketversionen,
 Geschwister-Testprojekte, `run.ps1`/`run.sh`, Werkzeuge als Single-File-Apps) werden hier
 sinngemäß auf Python übertragen. Siehe
-[Portierungsanalyse](../../10-analysen/2026-11-06%20portierung-doclibs-python.md).
+[Portierungsanalyse](../10-analysen/2026-11-06%20portierung-doclibs-python.md).
 
 ## Vorgeschlagener Ansatz
 
@@ -59,11 +59,11 @@ sinngemäß auf Python übertragen. Siehe
 
 ## Akzeptanzkriterien
 
-- [ ] `./run.sh setup` richtet `.venv/` ein; `./run.sh test` läuft grün (ein Rauchtest).
-- [ ] `./run.sh lint` und `./run.sh typecheck` laufen fehlerfrei.
-- [ ] `./run.sh build` erzeugt ein Wheel, das die PTA-Vorlagen als Paketdaten enthält (Prüfung, dass
+- [x] `./run.sh setup` richtet `.venv/` ein; `./run.sh test` läuft grün (ein Rauchtest).
+- [x] `./run.sh lint` und `./run.sh typecheck` laufen fehlerfrei.
+- [x] `./run.sh build` erzeugt ein Wheel, das die PTA-Vorlagen als Paketdaten enthält (Prüfung, dass
       das Paket vollständig ist — veröffentlicht wird es nicht).
-- [ ] `ai/Standards.md` beschreibt die Python-Konventionen in sich geschlossen.
+- [x] `ai/Standards.md` beschreibt die Python-Konventionen in sich geschlossen.
 
 ## Offene Fragen
 
@@ -91,3 +91,23 @@ sinngemäß auf Python übertragen. Siehe
 
 ## Notizen
 
+
+## Implementierungsnotizen
+
+- **venv + pip statt uv** (Entscheidung 2026-11-06): `pyproject.toml` mit hatchling, `.venv/`
+  über `./run.sh setup`; `setup` installiert das Paket editierbar mit `dev,pdf,svg`. Es gibt kein
+  Lockfile — Versionen sind nur nach unten begrenzt.
+- `./run.sh build` baut das Wheel mit `pip wheel --no-deps` nach `dist/` (kein `build`-Paket
+  nötig). Das Kriterium „Wheel enthält die PTA-Vorlagen" kann erst mit E01-S02 erfüllt sein;
+  hatchling nimmt alles unter `src/pta_documents/` mit, ein Test in E01-S02 prüft es.
+- **pyright strict** mit Ausnahmen für unbekannte Typen (`reportUnknown*`,
+  `reportMissingTypeStubs`, `reportPrivateUsage`): python-docx, python-pptx und die Token von
+  markdown-it sind nur teilweise typisiert; ohne diese Ausnahmen wäre fast jede Zeile, die sie
+  berührt, ein Fehler.
+- `DocumentFormat` ist ein `StrEnum` und kennt zusätzlich `MARKDOWN` (für Fehler beim Lesen von
+  Markdown, bevor ein Zielformat feststeht).
+- `.gitattributes`: Beispieldateien werden über ihre Endung als binär markiert (Office, PDF,
+  Bilder, Schriften), nicht über den Ordner — Markdown-Beispiele und Erwartungsdateien bleiben
+  diffbar.
+- `run.ps1` ist geschrieben, aber nur unter Linux mit `bash` gegengeprüft — **Prüfpunkt:** unter
+  Windows/PowerShell einmal `./run.ps1 setup` und `./run.ps1 test`.

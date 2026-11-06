@@ -5,3 +5,10 @@
 *.pdf binary
 *.png binary
 *.emf binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svgz binary
+*.ttf binary
+*.otf binary
+*.whl binary

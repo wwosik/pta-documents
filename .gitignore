@@ -15,3 +15,13 @@
 *.user
 *.suo
 settings.local.json
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/

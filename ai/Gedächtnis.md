@@ -15,8 +15,15 @@ weil ihm vertraut wird.
   `spec/50-entwurf/T01-S01-python-projektgeruest.md`.
 - Eigenständig weitergeführte Python-3-Portierung von DocLibs (.NET, `wwosik/doc-libs`, Stand
   Release `2610.28.22`). Es gibt keine Rückportierung und keinen Abgleich mit dem Original.
-- Noch kein Code: Analysen in `spec/10-analysen/`, Pläne in `spec/50-entwurf/`, Reihenfolge in
+- Analysen in `spec/10-analysen/`, Pläne in `spec/50-entwurf/`, Reihenfolge in
   `M01-pta-dokumente-aus-markdown.md`.
+- **Stack:** Python ≥ 3.12, venv + pip (kein uv), hatchling, pytest, ruff, pyright strict.
+  Kern: python-docx, python-pptx, lxml, markdown-it-py + mdit-py-plugins, Pillow. Extras:
+  `pdf` (reportlab, pikepdf, pdfplumber), `svg` (resvg-py), `diagrams` (mermaid-cli, extern).
+- **Paketstruktur** (`src/pta_documents/`): `errors.py` (`DocumentConversionError`,
+  `DocumentFormat`), `markdown/` (Dokumentmodell, Front Matter, Parser), `design/`
+  (Designmodell, eingebettete Vorlagen), `conversions/` (→ Markdown), `generation/`
+  (`common/`, `docx/`, `pptx/`).
 
 ## Entscheidungen
 
