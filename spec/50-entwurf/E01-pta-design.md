@@ -48,7 +48,7 @@ Pfad, über den ein anderes Design eingeschleust werden kann.
 1. Gibt es bei der PTA ein Corporate-Design-Handbuch (Logo-Schutzzonen, Mindestgrößen,
    Farbwerte in CMYK), das über die Vorlagen hinausgeht?
 
->
+> (2026-11-06) Nicht bekannt — die Standards sind nur, was in `source-templates/` steht.
 
 2. Sollen BPS und DATIS (Gruppenvorlage) später eigene Varianten mit eigenem Logo bekommen, oder
    bleibt es bei der einen BPS-PTA-DATIS-Word-Vorlage?

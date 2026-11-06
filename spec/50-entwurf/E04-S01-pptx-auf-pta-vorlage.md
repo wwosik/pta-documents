@@ -60,7 +60,7 @@ selbst erzeugten Master. Hier: 35 PTA-Layouts ohne `type`, Werte in der
 2. Wenn `{layout="Name"}` ein Layout mit mehreren Inhaltsplatzhaltern nennt (z. B. zweispaltig):
    Inhalte am `---` teilen wie bei `::: columns`?
 
->
+> (2026-11-06) An `---`-Zeilen teilen, wie bei `::: columns`.
 
 ## Notizen
 
