@@ -1,8 +1,8 @@
 # T01-S01 Python-Projektgerüst
 
-> Status: Entwurf
+> Status: in Bearbeitung (port-1)
 > Epic: T01 (technisch)
-> Milestone: [M01 PTA-Dokumente aus Markdown](M01-pta-dokumente-aus-markdown.md)
+> Milestone: [M01 PTA-Dokumente aus Markdown](../../50-entwurf/M01-pta-dokumente-aus-markdown.md)
 
 ## Zusammenfassung
 
@@ -16,7 +16,7 @@ Der Projektkatalog `projekt-init` hat keine Python-Komponente; das Repo wurde nu
 `spec-workflow` angelegt. Die .NET-Konventionen von DocLibs (`src/*.slnx`, zentrale Paketversionen,
 Geschwister-Testprojekte, `run.ps1`/`run.sh`, Werkzeuge als Single-File-Apps) werden hier
 sinngemäß auf Python übertragen. Siehe
-[Portierungsanalyse](../10-analysen/2026-11-06%20portierung-doclibs-python.md).
+[Portierungsanalyse](../../10-analysen/2026-11-06%20portierung-doclibs-python.md).
 
 ## Vorgeschlagener Ansatz
 

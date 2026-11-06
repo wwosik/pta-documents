@@ -13,7 +13,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge.
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| [T01-S01](T01-S01-python-projektgeruest.md) | Python-Projektgerüst | Entwurf |
+| [T01-S01](../55-in-arbeit/port-1/T01-S01-python-projektgeruest.md) | Python-Projektgerüst | in Bearbeitung (port-1) |
 | [E01-S01](E01-S01-pta-designmodell.md) | PTA-Designmodell aus den Vorlagen | Entwurf |
 | [E01-S02](E01-S02-vorlagen-einbetten.md) | Vorlagen bereinigen und als Paketdaten einbetten | Entwurf |
 | [E02-S01](E02-S01-markdown-parser-und-front-matter.md) | Markdown-Parser und Front Matter | Entwurf |
