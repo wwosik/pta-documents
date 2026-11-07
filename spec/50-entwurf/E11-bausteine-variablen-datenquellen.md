@@ -62,7 +62,7 @@ Erzeugung (E08-S01).
 2. Sollen Variablen auch im Front Matter selbst gelten (`titel: Angebot für {{kunde}}`)?
    Vorschlag: ja, außer in `variablen.*` selbst.
 
->
+> (2026-11-07) Ja, außer in `variablen.*`.
 
 ## Notizen
 

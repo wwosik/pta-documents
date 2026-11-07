@@ -32,8 +32,12 @@ weil ihm vertraut wird.
   .NET) ist seit DocLibs `2610.28.22` weitergegangen — Hinweise an den Schreiber
   (`GenerationResult`), Sprechernotizen, Builds, Übergänge, Szenen, HTML-Decks,
   `make_document`, Feature-Tour. Abgleich: `spec/10-analysen/2026-11-07 abgleich-vt-tools-libs.md`;
-  daraus die Epics E08–E10. E11–E13 sind eigene Ideen (Bausteine, Dokumentpflege, lange
-  Berichte), alle Stand 2026-11-07 im Entwurf.
+  daraus die Epics E08–E10. E11–E17 sind eigene Ideen (Bausteine, Dokumentpflege, lange
+  Berichte, Dokumenttypen der Beratung, visuelle Bausteine, Schulung, Arbeitsfluss), alle Stand
+  2026-11-07 im Entwurf und vom Menschen zur Umsetzung gewünscht; E08-S04 ist zurückgestellt.
+- **Werkzeugverben und Schalter sind englisch** (`generate`, `check`, `preview`, `compare`,
+  `--strict`), Front Matter und Anleitungen deutsch, Markdown-Syntaxnamen englisch
+  (Entscheidung 2026-11-07).
 - Erzeugte Beispieldateien zum Ansehen schreiben die Tests nach `.tmp/review/`. Auf der
   Entwicklungsmaschine gibt es weder Word/PowerPoint noch LibreOffice; das Öffnen in Office ist
   ein offener Prüfpunkt der Stories.

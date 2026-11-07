@@ -105,12 +105,34 @@ als Pläne ausgearbeitet; ob sie gebraucht werden, entscheidet der Mensch je Epi
 | Querverweise | „siehe Tabelle 3", „Kapitel 2.1" als Word-Felder | E13-S02 |
 | Barrierefreiheit | Alt-Texte, Tabellenköpfe, Dokumentsprache, PDF/UA — für öffentliche Auftraggeber | E13-S03 |
 
+In einer zweiten Runde (2026-11-07, auf Wunsch des Menschen „erst kreativ denken, dann bauen")
+kamen 16 weitere Ideen dazu, alle angenommen und als E14–E17 ausgearbeitet:
+
+| Idee | Kurz | Plan |
+| ---- | ---- | ---- |
+| Protokoll-Modus | Beschlüsse und Aufgaben (wer, bis wann) → automatische Listen am Ende | E14-S01 |
+| Anforderungen mit IDs | `REQ-001`, Anforderungsliste, Querverweise — Lastenheft, Konzept | E14-S02 |
+| Abnahme und Kalkulation | Unterschriftenblock; rechnende Tabellen mit Summe und MwSt | E14-S03 |
+| Dokument-Skelette | `./run.sh new angebot\|protokoll\|konzept\|schulung` | E14-S04 |
+| Zeitstrahl und Gantt | Roadmap auf Folien, Gantt als editierbare Word-Tabelle | E15-S01 |
+| Schritte, Harvey Balls, Risikomatrix | Chevrons, `[3/4]` → ◕, 5 × 5-Matrix | E15-S02 |
+| Icons | `:icon-check:` aus einem OFL/MIT-Set in PTA-Blau | E15-S03 |
+| Bild-Fokus und Stile | `{focus=top}` gegen den Platzhalterbeschnitt, `{.round}`, `{.grey}` | E15-S04 |
+| Zielgruppenfassungen | `{.internal}`, `--audience kunde`; Aufgabe/Lösung in Schulungen | E16-S01 |
+| Schulungs-Zeitplan | `{dauer=5}` → Agenda mit Uhrzeiten, Trainerplan | E16-S02 |
+| Teilnehmerhandout | Word mit Folienbildern, Notizen, Platz für eigene Notizen | E16-S03 |
+| Backup-Folien und Anhang | `{.backup}` hinter dem Abschluss; Anhänge A, B, C | E16-S04 |
+| Rückweg aus Word | Kundenkommentare und -änderungen zurück ins Markdown; Markdown → Word-Kommentare | E17-S01 |
+| Typografie und Code | deutsche Anführungszeichen, Gedankenstrich, geschützte Leerzeichen, Silbentrennung, Pygments | E17-S02 |
+| Terminologie und Quellen | bevorzugte Schreibweisen in `check`; `QUELLEN.md` → `[@quelle]`, Quellenverzeichnis | E17-S03 |
+| Watch und Seitenumbrüche | `./run.sh watch`; Seitenumbruch, Querformat-Abschnitt | E17-S04 |
+
 ## Empfohlene Reihenfolge
 
 Nach M01 zuerst, was ohne neue Formate geht und sofort hilft, besonders einer KI als Schreiber:
 E08-S01 (Hinweise), E09-S01 (Sprechernotizen), E08-S03 (Funktionsübersicht durch Tests gesichert).
 Dann die ohnehin geplante Folien-Syntax (E02-S02, E04-S03) und E09-S02/S03. E08-S04, E10 und
-E09-S04 erst, wenn der Bedarf feststeht. Die Ideen in E11–E13 sind unabhängig voneinander; E12-S02
+E09-S04 erst, wenn der Bedarf feststeht. Die Ideen in E11–E17 sind unabhängig voneinander; E12-S02
 (Dokumentvergleich) und E13 brauchen vor allem Word und können parallel zum PDF (E05) entstehen.
 
 ## Offene Punkte

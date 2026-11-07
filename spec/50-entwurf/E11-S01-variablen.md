@@ -65,12 +65,11 @@ nächsten Kunden erzeugen, ohne ihn anzufassen.
    (`{{ansprechpartner?}}`)? Vorschlag: nein — Fehler sind sicherer, eine KI korrigiert sie
    sofort.
 
->
-
+> (2026-11-07) Nein, immer Fehler.
 2. Dürfen Werte Markdown enthalten (`variablen.hinweis: **wichtig**`)? Vorschlag: ja, weil die
    Ersetzung vor dem Parsen läuft; ein Wert mit Zeilenumbruch ist aber ein Fehler.
 
->
+> (2026-11-07) Ja; ein Wert mit Zeilenumbruch ist ein Fehler.
 
 ## Notizen
 

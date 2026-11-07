@@ -71,8 +71,7 @@ das ihn einbindet, bekommt beim nächsten Erzeugen den neuen Stand.
    `!include firmenprofil.md` (Pandoc-Nähe)? Vorschlag: `::: include`, weil der Parser es ohnehin
    kennt und ein unbekannter Container schon heute ein Fehler wäre.
 
->
-
+> (2026-11-07) `::: include`.
 2. Darf ein Baustein Überschriften jeder Ebene enthalten, oder passt der Generator die Ebenen an
    die Einfügestelle an (`::: include firmenprofil` unter `##` hebt `#` → `##`)? Vorschlag:
    keine Anpassung — der Baustein wird so geschrieben, wie er eingefügt werden soll.
