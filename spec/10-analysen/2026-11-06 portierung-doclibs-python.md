@@ -5,7 +5,8 @@
 
 Diese Analyse stellt fest, was DocLibs heute ist, was davon in die Python-Portierung für die PTA
 übernommen wird, was entfällt und welche Python-Bibliotheken die .NET-Abhängigkeiten ersetzen.
-Die Pläne dazu liegen in `spec/50-entwurf/`.
+Die Pläne dazu liegen in `spec/50-entwurf/`. Was die Schwesterbibliothek vt-tools-libs seit diesem
+DocLibs-Stand dazubekommen hat, stellt der [Abgleich vom 2026-11-07](2026-11-07%20abgleich-vt-tools-libs.md) fest.
 
 ## Ausgangslage
 

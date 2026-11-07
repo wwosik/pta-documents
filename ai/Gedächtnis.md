@@ -28,6 +28,12 @@ weil ihm vertraut wird.
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
   eingebettete Vorlagen. PDF, Diagramme/Charts, PDF-Konverter, Folien-Syntax und Flow-Layouts
   sind nur geplant. Bedienung: `docs/verwendung.md`.
+- **Zweite Referenz:** `~/mvv/vt-tools-libs` (Schwesterbibliothek von DocLibs für die MVV,
+  .NET) ist seit DocLibs `2610.28.22` weitergegangen — Hinweise an den Schreiber
+  (`GenerationResult`), Sprechernotizen, Builds, Übergänge, Szenen, HTML-Decks,
+  `make_document`, Feature-Tour. Abgleich: `spec/10-analysen/2026-11-07 abgleich-vt-tools-libs.md`;
+  daraus die Epics E08–E10. E11–E13 sind eigene Ideen (Bausteine, Dokumentpflege, lange
+  Berichte), alle Stand 2026-11-07 im Entwurf.
 - Erzeugte Beispieldateien zum Ansehen schreiben die Tests nach `.tmp/review/`. Auf der
   Entwicklungsmaschine gibt es weder Word/PowerPoint noch LibreOffice; das Öffnen in Office ist
   ein offener Prüfpunkt der Stories.
