@@ -1,8 +1,8 @@
 # E04-S03 Flow-Layouts im PTA-Stil
 
-> Status: Entwurf
-> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](E04-pptx-generator.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](../../50-entwurf/E04-pptx-generator.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
@@ -18,7 +18,7 @@ Signalfarben.
   14, Kartentitel 16, Kennzahl 32, Statement 26, Kicker/Chips 12 pt), `DeckWriter.Fitting.cs`
   (Flow: alle Größen zweimal um ein Achtel, Abstände halbiert, dann Teilung zwischen Blöcken),
   `SlidePalette.cs`. Tests: `SlideLayoutTests.cs` (280 Zeilen), Beispiel `layouts.md`.
-- PTA-Werte ([Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md#weitere-muster)):
+- PTA-Werte ([Designanalyse](../../10-analysen/2026-11-06%20pta-designstandards.md#weitere-muster)):
   Inhaltsfläche 1,33/4,62 cm, 31,20 × 13,10 cm; zwei Spalten 15,10 cm + 1,00 cm; vier Spalten
   7,00 cm; Fazit-Box 1,33/15,78 cm, 31,20 × 1,94 cm, `004676`, 18 pt fett weiß, Einzug links
   1,90 cm, „maximal 2 Zeilen"; Kommentarbox `wedgeRectCallout`, weiß, Verlaufsrand `9FD8FF` →
