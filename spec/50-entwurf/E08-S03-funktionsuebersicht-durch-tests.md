@@ -68,7 +68,7 @@ vor; die Beispiele erzeugen ohne Hinweise; ihre Rundreise-Ergebnisse sind als
    ändern sich bei jeder Änderung), damit Anwender sie ohne Erzeugen öffnen können? Vorschlag:
    nein — `./run.sh generate samples/funktionen` dauert Sekunden.
 
->
+> (2026-11-07) Nein.
 
 ## Notizen
 

@@ -86,12 +86,11 @@ zeichnet die Szene als Standbild, Word lässt sie weg.
    31,20 × 13,10 cm) oder quadratische Einheit 0,195 cm mit 160 × 67 Einheiten? Vorschlag:
    quadratisch 160 × 67, damit `20x20` ein Quadrat ist.
 
->
-
+> (2026-11-07) Quadratisch, 160 × 67.
 3. Soll `image` in Szenen die PTA-Bildplatzhalter-Regel (Beschnitt) ignorieren und das Bild
    einpassen? Vorschlag: einpassen, wie vt-tools-libs.
 
->
+> (2026-11-07) Einpassen.
 
 ## Notizen
 

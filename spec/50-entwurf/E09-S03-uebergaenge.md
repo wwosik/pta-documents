@@ -70,14 +70,15 @@ Morph wird so geschrieben, dass ältere Programme überblenden.
    Syntaxwerte wie `.closing`, und „Morph" heißt auch im deutschen PowerPoint so. Der
    Schlüssel bleibt deutsch (`uebergang`).
 
->
-
+> (2026-11-07) Englisch.
 2. Soll `morph` ohne eine Szene (E09-S04) überhaupt erlaubt sein? Es wirkt dann wie eine
    Überblendung mit bewegtem Titel. Vorschlag: erlauben, der Guide erklärt die Wirkung.
 
->
+> (2026-11-07) Erlauben.
 
 ## Notizen
+
+- (2026-11-07) Erweiterung nach Entscheidung im Epic (Frage 1): Richtungen `push-left|right|up|down`, `wipe-left|right|up|down` (ohne Richtung wie bisher von links), zusätzlich `split`, `cover`, `uncover`, `zoom`, `cut` nach PowerPoints dezenten Übergängen (`p:split`, `p:cover`, `p:pull`, `p:zoom`, `p:cut`). `SlideTransition` wächst entsprechend; der HTML-Deck (E10-S01) nähert sie in CSS an oder blendet.
 
 - Kleinste Story des Epics; kann vor E09-S02 umgesetzt werden, teilt sich mit ihr nur das Modul
   `animations.py`.

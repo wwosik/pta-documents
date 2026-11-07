@@ -78,15 +78,16 @@ schreibt. Ein Front-Matter-Schlüssel baut alle Listen auf.
 1. Name des Front-Matter-Schlüssels: `aufbau: listen` (Vorschlag), `animation: listen` oder
    `klickweise: ja`?
 
->
-
+> (2026-11-07) `aufbau: listen`.
 2. Soll der PPTX-Konverter Builds als `{.build}` zurückgeben, damit ein Deck → Markdown → Deck
    seine Animationen behält? Vorschlag: nein, Animationen sind kein Inhalt; die Rundreise prüft
    Inhalt.
 
->
+> (2026-11-07) Nein.
 
 ## Notizen
+
+- (2026-11-07) Erweiterung nach Entscheidung im Epic (Frage 1): neben Fade auch `{.build=appear}`, `{.build=fly}`, `{.build=wipe}` als Eingang; `{.exit}` (Element verschwindet beim Klick) und `{.emphasize}` (Hervorhebung in PTA-Blau beim Klick). Die Attribute werden in `heading_attributes`/`layout_syntax` (E02-S02) registriert; der Guide nennt sie. Der Konverter ignoriert sie weiterhin.
 
 - Abhängig von E04-S03 nur für Karten, Reihen und Spalten; Listen, Tabellen, Bilder und Code
   lassen sich vorher umsetzen.

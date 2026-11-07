@@ -24,7 +24,7 @@ bevor der Anwender es tut.
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
 | [E10-S01](E10-S01-html-deck-generator.md) | `HtmlDeckGenerator`: eine HTML-Datei, PTA-Look aus dem Designmodell, gleiche Folien wie PPTX, Notizen/Builds/Übergänge aus E09, Druck | Entwurf |
-| [E10-S02](E10-S02-vorschau-als-bilder.md) | `./run.sh vorschau`: HTML-Deck mit Playwright zu PNG je Folie und Kontaktbogen; Empfehlung an die KI | Entwurf |
+| [E10-S02](E10-S02-vorschau-als-bilder.md) | `./run.sh preview`: HTML-Deck mit Playwright zu PNG je Folie und Kontaktbogen; Empfehlung an die KI | Entwurf |
 
 ## Bereichsweite Entscheidungen
 
@@ -51,7 +51,7 @@ bevor der Anwender es tut.
 
 `samples/gsb/gsb-praesentation.md` ergibt eine HTML-Datei, die in Chrome, Edge und Firefox die
 gleichen Folien zeigt wie die PPTX in PowerPoint (gleiche Anzahl, gleiche Titel, gleiche
-Teilung), und `./run.sh vorschau samples/gsb` legt je Folie ein PNG ab.
+Teilung), und `./run.sh preview samples/gsb` legt je Folie ein PNG ab.
 
 ## Offene Fragen
 
@@ -59,8 +59,7 @@ Teilung), und `./run.sh vorschau samples/gsb` legt je Folie ein PNG ab.
    ohne weiteren Befehl), oder nur mit `--html`? Vorschlag: nur mit `--html`, damit `documents/`
    nicht voller Dateien liegt, die niemand öffnet; die KI-Anleitung nennt den Schalter.
 
->
-
+> (2026-11-07) Nur mit `--html`.
 2. Ist das HTML-Deck auch ein **Zielformat** für die PTA (Vortrag im Browser, Weitergabe als eine
    Datei) oder nur Vorschau? Davon hängt ab, wie viel Mühe in Druck, Notizenpanel und
    Tastaturbedienung geht.

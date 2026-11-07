@@ -54,7 +54,7 @@ nach jeder Datei, damit der Schreiber (oft eine KI) die nächste Fassung ohne Hi
    `None` — Word zählt erst beim Öffnen.
 4. **Rückgabe:** `generate(...) -> GenerationResult` in beiden Generatoren; `slides` aus
    `len(presentation.slides)`. Aufrufer, die den Wert ignorieren, laufen unverändert.
-5. **Werkzeug `generate`:** nach `wrote <datei>` jede Note als `  - line 12: …`; `--streng`
+5. **Werkzeug `generate`:** nach `wrote <datei>` jede Note als `  - line 12: …`; `--strict`
    (Frage 1 des Epics) macht Hinweise zum Exit-Code 1. `generate-samples` ebenso.
 6. **Dokumentation:** `docs/verwendung.md` (Rückgabe, Codes), `docs/anleitung.md` Abschnitt 8
    („Hinweise sind keine Fehler, aber …"), `docs/ki-anleitung.md` Regel 3 („Hinweise lesen, das
@@ -73,7 +73,7 @@ nach jeder Datei, damit der Schreiber (oft eine KI) die nächste Fassung ohne Hi
       `str(result)` ist die Markdown-Liste der Hinweise.
 - [ ] Geteilte und übervolle Folien, weggelassenes HTML, nicht gezeichnete Grafikblöcke und
       beschnittene oder stark vergrößerte Bilder ergeben je einen Hinweis mit richtiger Zeile.
-- [ ] `./run.sh generate` zeigt die Hinweise unter der Datei; `--streng` setzt den Exit-Code.
+- [ ] `./run.sh generate` zeigt die Hinweise unter der Datei; `--strict` setzt den Exit-Code.
 - [ ] `samples/` erzeugt ohne Hinweise; die Rundreise-Tests bleiben grün.
 - [ ] `ki-anleitung.md`, `anleitung.md`, `verwendung.md` beschreiben Hinweise und Codes.
 
@@ -82,12 +82,11 @@ nach jeder Datei, damit der Schreiber (oft eine KI) die nächste Fassung ohne Hi
 1. Rohes HTML weglassen (wie vt-tools-libs) oder weiter als Text zeigen und nur melden? Vorschlag:
    weglassen — als Text ist es immer falsch.
 
->
-
+> (2026-11-07) Weglassen und melden.
 2. Soll der Hinweis `image-cropped` kommen, wenn der PTA-Bildplatzhalter beschneidet? Beschneiden
    ist dort gewollt; der Hinweis wäre nur bei starkem Verlust (> 25 %) sinnvoll.
 
->
+> (2026-11-07) Nur bei starkem Verlust (> 25 %).
 
 ## Notizen
 

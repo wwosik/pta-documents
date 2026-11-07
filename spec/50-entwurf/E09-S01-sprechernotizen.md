@@ -75,12 +75,11 @@ lässt sie weg. Damit kann eine KI dem Vortragenden zu jeder Folie den Sprechtex
 1. Sollen Notizen einer **geteilten** Folie auf der ersten Folie bleiben (wie vt-tools-libs) oder
    auf jeder Teilfolie wiederholt werden? Vorschlag: erste Folie.
 
->
-
+> (2026-11-07) Auf jeder Teilfolie wiederholen.
 2. Soll der Konverter Notizen standardmäßig ausgeben (Vorschlag: ja, für die Rundreise und weil
    eine KI beim Lesen fremder Decks den Sprechtext braucht)?
 
->
+> (2026-11-07) Ja, standardmäßig.
 
 ## Notizen
 

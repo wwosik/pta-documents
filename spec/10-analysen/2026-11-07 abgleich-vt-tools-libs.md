@@ -93,7 +93,7 @@ als Pläne ausgearbeitet; ob sie gebraucht werden, entscheidet der Mensch je Epi
 
 | Idee | Kurz | Plan |
 | ---- | ---- | ---- |
-| Prüfbefehl mit Stilregeln | `./run.sh pruefen`: Hinweise ohne Erzeugen, Regeln der PTA-Musterfolien (Punkte je Folie, Wörter je Folie), geschätzte Vortragsdauer, Bild ohne Quelle, fehlender Alt-Text | E08-S02 |
+| Prüfbefehl mit Stilregeln | `./run.sh check`: Hinweise ohne Erzeugen, Regeln der PTA-Musterfolien (Punkte je Folie, Wörter je Folie), geschätzte Vortragsdauer, Bild ohne Quelle, fehlender Alt-Text | E08-S02 |
 | Variablen | `{{kunde}}` aus Front Matter oder Kommandozeile — ein Angebot für mehrere Kunden | E11-S01 |
 | Bausteine | Firmenprofil, Leistungen, Kontaktfolien einmal schreiben, überall einbinden | E11-S02 |
 | Tabellen und Charts aus Dateien | CSV/XLSX aus dem Dokumentordner als Tabelle oder Chart | E11-S03 |

@@ -93,13 +93,12 @@ und Touch-Bedienung, Notizenpanel, Fortschrittsbalken und Druck je Folie auf ein
    die in E04-S04 benannten PTA-Layouts unterstützt werden und andere auf eine Inhaltsfolie
    zurückfallen? Vorschlag: Lagen lesen — die 35 Layouts sind sonst nicht zu pflegen.
 
->
-
+> (2026-11-07) Lagen aus dem Layout-XML lesen.
 2. Sollen Titelfotos der Vorlage (`bild-01`, `bild-02`, `branchen`) ins HTML eingebettet werden
    (je ~0,5–1 MB) oder durch den PTA-Verlauf (`ohne-bild`) ersetzt werden? Vorschlag: einbetten,
    sonst zeigt die Vorschau nicht, was PowerPoint zeigt.
 
->
+> (2026-11-07) Einbetten.
 
 ## Notizen
 

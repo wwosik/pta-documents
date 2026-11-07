@@ -54,8 +54,7 @@ Rücklesen (E07-S03) die Notizen als `::: notes` wieder.
 1. Reichen Fade-Builds und die vier Übergänge, oder braucht die PTA weitere Effekte (Wischen von
    rechts, Erscheinen ohne Fade)? Vorschlag: nein — bewusst klein halten.
 
->
-
+> (2026-11-07) Mehr Effekte: Richtungen für `push`/`wipe` (`push-left`, `wipe-up` …), weitere dezente PowerPoint-Übergänge (`split`, `cover`, `uncover`, `zoom`, `cut`), Build-Eingänge außer Fade (`{.build=appear}`, `fly`, `wipe`) sowie Ausgänge und Hervorhebungen (`{.exit}`, `{.emphasize}`). E09-S02 und E09-S03 sind um diese Punkte erweitert.
 2. E09-S04 (Szenen) ist aufwendig (vt-tools-libs: ~500 Zeilen plus PPTX-Ausgabe). Gibt es dafür
    bei der PTA einen Anwendungsfall, oder reichen die Flow-Layouts aus E04-S03?
 

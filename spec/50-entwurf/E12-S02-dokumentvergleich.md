@@ -45,8 +45,8 @@ so, wie Word es selbst beim Vergleichen zeigt. Der Kunde sieht, was sich zwische
 3. **Öffentliche Schnittstelle:** `DocxGenerator.compare(old: MarkdownDocument, new:
    MarkdownDocument, output, options, author) -> None`; Ressourcen kommen aus der neuen Fassung,
    gelöschte Bilder aus der alten.
-4. **Werkzeug** `tools/vergleich/vergleich.py` und `./run.sh vergleich alt.md neu.md
-   [--out ordner] [--autor Name]`; `./run.sh vergleich neu.md --seit HEAD~1` holt die alte
+4. **Werkzeug** `tools/compare/compare.py` und `./run.sh compare alt.md neu.md
+   [--out ordner] [--author Name]`; `./run.sh compare neu.md --since HEAD~1` holt die alte
    Fassung mit `git show <rev>:<pfad>` (auch ein Tag oder Datum). Ausgabe
    `<name>-vergleich.docx`.
 5. **Grenzen**, im Werkzeug-Hilfetext und in `docs/anleitung.md` genannt: Verschobene Absätze
@@ -61,11 +61,11 @@ so, wie Word es selbst beim Vergleichen zeigt. Der Kunde sieht, was sich zwische
 
 ## Akzeptanzkriterien
 
-- [ ] `./run.sh vergleich alt.md neu.md` ergibt ein Word-Dokument, das Word ohne Reparatur
+- [ ] `./run.sh compare alt.md neu.md` ergibt ein Word-Dokument, das Word ohne Reparatur
       öffnet und dessen Änderungen im Überprüfen-Modus sichtbar sind.
 - [ ] Alle Änderungen annehmen ergibt die neue Fassung, alle ablehnen die alte (Text und
       Struktur; Tabellen und Bilder als Ganzes).
-- [ ] `--seit <rev>` holt die alte Fassung aus Git; Autor und Datum stehen an jeder Änderung.
+- [ ] `--since <rev>` holt die alte Fassung aus Git; Autor und Datum stehen an jeder Änderung.
 - [ ] Die Grenzen stehen in Hilfetext und Anleitung.
 
 ## Offene Fragen

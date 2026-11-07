@@ -5,7 +5,7 @@
 
 ## Zusammenfassung
 
-`./run.sh vorschau documents/<thema>` rendert das HTML-Deck einer Präsentation mit Playwright zu
+`./run.sh preview documents/<thema>` rendert das HTML-Deck einer Präsentation mit Playwright zu
 einem PNG je Folie und einem Kontaktbogen und legt sie in `documents/<thema>/vorschau/` ab.
 Damit sehen Anwender ohne PowerPoint und eine KI, die das Deck geschrieben hat, das Ergebnis —
 überlange Titel, abgeschnittene Bilder, leere Folien — bevor jemand die PPTX öffnet.
@@ -40,7 +40,7 @@ Damit sehen Anwender ohne PowerPoint und eine KI, die das Deck geschrieben hat, 
    `contact_sheet(images, columns=4) -> Path` setzt mit Pillow `uebersicht.png` mit
    Foliennummern zusammen. Fehlt Playwright oder Chromium, wirft `PreviewUnavailableError` mit
    dem Installationshinweis.
-3. **Werkzeug** `tools/vorschau/vorschau.py` (damit `./run.sh vorschau` ohne Änderung an
+3. **Werkzeug** `tools/preview/preview.py` (damit `./run.sh preview` ohne Änderung an
    `run.sh`/`run.ps1` läuft; der Dateiname ist der Verbname, deshalb ausnahmsweise deutsch wie
    `generate` englisch — Frage 4): nimmt
    Markdown-Dateien oder Ordner wie `generate`, erzeugt das HTML-Deck im Speicher (E10-S01, ohne
@@ -66,9 +66,9 @@ Damit sehen Anwender ohne PowerPoint und eine KI, die das Deck geschrieben hat, 
 
 ## Akzeptanzkriterien
 
-- [ ] `./run.sh vorschau samples/gsb` legt je Folie ein PNG und `uebersicht.png` in
+- [ ] `./run.sh preview samples/gsb` legt je Folie ein PNG und `uebersicht.png` in
       `samples/gsb/vorschau/gsb-praesentation/` ab; die Bilder zeigen die Folien wie der Browser.
-- [ ] Ohne das Extra bricht nur `vorschau` mit einem Installationshinweis ab; `generate` und die
+- [ ] Ohne das Extra bricht nur `preview` mit einem Installationshinweis ab; `generate` und die
       Tests laufen unverändert (Vorschautests werden übersprungen).
 - [ ] Zwei Läufe auf derselben Maschine ergeben identische Bilder; auf einer anderen Maschine
       weichen sie um weniger als 0,5 % der Pixel ab.
@@ -80,26 +80,23 @@ Damit sehen Anwender ohne PowerPoint und eine KI, die das Deck geschrieben hat, 
 1. Soll die Vorschau bei Builds den Endzustand zeigen (Vorschlag) oder je Schritt ein Bild
    (`folie-03-2.png`)?
 
->
-
+> (2026-11-07) Endzustand.
 2. Word: soll optional **LibreOffice** (wenn `soffice` im Pfad ist) für `…-bericht.md` eine
    Vorschau liefern (DOCX → PDF → PNG über pypdfium2 aus dem Extra `pdf`)? Es wäre nie Pflicht,
-   zeigt aber nicht genau, was Word zeigt. Vorschlag: ja, als `vorschau --libreoffice`, klar als
+   zeigt aber nicht genau, was Word zeigt. Vorschlag: ja, als `preview --libreoffice`, klar als
    Näherung beschriftet; sonst gar keine Word-Vorschau.
 
->
-
+> (2026-11-07) Nein — keine Word-Vorschau, kein LibreOffice.
 3. Dürfen Referenzbilder (`tests/preview/expected/`, einige MB) ins Repo? Alternative: nur
    Struktur prüfen (Anzahl, Maße, nicht leer). Vorschlag: nur `samples/funktionen` als Referenz,
    `--scale 1`, PNG optimiert.
 
->
-
-4. Verbname `vorschau` (deutsch, wie der Anwender es liest) oder `preview` (englisch, wie
+> (2026-11-07) Nur `samples/funktionen` als Referenz, `--scale 1`, optimiert.
+4. Verbname `preview` (deutsch, wie der Anwender es liest) oder `preview` (englisch, wie
    `generate` und `generate-samples`)? Vorschlag: `preview`, damit alle Verben eine Sprache haben;
    die Anleitung erklärt ihn.
 
->
+> (2026-11-07) `preview`. Alle Verben und Schalter der Werkzeuge sind englisch (`check`, `compare`, `--strict`, `--sources`); die Anleitungen erklären sie.
 
 ## Notizen
 

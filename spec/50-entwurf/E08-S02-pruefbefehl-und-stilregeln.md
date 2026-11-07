@@ -5,7 +5,7 @@
 
 ## Zusammenfassung
 
-`./run.sh pruefen documents/<thema>` prüft Markdown-Dateien, ohne Dokumente zu schreiben: Fehler
+`./run.sh check documents/<thema>` prüft Markdown-Dateien, ohne Dokumente zu schreiben: Fehler
 und Hinweise aus E08-S01, dazu Stilregeln aus den PTA-Musterfolien und eine Statistik (Folien,
 Wörter je Folie, geschätzte Vortragsdauer, Seitenabschätzung). Für eine KI ist das der schnelle
 Kontrollgang vor dem Erzeugen; für Menschen der Blick, ob ein Deck zu voll ist.
@@ -37,32 +37,32 @@ Kontrollgang vor dem Erzeugen; für Menschen der Blick, ob ein Deck zu voll ist.
    - `style-title`: Folientitel über 60 Zeichen oder endend mit Punkt;
    - `style-image-source`: Bild ohne Urheber/Quelle in Titel oder Unterschrift (kein
      „Foto:", „Quelle:", „CC", „©"), wenn der Dokumentordner eine `QUELLEN.md` hat oder
-     `--quellen` gesetzt ist;
+     `--sources` gesetzt ist;
    - `style-alt-text`: Bild ohne Alt-Text (siehe E13-S03);
    - `style-heading-numbers`: Überschrift beginnt mit eigener Nummer („1. Einleitung"), obwohl
      Word nummeriert.
-   Regeln sind abschaltbar: Front Matter `pruefung: aus` oder `--ohne style-words`.
+   Regeln sind abschaltbar: Front Matter `pruefung: aus` oder `--skip style-words`.
 3. **Statistik** (`CheckStats`): Folien (Titel, Kapitel, Inhalt, Fortsetzungen), Wörter gesamt
    und je Folie (min/median/max), Notizen-Wörter (E09-S01), geschätzte Dauer (2 Minuten je
    Inhaltsfolie, plus Notizen bei 120 Wörtern/Minute — Faustregel, als solche ausgewiesen);
    Word: Wörter, Überschriften, Tabellen, Abbildungen, grobe Seitenzahl (Wörter / 350 zuzüglich
    Tabellen und Bilder) mit dem Hinweis, dass Word erst beim Öffnen zählt.
-4. **Werkzeug** `tools/check/check.py`, `./run.sh pruefen <datei-oder-ordner> [--streng]
-   [--ohne <code>,…] [--json]`: Formatwahl wie `generate`; Ausgabe je Datei: `OK`/`FEHLER`, dann
+4. **Werkzeug** `tools/check/check.py`, `./run.sh check <datei-oder-ordner> [--strict]
+   [--skip <code>,…] [--json]`: Formatwahl wie `generate`; Ausgabe je Datei: `OK`/`FEHLER`, dann
    Hinweise mit Zeile, dann die Statistik in zwei Zeilen; `--json` für Werkzeuge. Exit-Code 1 bei
-   Fehlern, mit `--streng` auch bei Hinweisen.
+   Fehlern, mit `--strict` auch bei Hinweisen.
 5. **Dokumentation:** `anleitung.md` Abschnitt „Prüfen, bevor man erzeugt", `ki-anleitung.md`
-   Regel 3 empfiehlt `pruefen` vor `generate`; Codes in `verwendung.md`.
+   Regel 3 empfiehlt `check` vor `generate`; Codes in `verwendung.md`.
 6. **Tests:** `tests/check/test_style_rules.py` je Regel positiv und negativ; `samples/` ohne
    Stilhinweise (Ausnahmen in den Beispielen ausdrücklich mit `pruefung: aus` je Datei, wenn sie
    absichtlich Grenzen zeigen, etwa die Fortsetzungsfolie in `funktionen-praesentation.md`).
 
 ## Akzeptanzkriterien
 
-- [ ] `./run.sh pruefen` schreibt keine Datei und meldet dieselben Fehler und Hinweise wie
+- [ ] `./run.sh check` schreibt keine Datei und meldet dieselben Fehler und Hinweise wie
       `generate`, dazu Stilhinweise und Statistik.
 - [ ] Jede Stilregel hat einen Code, ist einzeln abschaltbar und in `verwendung.md` beschrieben.
-- [ ] `--json` liefert eine maschinenlesbare Form; `--streng` setzt den Exit-Code bei Hinweisen.
+- [ ] `--json` liefert eine maschinenlesbare Form; `--strict` setzt den Exit-Code bei Hinweisen.
 - [ ] `samples/gsb` besteht die Prüfung ohne Hinweise.
 
 ## Offene Fragen
@@ -70,11 +70,10 @@ Kontrollgang vor dem Erzeugen; für Menschen der Blick, ob ein Deck zu voll ist.
 1. Welche Grenzwerte gelten (sieben Punkte, 80 Wörter, 60 Zeichen)? Die PTA-Musterfolien nennen
    keine Zahlen; die Werte oben sind Vorschläge zum Einstellen.
 
->
+> (2026-11-07) Die vorgeschlagenen Werte (7 Punkte, 80 Wörter, 60 Zeichen, 20 Wörter je Punkt), einstellbar.
+2. Soll die Quellenregel (`style-image-source`) immer gelten oder nur mit `QUELLEN.md`/`--sources`?
 
-2. Soll die Quellenregel (`style-image-source`) immer gelten oder nur mit `QUELLEN.md`/`--quellen`?
-
->
+> (2026-11-07) Nur mit `QUELLEN.md` oder `--sources`.
 
 ## Notizen
 

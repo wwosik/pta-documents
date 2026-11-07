@@ -58,8 +58,7 @@ Erzeugung (E08-S01).
    das Repo liefert die offiziellen Bausteine, `documents/_bausteine/` überschreibt bei gleichem
    Namen.
 
->
-
+> (2026-11-07) Beides: Repo liefert die offiziellen Bausteine, `documents/_bausteine/` überschreibt bei gleichem Namen.
 2. Sollen Variablen auch im Front Matter selbst gelten (`titel: Angebot für {{kunde}}`)?
    Vorschlag: ja, außer in `variablen.*` selbst.
 
