@@ -99,6 +99,48 @@ Der Wettlauf im alten System geschah mit einem Broker.
 - **Ein Broker heißt doppelte Maschinerie** – Compare-and-Swap brauchen wir ohnehin
 :::
 
+## Vorher und nachher
+
+::: columns
+**Heute**
+
+- 26 Tabellen für 12 Arten von Regeln
+- Sperren im Join
+
+---
+
+**Mit Hafen**
+
+- Ein Dokument je Revision
+- Keine Datenbank, kein Message Broker
+:::
+
+## Der Schattenlauf {kicker="Plan"}
+
+:::: columns 1:2
+**Vier Wochen** lang rechnen altes System und Hafen dieselben Buchungen.
+
+```
+vergleiche --alt planer --neu hafen
+```
+
+---
+
+| Woche | Gleiche Ergebnisse |
+| ----- | ------------------ |
+| 1 | 91 % |
+| 2 | 97 % |
+| 3 | 99 % |
+
+::: comment
+Ziel: 100 %
+:::
+::::
+
+::: conclusion
+Erst wenn der Schattenlauf vier Wochen lang gleiche Ergebnisse liefert, wird umgestellt.
+:::
+
 ## Stand und nächste Schritte
 
 | Teil | Status |

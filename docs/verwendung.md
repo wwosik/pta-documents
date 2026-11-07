@@ -77,6 +77,46 @@ eine Bildreihe bekommt eine eigene Folie (Text davor oben, danach unten); ein Bi
 kommt auf `Titel, Text und Bild 01`. Zu viel Inhalt wird bis 12 pt verkleinert und sonst auf
 „(Forts.)"-Folien fortgesetzt.
 
+### Flow-Folien (E04-S03)
+
+Eine `##`-Folie mit `:::`-Container, Alert, einem Absatz nur aus Code-Spans (Tags), `{.dark}`
+oder `kicker="…"` wird eine Flow-Folie (`generation/pptx/flow_parser.py` liest, `flow.py`
+zeichnet, Werte in `design/slides.py`: `FLOW`, `CONCLUSION`, `COMMENT`, `grid`). Sie steht auf
+`Nur Titel`; die Blöcke stapeln sich in der Inhaltsfläche (1,33/4,62 cm, 31,20 × 13,10 cm), mit
+0,40 cm Abstand:
+
+| Block | Gestaltung |
+| ----- | ---------- |
+| Text | 18 pt Segoe UI Light `404040`, Ebenen wie im Textplatzhalter; in Karten 14 pt |
+| `cards` | Rechtecke ohne Fläche, Rand `E6E6E6` 0,75 pt; bis vier je Zeile im Raster (2 × 15,10, 3 × 9,73, 4 × 7,00 cm an den Hilfslinien des Masters); Kennzahl 32 pt fett, Titel 18 pt Segoe UI, beide PTA-Blau |
+| `rows` | Begriff (18 pt Segoe UI PTA-Blau) im linken Drittel, Linien `E6E6E6` 0,5 pt über jeder Zeile, `404040` unter der letzten |
+| `panel` / `panel dark` | Fläche `E6E6E6` / `004676` mit weißer Schrift |
+| `statement` | erster Absatz 24 pt fett PTA-Blau |
+| `columns` | Spalten 1,00 cm auseinander; über die ganze Breite an den Hilfslinien (gleich breite genau, andere bis 1,5 cm daneben eingerastet); **genau zwei gleiche Spalten nur mit Text** → Layout `Titel und Text (zweispaltig)`, wenn der Text dort passt |
+| Alerts | Fläche `E6E6E6`, Balken links 0,15 cm PTA-Blau (`NOTE`, `TIP`) bzw. Gelb `FDDC35`, Text nicht kursiv |
+| Tags | Rahmen PTA-Blau 0,75 pt, Consolas 12 pt; beschriftete Tags (Liste `` - `x` Text `` in einem Container): Chip fett, Text daneben |
+| Code | Fläche `E6E6E6`, Consolas 14 pt, Zeilenabstand 130 % |
+| Tabellen, Bilder | wie auf Visual-Folien; Bilder teilen sich die übrige Höhe (mindestens 4,76 cm) |
+| `conclusion` | PTA-Fazit-Box (Vorlagensammlung Folie 43): 1,33/15,78 cm, 31,20 × 1,94 cm, `004676`, 18 pt fett weiß, Einzug links 1,90 cm; höchstens zwei Zeilen (verkleinert bis 14 pt, sonst Fehler), einmal je Folie, nur direkt auf der Folie; die Blöcke stapeln darüber |
+| `comment` | PTA-Kommentarbox (Folie 32): `wedgeRectCallout`, weiß, Verlaufsrand `9FD8FF` → `006FB9` 1,5 pt, 14 pt fett PTA-Blau, Ränder 0,30/0,20 cm; rechtsbündig oben auf dem Block davor, höchstens halb so breit wie ihr Platz, Spitze nach links unten auf den Block; nimmt keine Höhe ein |
+
+- `kicker="…"`: 12 pt fett Versalien `004676` bei 1,33/1,60 cm über dem Titel.
+- `{.dark}`: `Nur Titel` mit dem Hintergrund von `Titelfolie ohne Bild`; Titel, Text, Kicker,
+  Fußzeile weiß; helle Flächen (Panel, Alert, Code) behalten ihre dunkle Schrift.
+- Auf **allen** Folien: `==…==` fett mit Hervorhebung `FDDC35`; eine Tabellenzeile, deren erste
+  Zelle ganz markiert ist, hat die Fläche `FDDC35`; `[Wörter]{.x}` fett in `STATUS_COLORS`. Auf
+  Flow-Folien ist eine Tabellenzelle aus genau einem Code-Span ein Status-Label: „●" in der
+  Farbe seiner Kategorie (`status.<kategorie>` im Front Matter, sonst `AFAFAF`), Text `404040`.
+- Fitting (Port von `FitFlow`): alle Größen bis zu zweimal um ein Achtel kleiner (Abstände dann
+  halb), nie unter 12 pt; sonst Teilung zwischen Blöcken, Absatzgruppen, Tabellenzeilen (Kopf
+  wiederholt), Zeilen von `rows` und beschrifteten Tags. Karten, Panels, Alerts, Spalten werden
+  nie geteilt, eine Kommentarbox bleibt bei ihrem Block; Folgefolien „(Forts.)" behalten den
+  Kicker, die Fazit-Box steht nur auf der letzten. Hinweise `slide-split`/`slide-overfull`.
+- Mit Flow-Inhalt ist nur `layout="Nur Titel"` erlaubt. Aufbaufehler melden die Zeile
+  (`Line 4: In '::: cards', each card starts with a ### heading, …`; Karten ohne Titel,
+  `rows` ohne Liste, `- ` ohne fetten Titel, `statement` ohne Absatz, Spalten ≠ zwei/drei,
+  zwei Fazit-Boxen, Fazit-Box in einem Container, Kommentarbox ohne Block davor).
+
 ## Folien-Syntax (gemeinsam für Word und PowerPoint)
 
 Beide Generatoren lesen und prüfen dieselbe Folien-Syntax aus DocLibs, bevor sie schreiben
@@ -86,12 +126,12 @@ Front Matter mitgezählt).
 
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
-| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"` | `.closing`/`layout` wirken in PowerPoint (s. o.); `.dark`/`kicker` und in Word alle werden entfernt (gezeichnet ab E04-S03/E03-S03) |
-| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`) | Zäune entfallen, der Inhalt steht als normale Blöcke da |
-| Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | Markierungszeile entfällt, der Rest ist ein Zitat |
-| `==Markierung==` | – | Gleichheitszeichen entfallen, Text normal |
-| `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen, Wörter fett (Farbe ab E03-S03/E04-S03) |
-| Front Matter `status.<kategorie>: Text; Text` | dieselben fünf Kategorien, jeder Text nur einmal | geprüft; Status-Labels in Tabellen ab E03-S03/E04-S03 |
+| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"` | PowerPoint: alle wirken (s. o., Flow-Folien); Word: alle werden entfernt (gestaltet ab E03-S03) |
+| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment` | PowerPoint: Flow-Folien; Word: Zäune entfallen, der Inhalt steht als normale Blöcke da |
+| Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: Markierungszeile entfällt, der Rest ist ein Zitat |
+| `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Gleichheitszeichen entfallen, Text normal |
+| `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen, Wörter fett; PowerPoint in der Signalfarbe (Word ab E03-S03) |
+| Front Matter `status.<kategorie>: Text; Text` | dieselben fünf Kategorien, jeder Text nur einmal | geprüft; PowerPoint: Status-Labels in Tabellen auf Flow-Folien (Word ab E03-S03) |
 
 Andere geschweifte und eckige Klammern bleiben Text (`## Mengen {a, b}`, `[a] {.success}`,
 `` `[a]{.success}` ``, `[a](https://…){.x}`); farbige Wörter gelten nie in Code und nie über

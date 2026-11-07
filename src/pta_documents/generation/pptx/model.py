@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Final
 
+from pta_documents.design.colors import StatusCategory
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.markdown.document import DocumentResource
 
@@ -19,11 +20,19 @@ class Run:
     code: bool = False
     link: str | None = None
     is_break: bool = False
+    mark: bool = False
+    """``==text==``: bold, on the PTA yellow."""
+    status: StatusCategory | None = None
+    """``[words]{.success}``: bold in the signal colour; with ``label`` the colour of the dot."""
+    label: bool = False
+    """The dot "●" of a status label (a table cell that is one code span, on a flow slide)."""
 
     def metric(self) -> TextRun:
         if self.is_break:
             return TextRun(is_break=True)
-        return TextRun(self.text, self.bold)
+        return TextRun(
+            self.text, self.bold or self.mark or (self.status is not None and not self.label)
+        )
 
 
 BREAK = Run("", is_break=True)
@@ -77,6 +86,11 @@ class Table:
     alignments: tuple[Align, ...]
     has_header: bool
     title: tuple[Run, ...] | None = None
+    highlighted: tuple[bool, ...] = ()
+    """Per row: its first cell is ``==marked==`` as a whole, and the row is on the PTA yellow."""
+
+    def is_highlighted(self, row: int) -> bool:
+        return row < len(self.highlighted) and self.highlighted[row]
 
     def subset(self, body_rows: list[int], keep_title: bool) -> Table:
         chosen = ([0] if self.has_header else []) + body_rows
@@ -85,6 +99,7 @@ class Table:
             self.alignments,
             self.has_header,
             self.title if keep_title else None,
+            tuple(self.is_highlighted(r) for r in chosen),
         )
 
 
@@ -164,5 +179,170 @@ class LayoutSlide(Slide):
     segments: tuple[tuple[Item, ...], ...] = field(default_factory=tuple)
 
 
+# ---------------------------------------------------------------------- flow slides
+
+
+@dataclass(frozen=True)
+class TextBlock:
+    paragraphs: tuple[Paragraph, ...]
+
+
+@dataclass(frozen=True)
+class CodeLinesBlock:
+    """A code block no renderer took: its lines on a box of their own."""
+
+    lines: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class TableBlock:
+    table: Table
+
+
+@dataclass(frozen=True)
+class ImageRowBlock:
+    """One image, or a paragraph of nothing but images: side by side in cells of equal width."""
+
+    images: tuple[Image, ...]
+
+
+@dataclass(frozen=True)
+class ColumnsBlock:
+    """``::: columns``: its parts (split at ``---``) side by side, widths in the ratio of
+    ``widths``."""
+
+    widths: tuple[int, ...]
+    columns: tuple[tuple[FlowBlock, ...], ...]
+
+
+@dataclass(frozen=True)
+class Card:
+    """A card: its ``###`` or bold title, an optional big figure, and its blocks."""
+
+    title: tuple[Run, ...]
+    figure: tuple[Run, ...] | None
+    blocks: tuple[FlowBlock, ...]
+
+
+@dataclass(frozen=True)
+class CardsBlock:
+    """``::: cards``: boxes side by side, up to four to a row."""
+
+    cards: tuple[Card, ...]
+
+
+@dataclass(frozen=True)
+class Row:
+    term: tuple[Run, ...]
+    description: tuple[Paragraph, ...]
+
+
+@dataclass(frozen=True)
+class RowsBlock:
+    """``::: rows``: the term in the left third, its description beside it, a rule above each."""
+
+    rows: tuple[Row, ...]
+
+
+@dataclass(frozen=True)
+class PanelBlock:
+    """``::: panel`` or ``::: panel dark``: an area behind its blocks."""
+
+    dark: bool
+    blocks: tuple[FlowBlock, ...]
+
+
+@dataclass(frozen=True)
+class CalloutBlock:
+    """``> [!NOTE]`` and the other alerts: an area with a bar on its left, yellow if
+    ``important``."""
+
+    important: bool
+    blocks: tuple[FlowBlock, ...]
+
+
+@dataclass(frozen=True)
+class StatementBlock:
+    """The first paragraph of ``::: statement``, set large."""
+
+    text: tuple[Run, ...]
+
+
+@dataclass(frozen=True)
+class TagsBlock:
+    """A paragraph of nothing but code spans: chips that flow and wrap."""
+
+    tags: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class LabelledTag:
+    label: str
+    text: tuple[Run, ...]
+
+
+@dataclass(frozen=True)
+class LabelledTagsBlock:
+    """A list in a container whose items start with a code span: the span as a chip, the rest
+    beside it."""
+
+    items: tuple[LabelledTag, ...]
+
+
+@dataclass(frozen=True)
+class ConclusionBlock:
+    """``::: conclusion``: the PTA conclusion box at the foot of the content area."""
+
+    paragraphs: tuple[Paragraph, ...]
+
+
+@dataclass(frozen=True)
+class CommentBlock:
+    """``::: comment``: the PTA comment box, a speech bubble on the block before it."""
+
+    paragraphs: tuple[Paragraph, ...]
+
+
+FlowBlock = (
+    TextBlock
+    | CodeLinesBlock
+    | TableBlock
+    | ImageRowBlock
+    | ColumnsBlock
+    | CardsBlock
+    | RowsBlock
+    | PanelBlock
+    | CalloutBlock
+    | StatementBlock
+    | TagsBlock
+    | LabelledTagsBlock
+    | CommentBlock
+)
+
+
+@dataclass(frozen=True)
+class FlowSlide(Slide):
+    """A ``##`` section that uses the slide-layout Markdown (containers, alerts, tags, ``.dark``,
+    ``kicker``): its blocks stacked top to bottom on ``Nur Titel``."""
+
+    kicker: str | None = None
+    dark: bool = False
+    blocks: tuple[FlowBlock, ...] = ()
+    conclusion: ConclusionBlock | None = None
+
+
 def plain_text(runs: tuple[Run, ...]) -> str:
     return "".join(" " if r.is_break else r.text for r in runs).strip()
+
+
+def trim(runs: list[Run]) -> list[Run]:
+    """Without leading and trailing whitespace and breaks."""
+    result = list(runs)
+    while result and (result[0].is_break or not result[0].text.strip()):
+        result.pop(0)
+    while result and (result[-1].is_break or not result[-1].text.strip()):
+        result.pop()
+    if result:
+        result[0] = replace(result[0], text=result[0].text.lstrip())
+        result[-1] = replace(result[-1], text=result[-1].text.rstrip())
+    return result

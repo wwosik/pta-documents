@@ -142,14 +142,55 @@ Einleitender Satz.              ← Textebene „Einleitungstext"
 
 ### Folien-Syntax
 
-Für Flow-Folien gibt es eine eigene Syntax, die Word und PowerPoint schon **annehmen und
-prüfen**, aber noch nicht gestalten (die Gestaltung folgt): Container `::: cards`, `::: rows`,
-`::: panel` (auch `::: panel dark`), `::: statement`, `::: columns 1:2` … `:::`; Hinweiskästen
-`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`; `==Markierung==`; farbige
-Wörter `[im Plan]{.success}` (`.warning`, `.danger`, `.info`, `.neutral`); an `##`-Überschriften
-`{.dark}` und `{kicker="Warum"}`; im Front Matter `status.success: Erledigt` usw. Heute bleibt
-davon der Inhalt als normaler Text stehen (farbige Wörter fett). Ein Tippfehler ergibt eine
-Fehlermeldung mit Zeilennummer und den gültigen Namen.
+Mit einer eigenen Syntax werden aus einer `##`-Folie **Flow-Folien** im PTA-Stil. PowerPoint
+zeichnet sie auf dem Layout `Nur Titel`; Word nimmt dieselbe Syntax an und prüft sie, zeigt aber
+vorerst nur den Inhalt als normalen Text (die Gestaltung in Word folgt).
+
+```markdown
+## Warum neu bauen? {kicker="Warum"}
+
+::: cards
+### Zu kompliziert
+**26 Tabellen**
+
+für 12 Arten von Regeln.
+
+### Zu langsam
+**3,2 GB**
+
+Speicher je Fahrplan.
+:::
+
+::: conclusion
+Ein Neubau ist günstiger als jede weitere Erweiterung.
+:::
+```
+
+- Container `::: name` … `:::` (verschachtelt mit längeren Zäunen, `::::` außen):
+  `cards` (Karten nebeneinander, je eine `###`-Überschrift, darunter optional eine fette
+  Kennzahl, oder eine Liste `- **Titel** – Text`), `rows` (eine Liste `- **Begriff** –
+  Beschreibung`), `panel` bzw. `panel dark` (graue bzw. dunkelblaue Fläche), `statement` (der
+  erste Absatz groß), `columns` bzw. `columns 1:2` (Spalten, getrennt durch eine Zeile `---` mit
+  Leerzeile davor), `conclusion` (die PTA-Fazit-Box am Fuß der Folie, höchstens zwei Zeilen,
+  einmal je Folie) und `comment` (die PTA-Kommentarbox, eine Sprechblase rechts oben auf dem
+  Block davor, z. B. einem Diagramm).
+- Hinweiskästen `> [!NOTE]`, `[!TIP]` (Balken PTA-Blau), `[!IMPORTANT]`, `[!WARNING]`,
+  `[!CAUTION]` (Balken Gelb); ein Absatz aus Code-Spans `` `a` `b` `` wird zu Chips.
+- `==Markierung==` ist fett auf PTA-Gelb (auf allen Folien); eine Tabellenzeile, deren erste
+  Zelle ganz markiert ist, steht auf Gelb.
+- Farbige Wörter `[im Plan]{.success}` (`.warning`, `.danger`, `.info`, `.neutral`) sind fett
+  in der Signalfarbe; im Front Matter `status.success: Erledigt` usw. — eine Tabellenzelle, die
+  nur `` `Erledigt` `` enthält, bekommt auf Flow-Folien einen Ampelpunkt „●" in dieser Farbe.
+- An `##`-Überschriften: `{kicker="Warum"}` (kleine Zeile über dem Titel) und `{.dark}` (Folie
+  auf dem Verlauf der Titelfolie, Schrift weiß).
+- Genau zwei gleich breite Spalten nur mit Text kommen auf das Vorlagenlayout
+  `Titel und Text (zweispaltig)`.
+- Passt eine Flow-Folie nicht, wird alles bis zu zweimal um ein Achtel kleiner (nie unter
+  12 pt), dann geht es auf einer Folie „(Forts.)" weiter; Karten, Flächen und Spalten werden
+  nicht geteilt, die Fazit-Box steht auf der letzten.
+
+Ein Tippfehler oder ein falscher Aufbau (z. B. eine Karte ohne `###`) ergibt eine
+Fehlermeldung mit Zeilennummer, die sagt, was zu ändern ist.
 
 ## 6. Aus Python aufrufen (optional)
 

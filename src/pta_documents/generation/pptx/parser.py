@@ -3,26 +3,31 @@
 Follows the DocLibs ``DeckParser``: text under a ``##`` heading becomes the body of a text
 slide; a table, an image (row) or a code block makes a slide of its own, with the text before
 it above and the text after it below; a second visual starts another slide with the same title.
+A ``##`` section that uses the slide-layout Markdown becomes one flow slide (``flow_parser``).
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, replace
 from typing import Final
 
 from markdown_it.token import Token
 
+from pta_documents.design import slides as design
+from pta_documents.design.colors import StatusCategory
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     code_blocks,
     heading_attributes,
     html,
     layout_syntax,
+    layout_tokens,
 )
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image
 from pta_documents.generation.common.renderers import ImageGraphic
 from pta_documents.generation.common.result import Notes
+from pta_documents.generation.pptx import flow_parser
 from pta_documents.generation.pptx.model import (
     BREAK,
     PICTURE_TYPES,
@@ -44,28 +49,23 @@ from pta_documents.generation.pptx.model import (
     TitleSlide,
     Visual,
     VisualSlide,
+    trim,
 )
 from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
-from pta_documents.markdown.parser import child_lines, line_of, parse
+from pta_documents.markdown.parser import ALERT, CONTAINER_OPEN, child_lines, line_of, parse
 
 FORMAT: Final = DocumentFormat.PPTX
 WHAT: Final = "the deck"
 
 
 @dataclass
-class _Style:
+class Style:
     bold: bool = False
     italic: bool = False
     strike: bool = False
     link: str | None = None
-
-
-@dataclass
-class _Section:
-    """Collects the items under one heading."""
-
-    items: list[Item] = field(default_factory=lambda: list[Item]())
+    mark: bool = False
 
 
 class DeckParser:
@@ -76,13 +76,17 @@ class DeckParser:
         line_offset: int,
         notes: Notes | None = None,
         options: PptxOptions | None = None,
+        labels: dict[str, StatusCategory] | None = None,
     ) -> None:
         self.document = document
+        self.labels = labels or {}
+        """Status labels of the front matter (``status.<kategorie>``): label text -> category."""
         self.options = options or PptxOptions()
         self.body = body
         self.line_offset = line_offset
         self.notes = notes if notes is not None else Notes()
         self.slides: list[Slide] = []
+        self.tokens: list[Token] = []
         self.has_cover = False
         self.chapters = 0
         self.dark = False
@@ -94,43 +98,61 @@ class DeckParser:
         end = next((i for i, t in enumerate(tokens) if t.type == "footnote_block_open"), None)
         if end is not None:
             tokens = tokens[:end]
+        self.tokens = tokens
         heading: tuple[Token, Token] | None = None
-        section = _Section()
+        start = 0
         i = 0
         while i < len(tokens):
             token = tokens[i]
-            if token.type == "heading_open" and token.tag in ("h1", "h2"):
-                self._section(heading, section)
+            # Only headings of the document itself start slides, none inside a container.
+            if token.type == "heading_open" and token.tag in ("h1", "h2") and token.level == 0:
+                self._section(heading, start, i)
                 heading = (token, tokens[i + 1])
-                section = _Section()
                 level = int(token.tag[1])
                 _, attributes = layout_syntax.without_attributes(tokens[i + 1], level, FORMAT)
                 self.dark = attributes is not None and attributes.dark
                 i += 3
+                start = i
                 continue
-            i = self._block(tokens, i, section.items, depth=0, italic=False)
-        self._section(heading, section)
+            i += 1
+        self._section(heading, start, len(tokens))
         return self.slides
 
     # ------------------------------------------------------------------ sections
 
-    def _line(self, token: Token) -> int | None:
+    def line(self, token: Token) -> int | None:
         return line_of(token, self.line_offset)
 
     def _error(self, reason: str, token: Token) -> DocumentConversionError:
-        line = self._line(token)
+        line = self.line(token)
         return DocumentConversionError(FORMAT, f"{reason} (line {line})" if line else reason)
 
-    def _section(self, heading: tuple[Token, Token] | None, section: _Section) -> None:
+    def _section(self, heading: tuple[Token, Token] | None, start: int, end: int) -> None:
         if heading is None:
             # Text before the first heading is ignored, as in DocLibs.
             return
         open_token, inline = heading
         title, attributes = self._title(inline, int(open_token.tag[1]))
-        line = self._line(open_token)
+        line = self.line(open_token)
         layout = attributes.layout if attributes else None
+        if open_token.tag == "h2" and self._uses_layouts(start, end, attributes):
+            if layout is not None and layout != design.LAYOUTS.title_only:
+                raise self._error(
+                    f"The slide uses slide-layout Markdown (containers, alerts, tags, .dark or "
+                    f"kicker), which goes on the layout '{design.LAYOUTS.title_only}' only, not "
+                    f"on '{layout}'. Leave out layout=\"…\", or the slide-layout Markdown",
+                    open_token,
+                )
+            reader = flow_parser.FlowReader(self)
+            self.slides.append(reader.slide(title, line, attributes, start, end))
+            return
+        items: list[Item] = []
+        i = start
+        while i < end:
+            i = self.block(self.tokens, i, items, depth=0, italic=False)
+        section = items
         if open_token.tag == "h1":
-            text = [i for i in section.items if not isinstance(i, Separator)]
+            text = [i for i in section if not isinstance(i, Separator)]
             if attributes is not None and attributes.closing:
                 self._no_content(text, "the closing slide", open_token)
                 self.slides.append(ClosingSlide(title, line, layout))
@@ -153,14 +175,36 @@ class DeckParser:
             raise self._error("{.closing} goes on a '#' heading: the closing slide", open_token)
         if layout is not None:
             segments: list[tuple[Item, ...]] = [()]
-            for item in section.items:
+            for item in section:
                 if isinstance(item, Separator):
                     segments.append(())
                 else:
                     segments[-1] = (*segments[-1], item)
             self.slides.append(LayoutSlide(title, line, layout, tuple(segments)))
             return
-        self._content(title, section.items, line)
+        self._content(title, section, line)
+
+    def _uses_layouts(
+        self, start: int, end: int, attributes: heading_attributes.HeadingAttributes | None
+    ) -> bool:
+        """Whether a ``##`` section is a flow slide: ``.dark`` or ``kicker`` on its heading, a
+        container or an alert anywhere in it, or a paragraph of tags of its own (DocLibs)."""
+        if attributes is not None and (attributes.dark or attributes.kicker is not None):
+            return True
+        tokens = self.tokens
+        for i in range(start, end):
+            token = tokens[i]
+            if token.type == CONTAINER_OPEN or (
+                token.type == "blockquote_open" and ALERT in token.meta
+            ):
+                return True
+            if (
+                token.type == "paragraph_open"
+                and token.level == 0
+                and layout_tokens.tags(tokens[i + 1]) is not None
+            ):
+                return True
+        return False
 
     def _no_content(self, items: Sequence[Item], what: str, token: Token) -> None:
         if items:
@@ -174,7 +218,7 @@ class DeckParser:
         self, inline: Token, level: int
     ) -> tuple[tuple[Run, ...], heading_attributes.HeadingAttributes | None]:
         inline, attributes = layout_syntax.without_attributes(inline, level, FORMAT)
-        return tuple(_trim(self._runs(inline, _Style(), images_as_text=True))), attributes
+        return tuple(trim(self.runs(inline, Style(), images_as_text=True))), attributes
 
     def _content(self, heading_runs: tuple[Run, ...], items: list[Item], line: int | None) -> None:
         above: list[Paragraph] = []
@@ -206,11 +250,11 @@ class DeckParser:
 
     # ------------------------------------------------------------------ blocks
 
-    def _block(self, tokens: list[Token], i: int, out: list[Item], depth: int, italic: bool) -> int:
+    def block(self, tokens: list[Token], i: int, out: list[Item], depth: int, italic: bool) -> int:
         token = tokens[i]
         match token.type:
             case "heading_open":
-                runs = self._runs(tokens[i + 1], _Style(italic=italic), images_as_text=True)
+                runs = self.runs(tokens[i + 1], Style(italic=italic), images_as_text=True)
                 out.append(Paragraph(tuple(runs), Kind.SUBHEADLINE))
                 return i + 3
             case "paragraph_open":
@@ -221,18 +265,18 @@ class DeckParser:
             case "blockquote_open":
                 return self._container(tokens, i, "blockquote_close", out, depth, italic=True)
             case "table_open":
-                return self._table(tokens, i, out)
+                return self.table(tokens, i, out)
             case "fence" | "code_block":
                 graphic = self._draw(token) if token.type == "fence" else None
                 if graphic is not None:
-                    image = Image(graphic.image, token.info.strip(), self._line(token))
+                    image = Image(graphic.image, token.info.strip(), self.line(token))
                     out.append(Images((self._placeable(image, token),)))
                 else:
                     out.append(Code(tuple(token.content.rstrip("\n").split("\n"))))
                 return i + 1
             case "html_block":
                 if not html.is_comment(token.content):
-                    html.note_raw_html(self.notes, self._line(token), WHAT)
+                    html.note_raw_html(self.notes, self.line(token), WHAT)
                 return i + 1
             case "hr":
                 out.append(Separator())
@@ -240,7 +284,7 @@ class DeckParser:
             case "dl_open":
                 return self._container(tokens, i, "dl_close", out, depth, italic)
             case "dt_open":
-                runs = self._runs(tokens[i + 1], _Style(bold=True, italic=italic), True)
+                runs = self.runs(tokens[i + 1], Style(bold=True, italic=italic), True)
                 out.append(Paragraph(tuple(runs), Kind.INTRO))
                 return i + 3
             case _:
@@ -260,7 +304,7 @@ class DeckParser:
                 nesting -= 1
                 j += 1
                 continue
-            j = self._block(tokens, j, out, depth, italic)
+            j = self.block(tokens, j, out, depth, italic)
         return j
 
     def _list(self, tokens: list[Token], i: int, out: list[Item], depth: int, italic: bool) -> int:
@@ -284,7 +328,7 @@ class DeckParser:
                 elif t.type in ("bullet_list_open", "ordered_list_open"):
                     j = self._list(tokens, j, out, depth + 1, italic)
                 else:
-                    j = self._block(tokens, j, out, depth, italic)
+                    j = self.block(tokens, j, out, depth, italic)
             j += 1
         return j + 1
 
@@ -292,7 +336,7 @@ class DeckParser:
         self, inline: Token, out: list[Item], kind: Kind, depth: int, start: int, italic: bool
     ) -> None:
         """Text and images apart: images after the paragraph, as their own visual."""
-        runs = self._runs(inline, _Style(italic=italic), images_as_text=False)
+        runs = self.runs(inline, Style(italic=italic), images_as_text=False)
         images = [
             self._placeable(Image(self._resource(child, inline), child.content, line), inline)
             for child, line in zip(
@@ -300,7 +344,7 @@ class DeckParser:
             )
             if child.type == "image"
         ]
-        text = _trim(runs)
+        text = trim(runs)
         if text or not images:
             out.append(Paragraph(tuple(text), kind, depth, start))
         if images:
@@ -320,7 +364,7 @@ class DeckParser:
             self.notes,
             fence.info,
             fence.content,
-            self._line(fence),
+            self.line(fence),
             FORMAT,
             self.options.language,
             self.dark,
@@ -342,19 +386,35 @@ class DeckParser:
             )
         return Image(conversion.image, image.alt, image.line)
 
-    def _table(self, tokens: list[Token], i: int, out: list[Item]) -> int:
+    def table(self, tokens: list[Token], i: int, out: list[Item], labels: bool = False) -> int:
+        """The table at ``tokens[i]``; with ``labels`` (flow slides), a body cell that is one
+        code span is a status label: a dot in its category's colour before its text."""
         rows: list[tuple[tuple[Run, ...], ...]] = []
+        highlighted: list[bool] = []
         alignments: list[Align] = []
         has_header = False
         current: list[tuple[Run, ...]] = []
+        first_cell: Token | None = None
         j = i + 1
         while tokens[j].type != "table_close":
             t = tokens[j]
             if t.type == "tr_open":
                 current = []
+                first_cell = None
             elif t.type == "tr_close":
                 rows.append(tuple(current))
+                highlighted.append(first_cell is not None and layout_tokens.is_marked(first_cell))
+            elif (
+                t.type == "td_open"
+                and labels
+                and (label := layout_tokens.label_cell(tokens[j + 1]))
+            ):
+                first_cell = first_cell or tokens[j + 1]
+                category = self.labels.get(label, StatusCategory.NEUTRAL)
+                current.append((Run("● ", status=category, label=True), Run(label)))
             elif t.type in ("th_open", "td_open"):
+                if t.type == "td_open" and first_cell is None:
+                    first_cell = tokens[j + 1]
                 if t.type == "th_open":
                     has_header = True
                     style = str(t.attrs.get("style", "")) if t.attrs else ""
@@ -365,34 +425,44 @@ class DeckParser:
                             "text-align:right": Align.RIGHT,
                         }.get(style, Align.DEFAULT)
                     )
-                current.append(tuple(_trim(self._runs(tokens[j + 1], _Style(), True))))
+                current.append(tuple(trim(self.runs(tokens[j + 1], Style(), True))))
             j += 1
-        out.append(Table(tuple(rows), tuple(alignments), has_header))
+        out.append(Table(tuple(rows), tuple(alignments), has_header, None, tuple(highlighted)))
         return j + 1
 
     # ------------------------------------------------------------------ inline
 
-    def _runs(self, inline: Token, style: _Style, images_as_text: bool) -> list[Run]:
-        """The runs of an inline token; ``[words]{.success}`` bold without brackets and braces
-        (their colour comes with E04-S03)."""
+    def text_runs(self, inline: Token) -> tuple[Run, ...]:
+        """The runs of a paragraph or heading, images as their alt text, trimmed."""
+        return tuple(trim(self.runs(inline, Style(), images_as_text=True)))
+
+    def runs(self, inline: Token, style: Style, images_as_text: bool) -> list[Run]:
+        """The runs of an inline token; ``[words]{.success}`` without brackets and braces, in
+        their status category, ``==text==`` marked."""
         inline = layout_syntax.coloured(inline, FORMAT)
         runs: list[Run] = []
-        current = _Style(style.bold, style.italic, style.strike, style.link)
+        current = replace(style)
 
-        def add(text: str, code: bool = False) -> None:
+        def add(text: str, code: bool = False, status: StatusCategory | None = None) -> None:
             if text:
                 runs.append(
-                    Run(text, current.bold, current.italic, current.strike, code, current.link)
+                    Run(
+                        text,
+                        current.bold,
+                        current.italic,
+                        current.strike,
+                        code,
+                        current.link,
+                        mark=current.mark,
+                        status=status,
+                    )
                 )
 
         children = inline.children or []
         for child, line in zip(children, child_lines(inline, self.line_offset), strict=True):
             match child.type:
                 case "text" if layout_syntax.STATUS in child.meta:
-                    bold = current.bold
-                    current.bold = True
-                    add(child.content)
-                    current.bold = bold
+                    add(child.content, status=StatusCategory(child.meta[layout_syntax.STATUS]))
                 case "text":
                     add(child.content)
                 case "softbreak":
@@ -413,6 +483,10 @@ class DeckParser:
                     current.strike = True
                 case "s_close":
                     current.strike = style.strike
+                case "mark_open":
+                    current.mark = True
+                case "mark_close":
+                    current.mark = style.mark
                 case "link_open":
                     href = str(child.attrs.get("href", ""))
                     current.link = href if ":" in href else None
@@ -433,22 +507,3 @@ class DeckParser:
                 case _:
                     add(child.content)
         return runs
-
-
-def _trim(runs: list[Run]) -> list[Run]:
-    """Without leading and trailing whitespace and breaks."""
-    result = list(runs)
-    while result and (result[0].is_break or not result[0].text.strip()):
-        result.pop(0)
-    while result and (result[-1].is_break or not result[-1].text.strip()):
-        result.pop()
-    if result:
-        first, last = result[0], result[-1]
-        result[0] = Run(
-            first.text.lstrip(), first.bold, first.italic, first.strike, first.code, first.link
-        )
-        last = result[-1]
-        result[-1] = Run(
-            last.text.rstrip(), last.bold, last.italic, last.strike, last.code, last.link
-        )
-    return result

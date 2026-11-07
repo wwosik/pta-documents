@@ -15,17 +15,18 @@ from pptx.slide import Slide as PptxSlide
 from pptx.slide import SlideLayout
 from pptx.util import Emu
 
+from pta_documents.design import colors, templates
 from pta_documents.design import slides as design
-from pta_documents.design import templates
 from pta_documents.design.variants import GeneratedTexts, Language, SlidesVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common.result import NoteCodes, Notes
-from pta_documents.generation.pptx import fitting, visuals
+from pta_documents.generation.pptx import fitting, flow, visuals
 from pta_documents.generation.pptx.model import (
     ChapterSlide,
     ClosingSlide,
     Code,
     ContentSlide,
+    FlowSlide,
     Image,
     Images,
     Kind,
@@ -112,6 +113,8 @@ class DeckWriter:
                 self.visual_slide(slide)
             case LayoutSlide():
                 self.layout_slide(slide)
+            case FlowSlide():
+                flow.write_flow_slide(self, slide)
             case _:
                 raise TypeError(slide)
 
@@ -371,11 +374,12 @@ class DeckWriter:
             FORMAT, f"The layout '{slide.slide_layout.name}' has no placeholder {idx}."
         )
 
-    def set_title(self, slide: PptxSlide, runs: tuple[Run, ...]) -> None:
+    def set_title(self, slide: PptxSlide, runs: tuple[Run, ...], color: str | None = None) -> None:
         title: Any = slide.shapes.title
         if title is None:
             return
-        self.write_paragraphs(slide, title._element.txBody, [Paragraph(runs, Kind.SUBHEADLINE)])
+        paragraphs = [Paragraph(runs, Kind.SUBHEADLINE)]
+        self.write_paragraphs(slide, title._element.txBody, paragraphs, color=color)
 
     def set_text(self, slide: PptxSlide, idx: int, text: str) -> None:
         self.set_paragraphs(slide, idx, [Paragraph((Run(text),), Kind.SUBHEADLINE)])
@@ -445,7 +449,7 @@ class DeckWriter:
                 "may look blurred. Use a larger image.",
             )
 
-    def finish(self, slide: PptxSlide, footer: bool = False) -> None:
+    def finish(self, slide: PptxSlide, footer: bool = False, color: str | None = None) -> None:
         """Remove placeholders left empty (decorative ones stay) and add footer and number."""
         decorative = _decorative(slide.slide_layout)
         for shape in list(slide.placeholders):
@@ -457,9 +461,9 @@ class DeckWriter:
             if element.tag == p("sp") and not _text(element).strip() and parent is not None:
                 parent.remove(element)
         if footer:
-            self.add_footer(slide)
+            self.add_footer(slide, color)
 
-    def add_footer(self, slide: PptxSlide) -> None:
+    def add_footer(self, slide: PptxSlide, color: str | None = None) -> None:
         tree = slide.shapes._spTree
         for layout_shape in slide.slide_layout.placeholders:
             ph = layout_shape._element.find(f"{p('nvSpPr')}/{p('nvPr')}/{p('ph')}")
@@ -487,6 +491,12 @@ class DeckWriter:
                 texts[0].text = str(self.number)
             for r_pr in shape.iter(a("rPr"), a("endParaRPr")):
                 r_pr.set("lang", self.lang)
+                if color is not None:
+                    for old in r_pr.findall(a("solidFill")):
+                        r_pr.remove(old)
+                    fill = etree.Element(a("solidFill"))
+                    etree.SubElement(fill, a("srgbClr")).set("val", color)
+                    r_pr.insert(0, fill)
             tree.append(shape)
 
     # ------------------------------------------------------------------ text
@@ -497,6 +507,7 @@ class DeckWriter:
         body: etree._Element,
         paragraphs: list[Paragraph],
         scale: float = 1.0,
+        color: str | None = None,
     ) -> None:
         """Replace the paragraphs; a scale below 1 shrinks the text the way PowerPoint's
         "shrink text on overflow" does (``normAutofit``), so it stays fitted when edited."""
@@ -512,13 +523,26 @@ class DeckWriter:
             autofit = etree.SubElement(body_pr, a("normAutofit"))
             autofit.set("fontScale", str(round(scale * 100000)))
         for paragraph in paragraphs or [Paragraph(())]:
-            body.append(self.paragraph_element(slide, paragraph))
+            body.append(self.paragraph_element(slide, paragraph, color=color))
 
-    def paragraph_element(self, slide: PptxSlide, paragraph: Paragraph) -> etree._Element:
+    def paragraph_element(
+        self,
+        slide: PptxSlide,
+        paragraph: Paragraph,
+        factor: float | None = None,
+        color: str | None = None,
+        first: bool = False,
+    ) -> etree._Element:
+        """A paragraph at its level of the master; on flow slides with explicit sizes (the
+        level's size at ``factor``, see ``fitting.level_pt``), a colour, and no space before
+        the ``first`` paragraph of a box."""
         element = etree.Element(a("p"))
         p_pr = etree.SubElement(element, a("pPr"))
         if paragraph.level:
             p_pr.set("lvl", str(paragraph.level))
+        if first:
+            spacing = etree.SubElement(p_pr, a("spcBef"))
+            etree.SubElement(spacing, a("spcPts")).set("val", "0")
         if paragraph.kind is Kind.NUMBERED:
             auto = etree.SubElement(p_pr, a("buAutoNum"))
             auto.set("type", "arabicPeriod")
@@ -526,32 +550,56 @@ class DeckWriter:
                 auto.set("startAt", str(paragraph.start))
         if not len(p_pr) and not p_pr.attrib:
             element.remove(p_pr)
+        size = (
+            round(fitting.level_pt(self.body_style, paragraph.level, factor) * 100)
+            if factor is not None
+            else None
+        )
         for run in paragraph.runs:
             if run.is_break:
                 br = etree.SubElement(element, a("br"))
-                etree.SubElement(br, a("rPr")).set("lang", self.lang)
+                br_pr = etree.SubElement(br, a("rPr"))
+                br_pr.set("lang", self.lang)
+                if size is not None:
+                    br_pr.set("sz", str(size))
                 continue
-            element.append(self.run_element(slide, run, None))
+            element.append(self.run_element(slide, run, size, color))
         end = etree.SubElement(element, a("endParaRPr"))
         end.set("lang", self.lang)
+        if size is not None:
+            end.set("sz", str(size))
         return element
 
-    def run_element(self, slide: PptxSlide, run: Run, size: int | None) -> etree._Element:
+    def run_element(
+        self, slide: PptxSlide, run: Run, size: int | None, color: str | None = None
+    ) -> etree._Element:
+        """A run; ``color`` is its text colour (None: the placeholder's or the theme's).
+
+        ``==mark==`` is bold on the PTA yellow, ``[words]{.x}`` bold in the signal colour of its
+        status, the dot of a status label in that colour: on every slide.
+        """
         r = etree.Element(a("r"))
         r_pr = etree.SubElement(r, a("rPr"))
         r_pr.set("lang", self.lang)
         if size is not None:
             r_pr.set("sz", str(size))
-        if run.bold:
+        bold = run.bold or run.mark or (run.status is not None and not run.label)
+        if bold:
             r_pr.set("b", "1")
         if run.italic:
             r_pr.set("i", "1")
         if run.strike:
             r_pr.set("strike", "sngStrike")
         r_pr.set("dirty", "0")
+        fill = colors.STATUS_COLORS[run.status] if run.status is not None else color
+        if fill is not None:
+            etree.SubElement(etree.SubElement(r_pr, a("solidFill")), a("srgbClr")).set("val", fill)
+        if run.mark:
+            highlight = etree.SubElement(r_pr, a("highlight"))
+            etree.SubElement(highlight, a("srgbClr")).set("val", design.FLOW.highlight)
         if run.code:
             etree.SubElement(r_pr, a("latin")).set("typeface", design.CODE_FONT)
-        elif run.bold:
+        elif bold:
             # PTA rule: emphasis in Segoe UI (the heading font), not in Segoe UI Light.
             etree.SubElement(r_pr, a("latin")).set("typeface", "+mj-lt")
         if run.link:

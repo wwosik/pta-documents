@@ -237,3 +237,35 @@ def fit_code(lines: int, height: int) -> float | None:
 def code_lines_per_slide(height: int) -> int:
     size = CODE_SIZES[-1]
     return max(1, int((height - 2 * CODE_PAD) / (size * LINE_FACTOR * EMU_PER_POINT)))
+
+
+# ---------------------------------------------------------------------- flow text
+
+
+def level_pt(style: BodyStyle, level: int, factor: float) -> float:
+    """The size of a text level of the master at ``factor`` (body size 18 pt -> 1.0) on a flow
+    slide: never below 12 pt, nor below the level's own size where that is smaller."""
+    size = style.levels[level].size_pt
+    return max(round(size * factor * 2) / 2, min(size, design.MIN_FONT_PT))
+
+
+def flow_paragraph_height(
+    style: BodyStyle, paragraph: Paragraph, factor: float, width: float
+) -> float:
+    level = style.levels[paragraph.level]
+    size = level_pt(style, paragraph.level, factor)
+    bold = paragraph.kind is Kind.SUBHEADLINE
+    lines = text_metrics.lines(metric_runs(paragraph.runs), size, bold, width - level.margin)
+    return (lines * size * LINE_FACTOR + level.space_before_pt * factor) * EMU_PER_POINT
+
+
+def flow_text_height(
+    style: BodyStyle, paragraphs: Sequence[Paragraph], factor: float, width: float
+) -> int:
+    """The height of paragraphs in a text box on a flow slide; the first one's space before
+    does not count (PowerPoint leaves it out at the top of a box)."""
+    if not paragraphs:
+        return 0
+    total = sum(flow_paragraph_height(style, p, factor, width) for p in paragraphs)
+    first = style.levels[paragraphs[0].level].space_before_pt * factor * EMU_PER_POINT
+    return int(total - first)

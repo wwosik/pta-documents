@@ -106,7 +106,7 @@ def test_the_layouts_sample_is_accepted(
         (
             "## T\n\n::: card\n- **a** b\n:::\n",
             "Line 3: Unknown container '::: card'. "
-            "Valid containers: cards, rows, panel, statement, columns.",
+            "Valid containers: cards, rows, panel, statement, columns, conclusion, comment.",
         ),
         ("## T\n\n::: cards dark\n- **a** b\n:::\n", "Line 3: The container '::: cards dark'"),
         ("## T\n\n::: cards dark\n- **a** b\n:::\n", "takes no arguments."),
@@ -155,7 +155,9 @@ def test_heading_attributes_are_left_out(generate: Generate, format: DocumentFor
     _, data = generate('# Deck\n\n## Titel {.dark kicker="Warum"}\n\nText\n')
     text = texts(data, format)
     assert "Titel" in text
-    assert "{" not in text and "Warum" not in text
+    assert "{" not in text and "kicker" not in text
+    # PowerPoint draws the kicker above the title (E04-S03); Word leaves it out.
+    assert ("Warum" in text) is (format is DocumentFormat.PPTX)
 
 
 @GENERATORS

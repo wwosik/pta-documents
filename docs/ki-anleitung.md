@@ -78,7 +78,7 @@ Word-Dokument sind Fehler.
   Zeilenumbruch), keine Diagramme/Mermaid/`chart`-Blöcke (werden als Code gezeigt, Hinweis
   `code-not-drawn`).
 - Folien-Syntax (`:::`-Container, Alerts `> [!NOTE]`, `==Markierung==`, `[Wörter]{.success}`)
-  wird angenommen und geprüft, aber **noch nicht gestaltet**: siehe *Folien-Syntax* unten.
+  wird angenommen und geprüft, in Word aber **noch nicht gestaltet**: siehe *Folien-Syntax* unten.
 
 ## Präsentation
 
@@ -107,21 +107,36 @@ Gliederung:
 - Ein bestimmtes PTA-Layout: `## Titel {layout="Titel und Text (zweispaltig)"}` und den Inhalt mit
   `---` in Spalten teilen. Nur exakte Layoutnamen; die Fehlermeldung listet alle.
 - Heading-Attribute: `#` kennt `.closing` und `layout="…"`, `##` kennt `.dark`, `kicker="…"` und
-  `layout="…"`; alles andere ist ein Fehler. `.dark` und `kicker` werden heute noch entfernt
-  (Gestaltung folgt).
+  `layout="…"`; alles andere ist ein Fehler. `kicker` ist eine kleine Zeile über dem Titel,
+  `.dark` setzt die Folie auf den Verlauf der Titelfolie mit weißer Schrift (beides macht die
+  Folie zur Flow-Folie, siehe unten).
 
 ## Folien-Syntax (Word und PowerPoint)
 
 Beide Formate nehmen dieselbe Syntax an und melden dieselben Fehler mit Zeilennummer
-(`Line 12: …`). Gestaltet wird sie noch nicht — bis dahin gilt:
+(`Line 12: …`). **PowerPoint** macht aus einer `##`-Folie mit Container, Alert, Tag-Absatz,
+`.dark` oder `kicker` eine **Flow-Folie** auf „Nur Titel"; **Word** zeigt vorerst nur den Inhalt
+als normalen Text.
 
-| Schreiben | Gültig | Ergebnis heute |
-| --------- | ------ | -------------- |
-| `::: cards` … `:::` (außen `::::`, wenn verschachtelt) | `cards`, `rows`, `panel`, `panel dark`, `statement`, `columns`, `columns 1:2` | Zäune fallen weg, Inhalt bleibt normaler Text |
-| `> [!NOTE]` als erste Zeile eines Zitats | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | normales Zitat ohne die Markierung |
-| `==Wort==` | – | normaler Text |
-| `[im Plan]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | fett, ohne Klammern |
-| Front Matter `status.success: Erledigt; Fertig` | dieselben fünf Kategorien, jeder Text einmal | geprüft |
+| Schreiben | PowerPoint |
+| --------- | ---------- |
+| `::: cards` mit `### Titel` je Karte (optional erster Absatz `**26 %**` = Kennzahl) oder einer Liste `- **Titel** – Text` | Karten nebeneinander im Raster, höchstens vier je Zeile |
+| `::: rows` mit einer Liste `- **Begriff** – Beschreibung` | Begriff links, Beschreibung rechts, Linien wie die Tabelle |
+| `::: panel` / `::: panel dark` | graue / dunkelblaue Fläche |
+| `::: statement` | erster Absatz groß und fett, der Rest normal |
+| `::: columns` / `::: columns 1:2` / `1:1:2`, Teile durch `---` (Leerzeile davor) getrennt | Spalten; genau zwei gleiche Spalten nur mit Text → Layout „Titel und Text (zweispaltig)" |
+| `::: conclusion` (nur Text, höchstens zwei Zeilen, einmal je Folie, nicht in anderen Containern) | PTA-Fazit-Box am Fuß der Folie; länger = Fehler |
+| `::: comment` (nur Text, direkt nach dem Block, den sie kommentiert) | PTA-Kommentarbox: Sprechblase rechts oben auf dem Block davor — am besten nach einem Bild |
+| `> [!NOTE]` als erste Zeile eines Zitats (`NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION`) | graue Fläche, Balken blau bzw. gelb |
+| Absatz nur aus `` `a` `b` `` | Chips; in einem Container eine Liste `` - `x` Text `` = Chip mit Text daneben |
+| `==Wort==` (alle Folien) | fett auf Gelb; erste Tabellenzelle ganz markiert = Zeile gelb |
+| `[im Plan]{.success}` (`.warning`, `.danger`, `.info`, `.neutral`) | fett in der Signalfarbe |
+| Front Matter `status.success: Erledigt; Fertig` + Tabellenzelle `` `Erledigt` `` (Flow-Folie) | Ampelpunkt „●" in der Farbe vor dem Text; nicht zugeordnet = grau |
+
+- Flow-Folien nicht überladen: was nicht passt, wird bis zu zweimal um ein Achtel kleiner und
+  dann auf „(Forts.)"-Folien geteilt (Hinweis `slide-split`); Karten, Flächen und Spalten
+  werden nie geteilt. Mit Flow-Inhalt ist nur `layout="Nur Titel"` erlaubt.
+- Signalfarben nur für Status; zur Hervorhebung `==…==` (Gelb).
 
 Andere Namen sind Fehler; die Meldung listet die gültigen. Klammern, die nicht genau so aussehen
 (`[a] {.success}`, `## Mengen {a, b}`), bleiben Text.

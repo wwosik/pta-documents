@@ -145,3 +145,116 @@ ENGLISH_LOGO_AREA: Final = Area(cm(1.40), cm(1.30), cm(6.35), cm(3.59))
 PICTURE_GAP: Final = cm(0.50)
 """Room between pictures side by side on a slide."""
 MAX_PICTURES_PER_ROW: Final = 4
+
+COLUMN_GUIDES: Final = (
+    (1.33, 8.33),
+    (9.43, 16.43),
+    (17.43, 24.43),
+    (25.53, 32.53),
+)
+"""The vertical guides of the master in cm, as (start, end) of its four columns of 7.00 cm;
+two columns of 15.10 cm span two of them each (``Titel und Text (zweispaltig)``)."""
+
+
+def grid(columns: int) -> tuple[tuple[int, int], ...]:
+    """(left, width) of ``columns`` equal columns across the content area, at the guides: two
+    and four columns on the master's guides, three (and more) with ``COLUMN_GAP`` between."""
+    if columns == 4:
+        return tuple((cm(start), cm(end - start)) for start, end in COLUMN_GUIDES)
+    if columns == 2:
+        (start, _), (_, middle), (other, _), (_, end) = COLUMN_GUIDES
+        return ((cm(start), cm(middle - start)), (cm(other), cm(end - other)))
+    area = CONTENT_AREA
+    width = (area.width - (columns - 1) * COLUMN_GAP) // columns
+    return tuple((area.left + n * (width + COLUMN_GAP), width) for n in range(columns))
+
+
+@dataclass(frozen=True)
+class FlowStyle:
+    """Flow slides (cards, rows, panels, alerts, tags, code, statement, kicker) in the PTA style,
+    and the PTA conclusion and comment boxes of the template collection (slides 43, 32)."""
+
+    text_pt: float = 18
+    """Text on the slide: the introduction text level of the body (Segoe UI Light, 404040)."""
+    card_text_pt: float = 14
+    title_pt: float = 18
+    """Card and row titles: like the subheadline (Segoe UI, PTA blue)."""
+    figure_pt: float = 32
+    statement_pt: float = 24
+    kicker_pt: float = 12
+    kicker_left: int = cm(1.33)
+    kicker_top: int = cm(1.60)
+    kicker_color: str = colors.DARK_BLUE
+    tag_pt: float = 12
+    code_pt: float = CODE_SIZE_PT
+    code_line_spacing: float = 1.30
+    gap: int = cm(0.40)
+    """Between blocks; half of it on a shrunk slide."""
+    pad: int = cm(0.30)
+    row_pad: int = cm(0.15)
+    max_cards_per_row: int = 4
+    card_line: str = colors.GREY_LIGHT
+    card_line_pt: float = 0.75
+    rule: str = colors.GREY_LIGHT
+    closing_rule: str = colors.TEXT_SLIDES
+    rule_pt: float = 0.5
+    surface: str = colors.GREY_LIGHT
+    """Panels, alerts and code."""
+    dark_surface: str = colors.DARK_BLUE
+    alert_bar: int = cm(0.15)
+    note_bar: str = colors.PTA_BLUE
+    important_bar: str = colors.YELLOW
+    tag_line: str = colors.PTA_BLUE
+    tag_line_pt: float = 0.75
+    chip_pad_x: int = cm(0.18)
+    chip_pad_y: int = cm(0.06)
+    chip_gap: int = cm(0.18)
+    highlight: str = colors.YELLOW
+    """``==mark==`` and marked table rows."""
+    min_visual_height: int = cm(4.76)
+    """Images on a flow slide get at least this height (a quarter of the slide)."""
+    shrink_steps: tuple[float, ...] = (1.0, 0.875, 0.75)
+    """Flow slides shrink all sizes by an eighth, twice (DocLibs), never below 12 pt."""
+
+
+FLOW: Final = FlowStyle()
+
+
+@dataclass(frozen=True)
+class ConclusionStyle:
+    """The conclusion box (Fazit-Box) of the template collection, slide 43."""
+
+    area: Area = Area(cm(1.33), cm(15.78), cm(31.20), cm(1.94))
+    fill: str = colors.DARK_BLUE
+    color: str = colors.WHITE
+    sizes_pt: tuple[float, ...] = (18, 16, 14)
+    """18 pt bold; shrunk to 14 pt at most to stay within ``max_lines``."""
+    max_lines: int = 2
+    inset_left: int = 684000
+    inset_right: int = 180000
+    inset_y: int = 72000
+
+
+CONCLUSION: Final = ConclusionStyle()
+
+
+@dataclass(frozen=True)
+class CommentStyle:
+    """The comment box (Kommentarbox) of the template collection, slide 32: a speech bubble."""
+
+    fill: str = colors.WHITE
+    line_from: str = colors.LIGHT_BLUE
+    line_to: str = colors.PTA_BLUE
+    line_pt: float = 1.5
+    size_pt: float = 14
+    color: str = colors.PTA_BLUE
+    inset_x: int = cm(0.30)
+    inset_y: int = cm(0.20)
+    max_share: float = 0.5
+    """At most half the width it is placed in."""
+
+
+COMMENT: Final = CommentStyle()
+
+DARK_BACKGROUND_LAYOUT: Final = LAYOUTS.title_plain
+"""``## Title {.dark}``: ``Nur Titel`` with the background of this layout, text in white."""

@@ -21,8 +21,12 @@ ROWS: Final = "rows"
 PANEL: Final = "panel"
 STATEMENT: Final = "statement"
 COLUMNS: Final = "columns"
+CONCLUSION: Final = "conclusion"
+"""PTA: the conclusion box (Fazit-Box) at the foot of a slide (E04-S03)."""
+COMMENT: Final = "comment"
+"""PTA: the comment box (Kommentarbox), a speech bubble on the block before it (E04-S03)."""
 
-CONTAINER_NAMES: Final = (CARDS, ROWS, PANEL, STATEMENT, COLUMNS)
+CONTAINER_NAMES: Final = (CARDS, ROWS, PANEL, STATEMENT, COLUMNS, CONCLUSION, COMMENT)
 CONTAINERS: Final = ", ".join(CONTAINER_NAMES)
 """The containers, for error messages."""
 
@@ -159,7 +163,7 @@ def check(tokens: Sequence[Token], format: DocumentFormat, line_offset: int = 0)
             elif token.type == "heading_open" and token.tag in ("h1", "h2"):
                 heading(tokens[i + 1], int(token.tag[1]), format)
         except DocumentConversionError as error:
-            raise _at(error, line) from None
+            raise at_line(error, line) from None
         if token.type == "inline":
             heading_level = (
                 int(tokens[i - 1].tag[1])
@@ -188,7 +192,7 @@ def _check_coloured_words(
         try:
             coloured_words.category(span, format)
         except DocumentConversionError as error:
-            raise _at(error, line_at[span.start()]) from None
+            raise at_line(error, line_at[span.start()]) from None
 
 
 def token_text(child: Token) -> str:
@@ -210,7 +214,8 @@ def token_is_code(child: Token) -> bool:
     return child.type != "text"
 
 
-def _at(error: DocumentConversionError, line: int | None) -> DocumentConversionError:
+def at_line(error: DocumentConversionError, line: int | None) -> DocumentConversionError:
+    """The error with its line in front of its reason (``Line 12: …``), as ``check`` reports."""
     if line is None:
         return error
     return DocumentConversionError(error.format, f"Line {line}: {error.reason}")

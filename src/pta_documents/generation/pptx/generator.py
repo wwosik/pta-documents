@@ -51,9 +51,9 @@ class PptxGenerator:
         notes = Notes()
         front = FrontMatter.read(document.text, FORMAT)
         front.check_keys(VALID_KEYS, allow_status=True)
-        front.status_labels()  # raises for an unknown category or a label in two
+        labels = front.status_labels()  # raises for an unknown category or a label in two
         options = apply_front_matter(front, options or PptxOptions())
-        slides = DeckParser(document, front.body, front.body_line, notes, options).parse()
+        slides = DeckParser(document, front.body, front.body_line, notes, options, labels).parse()
 
         first = next((s for s in slides if isinstance(s, TitleSlide)), None)
         title = (

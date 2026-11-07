@@ -6,6 +6,7 @@ import copy
 import io
 import re
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Any, Final
 
 from lxml import etree
@@ -23,7 +24,7 @@ A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
 P: Final = "http://schemas.openxmlformats.org/presentationml/2006/main"
 NUMBER: Final = re.compile(r"^[+\-−–]?[\d.,'\s]+\s?(%|€|\$|£|k|m|mio\.?|mrd\.?|T€)?$", re.I)
 
-RunWriter = Callable[[PptxSlide, Run, int | None], etree._Element]
+RunWriter = Callable[[PptxSlide, Run, int | None, str | None], etree._Element]
 
 
 def a(name: str) -> str:
@@ -75,9 +76,13 @@ def draw_table(
     top: int,
     run_writer: RunWriter,
     lang: str,
+    dark: bool = False,
 ) -> int:
-    """Draw the table; returns its height."""
+    """Draw the table; returns its height. A highlighted row is on the PTA yellow; on a dark
+    slide the body rows are white."""
     t = design.TABLE
+    row_color = colors.WHITE if dark else t.row_color
+    closing_rule = colors.WHITE if dark else t.closing_rule_color
     columns = len(layout.widths)
     title_rows = 1 if table.title else 0
     frame = slide.shapes.add_table(
@@ -106,7 +111,7 @@ def draw_table(
             first.merge(graphic_table.cell(0, columns - 1))
         _cell(
             first,
-            [Run(r.text, True, r.italic, r.strike, r.code, r.link) for r in table.title],
+            [replace(r, bold=True) for r in table.title],
             t.title_size_pt,
             t.title_color,
             "+mj-lt",
@@ -124,6 +129,7 @@ def draw_table(
         header = table.has_header and r == 0
         body_index = r - (1 if table.has_header else 0)
         last = not header and body_index == data_rows - 1
+        highlighted = not header and table.is_highlighted(r)
         for c in range(columns):
             cell = graphic_table.cell(r + title_rows, c)
             runs = list(row[c]) if c < len(row) else []
@@ -143,15 +149,15 @@ def draw_table(
                     first_column=c == 0,
                 )
             else:
-                rule = t.closing_rule_color if last else t.rule_color
+                rule = closing_rule if last else t.rule_color
                 _cell(
                     cell,
                     runs,
                     layout.row_pt,
-                    t.row_color,
+                    t.row_color if highlighted else row_color,
                     None,
                     alignments[c],
-                    None,
+                    design.FLOW.highlight if highlighted else None,
                     rule,
                     slide,
                     run_writer,
@@ -187,14 +193,17 @@ def _cell(
         if run.is_break:
             etree.SubElement(etree.SubElement(paragraph, a("br")), a("rPr")).set("lang", lang)
             continue
-        element = run_writer(slide, run, size)
+        element = run_writer(slide, run, size, color)
         r_pr = element.find(a("rPr"))
         assert r_pr is not None
-        # Colour first in rPr (schema order), then the font unless the run set one.
-        r_pr.insert(0, _solid(etree.Element("x"), color))
         if font and r_pr.find(a("latin")) is None:
-            index = 1
-            r_pr.insert(index, etree.Element(a("latin"), typeface=font))
+            # The font unless the run set one, before a hyperlink (schema order).
+            link = r_pr.find(a("hlinkClick"))
+            latin = etree.Element(a("latin"), typeface=font)
+            if link is None:
+                r_pr.append(latin)
+            else:
+                link.addprevious(latin)
         paragraph.append(element)
     end = etree.SubElement(paragraph, a("endParaRPr"))
     end.set("lang", lang)
@@ -269,9 +278,10 @@ EMU_PER_PIXEL: Final = 9525
 
 
 def draw_pictures(
-    slide: PptxSlide, images: list[Image], left: int, top: int, width: int, height: int
+    slide: PptxSlide | None, images: list[Image], left: int, top: int, width: int, height: int
 ) -> tuple[int, list[float]]:
-    """Pictures side by side, each in an equal share of the width, aligned to the top left.
+    """Pictures side by side, each in an equal share of the width, aligned to the top left;
+    without a slide only measured.
 
     Returns the height used and, per image, how many times its natural size it is shown at.
     """
@@ -285,10 +295,11 @@ def draw_pictures(
         scale = min(share / pixels_x, height / pixels_y)
         factors.append(scale / EMU_PER_PIXEL)
         w, h = int(pixels_x * scale), int(pixels_y * scale)
-        picture: Any = slide.shapes.add_picture(
-            io.BytesIO(image.resource.content), Emu(x), Emu(top), Emu(w), Emu(h)
-        )
-        picture._element.nvPicPr.cNvPr.set("descr", image.alt)
+        if slide is not None:
+            picture: Any = slide.shapes.add_picture(
+                io.BytesIO(image.resource.content), Emu(x), Emu(top), Emu(w), Emu(h)
+            )
+            picture._element.nvPicPr.cNvPr.set("descr", image.alt)
         x += share + design.PICTURE_GAP
         used = max(used, h)
     return used, factors

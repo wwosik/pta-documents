@@ -26,9 +26,9 @@ weil ihm vertraut wird.
   (`common/`, `docx/`, `pptx/`).
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
-  eingebettete Vorlagen. PDF, Diagramme/Charts, PDF-Konverter und Flow-Layouts
-  sind nur geplant; die Folien-Syntax wird seit E02-S02 gelesen und geprüft, aber noch nicht
-  gestaltet. Bedienung: `docs/verwendung.md`.
+  eingebettete Vorlagen. PDF, Diagramme/Charts und PDF-Konverter sind nur geplant; die
+  Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
+  Flow-Folien, Word noch nicht (E03-S03). Bedienung: `docs/verwendung.md`.
 - **Zweite Referenz:** `~/mvv/vt-tools-libs` (Schwesterbibliothek von DocLibs für die MVV,
   .NET) ist seit DocLibs `2610.28.22` weitergegangen — Hinweise an den Schreiber
   (`GenerationResult`), Sprechernotizen, Builds, Übergänge, Szenen, HTML-Decks,
@@ -111,6 +111,16 @@ weil ihm vertraut wird.
   Stelle für alle Formate). `==mark==` ist eine eigene Inline-Regel (`markdown/mark.py`) —
   mdit-py-plugins hat keine. Fehler dieser Prüfung beginnen mit `Line N: `; ältere Meldungen des
   PPTX-Parsers hängen `(line N)` an.
+- **Flow-Folien** (E04-S03): `generation/pptx/flow_parser.py` (`FlowReader`, arbeitet auf
+  Token-Bereichen: `block_end`/`children`) liest, `flow.py` (`FlowWriter`) zeichnet; jede
+  Methode misst, mit Folie (`FlowWriter(deck, slide)`) zeichnet sie auch — Messen und Zeichnen
+  nie getrennt implementieren. Alle Maße in `design/slides.py` (`FLOW`, `CONCLUSION`, `COMMENT`,
+  `grid`, `COLUMN_GUIDES`). Folien beginnen nur an `#`/`##` auf Token-Ebene 0 — eine
+  Überschrift in einem Container oder Zitat startet keine Folie. Aufbaufehler beginnen wie
+  `layout_syntax.check` mit `Line N: ` (`layout_syntax.at_line`).
+- Der Test `test_no_colour_values_outside_the_colour_module` verbietet jede Zeichenkette aus
+  sechs Hex-Ziffern außerhalb von `design/colors.py` — auch Zahlen wie `"100000"` in XML-Attributen
+  (als `int` schreiben und mit `str()` setzen).
 - Farbige Wörter werden auf **Token-Ebene** zerlegt (`layout_syntax.coloured`: Textkinder mit
   `meta[STATUS]`), bevor ein Writer Runs baut — so maskieren Softbreaks und Code, auch wenn ein
   Writer einen Softbreak später als Leerzeichen schreibt.
