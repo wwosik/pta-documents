@@ -28,7 +28,9 @@ weil ihm vertraut wird.
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
   eingebettete Vorlagen. PDF, Diagramme/Charts und PDF-Konverter sind nur geplant; die
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
-  Flow-Folien, Word noch nicht (E03-S03). Bedienung: `docs/verwendung.md`.
+  Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
+  Diagrammlayouts (ohne `chart`-Renderer bis E06-S01); Word noch nicht (E03-S03). Bedienung:
+  `docs/verwendung.md`.
 - **Zweite Referenz:** `~/mvv/vt-tools-libs` (Schwesterbibliothek von DocLibs für die MVV,
   .NET) ist seit DocLibs `2610.28.22` weitergegangen — Hinweise an den Schreiber
   (`GenerationResult`), Sprechernotizen, Builds, Übergänge, Szenen, HTML-Decks,
@@ -124,5 +126,15 @@ weil ihm vertraut wird.
 - Farbige Wörter werden auf **Token-Ebene** zerlegt (`layout_syntax.coloured`: Textkinder mit
   `meta[STATUS]`), bevor ein Writer Runs baut — so maskieren Softbreaks und Code, auch wenn ein
   Writer einen Softbreak später als Leerzeichen schreibt.
+- **PTA-Folienarten** (E04-S04): `{.agenda}`, `{.interim}`, `{.quote}`, `{.contact}` sind
+  `HeadingAttributes.kind` (`heading_attributes.SLIDE_KINDS`); PPTX liest sie in
+  `generation/pptx/kind_parser.py`, schreibt sie in `kinds.py` (auch `ChartSlide`). Layouts je
+  Art in `design/slides.KIND_LAYOUTS`. `Agenda`- und `Zitat`-Layouts haben keine
+  Fußzeilen-Platzhalter. Die Agenda-Trennlinien sind dekorative Platzhalter („x"): `finish`
+  lässt sie stehen, `write_agenda` entfernt die unter dem letzten Punkt selbst.
+- **Charts auf Folien** (E04-S04): PPTX nimmt Fences über `code_blocks.render_graphic` (alle
+  Grafikarten) statt `draw`; `ChartGraphic` wird `model.Chart` und landet über
+  `generation/pptx/chart.insert_chart` nativ im Diagrammplatzhalter. Zeichnungen werfen weiter
+  (`code_blocks.unsupported`). Word nutzt noch `draw` (wirft für Charts bis E06-S01).
 - python-docx zeigt Stilnamen als UI-Namen („Heading 1"); verglichen wird mit dem `w:name` aus
   `styles.xml` („heading 1").

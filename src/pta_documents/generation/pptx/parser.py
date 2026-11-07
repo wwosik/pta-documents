@@ -3,7 +3,9 @@
 Follows the DocLibs ``DeckParser``: text under a ``##`` heading becomes the body of a text
 slide; a table, an image (row) or a code block makes a slide of its own, with the text before
 it above and the text after it below; a second visual starts another slide with the same title.
-A ``##`` section that uses the slide-layout Markdown becomes one flow slide (``flow_parser``).
+A ``##`` section that uses the slide-layout Markdown becomes one flow slide (``flow_parser``),
+one with a PTA slide kind (``{.agenda}`` …) its slide (``kind_parser``). A chart (a ``chart``
+block a renderer drew as one) goes on the PTA chart layouts.
 """
 
 from __future__ import annotations
@@ -25,14 +27,16 @@ from pta_documents.generation.common import (
     layout_tokens,
 )
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image
-from pta_documents.generation.common.renderers import ImageGraphic
+from pta_documents.generation.common.renderers import ChartGraphic, ImageGraphic
 from pta_documents.generation.common.result import Notes
-from pta_documents.generation.pptx import flow_parser
+from pta_documents.generation.pptx import flow_parser, kind_parser
 from pta_documents.generation.pptx.model import (
     BREAK,
     PICTURE_TYPES,
     Align,
     ChapterSlide,
+    Chart,
+    ChartSlide,
     ClosingSlide,
     Code,
     ContentSlide,
@@ -53,7 +57,14 @@ from pta_documents.generation.pptx.model import (
 )
 from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
-from pta_documents.markdown.parser import ALERT, CONTAINER_OPEN, child_lines, line_of, parse
+from pta_documents.markdown.parser import (
+    ALERT,
+    CONTAINER_OPEN,
+    child_lines,
+    container,
+    line_of,
+    parse,
+)
 
 FORMAT: Final = DocumentFormat.PPTX
 WHAT: Final = "the deck"
@@ -135,6 +146,21 @@ class DeckParser:
         title, attributes = self._title(inline, int(open_token.tag[1]))
         line = self.line(open_token)
         layout = attributes.layout if attributes else None
+        if open_token.tag == "h2" and attributes is not None and attributes.kind is not None:
+            if self._uses_layouts(start, end, attributes):
+                raise self._error(
+                    f"The slide kind .{attributes.kind} has the PTA layout's own design and "
+                    "takes no slide-layout Markdown (containers, alerts, tags)",
+                    open_token,
+                )
+            reader = kind_parser.KindReader(self)
+            self.slides.append(reader.slide(attributes.kind, title, open_token, layout, start, end))
+            return
+        if open_token.tag == "h2" and attributes is None:
+            charts = self._charts_in_columns(start, end)
+            if charts is not None:
+                self.slides.append(ChartSlide(title, line, charts))
+                return
         if open_token.tag == "h2" and self._uses_layouts(start, end, attributes):
             if layout is not None and layout != design.LAYOUTS.title_only:
                 raise self._error(
@@ -206,6 +232,36 @@ class DeckParser:
                 return True
         return False
 
+    def _charts_in_columns(self, start: int, end: int) -> tuple[Chart, ...] | None:
+        """The two charts of a section that is one ``::: columns`` of one chart each (``Titel
+        und zwei Diagramme``); None for any other section."""
+        tokens = self.tokens
+        if start >= end or tokens[start].type != CONTAINER_OPEN:
+            return None
+        if flow_parser.block_end(tokens, start) != end:
+            return None
+        name, arguments = container(tokens[start])
+        if name != layout_syntax.COLUMNS or arguments:
+            return None
+        kids = flow_parser.children(tokens, start)
+        if len(kids) != 3 or tokens[kids[1]].type != "hr":
+            return None
+        if any(tokens[kid].type != "fence" for kid in (kids[0], kids[2])):
+            return None
+        charts: list[Chart] = []
+        # A look ahead: notes of fences that are no charts come when the flow slide reads them.
+        notes, self.notes = self.notes, Notes()
+        try:
+            for kid in (kids[0], kids[2]):
+                items: list[Item] = []
+                self.block(tokens, kid, items, depth=0, italic=False)
+                if len(items) != 1 or not isinstance(items[0], Chart):
+                    return None
+                charts.append(items[0])
+        finally:
+            self.notes = notes
+        return tuple(charts)
+
     def _no_content(self, items: Sequence[Item], what: str, token: Token) -> None:
         if items:
             raise self._error(
@@ -223,13 +279,24 @@ class DeckParser:
     def _content(self, heading_runs: tuple[Run, ...], items: list[Item], line: int | None) -> None:
         above: list[Paragraph] = []
         below: list[Paragraph] = []
-        visual: Visual | None = None
+        visual: Visual | Chart | None = None
 
         def flush() -> None:
             nonlocal above, below, visual
-            self.slides.append(VisualSlide(heading_runs, line, tuple(above), visual, tuple(below)))
+            if isinstance(visual, Chart):
+                text = (*above, *below)
+                self.slides.append(ChartSlide(heading_runs, line, (visual,), text, bool(above)))
+            else:
+                slide = VisualSlide(heading_runs, line, tuple(above), visual, tuple(below))
+                self.slides.append(slide)
             above, below, visual = [], [], None
 
+        content = [i for i in items if not isinstance(i, Separator)]
+        if len(content) == 2 and all(isinstance(i, Chart) for i in content):
+            # Two charts and nothing else: side by side on 'Titel und zwei Diagramme'.
+            charts = tuple(i for i in content if isinstance(i, Chart))
+            self.slides.append(ChartSlide(heading_runs, line, charts))
+            return
         for item in items:
             if isinstance(item, Separator):
                 continue
@@ -268,7 +335,9 @@ class DeckParser:
                 return self.table(tokens, i, out)
             case "fence" | "code_block":
                 graphic = self._draw(token) if token.type == "fence" else None
-                if graphic is not None:
+                if isinstance(graphic, ChartGraphic):
+                    out.append(Chart(graphic, self.line(token)))
+                elif graphic is not None:
                     image = Image(graphic.image, token.info.strip(), self.line(token))
                     out.append(Images((self._placeable(image, token),)))
                 else:
@@ -357,9 +426,10 @@ class DeckParser:
             raise self._error(f"The image '{source}' is not among the document's resources", inline)
         return resource
 
-    def _draw(self, fence: Token) -> ImageGraphic | None:
-        """The image the code-block renderers make of ``fence``; None: it stays code."""
-        return code_blocks.draw(
+    def _draw(self, fence: Token) -> ImageGraphic | ChartGraphic | None:
+        """The image or chart the code-block renderers make of ``fence``; None: it stays code.
+        Drawings raise until slides place them (E02-S03, E06-S02, E06-S03)."""
+        graphic = code_blocks.render_graphic(
             self.options.code_block_renderers,
             self.notes,
             fence.info,
@@ -369,6 +439,14 @@ class DeckParser:
             self.options.language,
             self.dark,
         )
+        if graphic is None or isinstance(graphic, ImageGraphic | ChartGraphic):
+            return graphic
+        raise code_blocks.unsupported(graphic, fence.info, self.line(fence), FORMAT)
+
+    def image(self, child: Token, inline: Token) -> Image:
+        """The image of an ``image`` child of ``inline``, in a format slides take."""
+        line = self.line(inline)
+        return self._placeable(Image(self._resource(child, inline), child.content, line), inline)
 
     def _placeable(self, image: Image, token: Token) -> Image:
         """``image`` in a format slides take: other formats through the image converters."""

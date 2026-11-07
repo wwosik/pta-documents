@@ -195,18 +195,23 @@ def test_a_document_conversion_error_passes_unchanged(
     assert error.value is original
 
 
-@GENERATORS
+CHART = ChartGraphic(ChartSpec(ChartKind.BAR, ("a",), (ChartSeries("s", (1.0,)),)), object())
+
+
 @pytest.mark.parametrize(
-    "graphic",
+    ("generate", "format", "graphic"),
     [
-        DrawingGraphic(object()),
-        ChartGraphic(ChartSpec(ChartKind.BAR, ("a",), (ChartSeries("s", (1.0,)),)), object()),
+        (generate_docx, DocumentFormat.DOCX, DrawingGraphic(object())),
+        (generate_pptx, DocumentFormat.PPTX, DrawingGraphic(object())),
+        (generate_docx, DocumentFormat.DOCX, CHART),
     ],
-    ids=["drawing", "chart"],
+    ids=["docx-drawing", "pptx-drawing", "docx-chart"],
 )
 def test_drawings_and_charts_are_not_supported_yet(
     generate: Generate, format: DocumentFormat, graphic: CodeBlockGraphic
 ) -> None:
+    """Drawings follow with E02-S03/E06-S02, charts in Word with E06-S01; PowerPoint places
+    charts since E04-S04 (``tests/generation/pptx/test_kinds.py``)."""
     with pytest.raises(DocumentConversionError) as error:
         generate(DECK, (Recorder(graphic=graphic),))
     assert error.value.format is format

@@ -20,18 +20,24 @@ from pta_documents.design import slides as design
 from pta_documents.design.variants import GeneratedTexts, Language, SlidesVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common.result import NoteCodes, Notes
-from pta_documents.generation.pptx import fitting, flow, visuals
+from pta_documents.generation.pptx import chart, fitting, flow, kinds, visuals
 from pta_documents.generation.pptx.model import (
+    AgendaSlide,
     ChapterSlide,
+    Chart,
+    ChartSlide,
     ClosingSlide,
     Code,
+    ContactSlide,
     ContentSlide,
     FlowSlide,
     Image,
     Images,
+    InterimSlide,
     Kind,
     LayoutSlide,
     Paragraph,
+    QuoteSlide,
     Run,
     Slide,
     Table,
@@ -115,6 +121,16 @@ class DeckWriter:
                 self.layout_slide(slide)
             case FlowSlide():
                 flow.write_flow_slide(self, slide)
+            case AgendaSlide():
+                kinds.write_agenda(self, slide)
+            case InterimSlide():
+                kinds.write_interim(self, slide)
+            case QuoteSlide():
+                kinds.write_quote(self, slide)
+            case ContactSlide():
+                kinds.write_contact(self, slide)
+            case ChartSlide():
+                kinds.write_chart_slide(self, slide)
             case _:
                 raise TypeError(slide)
 
@@ -322,7 +338,8 @@ class DeckWriter:
             and ph[0] not in (design.PLACEHOLDERS.title,)
         ]
         pictures = [ph for ph in _placeholders(layout) if ph[1] == "pic"]
-        body_index = picture_index = 0
+        charts = [ph for ph in _placeholders(layout) if ph[1] == "chart"]
+        body_index = picture_index = chart_index = 0
         for segment in slide.segments:
             paragraphs = [item for item in segment if isinstance(item, Paragraph)]
             visuals = [item for item in segment if not isinstance(item, Paragraph)]
@@ -342,6 +359,10 @@ class DeckWriter:
                     for image in visual.images:
                         self.fill_picture(target, pictures[picture_index][0], image, slide)
                         picture_index += 1
+                elif isinstance(visual, Chart) and chart_index < len(charts):
+                    placeholder = self.placeholder(target, charts[chart_index][0])
+                    chart.insert_chart(placeholder, visual.graphic.chart, show_title=True)
+                    chart_index += 1
                 else:
                     raise self.error(
                         f"The layout '{slide.layout}' has no place for this "
@@ -390,8 +411,11 @@ class DeckWriter:
         shape = self.placeholder(slide, idx)
         self.write_paragraphs(slide, shape._element.txBody, paragraphs, scale)
 
-    def fill_picture(self, slide: PptxSlide, idx: int, image: Image, where: Slide) -> None:
-        """The image in a picture placeholder, which crops it to fill the placeholder."""
+    def fill_picture(
+        self, slide: PptxSlide, idx: int, image: Image, where: Slide, alone_hint: bool = True
+    ) -> None:
+        """The image in a picture placeholder, which crops it to fill the placeholder; a note
+        about cropping suggests a slide of its own unless ``alone_hint`` is False."""
         resource = image.resource
         placeholder = self.placeholder(slide, idx)
         picture = placeholder.insert_picture(io.BytesIO(resource.content))
@@ -403,7 +427,7 @@ class DeckWriter:
             ratio = int(picture.width) / int(picture.height)
             other = (
                 ""
-                if slide.slide_layout.name == design.LAYOUTS.title_image
+                if slide.slide_layout.name == design.LAYOUTS.title_image or not alone_hint
                 else f", or put it alone on a slide, which gets the layout "
                 f"'{design.LAYOUTS.title_image}'"
             )

@@ -35,9 +35,42 @@ class Layouts:
     title_text_image: str = "Titel, Text und Bild 01"
     title_image: str = "Titel und Bild 01"
     closing: str = "Abbschlussfolie"
+    agenda_short: str = "Agenda (kurz)"
+    agenda_long: str = "Agenda (lang)"
+    interim_01: str = "Zwischenfazit 01"
+    interim_02: str = "Zwischenfazit 02"
+    quote_01: str = "Zitat 01"
+    quote_02: str = "Zitat 02"
+    contact_01: str = "Kontakt 01"
+    contact_02: str = "Kontakt 02"
+    contact_03: str = "Kontakt 03"
+    contact_04: str = "Kontakt 04"
+    contact_05: str = "Kontakt 05"
+    contact_text: str = "Kontakt mit Text"
+    chart: str = "Titel und Diagramm"
+    two_charts: str = "Titel und zwei Diagramme"
+    chart_and_text: str = "Titel, Diagramm und Text"
+    text_and_chart: str = "Titel, Text und Diagramm"
 
 
 LAYOUTS: Final = Layouts()
+
+CONTACT_LAYOUTS: Final = (
+    LAYOUTS.contact_01,
+    LAYOUTS.contact_02,
+    LAYOUTS.contact_03,
+    LAYOUTS.contact_04,
+    LAYOUTS.contact_05,
+)
+"""``Kontakt 0n`` for n persons."""
+KIND_LAYOUTS: Final = {
+    "agenda": (LAYOUTS.agenda_short, LAYOUTS.agenda_long),
+    "interim": (LAYOUTS.interim_01, LAYOUTS.interim_02),
+    "quote": (LAYOUTS.quote_01, LAYOUTS.quote_02),
+    "contact": (*CONTACT_LAYOUTS, LAYOUTS.contact_text),
+}
+"""The layouts of each PTA slide kind (``heading_attributes.SLIDE_KINDS``), the default first:
+``layout="…"`` may choose any of its own kind (E04-S04)."""
 
 TITLE_SLIDES: Final = {
     "bild-01": LAYOUTS.title_image_01,
@@ -61,9 +94,39 @@ class Placeholders:
     second_body: int = 13
     picture: int = 31
     footer_types: tuple[str, str, str] = ("ftr", "sldNum", "dt")
+    agenda_numbers: tuple[int, ...] = (14, 16, 18, 20, 22, 24, 26, 28)
+    """``Agenda (kurz)`` has the first four, ``Agenda (lang)`` all eight."""
+    agenda_texts: tuple[int, ...] = (15, 17, 19, 21, 23, 25, 27, 29)
+    agenda_rules: tuple[int, ...] = (30, 31, 32, 33, 34, 35, 36)
+    """The rules between the agenda items (decorative): rule n lies under item n."""
+    contacts: tuple[tuple[int, int, int, int, int], ...] = (
+        (34, 14, 35, 36, 38),
+        (39, 40, 41, 42, 43),
+        (44, 45, 46, 47, 48),
+        (49, 50, 51, 52, 53),
+        (54, 55, 56, 57, 58),
+    )
+    """Per person of ``Kontakt 0n``: photo, name, function, e-mail, phone (``Kontakt mit Text``:
+    the first)."""
+    contact_text: int = 37
+    chart_title: int = 12
+    chart_unit: int = 13
+    chart_source: int = 14
+    chart: int = 15
+    second_chart: tuple[int, int, int, int] = (16, 17, 18, 19)
+    """``Titel und zwei Diagramme``, right: title, unit, source, chart."""
+    chart_text: int = 16
+    """The text of ``Titel, Diagramm und Text`` and ``Titel, Text und Diagramm``."""
 
 
 PLACEHOLDERS: Final = Placeholders()
+
+AGENDA_SHORT_ITEMS: Final = 4
+"""Up to this many items on ``Agenda (kurz)``, up to ``AGENDA_ITEMS`` on ``Agenda (lang)``."""
+AGENDA_ITEMS: Final = 8
+CONTACT_PERSONS: Final = 5
+QUOTE_SOURCE_PT: Final = 24.0
+"""The source of a quote: a second paragraph in its placeholder, Segoe UI Light, not italic."""
 
 DECORATIVE_PROMPT: Final = "x"
 """Layout placeholders with this prompt only draw graphics and are created empty on every slide."""
@@ -258,3 +321,5 @@ COMMENT: Final = CommentStyle()
 
 DARK_BACKGROUND_LAYOUT: Final = LAYOUTS.title_plain
 """``## Title {.dark}``: ``Nur Titel`` with the background of this layout, text in white."""
+
+QUOTE_SOURCE_FONT: Final = BODY_FONT

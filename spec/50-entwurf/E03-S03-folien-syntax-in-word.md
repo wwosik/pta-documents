@@ -78,3 +78,7 @@ wie im PDF von DocLibs, aber über Formatvorlagen statt Direktformatierung.
 > (2026-11-07) Nacheinander.
 
 ## Notizen
+
+- (2026-11-07, E04-S04) `{.agenda}`, `{.interim}`, `{.quote}`, `{.contact}` sind registriert
+  (`HeadingAttributes.kind`); Word entfernt sie heute nur und zeigt Überschrift und Inhalt
+  normal (eine Agenda ohne Liste bleibt in Word leer).

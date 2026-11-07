@@ -106,10 +106,28 @@ Gliederung:
   passenden Proportionen bzw. höherer Auflösung ablegen.
 - Ein bestimmtes PTA-Layout: `## Titel {layout="Titel und Text (zweispaltig)"}` und den Inhalt mit
   `---` in Spalten teilen. Nur exakte Layoutnamen; die Fehlermeldung listet alle.
-- Heading-Attribute: `#` kennt `.closing` und `layout="…"`, `##` kennt `.dark`, `kicker="…"` und
-  `layout="…"`; alles andere ist ein Fehler. `kicker` ist eine kleine Zeile über dem Titel,
+- Heading-Attribute: `#` kennt `.closing` und `layout="…"`, `##` kennt `.dark`, `kicker="…"`,
+  `layout="…"` und die PTA-Folienarten `.agenda`, `.interim`, `.quote`, `.contact` (siehe
+  unten); alles andere ist ein Fehler. `kicker` ist eine kleine Zeile über dem Titel,
   `.dark` setzt die Folie auf den Verlauf der Titelfolie mit weißer Schrift (beides macht die
   Folie zur Flow-Folie, siehe unten).
+
+## PTA-Folienarten (PowerPoint)
+
+Höchstens eine je `##`, nie zusammen mit `.dark`, `kicker` oder Containern/Alerts. Word nimmt
+sie an und zeigt nur Überschrift und Inhalt.
+
+| Schreiben | Ergebnis |
+| --------- | -------- |
+| `## Agenda {.agenda}` + **eine** Liste (je Punkt eine Zeile, max. 8) | Agendafolie mit „01" …; ≤ 4 kurz, 5–8 lang; mehr = Fehler → zwei Agendafolien |
+| `## Agenda {.agenda}` ohne Inhalt | Agenda aus den `#`-Kapiteln (ohne Titel und `{.closing}`) |
+| `## Aussage {.interim}` — **kein** Inhalt darunter | Zwischenfazit (`layout="Zwischenfazit 02"` für die zweite Variante) |
+| `## Zitat {.quote}` + höchstens **ein** Absatz (die Quelle) | Zitatfolie (`layout="Zitat 02"`) |
+| `## Kontakt {.contact}` + je Person `### Name` und **ein** Absatz mit Foto und Zeilen Funktion / E-Mail (mit `@`) / Telefon (`+` oder Ziffer am Anfang) | Kontakt 01–05 nach Personenzahl (max. 5); genau eine Person + weiterer Text/Liste danach → „Kontakt mit Text" |
+
+- Keine Agenda ohne `{.agenda}` — es gibt keine automatische.
+- Jede Kontaktart (Funktion, E-Mail, Telefon) höchstens einmal je Person; Fotos hochkant
+  (etwa 7 : 9), sonst kommt `image-cropped`.
 
 ## Folien-Syntax (Word und PowerPoint)
 

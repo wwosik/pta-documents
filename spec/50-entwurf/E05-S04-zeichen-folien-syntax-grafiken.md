@@ -97,3 +97,7 @@ Vektoren bzw. Bilder gesetzt.
   Wörter über `layout_syntax.coloured` (Textkinder mit `meta[STATUS]`); die Fehlerfälle der Tests
   in `tests/generation/common/test_layout_syntax.py` (dort für DOCX/PPTX parametrisiert) um PDF
   ergänzen — das ist der Port von `SlideLayoutSyntaxTests.Mistakes_Throw_LikeInDecks`.
+- (2026-11-07, E04-S04) Neue Heading-Attribute `.agenda`, `.interim`, `.quote`, `.contact`
+  (`HeadingAttributes.kind`) prüft `layout_syntax.check` auch für PDF; wie Word mindestens
+  Überschrift und Inhalt zeigen. Charts aus `ChartGraphic` platziert PowerPoint bereits
+  (`generation/pptx/kinds.py`).

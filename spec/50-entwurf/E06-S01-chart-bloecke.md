@@ -98,3 +98,12 @@ eingebetteter Tabelle, im PDF eine Vektorzeichnung.
   (heute leer; die Optionen nutzen es als `default_factory`). `ChartSpec`/`ChartSeries`/
   `ChartKind` liegen schon in `charts/spec.py`; `ChartGraphic.drawing` ist bis E02-S03 als
   `object` typisiert. `code_blocks.draw` wirft heute für `ChartGraphic` „does not support yet".
+- (2026-11-07, E04-S04) Die Platzierung auf Folien steht: `DeckParser` macht aus einem
+  `ChartGraphic` ein `model.Chart`, wählt `Titel und Diagramm` / `Titel, Text und Diagramm` /
+  `Titel, Diagramm und Text` / `Titel und zwei Diagramme` (auch `::: columns` mit genau zwei
+  Charts) als `ChartSlide`, `kinds.write_chart_slide` füllt Titel 12, Einheit 13, Quelle 14
+  (`ChartSpec.source` ist neu) und setzt den Chart über `generation/pptx/chart.insert_chart`
+  (python-pptx `insert_chart`, Reihenfarben aus `ChartSpec.colors`, Legende unten ab zwei
+  Reihen, kein Titel im Chart). Hier fehlen noch: der `chart`-Renderer (Eintrag in
+  `default_renderers`), der PTA-Diagrammstil in `chart.py` (Lücke, Achsen, Schrift) und Word.
+  Charts auf Flow-Folien sind ein Fehler (`flow_parser.FlowReader.items`).

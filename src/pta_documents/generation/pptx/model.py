@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Final
 
 from pta_documents.design.colors import StatusCategory
+from pta_documents.generation.common.renderers import ChartGraphic
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.markdown.document import DocumentResource
 
@@ -133,7 +134,15 @@ class Separator:
     """A ``---`` line: splits the content of a slide with a named layout."""
 
 
-Item = Paragraph | Table | Images | Code | Separator
+@dataclass(frozen=True)
+class Chart:
+    """A ``chart`` block a renderer drew as a chart: native in its layout's chart placeholder."""
+
+    graphic: ChartGraphic
+    line: int | None = None
+
+
+Item = Paragraph | Table | Images | Code | Chart | Separator
 
 
 @dataclass(frozen=True)
@@ -177,6 +186,65 @@ class LayoutSlide(Slide):
 
     layout: str = ""
     segments: tuple[tuple[Item, ...], ...] = field(default_factory=tuple)
+
+
+# ---------------------------------------------------------------------- PTA slide kinds
+
+
+@dataclass(frozen=True)
+class AgendaSlide(Slide):
+    """``## Agenda {.agenda}``: its list, or else the chapters of the deck, numbered 01, 02 …"""
+
+    items: tuple[tuple[Run, ...], ...] = ()
+    layout: str = ""
+
+
+@dataclass(frozen=True)
+class InterimSlide(Slide):
+    """``## Statement {.interim}``: the heading alone on ``Zwischenfazit 01``/``02``."""
+
+    layout: str = ""
+
+
+@dataclass(frozen=True)
+class QuoteSlide(Slide):
+    """``## Quote {.quote}``: the heading on ``Zitat 01``/``02``, a paragraph under it as its
+    source."""
+
+    source: tuple[Run, ...] = ()
+    layout: str = ""
+
+
+@dataclass(frozen=True)
+class Person:
+    """A person of a contact slide: the ``###`` heading and the lines under it."""
+
+    name: tuple[Run, ...]
+    photo: Image | None = None
+    function: tuple[Run, ...] = ()
+    email: tuple[Run, ...] = ()
+    phone: tuple[Run, ...] = ()
+
+
+@dataclass(frozen=True)
+class ContactSlide(Slide):
+    """``## Contacts {.contact}``: one to five persons on ``Kontakt 0n``, or one person with
+    text on ``Kontakt mit Text``."""
+
+    persons: tuple[Person, ...] = ()
+    text: tuple[Paragraph, ...] = ()
+    layout: str = ""
+
+
+@dataclass(frozen=True)
+class ChartSlide(Slide):
+    """One chart (``Titel und Diagramm``), two (``Titel und zwei Diagramme``), or one with text
+    (``Titel, Text und Diagramm`` when the text comes first, else ``Titel, Diagramm und
+    Text``)."""
+
+    charts: tuple[Chart, ...] = ()
+    text: tuple[Paragraph, ...] = ()
+    text_first: bool = False
 
 
 # ---------------------------------------------------------------------- flow slides

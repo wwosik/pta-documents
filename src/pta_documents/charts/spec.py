@@ -39,5 +39,7 @@ class ChartSpec:
     title: str | None = None
     unit: str | None = None
     """The unit of the values, shown with the value axis (``k``, ``%``, ``EUR``)."""
+    source: str | None = None
+    """Where the data comes from: the source line of the PTA chart layouts (Quellenangabe)."""
     colors: tuple[str, ...] = colors.ACCENTS
     """The series colours (RGB hex without ``#``), in order; they repeat for more series."""

@@ -192,6 +192,41 @@ Ein Neubau ist günstiger als jede weitere Erweiterung.
 Ein Tippfehler oder ein falscher Aufbau (z. B. eine Karte ohne `###`) ergibt eine
 Fehlermeldung mit Zeilennummer, die sagt, was zu ändern ist.
 
+### Agenda, Zwischenfazit, Zitat, Kontakt
+
+Für diese PTA-Folien genügt ein Attribut an der `##`-Überschrift; das passende Layout sucht
+PowerPoint selbst aus.
+
+```markdown
+## Agenda {.agenda}
+
+## Die Migration ist ohne Ausfall möglich {.interim}
+
+## Was man nicht messen kann, kann man nicht lenken {.quote}
+
+— Peter Drucker, Ökonom
+
+## Ihre Ansprechpartner {.contact}
+
+### Erika Mustermann
+
+![Erika Mustermann](images/erika.jpg)
+Projektleiterin
+erika.mustermann@pta.de
++49 621 12345-0
+```
+
+- `{.agenda}` ohne Liste nimmt die Kapitel (`#`) der Präsentation; mit einer Liste deren Punkte
+  (höchstens acht, ab fünf das lange Layout). Eine Agenda entsteht nur mit `{.agenda}`.
+- `{.interim}` ist nur die Überschrift (Zwischenfazit), `{.quote}` die Überschrift als Zitat und
+  ein Absatz darunter als Quelle.
+- `{.contact}`: je Person eine `###`-Überschrift mit dem Namen, darunter Foto und Zeilen für
+  Funktion, E-Mail und Telefon (Reihenfolge egal); ein bis fünf Personen. Bei genau einer
+  Person darf danach noch Text oder eine Liste folgen. Ohne Foto bleibt keine graue Fläche.
+- `layout="Zwischenfazit 02"` bzw. `layout="Zitat 02"` wählt die zweite Variante.
+- Diagramme aus `chart`-Blöcken kommen auf die PTA-Diagrammlayouts, sobald der Chart-Renderer
+  da ist (E06-S01).
+
 ## 6. Aus Python aufrufen (optional)
 
 ```python

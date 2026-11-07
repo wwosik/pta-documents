@@ -117,6 +117,38 @@ zeichnet, Werte in `design/slides.py`: `FLOW`, `CONCLUSION`, `COMMENT`, `grid`).
   `rows` ohne Liste, `- ` ohne fetten Titel, `statement` ohne Absatz, Spalten ≠ zwei/drei,
   zwei Fazit-Boxen, Fazit-Box in einem Container, Kommentarbox ohne Block davor).
 
+### PTA-Folienarten und Diagramm-Layouts (E04-S04)
+
+Ein Heading-Attribut am `##` wählt eine PTA-Folienart (`generation/pptx/kind_parser.py` liest,
+`kinds.py` schreibt; Layoutnamen und Platzhalter in `design/slides.py`: `LAYOUTS`,
+`PLACEHOLDERS`, `KIND_LAYOUTS`). Höchstens eine je Folie, nicht mit `.dark`, `kicker` oder
+Flow-Inhalt; `layout="…"` darf nur ein Layout derselben Art wählen.
+
+| Schreiben | Layout | Belegung |
+| --------- | ------ | -------- |
+| `## Agenda {.agenda}` mit genau einer Liste (je Punkt eine Zeile) | ≤ 4 Punkte `Agenda (kurz)`, 5–8 `Agenda (lang)`, mehr = Fehler | Nummern „01" … (idx 14, 16 …), Texte (15, 17 …); ungenutzte Paare und die Linien unter dem letzten Punkt entfallen |
+| `## Agenda {.agenda}` ohne Inhalt | wie oben | die Kapitel des Decks: alle `#` nach dem ersten, ohne `{.closing}` |
+| `## Aussage {.interim}` (kein Inhalt) | `Zwischenfazit 01` (`02` über `layout`) | Überschrift im Titel |
+| `## Zitat {.quote}`, optional ein Absatz darunter | `Zitat 01` (`02`) | Überschrift im Titel; der Absatz ist die Quelle: zweiter Absatz im Titel, 24 pt Segoe UI Light, nicht kursiv |
+| `## Kontakt {.contact}`, je Person `###` Name, darunter ein Absatz: Foto (optional), Zeilen Funktion, E-Mail (mit `@`, wird `mailto:`-Link), Telefon (beginnt mit `+` oder Ziffer) in beliebiger Reihenfolge | n Personen (1–5) `Kontakt 0n`; eine Person mit weiterem Text (Absätze, Listen nach dem Kontaktabsatz) `Kontakt mit Text` | je Person Bild/Name/Funktion/E-Mail/Telefon (34/14/35/36/38, 39/40–43 …), Text 37; was fehlt (auch das Foto), entfällt |
+
+Ohne `{.agenda}` entsteht nie eine Agendafolie. Fehler melden die Zeile (`Line 3: An agenda
+holds 8 items at most, this one 9. Split it into two agenda slides.`; Inhalt unter
+`{.interim}`, mehr als ein Absatz unter `{.quote}`, sechs Personen, zwei E-Mail-Zeilen, Text
+bei mehreren Personen, ein fremdes Layout).
+
+**Charts:** Liefert ein Code-Block-Renderer für einen Fence einen `ChartGraphic`, setzt
+PowerPoint ein natives Diagramm (`generation/pptx/chart.py`, python-pptx `insert_chart`, Reihen
+in `ChartSpec.colors`) in den Diagrammplatzhalter: ein Chart allein → `Titel und Diagramm`, mit
+Text davor → `Titel, Text und Diagramm`, Text danach → `Titel, Diagramm und Text`, zwei Charts
+ohne anderes (auch als einzige Teile eines `::: columns`) → `Titel und zwei Diagramme`.
+`ChartSpec.title`/`unit`/`source` stehen in den Platzhaltern Diagrammtitel/Werteinheit/
+Quellenangabe (leere entfallen), der Titel nicht zusätzlich im Diagramm. Ein Chart neben einer
+Tabelle oder einem Bild bekommt eine eigene Folie; auf einer Flow-Folie ist er ein Fehler. Mit
+`layout="…"` geht ein Chart in den nächsten Diagrammplatzhalter des Layouts. Den
+`chart`-Renderer und den PTA-Diagrammstil liefert E06-S01; Word wirft für Charts bis dahin
+„does not support yet", Zeichnungen (`DrawingGraphic`) in beiden Formaten bis E02-S03/E06.
+
 ## Folien-Syntax (gemeinsam für Word und PowerPoint)
 
 Beide Generatoren lesen und prüfen dieselbe Folien-Syntax aus DocLibs, bevor sie schreiben
@@ -126,7 +158,7 @@ Front Matter mitgezählt).
 
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
-| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"` | PowerPoint: alle wirken (s. o., Flow-Folien); Word: alle werden entfernt (gestaltet ab E03-S03) |
+| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: alle werden entfernt, der Inhalt steht als normale Blöcke da (gestaltet ab E03-S03) |
 | Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment` | PowerPoint: Flow-Folien; Word: Zäune entfallen, der Inhalt steht als normale Blöcke da |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: Markierungszeile entfällt, der Rest ist ein Zitat |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Gleichheitszeichen entfallen, Text normal |

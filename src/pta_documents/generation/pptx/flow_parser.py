@@ -20,6 +20,7 @@ from pta_documents.generation.pptx.model import (
     CalloutBlock,
     Card,
     CardsBlock,
+    Chart,
     Code,
     CodeLinesBlock,
     ColumnsBlock,
@@ -178,6 +179,16 @@ class FlowReader:
                     target.add(ImageRowBlock(item.images))
                 case Code():
                     target.add(CodeLinesBlock(item.lines))
+                case Chart():
+                    raise layout_syntax.at_line(
+                        DocumentConversionError(
+                            FORMAT,
+                            "A chart goes on a slide of its own (with text before or after it), "
+                            "or two side by side in a '::: columns' of nothing else; a flow "
+                            "slide has no place for it yet.",
+                        ),
+                        item.line,
+                    )
                 case _:
                     pass  # a '---' means nothing on a flow slide
 

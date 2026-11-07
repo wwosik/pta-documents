@@ -14,6 +14,7 @@ from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import renderers as code_block_renderers
 from pta_documents.generation.common.renderers import (
     ChartGraphic,
+    CodeBlockGraphic,
     CodeBlockRenderer,
     CodeBlockRequest,
     ImageGraphic,
@@ -55,8 +56,26 @@ def draw(
     graphic language).
 
     A fence goes to the renderers only with an info string. Drawings and charts raise until the
-    generators place them (E03-S04, E04-S04, E06).
+    generator places them (``render_graphic`` and ``unsupported`` for those that do).
     """
+    graphic = render_graphic(renderers, notes, info, code, line, format, language, dark)
+    if graphic is None or isinstance(graphic, ImageGraphic):
+        return graphic
+    raise unsupported(graphic, info, line, format)
+
+
+def render_graphic(
+    renderers: Sequence[CodeBlockRenderer],
+    notes: Notes,
+    info: str,
+    code: str,
+    line: int | None,
+    format: DocumentFormat,
+    language: Language,
+    dark: bool = False,
+) -> CodeBlockGraphic | None:
+    """The graphic a renderer makes of a fence, of any kind; None: the fence stays code (noted if
+    it is in a graphic language). For generators that place some drawings or charts themselves."""
     info = info.strip()
     graphic = None
     if info:
@@ -64,14 +83,18 @@ def draw(
         graphic = code_block_renderers.render(renderers, request)
     if graphic is None:
         note_not_drawn(notes, info, line)
-        return None
-    if isinstance(graphic, ImageGraphic):
-        return graphic
+    return graphic
+
+
+def unsupported(
+    graphic: CodeBlockGraphic, info: str, line: int | None, format: DocumentFormat
+) -> DocumentConversionError:
+    """The error for a graphic of a kind the generator of ``format`` does not place yet."""
     kind = "chart" if isinstance(graphic, ChartGraphic) else "drawing"
     where = f"Line {line}: " if line else ""
-    raise DocumentConversionError(
+    return DocumentConversionError(
         format,
-        f"{where}The `{fence_language(info)}` block was rendered as a {kind}, which "
+        f"{where}The `{fence_language(info.strip())}` block was rendered as a {kind}, which "
         f"{format.value.upper()} does not support yet. Leave the block out, or turn off the "
         "renderer that takes it.",
     )
