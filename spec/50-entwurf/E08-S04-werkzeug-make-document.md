@@ -1,6 +1,6 @@
 # E08-S04 Werkzeug `make_document` für KI-Hosts
 
-> Status: Entwurf
+> Status: zurückgestellt (2026-11-07) — kein KI-Host geplant
 > Epic: [E08 Rückmeldung an den Schreiber und KI-Anbindung](E08-rueckmeldung-und-ki-anbindung.md)
 
 ## Zusammenfassung
@@ -76,7 +76,7 @@ KI-SDK.
 
 2. Gibt es einen Host, der das braucht (Epic-Frage 2)? Ohne ihn bleibt die Story liegen.
 
->
+> (2026-11-07) Nein, die KI arbeitet im Klon mit `run.sh`. Zurückgestellt.
 
 ## Notizen
 

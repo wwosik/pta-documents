@@ -73,7 +73,8 @@ PowerPoint entspricht das dem Sticker aus E04-S05; beide sollen über denselben 
    angepasst, `sticker` entfällt) — oder `sticker` für Folien behalten, weil die PTA den
    Begriff so verwendet?
 
->
+> (2026-11-07) Gemeinsamer Schlüssel `kennzeichnung` für alle Formate; E04-S05 ist angepasst,
+> `sticker` entfällt.
 
 2. Wasserzeichen auch für `vertraulich` (groß über die Seite) oder nur der Text in der
    Kopfzeile? Vorschlag: nur Text — ein Wasserzeichen „VERTRAULICH" stört beim Lesen eines

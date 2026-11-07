@@ -65,7 +65,8 @@ Teilung), und `./run.sh vorschau samples/gsb` legt je Folie ein PNG ab.
    Datei) oder nur Vorschau? Davon hängt ab, wie viel Mühe in Druck, Notizenpanel und
    Tastaturbedienung geht.
 
->
+> (2026-11-07) Als Vorschau gewünscht (HTML-Deck und PNG-Vorschau, E10-S01 und E10-S02);
+> nicht als Zielformat. Druck, Notizenpanel und Tastatur nur so weit, wie die Vorschau sie braucht.
 
 ## Notizen
 

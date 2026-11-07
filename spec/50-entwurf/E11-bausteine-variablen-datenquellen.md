@@ -66,3 +66,5 @@ Erzeugung (E08-S01).
 >
 
 ## Notizen
+
+- (2026-11-07) Umsetzung gewünscht (Entscheidung des Menschen zu allen drei Epics E11–E13).

@@ -23,7 +23,7 @@ denselben Optionen wie `generate`.
   Abschluss-`#` ist ein Fehler (E04-S01); `###` ist die Subheadline, Absätze Einleitungstext,
   Listen ab der dritten Textebene (E04-S02); keine Brands, keine Zeichen-Tabelle (PowerPoint nimmt
   die installierte Segoe UI); Front Matter deutsch (`vorlage`, `titelfolie`, `fusszeile`,
-  `sprache`, `sticker`, `status.*` …).
+  `sprache`, `kennzeichnung`, `status.*` …).
 - Bausteine aus E02-S05; Inhalte aus E04-S01 bis E04-S05.
 
 ## Vorgeschlagener Ansatz
@@ -44,7 +44,7 @@ denselben Optionen wie `generate`.
      gewählten Vorlage, mit dem Hinweis, dass Inhalte an `---` auf die Platzhalter verteilt
      werden (E04-S01).
    - `{{diagrams}}`, `{{frontMatter}}` (aus `VALID_KEYS` des Generators und den Optionen;
-     `sticker` je nach Vorlage mit seinem Standard).
+     `kennzeichnung` je nach Vorlage mit seinem Standard).
    - **Wenn etwas falsch ist** — die Fehler mit Beispielen (Inhalt unter Kapitelfolie,
      unbekannter Container/Alert/Attribut, Karte ohne fetten Anfang, Fazit-Box zu lang, Agenda mit
      mehr als acht Punkten, unbekannter Layoutname).

@@ -115,8 +115,16 @@ E09-S04 erst, wenn der Bedarf feststeht. Die Ideen in E11–E13 sind unabhängig
 
 ## Offene Punkte
 
+Vom Menschen am 2026-11-07 entschieden:
+
 1. Wird ein KI-Host (Chat-Assistent) die Bibliothek aufrufen, sodass E08-S04 nötig ist, oder
    bleibt der Weg „Claude Code im Klon" (`docs/ki-anleitung.md`)?
+
+> Nein, nur der Klon mit `run.sh`; E08-S04 zurückgestellt.
 2. Brauchen PTA-Vorträge Szenen (E09-S04) und ein HTML-Deck (E10), oder genügen Notizen, Builds
    und Übergänge in PowerPoint?
+
+> Alles gewünscht: Notizen, Builds, Übergänge, Szenen, HTML-Deck und PNG-Vorschau.
 3. Welche der Ideen E11–E13 sind gewünscht?
+
+> Alle drei. Der Schlüssel `kennzeichnung` gilt gemeinsam für alle Formate (E04-S05, E12-S03).

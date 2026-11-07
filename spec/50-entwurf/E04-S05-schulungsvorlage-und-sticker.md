@@ -28,12 +28,13 @@ Absicherung der Schulungsvorlage durch Tests über alle Folienarten und die engl
 
 ## Vorgeschlagener Ansatz
 
-1. **Front Matter** `sticker:` (neuer Schlüssel in `front_matter.Keys`, nur PPTX) mit den Werten
-   `vertraulich`, `intern`, `kein`. Standard: `basis` → `kein`, `schulung` → `intern` (wie die
-   Vorlage). `PptxOptions.sticker: Sticker | None`; `Sticker` als `StrEnum` in
-   `design/variants.py`.
-2. **Text:** `GeneratedTexts` um „VERTRAULICH"/„CONFIDENTIAL" und „Für den internen
-   Gebrauch"/„For internal use only" erweitern.
+1. **Front Matter** `kennzeichnung:` (neuer Schlüssel in `front_matter.Keys`; in Word und PDF
+   wirkt er nach E12-S03 — Entscheidung 2026-11-07: ein gemeinsamer Schlüssel statt `sticker`) mit
+   den Werten `vertraulich`, `intern`, `entwurf`, `kein`. Standard: `basis` → `kein`, `schulung` →
+   `intern` (wie die Vorlage). `PptxOptions.marking: Marking | None`; `Marking` als `StrEnum` in
+   `design/variants.py`, gemeinsam mit E12-S03.
+2. **Text:** `GeneratedTexts` um „VERTRAULICH"/„CONFIDENTIAL", „Für den internen
+   Gebrauch"/„For internal use only" und „ENTWURF"/„DRAFT" erweitern.
 3. **Zeichnen** in `generation/pptx/sticker.py`, **auf dem Master** des erzeugten Decks wie in der
    Schulungsvorlage (damit er auf jeder Folie mit Mastergrafiken steht und in PowerPoint an einer
    Stelle geändert wird):
@@ -55,15 +56,15 @@ Absicherung der Schulungsvorlage durch Tests über alle Folienarten und die engl
 
 ## Akzeptanzkriterien
 
-- [ ] `sticker: vertraulich` zeigt „VERTRAULICH" oben rechts vor der Eckklammer auf jeder Folie
+- [ ] `kennzeichnung: vertraulich` zeigt „VERTRAULICH" oben rechts vor der Eckklammer auf jeder Folie
       mit Mastergrafiken, in Basis- und Schulungsvorlage.
 - [ ] Ohne Angabe sieht ein Schulungsdeck aus wie die Schulungsvorlage („Für den internen
       Gebrauch"), ein Basisdeck hat keinen Sticker.
-- [ ] Unbekannte Werte für `sticker` werfen `DocumentConversionError` mit den gültigen Werten.
+- [ ] Unbekannte Werte für `kennzeichnung` werfen `DocumentConversionError` mit den gültigen Werten.
 
 ## Offene Fragen
 
-1. Darf `sticker: kein` die Kennzeichnung der **Schulungsvorlage** entfernen? Vorschlag: nein
+1. Darf `kennzeichnung: kein` die Kennzeichnung der **Schulungsvorlage** entfernen? Vorschlag: nein
    (Fehler mit Hinweis auf die PTA-Regel), weil die Kennzeichnung dort verpflichtend ist.
 
 >

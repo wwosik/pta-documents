@@ -59,3 +59,5 @@ Historie mit zwei Zeilen; `./run.sh vergleich` beider Fassungen ergibt ein Word-
 >
 
 ## Notizen
+
+- (2026-11-07) Umsetzung gewünscht (Entscheidung des Menschen zu allen drei Epics E11–E13).

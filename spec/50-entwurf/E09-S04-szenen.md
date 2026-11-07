@@ -1,6 +1,6 @@
 # E09-S04 Szenen: benannte Formen, die Morph bewegt
 
-> Status: Entwurf, Bedarf offen
+> Status: Entwurf
 > Epic: [E09 Präsentieren](E09-praesentieren.md)
 
 ## Zusammenfassung
@@ -80,7 +80,7 @@ zeichnet die Szene als Standbild, Word lässt sie weg.
    Folie verändern —, oder reichen Flow-Layouts (E04-S03) und Mermaid (E06-S03)? Ohne Ja bleibt
    die Story liegen.
 
->
+> (2026-11-07) Ja.
 
 2. Raster über die Inhaltsfläche (PTA-konform, aber nicht quadratisch: 160 × 90 auf
    31,20 × 13,10 cm) oder quadratische Einheit 0,195 cm mit 160 × 67 Einheiten? Vorschlag:

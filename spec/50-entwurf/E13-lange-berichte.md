@@ -62,3 +62,5 @@ PDF (nach E05), das veraPDF als PDF/A-2b und — soweit E13-S03 es erreicht — 
 >
 
 ## Notizen
+
+- (2026-11-07) Umsetzung gewünscht (Entscheidung des Menschen zu allen drei Epics E11–E13).

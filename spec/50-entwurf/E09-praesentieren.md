@@ -25,7 +25,7 @@ zu jeder Folie sagt.
 | [E09-S01](E09-S01-sprechernotizen.md) | `::: notes` → Notizenseite der Folie auf dem Notizenmaster der PTA-Vorlage; Rückweg im PPTX-Konverter | Entwurf |
 | [E09-S02](E09-S02-builds.md) | `{.build}` / `{.frag}` als Fade-Eingänge in PPTX; Front Matter für „alle Listen" | Entwurf |
 | [E09-S03](E09-S03-uebergaenge.md) | Folienübergänge per Front Matter und Heading-Attribut; Morph mit Fade-Rückfall | Entwurf |
-| [E09-S04](E09-S04-szenen.md) | `::: scene`: benannte Formen auf dem Raster, Morph zwischen Szenenfolien | Entwurf, Bedarf offen |
+| [E09-S04](E09-S04-szenen.md) | `::: scene`: benannte Formen auf dem Raster, Morph zwischen Szenenfolien | Entwurf |
 
 ## Bereichsweite Entscheidungen
 
@@ -59,7 +59,7 @@ Rücklesen (E07-S03) die Notizen als `::: notes` wieder.
 2. E09-S04 (Szenen) ist aufwendig (vt-tools-libs: ~500 Zeilen plus PPTX-Ausgabe). Gibt es dafür
    bei der PTA einen Anwendungsfall, oder reichen die Flow-Layouts aus E04-S03?
 
->
+> (2026-11-07) Ja, Szenen werden gebraucht — zusammen mit Notizen, Builds und Übergängen.
 
 ## Notizen
 

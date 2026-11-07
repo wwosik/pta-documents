@@ -26,7 +26,7 @@ Aufzählungen", Satzzeichen, Schreibweisen), die sich zum Teil prüfen lassen.
 | [E08-S01](E08-S01-hinweise-aus-der-erzeugung.md) | `GenerationResult` mit `GenerationNote`s aus DOCX, PPTX (und PDF): geteilte Folien, HTML weggelassen, Diagramm nicht gezeichnet, Bild vergrößert, fehlende Zeichen; Ausgabe im Werkzeug `generate` | Entwurf |
 | [E08-S02](E08-S02-pruefbefehl-und-stilregeln.md) | `./run.sh pruefen`: Hinweise ohne Erzeugen, Stilregeln der PTA-Musterfolien, Statistik (Folien, Wörter, Dauer), Bild ohne Quelle | Entwurf |
 | [E08-S03](E08-S03-funktionsuebersicht-durch-tests.md) | `samples/funktionen/` als gesicherte Feature-Tour: zeigt jede Syntax der Guides, erzeugt ohne Hinweise, Rundreise-Erwartungen committet | Entwurf |
-| [E08-S04](E08-S04-werkzeug-make-document.md) | `make_document` für KI-Hosts: Beschreibung, JSON Schema, Guide aus den Optionen, `run`, `reply` | Entwurf |
+| [E08-S04](E08-S04-werkzeug-make-document.md) | `make_document` für KI-Hosts: Beschreibung, JSON Schema, Guide aus den Optionen, `run`, `reply` | zurückgestellt (2026-11-07) |
 
 ## Bereichsweite Entscheidungen
 
@@ -58,6 +58,7 @@ einen einzigen Hinweis.
 2. Wird ein KI-Host die Bibliothek direkt aufrufen (E08-S04), oder bleibt „Claude Code im Klon"
    der einzige Weg? Ohne Host kann E08-S04 warten.
 
->
+> (2026-11-07) Nein. Die KI (Claude Code, Copilot in VS Code) arbeitet im Klon und ruft
+> `run.sh` auf; E08-S04 ist zurückgestellt.
 
 ## Notizen
