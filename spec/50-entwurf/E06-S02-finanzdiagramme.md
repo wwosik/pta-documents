@@ -78,14 +78,14 @@ im PDF, eigenständiges SVG mit Tooltips.
    aus den PTA-Farben errechnet werden (eine Funktion `tint()` in `colors.py`), oder sollen nur
    die festen PTA-Farben vorkommen (dann z. B. Vorjahr `LIGHT_BLUE`, Ist `PTA_BLUE`)?
 
->
+> (2026-11-07) Aus den PTA-Farben errechnen (`tint()` in `colors.py`).
 
 2. Die Beschriftungen sind in DocLibs englisch („Previous", „Current", „Reference",
    „Projection", „Estimate", „Change", „Overall", „Value"). Vorschlag für die deutschen
    Standardwerte: „Vorjahr", „Ist", „Plan", „Prognose", „Schätzung", „Veränderung", „Gesamt",
    „Wert" — passt das zum Sprachgebrauch der PTA (z. B. „Plan" oder „Ziel" für die Referenz)?
 
->
+> (2026-11-07) Ja, passt.
 
 ## Notizen
 

@@ -76,13 +76,13 @@ in Folien — in den PTA-Farben und ohne Online-Dienst.
    eingerichtet ist: Fehler mit Einrichtungshinweis (Vorschlag), oder der Block bleibt still als
    Code stehen?
 
->
+> (2026-11-07) Block bleibt als Code, Hinweis `code-not-drawn` (E08-S01) mit Einrichtungshinweis.
 
 2. Wo wird mermaid-cli installiert: global per `npm install -g @mermaid-js/mermaid-cli@<Version>`
    und nur dokumentiert, oder repo-lokal (`tools/mermaid/package.json`, `./run.sh setup` ruft
    `npm ci`, wenn Node vorhanden ist)? Vorschlag: repo-lokal, damit die Version fest ist.
 
->
+> (2026-11-07) Repo-lokal (`tools/mermaid/package.json`, `npm ci` in `./run.sh setup`, wenn Node vorhanden).
 
 ## Notizen
 

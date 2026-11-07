@@ -69,6 +69,6 @@ generiert. Die Guides selbst schreiben E03-S05, E04-S06 und E05-S05.
    `authoring_guide(options, language=Language.EN)`), etwa für englischsprachige Agenten oder
    Kollegen — oder genügt Deutsch (Vorschlag)?
 
->
+> (2026-11-07) Nur Deutsch.
 
 ## Notizen

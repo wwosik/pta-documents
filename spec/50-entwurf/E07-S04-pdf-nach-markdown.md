@@ -73,7 +73,7 @@ und Fußzeilen sowie Bilder auf jeder Seite fallen weg, übrige Bilder werden Re
    Linien finden (`find_tables`). Soll der Konverter das über DocLibs hinaus nutzen und Pipe-
    Tabellen schreiben (hilfreich für PTA-PDFs mit Linien-Tabellen), oder zunächst 1:1 portieren?
 
->
+> (2026-11-07) Tabellen mit `find_tables` erkennen und als Pipe-Tabellen schreiben.
 
 ## Notizen
 

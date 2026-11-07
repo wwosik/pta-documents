@@ -85,12 +85,12 @@ Signalfarben.
    (a) `Nur Titel` mit dem Verlaufshintergrund von `Titelfolie ohne Bild` und weißer Schrift
    (Vorschlag), (b) Fehler mit Hinweis auf Zwischenfazit/Zitat (E04-S04), oder (c) ignorieren?
 
->
+> (2026-11-07) (a) `Nur Titel` mit dem Verlauf der Titelfolie und weißer Schrift.
 
 2. Status-Labels in Tabellen: fetter Text in der Signalfarbe (Vorschlag), oder ein Ampelpunkt
    „●" in der Signalfarbe vor dem Text in `404040` wie im Ampel-Muster der Vorlagensammlung?
 
->
+> (2026-11-07) Ampelpunkt „●“ in der Signalfarbe vor dem Text in `404040`, wie das Ampel-Muster der Vorlagensammlung.
 
 ## Notizen
 

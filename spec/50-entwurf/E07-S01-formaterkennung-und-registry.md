@@ -76,7 +76,7 @@ unterstützte Formate werden mit einer Meldung abgelehnt, die sagt, was zu tun i
    durchgereicht werden (ein `MarkdownDocument` mit dem Text), oder wie in DocLibs abgelehnt?
    Vorschlag: ablehnen, weil Markdown-Dateien gar nicht konvertiert werden müssen.
 
->
+> (2026-11-07) Ablehnen.
 
 ## Notizen
 

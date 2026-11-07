@@ -63,7 +63,7 @@ ein SVG-Schreiber mit Tooltips ohne Skript für Web-Seiten und als Vorstufe für
    Schnitt), damit sie auf Rechnern ohne Segoe UI gleich aussehen, oder nur Familiennamen nennen
    wie in DocLibs (Vorschlag; kleiner, Browser ersetzen die Schrift)?
 
->
+> (2026-11-07) Nur Familiennamen nennen.
 
 ## Notizen
 

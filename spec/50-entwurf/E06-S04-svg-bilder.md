@@ -72,7 +72,7 @@ und neuer das SVG scharf zeichnet; das PDF setzt das PNG.
 1. Auflösung des PNG im PDF: DocLibs rendert in doppelter Größe (≈ 192 dpi). Für Ausdrucke
    wären dreifach (≈ 288 dpi) besser, bei größeren Dateien. Doppelt lassen oder dreifach?
 
->
+> (2026-11-07) Dreifach (≈ 288 dpi).
 
 ## Notizen
 

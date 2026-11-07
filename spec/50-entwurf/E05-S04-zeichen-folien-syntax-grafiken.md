@@ -78,7 +78,7 @@ Vektoren bzw. Bilder gesetzt.
    `FDDC35` (PTA-Hervorhebungsfarbe, wie in den Folien vorgesehen), gleich wie im DOCX
    (E03-S03). Einverstanden?
 
->
+> (2026-11-07) Ja, Hinterlegung in Gelb `FDDC35` wie im DOCX.
 
 ## Notizen
 

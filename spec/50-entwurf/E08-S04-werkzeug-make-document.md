@@ -72,7 +72,7 @@ KI-SDK.
 1. Soll `vorlage` ein Parameter sein, obwohl das Front Matter es auch kann? Vorschlag: ja, ein
    Enum hilft dem Modell mehr als Prosa; Front Matter gewinnt.
 
->
+> (2026-11-07) Ja (Vorschlag angenommen; Story bleibt zurückgestellt).
 
 2. Gibt es einen Host, der das braucht (Epic-Frage 2)? Ohne ihn bleibt die Story liegen.
 

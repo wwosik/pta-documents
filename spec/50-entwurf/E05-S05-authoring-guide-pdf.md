@@ -71,12 +71,12 @@ nicht haben, und Fehler. Sie wird aus den Optionen erzeugt, damit sie nie vom Ge
    beim Öffnen aktualisiert, fehlende Zeichen im PDF), statt getrennter Anleitungen in E03-S05 und
    hier? Vorschlag: gemeinsam.
 
->
+> (2026-11-07) Gemeinsam — eine Anleitung „Dokumente“ für Word und PDF; E03-S05 schreibt sie, E05-S05 ergänzt den PDF-Abschnitt.
 
 2. Wird zusätzlich eine englische Fassung gebraucht (z. B. für `sprache: en` oder für Agenten),
    oder genügt die deutsche?
 
->
+> (2026-11-07) Nein, nur Deutsch (wie E02-S05).
 
 ## Notizen
 

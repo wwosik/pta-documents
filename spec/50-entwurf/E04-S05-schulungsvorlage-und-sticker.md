@@ -67,21 +67,21 @@ Absicherung der Schulungsvorlage durch Tests über alle Folienarten und die engl
 1. Darf `kennzeichnung: kein` die Kennzeichnung der **Schulungsvorlage** entfernen? Vorschlag: nein
    (Fehler mit Hinweis auf die PTA-Regel), weil die Kennzeichnung dort verpflichtend ist.
 
->
+> (2026-11-07) Nein — Fehler mit Hinweis auf die PTA-Regel.
 
 2. Soll es eine englische Schulungsvariante geben (`vorlage: schulung` + `sprache: en`):
    `prepare-templates` entfernt wie in der englischen Titelfolie das deutsche Logo aus den
    Titellayouts der Schulungsvorlage, der Generator setzt das englische? Oder bleibt das deutsche
    Logo mit deutschem Slogan (heutiger Stand)?
 
->
+> (2026-11-07) Ja, englische Schulungsvariante mit englischem Logo wie bei der Titelfolie EN.
 
 3. Auf Layouts ohne Mastergrafiken (in der Basisvorlage u. a. `Titel und Bild 02`,
    `Zwischenfazit 01/02`, `Zitat 02`) erscheint ein Master-Sticker nicht — wie in der
    Schulungsvorlage. Genügt das, oder soll „VERTRAULICH" dort zusätzlich als Form auf der Folie
    stehen?
 
->
+> (2026-11-07) Genügt, wie die Schulungsvorlage.
 
 ## Notizen
 

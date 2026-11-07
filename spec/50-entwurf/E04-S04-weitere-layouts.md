@@ -80,13 +80,13 @@ die vier Diagramm-Layouts, die Charts aus `chart`-Blöcken in ihren Diagrammplat
    dem Titel) als Agendapunkte übernehmen? Die Agenda bleibt ausdrücklich angefordert, aber der
    Schreiber muss die Kapitel nicht doppelt pflegen.
 
->
+> (2026-11-07) Ja.
 
 2. Zitat-Layouts haben nur einen Platzhalter. Wohin mit der Quelle („— Name, Funktion")?
    Vorschlag: ein Absatz unter der Überschrift wird zweiter Absatz im selben Platzhalter, 24 pt
    Segoe UI Light, nicht kursiv. Alternative: keine Quelle zulassen.
 
->
+> (2026-11-07) Zweiter Absatz im selben Platzhalter, 24 pt Segoe UI Light, nicht kursiv.
 
 ## Notizen
 

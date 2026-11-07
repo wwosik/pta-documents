@@ -75,17 +75,17 @@ eingebetteter Tabelle, im PDF eine Vektorzeichnung.
    werden sie deutsch wie das Front Matter (`typ: balken|linie|flaeche`, `titel`, `einheit`,
    `gestapelt: ja`, `quelle`)?
 
->
+> (2026-11-07) Englisch (Markdown-Syntax).
 
 2. Zahlen: nur mit Dezimalpunkt (`1250.5`, wie DocLibs) oder auch deutsch mit Komma (`1250,5`)?
    Mit Komma bräuchte die CSV ein anderes Trennzeichen (`;`).
 
->
+> (2026-11-07) Beides: Trennzeichen `,` → Dezimalpunkt, Trennzeichen `;` → Dezimalkomma.
 
 3. Die Diagrammlayouts nennt auch E04-S04. Vorschlag: Charts nutzen sie hier, E04-S04 deckt nur
    noch die übrigen Layouts ab. Einverstanden?
 
->
+> (2026-11-07) Ja.
 
 ## Notizen
 

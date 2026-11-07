@@ -1,6 +1,6 @@
 # E07-S06 Markdown-Hilfen
 
-> Status: Entwurf
+> Status: gestrichen (2026-11-07) — Prüfpunkte wandern zu E07-S02
 > Epic: [E07 Konvertierung nach Markdown](E07-konvertierung-nach-markdown.md)
 
 ## Zusammenfassung
@@ -60,7 +60,7 @@ schreiben, und schließt die Lücken in Tests und Beschreibung.
    Tests, Doku wie oben), oder wird sie gestrichen und der Rest bei der Prüfung von E07-S02
    miterledigt?
 
->
+> (2026-11-07) Gestrichen; Schnittstelle, Tests und Doku werden bei der Prüfung von E07-S02 miterledigt.
 
 ## Notizen
 

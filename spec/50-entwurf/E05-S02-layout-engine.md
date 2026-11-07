@@ -83,7 +83,7 @@ in den Formatvorlagen der PTA-Word-Vorlage statt in DocLibs' eigenen Größen.
    mit dem Verweis (8 pt „Fußnotentext", Trennlinie), oder einfacher gesammelt am Ende des
    Dokuments?
 
->
+> (2026-11-07) Am Fuß der Seite, wie Word.
 
 ## Notizen
 

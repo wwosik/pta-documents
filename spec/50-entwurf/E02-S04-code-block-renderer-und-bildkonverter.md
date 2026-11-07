@@ -78,7 +78,7 @@ Fehlerweitergabe als `DocumentConversionError`.
    sind (Charts immer, Mermaid und SVG→PNG, wenn mermaid-cli bzw. das Extra `svg` installiert
    ist), oder wie in DocLibs nur, wenn der Aufrufer sie übergibt (Standard leer)?
 
->
+> (2026-11-07) Standardmäßig einschalten, wenn verfügbar; in den Optionen abschaltbar.
 
 ## Notizen
 

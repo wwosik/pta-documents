@@ -78,7 +78,7 @@ Seitenzahl — für alle vier Varianten (`hoch`, `hoch-ohne-deckblatt`, `quer`,
 1. Logo im PDF: als Vektor (aus dem EMF gewandelte Pfade, scharf in jedem Zoom) oder als
    hochaufgelöstes PNG (≥ 600 dpi)? Vorschlag: Vektor, wenn E01-S04 ein sauberes SVG liefert.
 
->
+> (2026-11-07) Vektor.
 
 ## Notizen
 
