@@ -71,18 +71,18 @@ Bild, ohne es vorher in einem Bildprogramm zuzuschneiden.
 1. `.shadow` (weicher Schatten unter dem Bild) — passt das zum PTA-Stil? Die Vorlagensammlung
    zeigt Bilder ohne Schatten. Vorschlag: nein, weglassen.
 
->
+> (2026-11-07) Nein, weglassen.
 
 2. Sollen Attribute nur in Braces nach dem Bild stehen (`{focus=top}`) und `scale=` aus dem Titel
    dorthin wandern (eine Stelle, Titel bleibt reine Unterschrift)? Vorschlag: ja, mit Übergang —
    `scale=` im Titel bleibt ein Jahr gültig und löst einen Hinweis aus.
 
->
+> (2026-11-07) Ja, mit Übergang (ein Jahr, Hinweis).
 
 3. Rundes Bild auch für Kontakt-Layouts (E04-S04) als Standard, oder nur auf Wunsch? Vorschlag:
    nur auf Wunsch — die Vorlage zeigt rechteckige Fotos.
 
->
+> (2026-11-07) Nur auf Wunsch.
 
 ## Notizen
 

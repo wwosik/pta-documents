@@ -76,17 +76,17 @@ bekommen, und eine KI kann Icons nennen statt Bilder zu suchen.
    bekannt) oder `![](icon:check)` wie `qr:` (ein Mechanismus für alle erzeugten Bilder, aber
    sperrig im Kartentitel)?
 
->
+> (2026-11-07) `:icon-check:`.
 
 2. Inline-Icons in Folientexten: als frei positionierte Formen (fragil beim Fitting) oder
    Fehler mit Hinweis auf Karten und Listen? Vorschlag: Fehler — Folientext ist Platzhaltertext.
 
->
+> (2026-11-07) Fehler mit Hinweis auf Karten und Listen.
 
 3. Tabler (MIT) oder Lucide (ISC)? Beide passen; Tabler hat mehr Icons, Lucide ist die Fortsetzung
    von Feather mit sehr einheitlichem Strich. Vorschlag: Tabler.
 
->
+> (2026-11-07) Tabler Icons (MIT).
 
 ## Notizen
 

@@ -67,23 +67,23 @@ die das Inhaltsverzeichnis zeigt.
 1. Fußzeile der Backup-Folien: „Backup", „PTA – <Titel> · Backup" oder unverändert? Vorschlag:
    „PTA – <Titel> · Backup", damit die Folie als Teil des Decks erkennbar bleibt.
 
->
+> (2026-11-07) „PTA – <Titel> · Backup“.
 
 2. Sollen Backup-Folien in der Kundenfassung (E16-S01) enthalten sein? Vorschlag: ja — Backup ist
    Vorrat, nicht intern; wer sie ausschließen will, markiert sie `{.internal}`.
 
->
+> (2026-11-07) Ja; wer sie ausschließen will, markiert `{.internal}`.
 
 3. `# Anhang {.appendix}` als eigene unnummerierte Überschrift ausgeben oder nur als Schalter
    verstehen (erste Anhangsüberschrift ist dann `# Glossar {.appendix}` = „A Glossar")?
    Vorschlag: Schalter — die Überschrift ist der erste Anhang.
 
->
+> (2026-11-07) Schalter — die Überschrift ist der erste Anhang.
 
 4. Abbildungen und Tabellen im Anhang: weiter durchzählen (Abbildung 12) oder je Anhang neu
    (Abbildung A-1)? Vorschlag: durchzählen — einfacher, und Word macht es ohne Zutun so.
 
->
+> (2026-11-07) Durchzählen.
 
 ## Notizen
 

@@ -72,17 +72,17 @@ Balls ○ ◔ ◑ ◕ ● für Bewertungsmatrizen; `::: riskmatrix` macht aus ei
    vorhanden, im PDF aber nicht in Selawik — dort Ersatz aus einer gebündelten Symbolschrift
    oder als kleines Bild) oder überall als Bild? Vorschlag: Unicode in Word, Bild im PDF.
 
->
+> (2026-11-07) Unicode in Word, Bild im PDF.
 
 2. Risikomatrix in Word als Grafik (Vorschlag) oder als 5 × 5-Word-Tabelle mit farbigen Zellen
    und Nummern als Text (editierbar, aber Achsenbeschriftung schwierig)?
 
->
+> (2026-11-07) Als Grafik.
 
 3. Schwellen der Matrixfarben (≤ 4 grün, ≤ 12 gelb, sonst rot) — gibt es eine PTA-Vorgabe aus dem
    Risikomanagement?
 
->
+> (2026-11-07) Ja, ≤ 4 grün, ≤ 12 gelb, sonst rot; einstellbar.
 
 ## Notizen
 

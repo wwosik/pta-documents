@@ -91,12 +91,12 @@ Statusberichten sonst von Hand entstehen.
    kennen? Vorschlag: Meilensteine ja (Raute `004676`), Abhängigkeitspfeile nein — das wird
    schnell ein Projektwerkzeug.
 
->
+> (2026-11-07) Meilensteine ja (Raute), Abhängigkeiten nein.
 
 2. Wochenraster: Kalenderwochen (`KW 03`) oder Datum des Montags? Vorschlag: KW, wie
    Projektpläne bei Kunden üblich.
 
->
+> (2026-11-07) Kalenderwochen.
 
 ## Notizen
 

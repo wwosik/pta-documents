@@ -70,13 +70,13 @@ tragen automatisch die Kennzeichnung `intern`.
    über eine Kopfzelle `Kommentar {.internal}`? Vorschlag: nein, erst wenn der Bedarf da ist —
    Tabellen werden stattdessen doppelt geschrieben.
 
->
+> (2026-11-07) Nein, vorerst nicht.
 
 2. Sollen Lösungen in der Teilnehmerfassung (`kunde`) als leerer Kasten „Lösung" mit Linien
    bleiben (zum Ausfüllen) oder ganz fehlen? Vorschlag: ganz fehlen; das Handout (E16-S03) hat
    ohnehin Notizlinien.
 
->
+> (2026-11-07) Ganz fehlen.
 
 ## Notizen
 

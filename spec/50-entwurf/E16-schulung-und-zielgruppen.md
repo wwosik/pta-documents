@@ -57,13 +57,13 @@ Abweichung.
 1. Standardfassung ohne Angabe: `kunde` (nichts Internes geht versehentlich raus — Vorschlag)
    oder `intern` (wer intern arbeitet, sieht alles und muss für den Kunden bewusst exportieren)?
 
->
+> (2026-11-07) `kunde`.
 
 2. Soll `./run.sh generate` ohne `--audience` **alle** Fassungen erzeugen, in denen sich das
    Dokument unterscheidet (eine Datei je Fassung), oder nur die Standardfassung? Vorschlag: nur
    die Standardfassung; `--audience alle` erzeugt jede.
 
->
+> (2026-11-07) Nur die Standardfassung; `--audience alle` erzeugt jede.
 
 ## Notizen
 

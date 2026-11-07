@@ -65,13 +65,13 @@ Trennfolien, mit Deckblatt aus dem Front Matter und dem Zeitplan vorn.
    oben, Notizen darunter (Hochformat, mehr Platz für Text)? Vorschlag: nebeneinander bei 2 je
    Seite, untereinander bei 3 und 6.
 
->
+> (2026-11-07) Nebeneinander bei 2 je Seite, untereinander bei 3 und 6.
 
 2. Soll das Handout die **Foliennummer** am Bild zeigen („Folie 12"), damit Teilnehmer
    mitblättern können? Vorschlag: ja, als Beschriftung „Folie n: Titel" (Formatvorlage
    „Beschriftung", ohne Abbildungszähler).
 
->
+> (2026-11-07) Ja, „Folie n: Titel“ in „Beschriftung“ ohne Zähler.
 
 ## Notizen
 

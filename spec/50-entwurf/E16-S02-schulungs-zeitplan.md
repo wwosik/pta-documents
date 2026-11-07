@@ -65,17 +65,17 @@ verglichen und mit der Schätzung aus E08-S02 abgeglichen.
    oder nur Anzeige im Zeitplan? Vorschlag: Rest gleichmäßig verteilen, dann braucht nicht jede
    Folie eine Zahl.
 
->
+> (2026-11-07) Rest gleichmäßig verteilen.
 
 2. Pausenfolie zeigen (`Zwischenfazit 01` mit „Pause · 15 min", bleibt während der Pause auf der
    Leinwand) oder Pause nur im Zeitplan? Vorschlag: Folie zeigen, mit `{.break}` ohne Inhalt.
 
->
+> (2026-11-07) Folie zeigen, `{.break}` ohne Inhalt.
 
 3. Verbname `schedule` oder Zeitplan immer nur als Teil des Handouts (E16-S03)? Vorschlag:
    eigenes Verb, weil der Trainer den Zeitplan oft vor dem Handout braucht.
 
->
+> (2026-11-07) Eigenes Verb `schedule`.
 
 ## Notizen
 
