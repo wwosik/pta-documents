@@ -1,8 +1,8 @@
 # E07-S01 Formaterkennung und Registry
 
-> Status: Entwurf
-> Epic: [E07 Konvertierung nach Markdown](E07-konvertierung-nach-markdown.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E07 Konvertierung nach Markdown](../../50-entwurf/E07-konvertierung-nach-markdown.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
