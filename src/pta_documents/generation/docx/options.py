@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import datetime as dt
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from pta_documents.design.variants import DEFAULT_WORD_VARIANT, Language, WordVariant
+from pta_documents.generation.common.images import ImageConverter, default_converters
+from pta_documents.generation.common.renderers import CodeBlockRenderer, default_renderers
 
 
 @dataclass(frozen=True)
@@ -20,3 +22,9 @@ class DocxOptions:
     """``firma:``: replaces the company line of the footer (template: "PTA IT-Beratung")."""
     toc: bool = False
     """``inhaltsverzeichnis: ja``: a table of contents after the cover."""
+    code_block_renderers: tuple[CodeBlockRenderer, ...] = field(default_factory=default_renderers)
+    """Asked in order for every fenced code block with an info string; the first graphic wins.
+    Defaults to every renderer of the library that is available; ``()`` turns them off."""
+    image_converters: tuple[ImageConverter, ...] = field(default_factory=default_converters)
+    """Asked in order (scale 2) for every image in a format the generator does not take.
+    Defaults to every converter of the library that is available; ``()`` turns them off."""

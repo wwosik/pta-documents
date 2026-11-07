@@ -76,3 +76,7 @@ Charts (`ChartGraphic`) als natives Word-Diagramm aus E06-S01 — beide gleich b
 - Abhängigkeiten: E02-S03, E02-S04, E06-S01 (Word-Chart), E06-S04 (SVG in Word), E01-S03.
 - E06-S01 nennt für Word das Seitenverhältnis 640:380 und 10 pt; Schritt 4 hier schlägt vor,
   es an die Regel für Zeichnungen anzugleichen — beim Annehmen beider Pläne abstimmen.
+- (2026-11-07, E02-S04) Einstieg: `BodyWriter.block` (Fall `fence`) ruft `self.draw(token)` →
+  `code_blocks.draw`, das heute für `DrawingGraphic`/`ChartGraphic` wirft; hier stattdessen
+  zeichnen (`draw` dann den Graphic-Typ zurückgeben lassen). `ImageGraphic` setzt
+  `place_picture` ohne Beschriftung.

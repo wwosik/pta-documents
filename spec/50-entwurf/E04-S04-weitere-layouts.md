@@ -92,3 +92,7 @@ die vier Diagramm-Layouts, die Charts aus `chart`-Blöcken in ihren Diagrammplat
 ## Notizen
 
 - Abhängigkeiten: E02-S02 (Attribute), E04-S03 (Flow-Erkennung), für Schritt 6 E02-S04 und E06-S01.
+- (2026-11-07, E02-S04) Einstieg in PPTX: `DeckParser._block` (Fall `fence`) ruft `self._draw`
+  → `code_blocks.draw`, das heute für `DrawingGraphic`/`ChartGraphic` wirft; `ImageGraphic`
+  wird ein `Images`-Visual mit dem Info-String als Alt-Text. `CodeBlockRequest.dark` kommt aus
+  `DeckParser.dark` (`{.dark}` des laufenden `##`).

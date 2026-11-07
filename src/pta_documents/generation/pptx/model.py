@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Final
 
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.markdown.document import DocumentResource
@@ -85,6 +86,10 @@ class Table:
             self.has_header,
             self.title if keep_title else None,
         )
+
+
+PICTURE_TYPES: Final = ("image/png", "image/jpeg", "image/gif", "image/bmp", "image/tiff")
+"""The image formats slides take; the parser converts others (image converters) or refuses them."""
 
 
 @dataclass(frozen=True)

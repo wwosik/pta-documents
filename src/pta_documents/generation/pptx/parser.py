@@ -20,9 +20,12 @@ from pta_documents.generation.common import (
     html,
     layout_syntax,
 )
+from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image
+from pta_documents.generation.common.renderers import ImageGraphic
 from pta_documents.generation.common.result import Notes
 from pta_documents.generation.pptx.model import (
     BREAK,
+    PICTURE_TYPES,
     Align,
     ChapterSlide,
     ClosingSlide,
@@ -42,6 +45,7 @@ from pta_documents.generation.pptx.model import (
     Visual,
     VisualSlide,
 )
+from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
 from pta_documents.markdown.parser import child_lines, line_of, parse
 
@@ -71,14 +75,18 @@ class DeckParser:
         body: str,
         line_offset: int,
         notes: Notes | None = None,
+        options: PptxOptions | None = None,
     ) -> None:
         self.document = document
+        self.options = options or PptxOptions()
         self.body = body
         self.line_offset = line_offset
         self.notes = notes if notes is not None else Notes()
         self.slides: list[Slide] = []
         self.has_cover = False
         self.chapters = 0
+        self.dark = False
+        """The current slide is dark (``## Title {.dark}``): for the code-block renderers."""
 
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
@@ -95,6 +103,9 @@ class DeckParser:
                 self._section(heading, section)
                 heading = (token, tokens[i + 1])
                 section = _Section()
+                level = int(token.tag[1])
+                _, attributes = layout_syntax.without_attributes(tokens[i + 1], level, FORMAT)
+                self.dark = attributes is not None and attributes.dark
                 i += 3
                 continue
             i = self._block(tokens, i, section.items, depth=0, italic=False)
@@ -212,9 +223,12 @@ class DeckParser:
             case "table_open":
                 return self._table(tokens, i, out)
             case "fence" | "code_block":
-                if token.type == "fence":
-                    code_blocks.note_not_drawn(self.notes, token.info, self._line(token))
-                out.append(Code(tuple(token.content.rstrip("\n").split("\n"))))
+                graphic = self._draw(token) if token.type == "fence" else None
+                if graphic is not None:
+                    image = Image(graphic.image, token.info.strip(), self._line(token))
+                    out.append(Images((self._placeable(image, token),)))
+                else:
+                    out.append(Code(tuple(token.content.rstrip("\n").split("\n"))))
                 return i + 1
             case "html_block":
                 if not html.is_comment(token.content):
@@ -280,7 +294,7 @@ class DeckParser:
         """Text and images apart: images after the paragraph, as their own visual."""
         runs = self._runs(inline, _Style(italic=italic), images_as_text=False)
         images = [
-            Image(self._resource(child, inline), child.content, line)
+            self._placeable(Image(self._resource(child, inline), child.content, line), inline)
             for child, line in zip(
                 inline.children or [], child_lines(inline, self.line_offset), strict=True
             )
@@ -298,6 +312,35 @@ class DeckParser:
         if resource is None:
             raise self._error(f"The image '{source}' is not among the document's resources", inline)
         return resource
+
+    def _draw(self, fence: Token) -> ImageGraphic | None:
+        """The image the code-block renderers make of ``fence``; None: it stays code."""
+        return code_blocks.draw(
+            self.options.code_block_renderers,
+            self.notes,
+            fence.info,
+            fence.content,
+            self._line(fence),
+            FORMAT,
+            self.options.language,
+            self.dark,
+        )
+
+    def _placeable(self, image: Image, token: Token) -> Image:
+        """``image`` in a format slides take: other formats through the image converters."""
+        resource = image.resource
+        if resource.content_type in PICTURE_TYPES:
+            return image
+        converters = self.options.image_converters
+        conversion = convert_image(converters, resource, GENERATOR_SCALE, FORMAT)
+        if conversion is None:
+            nobody = ", and no image converter takes it" if converters else ""
+            raise self._error(
+                f"The image '{resource.path}' is a {resource.content_type}; PPTX takes PNG, JPEG, "
+                f"GIF, BMP and TIFF{nobody}",
+                token,
+            )
+        return Image(conversion.image, image.alt, image.line)
 
     def _table(self, tokens: list[Token], i: int, out: list[Item]) -> int:
         rows: list[tuple[tuple[Run, ...], ...]] = []

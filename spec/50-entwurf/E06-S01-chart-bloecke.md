@@ -94,3 +94,7 @@ eingebetteter Tabelle, im PDF eine Vektorzeichnung.
   E03-S04 bleibt für Zeichnungen (Mermaid, Finanzdiagramme) im DOCX.
 - `::: columns` für zwei Charts setzt E02-S02/E04-S03 voraus; ohne sie wird der Fall später
   nachgezogen.
+- (2026-11-07, E02-S04) Standard eintragen in `generation/common/renderers.default_renderers()`
+  (heute leer; die Optionen nutzen es als `default_factory`). `ChartSpec`/`ChartSeries`/
+  `ChartKind` liegen schon in `charts/spec.py`; `ChartGraphic.drawing` ist bis E02-S03 als
+  `object` typisiert. `code_blocks.draw` wirft heute für `ChartGraphic` „does not support yet".

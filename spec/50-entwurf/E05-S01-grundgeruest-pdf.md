@@ -98,3 +98,6 @@ reportlab zeichnen und das Ergebnis mit pikepdf zu PDF/A-2b machen. Noch ohne Ma
   E05-S02 und braucht E07-S04.
 - Prüfpunkt: Pillows sRGB-Profil ist ICC v2/v4; PDF/A-2 erlaubt beide. Sobald veraPDF auf einem
   Rechner verfügbar ist, einmal `.tmp/review/pdf-grundgeruest.pdf` prüfen.
+- (2026-11-07, E02-S04) `PdfOptions.code_block_renderers`/`image_converters` wie in
+  `DocxOptions`: `field(default_factory=default_renderers)` bzw. `default_converters`; Fences
+  über `generation/common/code_blocks.draw`, Bilder über `images.convert_image(…, 2 * scale, …)`.

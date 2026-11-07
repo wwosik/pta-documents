@@ -46,7 +46,6 @@ A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
 P: Final = "http://schemas.openxmlformats.org/presentationml/2006/main"
 R: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 FOOTER_TYPES: Final = ("ftr", "sldNum")
-PICTURE_TYPES: Final = ("image/png", "image/jpeg", "image/gif", "image/bmp", "image/tiff")
 MAX_ENLARGEMENT: Final = 2.0
 """Shown at more than this many times its natural size, an image gets an ``image-enlarged`` note."""
 MAX_CROPPED: Final = 0.25
@@ -390,12 +389,6 @@ class DeckWriter:
     def fill_picture(self, slide: PptxSlide, idx: int, image: Image, where: Slide) -> None:
         """The image in a picture placeholder, which crops it to fill the placeholder."""
         resource = image.resource
-        if resource.content_type not in PICTURE_TYPES:
-            raise self.error(
-                f"The image '{resource.path}' is a {resource.content_type}; PPTX takes PNG, JPEG, "
-                "GIF, BMP and TIFF",
-                where,
-            )
         placeholder = self.placeholder(slide, idx)
         picture = placeholder.insert_picture(io.BytesIO(resource.content))
         picture._element.nvPicPr.cNvPr.set("descr", image.alt)

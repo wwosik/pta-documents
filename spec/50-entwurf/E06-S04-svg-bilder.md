@@ -81,3 +81,8 @@ und neuer das SVG scharf zeichnet; das PDF setzt das PNG.
   E06-S03, die aber absichtlich nur einen Teil von SVG kennt; deshalb hier das PNG.
 - resvg verarbeitet CSS nur teilweise; die Tooltips von `DrawingSvg` müssen ohne `:hover`
   unsichtbar sein — der Test dazu ist Pflicht.
+- (2026-11-07, E02-S04) Standard eintragen in `generation/common/images.default_converters()`
+  (Import von resvg-py dort abfangen). Die Generatoren konvertieren heute schon: DOCX in
+  `BodyWriter.place_picture` (natürliche Größe aus `ConvertedImage`), PPTX im Parser
+  (`DeckParser._placeable`, das Original-SVG geht dabei verloren — für `asvg:svgBlip` muss das
+  `Image`-Modell es mitführen).

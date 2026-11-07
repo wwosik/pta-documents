@@ -35,11 +35,13 @@ from pta_documents.generation.common import (
     layout_syntax,
     text_metrics,
 )
+from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image
 from pta_documents.generation.common.openxml import R, field_paragraph_runs, w
+from pta_documents.generation.common.renderers import ImageGraphic
 from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.generation.docx.options import DocxOptions
-from pta_documents.markdown.document import MarkdownDocument
+from pta_documents.markdown.document import DocumentResource, MarkdownDocument
 from pta_documents.markdown.front_matter import FrontMatter
 from pta_documents.markdown.parser import child_lines, create_parser, line_of
 
@@ -149,9 +151,19 @@ class BodyWriter:
             case "table_open":
                 return self.table_block(tokens, i)
             case "fence" | "code_block":
-                if token.type == "fence":
-                    code_blocks.note_not_drawn(self.notes, token.info, self.line(token))
-                self.code_block(token.content)
+                graphic = self.draw(token) if token.type == "fence" else None
+                if graphic is not None:
+                    paragraph = self.paragraph(word.STYLES.normal)
+                    self.place_picture(
+                        paragraph,
+                        graphic.image,
+                        graphic.image.path,
+                        token.info.strip(),
+                        "",
+                        self.line(token),
+                    )
+                else:
+                    self.code_block(token.content)
                 return i + 1
             case "html_block":
                 if not html.is_comment(token.content):
@@ -169,6 +181,18 @@ class BodyWriter:
 
     def line(self, token: Token) -> int | None:
         return line_of(token, self.front.body_line)
+
+    def draw(self, fence: Token) -> ImageGraphic | None:
+        """The image the code-block renderers make of ``fence``; None: it stays code."""
+        return code_blocks.draw(
+            self.options.code_block_renderers,
+            self.notes,
+            fence.info,
+            fence.content,
+            self.line(fence),
+            FORMAT,
+            self.options.language,
+        )
 
     def container(self, tokens: list[Token], i: int, close: str, style: str | None) -> int:
         depth = 0
@@ -361,18 +385,40 @@ class BodyWriter:
     def picture(self, paragraph: Paragraph, image: Token, line: int | None) -> None:
         source = str(image.attrs.get("src", ""))
         resource = self.source.find_resource(source)
-        where = f" (line {line})" if line else ""
         if resource is None:
+            where = f" (line {line})" if line else ""
             raise DocumentConversionError(
                 FORMAT, f"The image '{source}'{where} is not among the document's resources."
             )
+        title = str(image.attrs.get("title") or "")
+        self.place_picture(paragraph, resource, source, image.content, title, line)
+
+    def place_picture(
+        self,
+        paragraph: Paragraph,
+        resource: DocumentResource,
+        source: str,
+        alt: str,
+        title: str,
+        line: int | None,
+    ) -> None:
+        """``resource`` as a picture in ``paragraph``; a format DOCX does not take goes through
+        the image converters and is placed at its natural size."""
+        where = f" (line {line})" if line else ""
+        natural: tuple[float, float] | None = None
         if resource.content_type not in SUPPORTED_IMAGES:
-            raise DocumentConversionError(
-                FORMAT,
-                f"The image '{source}'{where} is a {resource.content_type}; DOCX takes PNG, JPEG, "
-                "GIF, BMP and TIFF.",
-            )
-        width, height = self._image_size(resource.content)
+            converters = self.options.image_converters
+            conversion = convert_image(converters, resource, GENERATOR_SCALE, FORMAT)
+            if conversion is None:
+                nobody = ", and no image converter takes it" if converters else ""
+                raise DocumentConversionError(
+                    FORMAT,
+                    f"The image '{source}'{where} is a {resource.content_type}; DOCX takes PNG, "
+                    f"JPEG, GIF, BMP and TIFF{nobody}.",
+                )
+            resource = conversion.image
+            natural = (conversion.width, conversion.height)
+        width, height = self._image_size(resource.content, natural)
         with Image.open(io.BytesIO(resource.content)) as opened:
             factor = width / (opened.size[0] * EMU_PER_PIXEL)
         if factor > MAX_ENLARGEMENT:
@@ -394,19 +440,26 @@ class BodyWriter:
         for doc_pr in run._r.iter(
             "{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}docPr"
         ):
-            doc_pr.set("descr", image.content)
-            title = str(image.attrs.get("title") or "")
+            doc_pr.set("descr", alt)
             if title:
                 doc_pr.set("title", title)
 
-    def _image_size(self, content: bytes) -> tuple[int, int]:
-        with Image.open(io.BytesIO(content)) as picture:
-            pixels_x, pixels_y = picture.size
-            dpi = picture.info.get("dpi", (96, 96))
-        dpi_x = float(dpi[0]) or 96.0
-        dpi_y = float(dpi[1]) or 96.0
-        width = pixels_x / dpi_x * EMU_PER_INCH
-        height = pixels_y / dpi_y * EMU_PER_INCH
+    def _image_size(
+        self, content: bytes, natural: tuple[float, float] | None = None
+    ) -> tuple[int, int]:
+        """The size of the picture in EMU: from its pixels and dpi, or its ``natural`` size in
+        pixels at 96 dpi; never wider than the text or higher than 80 % of the page."""
+        if natural is not None:
+            width = natural[0] * EMU_PER_PIXEL
+            height = natural[1] * EMU_PER_PIXEL
+        else:
+            with Image.open(io.BytesIO(content)) as picture:
+                pixels_x, pixels_y = picture.size
+                dpi = picture.info.get("dpi", (96, 96))
+            dpi_x = float(dpi[0]) or 96.0
+            dpi_y = float(dpi[1]) or 96.0
+            width = pixels_x / dpi_x * EMU_PER_INCH
+            height = pixels_y / dpi_y * EMU_PER_INCH
         scale = min(1.0, self.text_width / width, self.text_height * 0.8 / height)
         return int(width * scale), int(height * scale)
 

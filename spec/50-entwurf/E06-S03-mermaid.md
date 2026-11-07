@@ -92,3 +92,5 @@ in Folien — in den PTA-Farben und ohne Online-Dienst.
 - Prüfpunkt: dass `mmdc` stdin/stdout (`-i -`/`-o -`) in der gewählten Version kann; sonst
   schreibt der Renderer in ein `tempfile.TemporaryDirectory`.
 - Die SVG-Übersetzung im Kern kann auch das Logo (E01-S04, E05-S03) als Vektor zeichnen.
+- (2026-11-07, E02-S04) Standard eintragen in `generation/common/renderers.default_renderers()`
+  — nur, wenn mermaid-cli gefunden wird (Entscheidung: standardmäßig an, wenn verfügbar).

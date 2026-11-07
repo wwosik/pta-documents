@@ -102,6 +102,64 @@ einen Zeilenumbruch. Die Bausteine für die späteren Zeichner: `markdown/parser
 `columns`, `coloured`), `coloured_words.py` (`apply` über beliebige Runs) und
 `layout_tokens.py` (`tags`, `labelled_tags`, `label_cell`, `marked_row`, `only_images`).
 
+## Code-Block-Renderer und Bildkonverter
+
+Zwei Erweiterungspunkte, über die Diagramme, Charts und fremde Bildformate in die Generatoren
+kommen (`DocxOptions` und `PptxOptions`, Felder `code_block_renderers` und `image_converters`):
+
+```python
+from pta_documents.generation.common.images import ConvertedImage
+from pta_documents.generation.common.renderers import CodeBlockRequest, ImageGraphic
+from pta_documents.generation.docx.options import DocxOptions
+
+
+class Testbild:
+    authoring_guide = None  # oder ein Abschnitt ab "##" für die Authoring Guides (E02-S05)
+
+    def render(self, request: CodeBlockRequest) -> ImageGraphic | None:
+        if request.info.split()[0] != "testbild":
+            return None  # nicht meins: der Nächste wird gefragt, sonst bleibt es Code
+        return ImageGraphic(DocumentResource("testbild.png", "image/png", png_bytes))
+
+
+class SvgNachPng:
+    format = "SVG"  # so nennen es die Authoring Guides; None: gar nicht
+
+    def convert(self, image: DocumentResource, scale: float) -> ConvertedImage | None:
+        if image.content_type != "image/svg+xml":
+            return None
+        return ConvertedImage(png_bytes, "image/png", breite_px, hoehe_px)  # natürliche Größe
+
+
+options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgNachPng(),))
+```
+
+- **Renderer** (`generation/common/renderers.py`, `CodeBlockRenderer`) bekommen jeden
+  Codeblock mit Info-String (```` ```mermaid ````, ```` ```chart bar ````) als
+  `CodeBlockRequest(info, code, line, format, language, dark)`: `line` ist die Zeile des
+  öffnenden Zauns mit Front Matter, `language` die Dokumentsprache (`sprache:`), `dark` in
+  PowerPoint, ob die Folie `{.dark}` ist. Der erste Renderer mit Ergebnis gewinnt; `None` heißt
+  „nicht meins". Codeblöcke ohne Info-String und eingerückter Code gehen an keinen Renderer.
+- Ergebnis `ImageGraphic(resource)`: das Bild steht an der Stelle des Codeblocks wie ein
+  Markdown-Bild, mit dem Info-String als Alt-Text — in Word ohne „Abbildung n"-Beschriftung, in
+  PowerPoint wie ein Bild allein auf einer Folie. `DrawingGraphic(drawing)` und
+  `ChartGraphic(chart, drawing)` (Daten in `pta_documents.charts.ChartSpec`) sind vorgesehen,
+  werden aber noch nicht gezeichnet: sie ergeben einen Fehler „… does not support yet"
+  (Zeichnen folgt mit E03-S04, E04-S04 und E06).
+- **Konverter** (`generation/common/images.py`, `ImageConverter`) bekommen jedes Bild, dessen
+  Format der Generator nicht setzt (alles außer PNG, JPEG, GIF, BMP, TIFF, z. B. SVG), mit
+  `scale = 2`; der erste mit Ergebnis gewinnt. Word setzt das Ergebnis in der natürlichen Größe
+  aus `ConvertedImage` (Pixel bei 96 dpi), PowerPoint wie jedes andere Bild. Nimmt kein Konverter
+  das Bild, bleibt es ein Fehler (`… is a image/svg+xml; …, and no image converter takes it`).
+- **Fehler:** wirft ein Renderer oder Konverter eine `DocumentConversionError`, geht sie
+  unverändert durch; jede andere Ausnahme wird zu `DocumentConversionError` im Format des
+  Generators (Konverter: `The image '…' cannot be converted: …`), die ursprüngliche steht in
+  `__cause__`.
+- **Standard:** ohne Angabe nehmen die Optionen alle Renderer und Konverter der Bibliothek, die
+  verfügbar sind (`default_renderers()`, `default_converters()`); `()` schaltet sie ab. Heute
+  sind beide Listen leer — Charts, Mermaid (E06-S01/S03) und SVG → PNG (E06-S04, Extra `svg`)
+  tragen sich dort ein.
+
 ## Hinweise (`GenerationResult`)
 
 `generate()` beider Generatoren gibt ein `GenerationResult` zurück (`pta_documents.GenerationResult`,
@@ -126,7 +184,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `image-cropped` (`IMAGE_CROPPED`) | PPTX | ein Bildplatzhalter schneidet mehr als ein Viertel der Bildfläche ab |
 | `image-enlarged` (`IMAGE_ENLARGED`) | PPTX, DOCX | ein Bild wird mehr als doppelt so groß gezeigt wie seine Pixel bei 96 dpi und wirkt unscharf |
 | `raw-html` (`RAW_HTML`) | PPTX, DOCX | rohes HTML im Markdown; es wird **weggelassen**. HTML-Kommentare `<!-- … -->` fallen ohne Hinweis weg, `<br>` ist ein Zeilenumbruch |
-| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde nicht gezeichnet und steht als Code da (Renderer folgen mit E02-S04/E06) |
+| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (die Renderer der Bibliothek folgen mit E06) |
 | `character-missing` (`CHARACTER_MISSING`) | PDF (E05-S04) | ein Zeichen fehlt in den Schriften |
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01) | Sprechernotizen fallen im Word-Dokument weg |
 

@@ -57,6 +57,15 @@ weil ihm vertraut wird.
   `NoteCodes` (und `ALL`) eintragen und in `docs/verwendung.md` aufführen. `samples/` muss ohne
   Hinweise erzeugen (Tests `test_the_samples_generate_without_notes`).
 
+- **Renderer und Bildkonverter** (E02-S04): `generation/common/renderers.py`
+  (`CodeBlockRenderer`, `render`, `default_renderers`) und `images.py` (`ImageConverter`,
+  `convert_image`, `default_converters`, Maßstab `GENERATOR_SCALE = 2`). Optionen
+  `code_block_renderers`/`image_converters` nutzen die `default_*`-Funktionen als
+  `default_factory` (Entscheidung: standardmäßig an, wenn verfügbar; `()` schaltet ab) — neue
+  Renderer/Konverter der Bibliothek dort eintragen. Fences laufen in beiden Generatoren über
+  `code_blocks.draw` (notiert `code-not-drawn` nur, wenn nichts gezeichnet hat); PPTX konvertiert
+  Bilder im Parser (`DeckParser._placeable`), DOCX in `BodyWriter.place_picture`.
+
 ## Entscheidungen
 
 - **Entscheidungen des Menschen vom 2026-11-06:** Projektsprache Deutsch; portiert wird alles
