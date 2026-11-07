@@ -28,7 +28,8 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 
 1. Passt dieser Zuschnitt?
 
->
+> (2026-11-07) Ja. M02–M06 werden ohne Zwischenprüfung nacheinander umgesetzt (Agent `docs-2`);
+> der Mensch prüft danach alle Stories in `spec/60-prüfung/`.
 
 ## Notizen
 

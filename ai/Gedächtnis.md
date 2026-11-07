@@ -38,6 +38,10 @@ weil ihm vertraut wird.
 - **Umsetzungsreihenfolge** nach M01: Meilensteine M02 (Rückmeldung, Folien-Syntax) → M03
   (Grafik, Charts) → M04 (Präsentieren, Schulung, Guides) → M05 (PDF) → M06 (Inhalte,
   Dokumentpflege); jede der 59 offenen Stories nennt ihren Meilenstein im Kopf.
+- **Vorgaben für die Umsetzung von M02–M06 (2026-11-07):** Agent `docs-2`, ohne Zwischenprüfung;
+  nur lokal committen (Push macht der Mensch); neue Abhängigkeiten nur mit freizügiger Lizenz
+  (MIT, BSD, Apache, OFL) und als Extra, wo der Plan es vorsieht; fehlt eine Entscheidung,
+  die vorsichtigste vernünftige wählen und als Warnung in den Implementierungsnotizen festhalten.
 - **Werkzeugverben und Schalter sind englisch** (`generate`, `check`, `preview`, `compare`,
   `--strict`), Front Matter und Anleitungen deutsch, Markdown-Syntaxnamen englisch
   (Entscheidung 2026-11-07).
