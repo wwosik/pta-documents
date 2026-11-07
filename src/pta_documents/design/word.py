@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from pta_documents.design import colors
+from pta_documents.design import colors, slides
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,25 @@ class WordStyles:
     """Added by the generator; the templates have no code style."""
     quote: str = "Zitat"
     """Added by the generator; the templates have no quote style."""
+    note: str = "Hinweis"
+    """Added by the generator: alerts NOTE and TIP, conclusion and comment boxes."""
+    note_important: str = "Hinweis wichtig"
+    """Added by the generator: alerts IMPORTANT, WARNING and CAUTION."""
+    mark: str = "Markierung"
+    """Added by the generator: the character style of ``==mark==``."""
+    picture_row: str = "Bildreihe"
+    """Added by the generator: the table style without rules of a row of pictures."""
+    status: tuple[tuple[colors.StatusCategory, str], ...] = (
+        (colors.StatusCategory.SUCCESS, "Status Erfolg"),
+        (colors.StatusCategory.WARNING, "Status Warnung"),
+        (colors.StatusCategory.DANGER, "Status Gefahr"),
+        (colors.StatusCategory.INFO, "Status Info"),
+        (colors.StatusCategory.NEUTRAL, "Status Neutral"),
+    )
+    """Added by the generator: the bold character styles of coloured words and status labels."""
+
+    def status_style(self, category: colors.StatusCategory) -> str:
+        return dict(self.status)[category]
 
 
 STYLES: Final = WordStyles()
@@ -72,3 +91,29 @@ QUOTE_INDENT_CM: Final = 1.25
 HORIZONTAL_RULE_COLOR: Final = colors.GREY_MID
 
 INLINE_CODE_FONT: Final = "Consolas"
+
+
+@dataclass(frozen=True)
+class NoteStyle:
+    """A paragraph style for alerts and boxes: a rule on the left on a light grey area."""
+
+    rule: str
+    rule_pt: float = 3
+    background: str = colors.GREY_LIGHT
+    indent_pt: float = 6
+    """Room between the rule and the text."""
+
+
+NOTE: Final = NoteStyle(rule=colors.PTA_BLUE)
+NOTE_IMPORTANT: Final = NoteStyle(rule=colors.YELLOW)
+MARK_COLOR: Final = colors.YELLOW
+"""``==mark==`` in exact PTA yellow (Word's highlighter only knows its own yellow)."""
+
+PICTURES_PER_ROW: Final = slides.MAX_PICTURES_PER_ROW
+"""More pictures in one paragraph go on further rows (as ``MAX_PICTURES_PER_ROW`` on slides)."""
+PICTURE_GAP_CM: Final = 0.3
+"""Room between the pictures of a row."""
+CONTACT_PHOTO_CM: Final = 3.0
+"""The width a contact photo is shown at, at most."""
+TABLE_BASE_STYLE: Final = "Normal Table"
+"""The built-in table style without rules the picture row style is based on."""

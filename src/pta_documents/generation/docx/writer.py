@@ -2,12 +2,17 @@
 
 Every block goes into a style of the PTA template (see ``design/word.py``); direct formatting
 is only used for character formats (bold, italic, strikethrough, inline code, links), list
-numbering, alignment and indents.
+numbering, alignment, indents and the shading of a highlighted table row.
+
+Slide-layout Markdown is shown plainly (E03-S03): containers as ordinary blocks, alerts and boxes
+in the styles ``Hinweis``/``Hinweis wichtig``, ``==mark==`` and coloured words in character
+styles, image rows as a table without rules, the PTA slide kinds as headings, quotes and lists.
 """
 
 from __future__ import annotations
 
 import io
+import math
 import re
 from dataclasses import dataclass, field
 from typing import Any, Final, cast
@@ -27,12 +32,15 @@ from markdown_it.token import Token
 from PIL import Image
 
 from pta_documents.design import word
+from pta_documents.design.colors import STATUS_COLORS, StatusCategory
 from pta_documents.design.variants import GeneratedTexts
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     code_blocks,
+    heading_attributes,
     html,
     layout_syntax,
+    layout_tokens,
     text_metrics,
 )
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image
@@ -43,7 +51,13 @@ from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.generation.docx.options import DocxOptions
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
 from pta_documents.markdown.front_matter import FrontMatter
-from pta_documents.markdown.parser import child_lines, create_parser, line_of
+from pta_documents.markdown.parser import (
+    ALERT,
+    child_lines,
+    container,
+    create_parser,
+    line_of,
+)
 
 FORMAT: Final = DocumentFormat.DOCX
 EMU_PER_TWIP: Final = 635
@@ -68,6 +82,8 @@ class _Format:
     bold: bool = False
     italic: bool = False
     strike: bool = False
+    mark: bool = False
+    status: StatusCategory | None = None
 
 
 @dataclass
@@ -81,6 +97,10 @@ class _Inline:
     plain_bold: bool = False
     """The paragraph style is bold already: do not set bold directly."""
     images: bool = True
+    line_breaks: bool = False
+    """Soft line breaks are line breaks (contact lines), not spaces."""
+    photo_width: int | None = None
+    """The width pictures are shown at, at most (contact photos); None: the text width."""
 
 
 class BodyWriter:
@@ -106,6 +126,11 @@ class BodyWriter:
         self.footnotes_root: etree._Element | None = None
         self.next_footnote_id = 1
         self.style_ids: dict[str, str] = {}
+        self.labels = front.status_labels()
+        self.container_depth = 0
+        """How deep the writer is in ``:::`` containers: headings there are no headings."""
+        self.kind: str | None = None
+        """The PTA slide kind of the ``##`` section being written (E04-S04)."""
         section = document.sections[0]
         page_width = int(section.page_width or 0)
         margins = int(section.left_margin or 0) + int(section.right_margin or 0)
@@ -137,11 +162,19 @@ class BodyWriter:
         match token.type:
             case "heading_open":
                 level = int(token.tag[1])
+                # Heading attributes are checked, but have no effect in Word, but for the kinds.
+                inline, attributes = layout_syntax.without_attributes(tokens[i + 1], level, FORMAT)
+                if self.container_depth or (self.kind == heading_attributes.CONTACT and level > 2):
+                    # A card or a person: no number and no entry in the table of contents.
+                    paragraph = self.paragraph(word.STYLES.normal_bold)
+                    paragraph.paragraph_format.keep_with_next = True
+                    self.inline(paragraph, inline, plain_bold=True)
+                    return i + 3
+                if attributes is not None and attributes.kind is not None and token.level == 0:
+                    return self.slide_kind(tokens, i, inline, attributes.kind)
                 styles = word.STYLES
                 heading = styles.headings[level - 1] if level <= 3 else styles.sub_heading
                 paragraph = self.paragraph(heading)
-                # Heading attributes are checked, but have no effect in Word.
-                inline, _ = layout_syntax.without_attributes(tokens[i + 1], level, FORMAT)
                 self.inline(paragraph, inline)
                 return i + 3
             case "paragraph_open":
@@ -169,8 +202,17 @@ class BodyWriter:
                 if not html.is_comment(token.content):
                     html.note_raw_html(self.notes, self.line(token), WHAT)
                 return i + 1
+            case "blockquote_open" if ALERT in token.meta:
+                kind = str(token.meta[ALERT])
+                important = layout_syntax.is_important(kind, FORMAT)
+                style = word.STYLES.note_important if important else word.STYLES.note
+                end = _block_end(tokens, i)
+                self.note_box(tokens, i + 1, end - 1, style, self.texts.alert(kind))
+                return end
             case "blockquote_open":
                 return self.container(tokens, i, "blockquote_close", word.STYLES.quote)
+            case "container_layout_open":
+                return self.layout_container(tokens, i)
             case "hr":
                 self.horizontal_rule()
                 return i + 1
@@ -207,13 +249,134 @@ class BodyWriter:
             j = self.block(tokens, j, style) if tokens[j].type != close else j + 1
         return j
 
+    def layout_container(self, tokens: list[Token], i: int) -> int:
+        """A ``:::`` container: its content as ordinary blocks, one after the other."""
+        name, _ = container(tokens[i])
+        end = _block_end(tokens, i)
+        if name in (layout_syntax.CONCLUSION, layout_syntax.COMMENT):
+            conclusion = name == layout_syntax.CONCLUSION
+            label = self.texts.conclusion if conclusion else self.texts.comment
+            self.note_box(tokens, i + 1, end - 1, word.STYLES.note, label)
+            return end
+        self.container_depth += 1
+        j = i + 1
+        first = True
+        while j < end - 1:
+            token = tokens[j]
+            if name == layout_syntax.COLUMNS and token.type == "hr":
+                j += 1  # the line between two columns
+                continue
+            if name == layout_syntax.STATEMENT and first and token.type == "paragraph_open":
+                paragraph = self.paragraph(word.STYLES.normal_bold)
+                self.inline(paragraph, tokens[j + 1], plain_bold=True)
+                j += 3
+            else:
+                j = self.block(tokens, j)
+            first = False
+        self.container_depth -= 1
+        return end
+
+    def note_box(self, tokens: list[Token], start: int, stop: int, style: str, label: str) -> None:
+        """The blocks ``tokens[start:stop]`` in the note ``style``, the first paragraph starting
+        with ``label`` in bold."""
+        first = True
+        j = start
+        while j < stop:
+            token = tokens[j]
+            if token.type == "paragraph_open":
+                paragraph = self.paragraph(style)
+                if first:
+                    self._label(paragraph, label)
+                self.inline(paragraph, tokens[j + 1])
+                j += 3
+            else:
+                if first:
+                    self._label(self.paragraph(style), label)
+                j = self.block(tokens, j, style)
+            first = False
+        if first:
+            self._label(self.paragraph(style), label)
+
+    def _label(self, paragraph: Paragraph, label: str) -> None:
+        context = _Inline(paragraph._p, self.document.part, paragraph)
+        context.format.bold = True
+        self._run(context, label + ":")
+        context.format.bold = False
+        self._run(context, " ")
+
+    def slide_kind(self, tokens: list[Token], i: int, inline: Token, kind: str) -> int:
+        """A ``##`` section of a PTA slide kind (E04-S04), shown plainly: the agenda as a heading
+        with its list (without one: the chapters after it), the interim conclusion as bold text,
+        the quote and its source as quotes, the contacts as a heading with a bold line per
+        person, the photo small and each line on its own."""
+        end = i + 3
+        while end < len(tokens) and not (
+            tokens[end].type == "heading_open"
+            and tokens[end].level == 0
+            and tokens[end].tag in ("h1", "h2")
+        ):
+            end += 1
+        style: str | None = None
+        match kind:
+            case heading_attributes.INTERIM:
+                paragraph = self.paragraph(word.STYLES.normal_bold)
+                self.inline(paragraph, inline, plain_bold=True)
+            case heading_attributes.QUOTE:
+                style = word.STYLES.quote
+                self.inline(self.paragraph(style), inline)
+            case _:
+                self.inline(self.paragraph(word.STYLES.headings[1]), inline)
+        if kind == heading_attributes.AGENDA and all(
+            t.type == "html_block" and html.is_comment(t.content) for t in tokens[i + 3 : end]
+        ):
+            self.chapters(tokens, end)
+        self.kind = kind
+        j = i + 3
+        while j < end:
+            j = self.block(tokens, j, style)
+        self.kind = None
+        return end
+
+    def chapters(self, tokens: list[Token], start: int) -> None:
+        """The ``#`` headings from ``tokens[start]`` on (the closing one aside) as a numbered
+        list: the agenda without a list of its own."""
+        num_id: str | None = None
+        for i in range(start, len(tokens)):
+            token = tokens[i]
+            if token.type != "heading_open" or token.tag != "h1" or token.level != 0:
+                continue
+            inline, attributes = layout_syntax.without_attributes(tokens[i + 1], 1, FORMAT)
+            if attributes is not None and attributes.closing:
+                continue
+            style = word.STYLES.list_number
+            num_id = num_id or self._new_num(style)
+            paragraph = self.paragraph(style)
+            _set_numbering(paragraph, num_id, 0)
+            self.inline(paragraph, inline)
+
     def paragraph_block(self, tokens: list[Token], i: int, style: str | None) -> int:
         inline = tokens[i + 1]
         children = inline.children or []
         after = tokens[i + 3] if i + 3 < len(tokens) else None
 
+        if self.kind == heading_attributes.CONTACT and style is None:
+            paragraph = self.paragraph(word.STYLES.normal)
+            context = _Inline(
+                paragraph._p,
+                self.document.part,
+                paragraph,
+                line_breaks=True,
+                photo_width=int(Cm(word.CONTACT_PHOTO_CM)),
+            )
+            self._inline_children(context, inline)
+            return i + 3
         if style is None and self._is_table_caption(inline) and self._previous_is_table():
             self.caption(self.texts.table, inline, strip_prefix=True)
+            return i + 3
+        if style is None and (images := layout_tokens.only_images(inline)) is not None:
+            lines = child_lines(inline, self.front.body_line)
+            at = {id(c): line for c, line in zip(children, lines, strict=True)}
+            self.picture_row([(image, at[id(image)]) for image in images])
             return i + 3
         if style is None and _only_images(children):
             lines = child_lines(inline, self.front.body_line)
@@ -324,9 +487,12 @@ class BodyWriter:
         for r, row in enumerate(rows):
             if r < header_rows:
                 _repeat_header(table, r)
+            marked = layout_tokens.marked_row([content for content, _ in row])
             for c in range(columns):
                 cell = table.cell(r, c)
                 cell.width = Emu(widths[c])
+                if marked:
+                    _shade(cell._tc.get_or_add_tcPr(), word.MARK_COLOR)
                 if c >= len(row):
                     continue
                 content, align = row[c]
@@ -335,8 +501,48 @@ class BodyWriter:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
                 elif align == "center":
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                self.inline(paragraph, content)
+                label = layout_tokens.label_cell(content)
+                if label is not None and label in self.labels:
+                    # A status label: in the character style of its category, not as code.
+                    context = _Inline(paragraph._p, self.document.part, paragraph)
+                    context.format.status = self.labels[label]
+                    self._run(context, label)
+                else:
+                    self.inline(paragraph, content)
         return j + 1
+
+    def picture_row(self, images: list[tuple[Token, int | None]]) -> None:
+        """Two or more pictures side by side: a table without rules over the text width, equal
+        cells, a caption under each picture in its cell, more than four on further rows."""
+        per_row = word.PICTURES_PER_ROW
+        columns = min(len(images), per_row)
+        rows = math.ceil(len(images) / per_row)
+        table = self.document.add_table(rows=rows, cols=columns)
+        table.style = self._ensure_picture_row_style()
+        table.autofit = False
+        width = self.text_width // columns
+        _set_table_width(table, [width] * columns)
+        room = width - int(Cm(word.PICTURE_GAP_CM))
+        for n, (image, line) in enumerate(images):
+            r, c = divmod(n, per_row)
+            cell = table.cell(r, c)
+            paragraph = cell.paragraphs[0]
+            self.picture(paragraph, image, line, room)
+            text = str(image.attrs.get("title") or "") or image.content
+            if text:
+                paragraph.paragraph_format.keep_with_next = True
+                caption = cell.add_paragraph(
+                    style=cast(ParagraphStyle, self.document.styles[word.STYLES.caption])
+                )
+                self.caption(self.texts.figure, None, text=text, paragraph=caption)
+        for r, row in enumerate(table.rows):
+            for c in range(columns):
+                table.cell(r, c).width = Emu(width)
+            etree.SubElement(row._tr.get_or_add_trPr(), w("cantSplit"))
+            if r < rows - 1:
+                for cell in row.cells:
+                    for paragraph in cell.paragraphs:
+                        paragraph.paragraph_format.keep_with_next = True
 
     def _previous_is_table(self) -> bool:
         body: etree._Element = self.document.element.body  # type: ignore[attr-defined]
@@ -363,6 +569,7 @@ class BodyWriter:
         inline: Token | None,
         strip_prefix: bool = False,
         text: str | None = None,
+        paragraph: Paragraph | None = None,
     ) -> None:
         if label == self.texts.table:
             self.tables += 1
@@ -370,7 +577,7 @@ class BodyWriter:
         else:
             self.figures += 1
             number = self.figures
-        paragraph = self.paragraph(word.STYLES.caption)
+        paragraph = paragraph or self.paragraph(word.STYLES.caption)
         _append_text(paragraph._p, f"{label} ")
         for run in field_paragraph_runs(f"SEQ {label} \\* ARABIC", str(number)):
             paragraph._p.append(run)
@@ -382,7 +589,9 @@ class BodyWriter:
         elif text:
             _append_text(paragraph._p, text)
 
-    def picture(self, paragraph: Paragraph, image: Token, line: int | None) -> None:
+    def picture(
+        self, paragraph: Paragraph, image: Token, line: int | None, width: int | None = None
+    ) -> None:
         source = str(image.attrs.get("src", ""))
         resource = self.source.find_resource(source)
         if resource is None:
@@ -391,7 +600,7 @@ class BodyWriter:
                 FORMAT, f"The image '{source}'{where} is not among the document's resources."
             )
         title = str(image.attrs.get("title") or "")
-        self.place_picture(paragraph, resource, source, image.content, title, line)
+        self.place_picture(paragraph, resource, source, image.content, title, line, width)
 
     def place_picture(
         self,
@@ -401,9 +610,11 @@ class BodyWriter:
         alt: str,
         title: str,
         line: int | None,
+        max_width: int | None = None,
     ) -> None:
         """``resource`` as a picture in ``paragraph``; a format DOCX does not take goes through
-        the image converters and is placed at its natural size."""
+        the image converters and is placed at its natural size (never wider than
+        ``max_width``, default the text width)."""
         where = f" (line {line})" if line else ""
         natural: tuple[float, float] | None = None
         if resource.content_type not in SUPPORTED_IMAGES:
@@ -418,7 +629,7 @@ class BodyWriter:
                 )
             resource = conversion.image
             natural = (conversion.width, conversion.height)
-        width, height = self._image_size(resource.content, natural)
+        width, height = self._image_size(resource.content, natural, max_width)
         with Image.open(io.BytesIO(resource.content)) as opened:
             factor = width / (opened.size[0] * EMU_PER_PIXEL)
         if factor > MAX_ENLARGEMENT:
@@ -445,7 +656,10 @@ class BodyWriter:
                 doc_pr.set("title", title)
 
     def _image_size(
-        self, content: bytes, natural: tuple[float, float] | None = None
+        self,
+        content: bytes,
+        natural: tuple[float, float] | None = None,
+        max_width: int | None = None,
     ) -> tuple[int, int]:
         """The size of the picture in EMU: from its pixels and dpi, or its ``natural`` size in
         pixels at 96 dpi; never wider than the text or higher than 80 % of the page."""
@@ -460,7 +674,8 @@ class BodyWriter:
             dpi_y = float(dpi[1]) or 96.0
             width = pixels_x / dpi_x * EMU_PER_INCH
             height = pixels_y / dpi_y * EMU_PER_INCH
-        scale = min(1.0, self.text_width / width, self.text_height * 0.8 / height)
+        widest = min(self.text_width, max_width or self.text_width)
+        scale = min(1.0, widest / width, self.text_height * 0.8 / height)
         return int(width * scale), int(height * scale)
 
     # ------------------------------------------------------------------ other blocks
@@ -492,6 +707,10 @@ class BodyWriter:
     def paragraph(self, style: str) -> Paragraph:
         if style == word.STYLES.quote:
             self._ensure_quote_style()
+        elif style == word.STYLES.note:
+            self._ensure_note_style(style, word.NOTE)
+        elif style == word.STYLES.note_important:
+            self._ensure_note_style(style, word.NOTE_IMPORTANT)
         return self.document.add_paragraph(style=cast(ParagraphStyle, self.document.styles[style]))
 
     def _ensure_code_style(self) -> str:
@@ -529,6 +748,59 @@ class BodyWriter:
             style.base_style = self.document.styles[word.STYLES.normal]
             style.paragraph_format.left_indent = Cm(word.QUOTE_INDENT_CM)
 
+    def _has_style(self, name: str) -> bool:
+        return name in [s.name for s in self.document.styles]
+
+    def _ensure_note_style(self, name: str, design: word.NoteStyle) -> None:
+        """A paragraph style for alerts and boxes, on ``Standard``: a rule on the left and a
+        light grey area."""
+        if self._has_style(name):
+            return
+        style = cast(ParagraphStyle, self.document.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH))
+        style.base_style = self.document.styles[word.STYLES.normal]
+        element: Any = style.element
+        p_pr = element.get_or_add_pPr()
+        borders = etree.SubElement(p_pr, w("pBdr"))
+        left = etree.SubElement(borders, w("left"))
+        left.set(w("val"), "single")
+        left.set(w("sz"), str(int(design.rule_pt * 8)))
+        left.set(w("space"), str(int(design.indent_pt)))
+        left.set(w("color"), design.rule)
+        _shade(p_pr, design.background)
+        indent = etree.SubElement(p_pr, w("ind"))
+        indent.set(w("left"), str(int(design.indent_pt * 20)))
+        _order_ppr(p_pr)
+
+    def _character_style(
+        self, name: str, color: str | None = None, shading: str | None = None
+    ) -> str:
+        """The id of the character style ``name``, added when missing: bold in ``color``, or
+        on ``shading``."""
+        if not self._has_style(name):
+            style = self.document.styles.add_style(name, WD_STYLE_TYPE.CHARACTER)
+            element: Any = style.element
+            r_pr = element.get_or_add_rPr()
+            if color is not None:
+                etree.SubElement(r_pr, w("b"))
+                etree.SubElement(r_pr, w("bCs"))
+                etree.SubElement(r_pr, w("color")).set(w("val"), color)
+            if shading is not None:
+                _shade(r_pr, shading)
+        return self.style_id(name)
+
+    def _ensure_picture_row_style(self) -> str:
+        name = word.STYLES.picture_row
+        if not self._has_style(name):
+            # python-docx makes table styles paragraph styles (_TableStyle).
+            style = cast(ParagraphStyle, self.document.styles.add_style(name, WD_STYLE_TYPE.TABLE))
+            style.base_style = self.document.styles[word.TABLE_BASE_STYLE]
+            element: Any = style.element
+            tbl_pr = etree.SubElement(element, w("tblPr"))
+            borders = etree.SubElement(tbl_pr, w("tblBorders"))
+            for side in ("top", "left", "bottom", "right", "insideH", "insideV"):
+                etree.SubElement(borders, w(side)).set(w("val"), "nil")
+        return name
+
     def style_id(self, name: str) -> str:
         if name not in self.style_ids:
             self.style_ids[name] = str(self.document.styles[name].style_id)
@@ -543,7 +815,6 @@ class BodyWriter:
     def _inline_children(self, context: _Inline, token: Token, skip: tuple[str, ...] = ()) -> None:
         """The children of the inline ``token`` (without those of a type in ``skip``)."""
         stack: list[etree._Element] = []
-        # Coloured words are bold; their status character styles come with E03-S03.
         token = layout_syntax.coloured(token, FORMAT)
         children = token.children or []
         for child, line in zip(children, child_lines(token, self.front.body_line), strict=True):
@@ -551,14 +822,20 @@ class BodyWriter:
                 continue
             match child.type:
                 case "text" if layout_syntax.STATUS in child.meta:
-                    bold = context.format.bold
-                    context.format.bold = True
+                    status = context.format.status
+                    context.format.status = child.meta[layout_syntax.STATUS]
                     self._run(context, child.content)
-                    context.format.bold = bold
+                    context.format.status = status
                 case "text":
                     self._run(context, child.content)
+                case "softbreak" if context.line_breaks:
+                    etree.SubElement(self._new_run(context), w("br"))
                 case "softbreak":
                     self._run(context, " ")
+                case "mark_open":
+                    context.format.mark = True
+                case "mark_close":
+                    context.format.mark = False
                 case "hardbreak":
                     etree.SubElement(self._new_run(context), w("br"))
                 case "code_inline":
@@ -591,7 +868,7 @@ class BodyWriter:
                         context.target = stack.pop()
                 case "image":
                     if context.images and context.paragraph is not None:
-                        self.picture(context.paragraph, child, line)
+                        self.picture(context.paragraph, child, line, context.photo_width)
                     else:
                         self._run(context, child.content)
                 case "footnote_ref":
@@ -615,13 +892,23 @@ class BodyWriter:
             return
         run = self._new_run(context)
         r_pr = etree.Element(w("rPr"))
+        status = context.format.status
+        style: str | None = None
         if context.target.tag == w("hyperlink"):
-            etree.SubElement(r_pr, w("rStyle")).set(w("val"), self.style_id(word.STYLES.hyperlink))
+            style = self.style_id(word.STYLES.hyperlink)
+        elif status is not None:
+            style = self._character_style(
+                word.STYLES.status_style(status), color=STATUS_COLORS[status]
+            )
+        elif context.format.mark:
+            style = self._character_style(word.STYLES.mark, shading=word.MARK_COLOR)
+        if style is not None:
+            etree.SubElement(r_pr, w("rStyle")).set(w("val"), style)
         if code:
             fonts = etree.SubElement(r_pr, w("rFonts"))
             for attribute in ("ascii", "hAnsi", "cs", "eastAsia"):
                 fonts.set(w(attribute), word.INLINE_CODE_FONT)
-        if context.format.bold and not context.plain_bold:
+        if context.format.bold and not context.plain_bold and status is None:
             etree.SubElement(r_pr, w("b"))
         if context.format.italic:
             etree.SubElement(r_pr, w("i"))
@@ -737,6 +1024,28 @@ def _reencode(content: bytes) -> bytes:
         else:
             picture.save(buffer, "PNG")
         return buffer.getvalue()
+
+
+def _block_end(tokens: list[Token], i: int) -> int:
+    """The index after the block that opens at ``tokens[i]``."""
+    if tokens[i].nesting != 1:
+        return i + 1
+    j = i + 1
+    while not (tokens[j].nesting == -1 and tokens[j].level == tokens[i].level):
+        j += 1
+    return j + 1
+
+
+def _shade(properties: etree._Element, fill: str) -> None:
+    """Shading of ``fill`` in paragraph, run or cell properties (in schema order for cells)."""
+    shading = etree.SubElement(properties, w("shd"))
+    shading.set(w("val"), "clear")
+    shading.set(w("color"), "auto")
+    shading.set(w("fill"), fill)
+    if properties.tag == w("tcPr"):
+        width = properties.find(w("tcW"))
+        if width is not None:
+            width.addnext(shading)
 
 
 def _only_images(children: list[Token]) -> bool:

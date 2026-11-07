@@ -78,7 +78,11 @@ Word-Dokument sind Fehler.
   Zeilenumbruch), keine Diagramme/Mermaid/`chart`-Blöcke (werden als Code gezeigt, Hinweis
   `code-not-drawn`).
 - Folien-Syntax (`:::`-Container, Alerts `> [!NOTE]`, `==Markierung==`, `[Wörter]{.success}`)
-  wird angenommen und geprüft, in Word aber **noch nicht gestaltet**: siehe *Folien-Syntax* unten.
+  wird angenommen und schlicht gezeigt: Container-Inhalt nacheinander (`###` in Containern wird
+  fett, keine Überschrift), Alerts/`conclusion`/`comment` als Hinweisabsatz mit fetter Art,
+  Markierung gelb, farbige Wörter und Status-Labels in der Statusfarbe. Mehrere Bilder in einem
+  Absatz (`![a](x.png) ![b](y.png)`) stehen nebeneinander (max. vier je Zeile), je mit
+  „Abbildung n".
 
 ## Präsentation
 
@@ -114,8 +118,9 @@ Gliederung:
 
 ## PTA-Folienarten (PowerPoint)
 
-Höchstens eine je `##`, nie zusammen mit `.dark`, `kicker` oder Containern/Alerts. Word nimmt
-sie an und zeigt nur Überschrift und Inhalt.
+Höchstens eine je `##`, nie zusammen mit `.dark`, `kicker` oder Containern/Alerts. Word zeigt
+sie schlicht: Agenda als Überschrift mit Liste (ohne Liste die folgenden `#`-Kapitel),
+Zwischenfazit fett, Zitat und Quelle als Zitat, Kontakt mit fettem Namen und kleinem Foto.
 
 | Schreiben | Ergebnis |
 | --------- | -------- |
@@ -133,8 +138,8 @@ sie an und zeigt nur Überschrift und Inhalt.
 
 Beide Formate nehmen dieselbe Syntax an und melden dieselben Fehler mit Zeilennummer
 (`Line 12: …`). **PowerPoint** macht aus einer `##`-Folie mit Container, Alert, Tag-Absatz,
-`.dark` oder `kicker` eine **Flow-Folie** auf „Nur Titel"; **Word** zeigt vorerst nur den Inhalt
-als normalen Text.
+`.dark` oder `kicker` eine **Flow-Folie** auf „Nur Titel"; **Word** zeigt den Inhalt schlicht in
+eigenen Formatvorlagen (siehe *Word-Bericht*).
 
 | Schreiben | PowerPoint |
 | --------- | ---------- |

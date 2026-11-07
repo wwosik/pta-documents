@@ -69,7 +69,13 @@ def pptx_runs(data: bytes) -> list[tuple[str, bool]]:
 
 
 def docx_runs(data: bytes) -> list[tuple[str, bool]]:
-    return [(r.text, bool(r.bold)) for p in open_docx(data).paragraphs for r in p.runs]
+    """Text and boldness of each run: set directly or by its character style (E03-S03)."""
+
+    def bold(run: Any) -> bool:
+        style = run.style
+        return bool(run.bold) or bool(style is not None and style.font.bold)
+
+    return [(r.text, bold(r)) for p in open_docx(data).paragraphs for r in p.runs]
 
 
 def runs(data: bytes, format: DocumentFormat) -> list[tuple[str, bool]]:

@@ -29,7 +29,8 @@ weil ihm vertraut wird.
   eingebettete Vorlagen. PDF, Diagramme/Charts und PDF-Konverter sind nur geplant; die
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
   Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
-  Diagrammlayouts (ohne `chart`-Renderer bis E06-S01); Word noch nicht (E03-S03). Bedienung:
+  Diagrammlayouts (ohne `chart`-Renderer bis E06-S01); Word zeigt sie seit E03-S03 schlicht in
+eigenen Formatvorlagen. Bedienung:
   `docs/verwendung.md`.
 - **Zweite Referenz:** `~/mvv/vt-tools-libs` (Schwesterbibliothek von DocLibs für die MVV,
   .NET) ist seit DocLibs `2610.28.22` weitergegangen — Hinweise an den Schreiber
@@ -136,5 +137,11 @@ weil ihm vertraut wird.
   Grafikarten) statt `draw`; `ChartGraphic` wird `model.Chart` und landet über
   `generation/pptx/chart.insert_chart` nativ im Diagrammplatzhalter. Zeichnungen werfen weiter
   (`code_blocks.unsupported`). Word nutzt noch `draw` (wirft für Charts bis E06-S01).
+- **Folien-Syntax in Word** (E03-S03): `BodyWriter` legt eigene Vorlagen bei Bedarf an
+  (`design/word.STYLES`: `Hinweis`, `Hinweis wichtig`, `Markierung`, `Status …`, Tabellenvorlage
+  `Bildreihe`); Runs bekommen höchstens eine `rStyle` (Hyperlink vor Status vor Markierung).
+  Überschriften in `:::`-Containern und Personen von `{.contact}` sind „Standard fett", nie
+  „Überschrift 3". Der DOCX-Konverter erkennt die Vorlagen am Namen (`_Context.style_names`),
+  nicht an der Style-ID. Fett aus einer Zeichenvorlage sieht `run.bold` nicht (`run.style.font`).
 - python-docx zeigt Stilnamen als UI-Namen („Heading 1"); verglichen wird mit dem `w:name` aus
   `styles.xml` („heading 1").

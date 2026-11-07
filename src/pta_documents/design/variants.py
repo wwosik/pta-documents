@@ -35,6 +35,17 @@ class GeneratedTexts:
     figure: str
     contents: str
     continued: str
+    note: str = ""
+    tip: str = ""
+    important: str = ""
+    warning: str = ""
+    caution: str = ""
+    conclusion: str = ""
+    comment: str = ""
+
+    def alert(self, kind: str) -> str:
+        """The word an alert of ``kind`` (``NOTE`` …) starts with."""
+        return str(getattr(self, kind.lower()))
 
 
 TEXTS: Final = {
@@ -45,6 +56,13 @@ TEXTS: Final = {
         figure="Abbildung",
         contents="Inhalt",
         continued="(Forts.)",
+        note="Hinweis",
+        tip="Tipp",
+        important="Wichtig",
+        warning="Warnung",
+        caution="Vorsicht",
+        conclusion="Fazit",
+        comment="Kommentar",
     ),
     Language.EN: GeneratedTexts(
         page="Page",
@@ -53,6 +71,13 @@ TEXTS: Final = {
         figure="Figure",
         contents="Contents",
         continued="(cont.)",
+        note="Note",
+        tip="Tip",
+        important="Important",
+        warning="Warning",
+        caution="Caution",
+        conclusion="Conclusion",
+        comment="Comment",
     ),
 }
 

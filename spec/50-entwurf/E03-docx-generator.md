@@ -20,7 +20,7 @@ auch wenn es danach weiterbearbeitet wird.
 | ----- | ------ | ------ |
 | [E03-S01](../60-prüfung/E03-S01-docx-auf-pta-vorlage.md) | Dokument aus der Vorlage: Beispielinhalt entfernen, Varianten, Deckblatt, Kopf-/Fußzeile, Metadaten, Inhaltsverzeichnis | in Prüfung |
 | [E03-S02](../60-prüfung/E03-S02-docx-inhalte.md) | Inhalte: Überschriften, Absätze, Listen, Tabellen mit Beschriftung, Bilder, Code, Links, Fußnoten, Zitate | in Prüfung |
-| [E03-S03](../55-in-arbeit/docs-2/E03-S03-folien-syntax-in-word.md) | Folien-Syntax in Word: Container, Alerts, `==mark==`, Status-Labels, Bildreihen | in Bearbeitung (docs-2) |
+| [E03-S03](../60-prüfung/E03-S03-folien-syntax-in-word.md) | Folien-Syntax in Word: Container, Alerts, `==mark==`, Status-Labels, Bildreihen | in Prüfung |
 | [E03-S04](E03-S04-diagramme-und-charts-im-docx.md) | Diagramme und Charts im DOCX (als Bild bzw. natives Word-Diagramm) | Entwurf |
 | [E03-S05](E03-S05-authoring-guide-docx.md) | Authoring Guide DOCX | Entwurf |
 

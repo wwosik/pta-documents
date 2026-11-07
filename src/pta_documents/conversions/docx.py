@@ -9,6 +9,8 @@ from lxml import etree
 
 from pta_documents.conversions.openxml import OpenXmlPackage, guard, read_input
 from pta_documents.conversions.options import ConversionOptions, ResourceCollector
+from pta_documents.design import word
+from pta_documents.design.variants import TEXTS
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown import text as md
 from pta_documents.markdown.document import MarkdownDocument
@@ -23,6 +25,13 @@ V: Final = "urn:schemas-microsoft-com:vml"
 DOCUMENT_PART: Final = "word/document.xml"
 HARD_BREAK: Final = "\\\n"
 """A backslash break, because ``normalize`` trims the two-space form away."""
+NOTE_STYLES: Final = (word.STYLES.note, word.STYLES.note_important)
+"""The styles of alerts and boxes the DOCX generator writes (E03-S03): read back as quotes."""
+ALERT_KINDS: Final = ("NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION")
+ALERT_WORDS: Final = tuple(
+    (kind, texts.alert(kind)) for texts in TEXTS.values() for kind in ALERT_KINDS
+)
+"""The words a generated alert starts with, and its kind."""
 
 
 def w(name: str) -> str:
@@ -34,6 +43,8 @@ class _Context:
     package: OpenXmlPackage
     rels: dict[str, str]
     styles: dict[str, str]
+    style_names: dict[str, str]
+    """Style id (lower case) -> name."""
     numbering_is_ordered: dict[tuple[str, int], bool]
     images: ResourceCollector | None
 
@@ -66,6 +77,7 @@ class DocxConverter:
                 package,
                 package.relationships(DOCUMENT_PART),
                 _load_styles(package),
+                _load_style_names(package),
                 _load_numbering(package),
                 ResourceCollector(options.resource_path_prefix) if options.include_images else None,
             )
@@ -95,6 +107,19 @@ def _load_styles(package: OpenXmlPackage) -> dict[str, str]:
         name_element = style.find(w("name"))
         name = name_element.get(w("val"), style_id) if name_element is not None else style_id
         result[style_id.lower()] = _classify_heading(style_id, name)
+    return result
+
+
+def _load_style_names(package: OpenXmlPackage) -> dict[str, str]:
+    result: dict[str, str] = {}
+    styles = package.read_xml("word/styles.xml")
+    if styles is None:
+        return result
+    for style in styles.iterfind(w("style")):
+        style_id = style.get(w("styleId"))
+        name = style.find(w("name"))
+        if style_id is not None and name is not None:
+            result[style_id.lower()] = name.get(w("val"), style_id)
     return result
 
 
@@ -186,6 +211,11 @@ def _render_paragraph_text(paragraph: etree._Element, context: _Context, out: li
         out.append("#" * level + " " + text.replace(HARD_BREAK, " ").strip() + "\n\n")
         return
 
+    if style_id and context.style_names.get(style_id.lower()) in NOTE_STYLES:
+        _ensure_blank_line(out)
+        out.append(_note(text) + "\n\n")
+        return
+
     numbering = properties.find(w("numPr")) if properties is not None else None
     if numbering is not None:
         num_element = numbering.find(w("numId"))
@@ -200,7 +230,55 @@ def _render_paragraph_text(paragraph: etree._Element, context: _Context, out: li
     out.append(text + "\n\n")
 
 
+def _note(text: str) -> str:
+    """A paragraph of an alert or box as a quote; one that starts with the bold word of an
+    alert (``**Hinweis:**``) as that alert again."""
+    for kind, word_ in ALERT_WORDS:
+        alone = f"**{word_}:**"
+        joined = f"**{word_}: "
+        if text.startswith(alone):
+            rest = text[len(alone) :].lstrip()
+        elif text.startswith(joined):
+            # Word merges the bold word with bold text after it.
+            rest = "**" + text[len(joined) :]
+        else:
+            continue
+        return f"> [!{kind}]\n> " + rest.replace("\n", "\n> ")
+    return "> " + text.replace("\n", "\n> ")
+
+
+def _is_picture_row(table: etree._Element, context: _Context) -> bool:
+    style = table.find(f"{w('tblPr')}/{w('tblStyle')}")
+    style_id = style.get(w("val")) if style is not None else None
+    return bool(style_id) and context.style_names.get(str(style_id).lower()) == (
+        word.STYLES.picture_row
+    )
+
+
+def _render_picture_row(table: etree._Element, context: _Context, out: list[str]) -> None:
+    """A row of pictures (E03-S03): the pictures in one paragraph, then their captions."""
+    pictures: list[str] = []
+    captions: list[str] = []
+    for paragraph in table.iter(w("p")):
+        text = _render_runs(paragraph, context).strip()
+        if not text:
+            continue
+        if next(paragraph.iter(w("drawing")), None) is not None:
+            pictures.append(text)
+        else:
+            captions.append(text)
+    if pictures:
+        _ensure_blank_line(out)
+        out.append(" ".join(pictures) + "\n\n")
+    for caption in captions:
+        _ensure_blank_line(out)
+        out.append(caption + "\n\n")
+
+
 def _render_table(table: etree._Element, context: _Context, out: list[str]) -> None:
+    if _is_picture_row(table, context):
+        _render_picture_row(table, context, out)
+        return
     grid: list[list[str]] = []
     for row in table.iterfind(w("tr")):
         cells: list[str] = []

@@ -143,8 +143,12 @@ Einleitender Satz.              ← Textebene „Einleitungstext"
 ### Folien-Syntax
 
 Mit einer eigenen Syntax werden aus einer `##`-Folie **Flow-Folien** im PTA-Stil. PowerPoint
-zeichnet sie auf dem Layout `Nur Titel`; Word nimmt dieselbe Syntax an und prüft sie, zeigt aber
-vorerst nur den Inhalt als normalen Text (die Gestaltung in Word folgt).
+zeichnet sie auf dem Layout `Nur Titel`; Word nimmt dieselbe Syntax an und zeigt sie schlicht:
+Container-Inhalte nacheinander (Karten- und Spaltenüberschriften fett statt als Überschrift),
+Hinweiskästen, Fazit- und Kommentarbox als graue Absätze mit farbiger Linie links und fetter Art
+am Anfang („Hinweis:", „Fazit:"), `==Markierung==` gelb hinterlegt, farbige Wörter und
+Status-Labels in der Statusfarbe, mehrere Bilder in einem Absatz nebeneinander, jedes mit seiner
+Beschriftung.
 
 ```markdown
 ## Warum neu bauen? {kicker="Warum"}

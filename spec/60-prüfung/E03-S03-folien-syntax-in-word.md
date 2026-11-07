@@ -1,8 +1,8 @@
 # E03-S03 Folien-Syntax in Word
 
-> Status: in Bearbeitung (docs-2)
-> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](../../50-entwurf/E03-docx-generator.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Prüfung
+> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](../50-entwurf/E03-docx-generator.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
@@ -63,11 +63,11 @@ wie im PDF von DocLibs, aber über Formatvorlagen statt Direktformatierung.
 
 ## Akzeptanzkriterien
 
-- [ ] Das Folienbeispiel `layouts.md` ergibt ein DOCX ohne Fehler, das Word ohne Reparatur öffnet.
-- [ ] Alerts, Markierungen, farbige Wörter und Status-Labels stehen in eigenen Formatvorlagen;
+- [x] Das Folienbeispiel `layouts.md` ergibt ein DOCX ohne Fehler, das Word ohne Reparatur öffnet.
+- [x] Alerts, Markierungen, farbige Wörter und Status-Labels stehen in eigenen Formatvorlagen;
       in den Runs gibt es weiterhin keine direkte Schrift-, Größen- oder Farbangabe außer Code.
-- [ ] Mehrere Bilder in einem Absatz stehen nebeneinander, jedes mit seiner Beschriftung.
-- [ ] Fehler in der Folien-Syntax melden dasselbe wie im PPTX (E02-S02).
+- [x] Mehrere Bilder in einem Absatz stehen nebeneinander, jedes mit seiner Beschriftung.
+- [x] Fehler in der Folien-Syntax melden dasselbe wie im PPTX (E02-S02).
 
 ## Offene Fragen
 
@@ -82,3 +82,48 @@ wie im PDF von DocLibs, aber über Formatvorlagen statt Direktformatierung.
 - (2026-11-07, E04-S04) `{.agenda}`, `{.interim}`, `{.quote}`, `{.contact}` sind registriert
   (`HeadingAttributes.kind`); Word entfernt sie heute nur und zeigt Überschrift und Inhalt
   normal (eine Agenda ohne Liste bleibt in Word leer).
+
+## Implementierungsnotizen
+
+- **Umgesetzt** in `generation/docx/writer.py` (`layout_container`, `note_box`, `slide_kind`,
+  `chapters`, `picture_row`, Zeichenvorlagen in `_run`, Status-Labels und markierte Zeilen in
+  `table_block`), Namen und Maße in `design/word.py` (`STYLES.note`, `note_important`, `mark`,
+  `picture_row`, `status`; `NOTE`, `NOTE_IMPORTANT`, `MARK_COLOR`, `PICTURES_PER_ROW` =
+  `slides.MAX_PICTURES_PER_ROW`, `PICTURE_GAP_CM`, `CONTACT_PHOTO_CM`, `TABLE_BASE_STYLE`),
+  Wörter in `design.variants.GeneratedTexts` (`note` … `caution`, `conclusion`, `comment`,
+  `alert(kind)`), Rückweg in `conversions/docx.py` (`NOTE_STYLES`, `_note`,
+  `_render_picture_row`).
+- Tests: `tests/generation/docx/test_layouts.py` (Rundreise `layouts.md` hoch und quer gegen
+  `layouts-hoch/quer.roundtrip.expected.md`, Vorlage je Block, keine Direktformatierung,
+  Vorlagen-XML, markierte Zeile, Status-Labels, englische Alert-Wörter, Bildreihe mit 2 und 5
+  Bildern, Folienarten). Zum Ansehen: `.tmp/review/layouts-hoch.docx`, `layouts-quer.docx`,
+  `bildreihe-2.docx`, `bildreihe-5.docx`.
+- `test_layout_syntax.docx_runs` zählt jetzt auch Fett aus der Zeichenvorlage (farbige Wörter
+  sind nicht mehr direkt fett) — keine Abschwächung, die Prüfung „fett" bleibt.
+- Alerts: die Art steht fett mit Doppelpunkt am Anfang („**Hinweis:** …"); Listen, Code und
+  Tabellen in einem Alert behalten ihre eigene Vorlage (nur Absätze werden „Hinweis").
+- Der Konverter macht aus „Hinweis …" wieder `> [!KIND]`, wenn der Absatz mit einem Alert-Wort
+  beginnt; Fazit- und Kommentarbox werden schlichte Zitate (`> **Fazit:** …`), mehrere Absätze
+  eines Alerts getrennte Zitate. Status- und Markierungsvorlagen werden als Text gelesen.
+- **Warnung:** Nicht nur in `::: cards`, sondern in **jedem** Container werden Überschriften
+  „Standard fett" (Begründung der Story gilt ebenso, z. B. `### …` in `::: panel dark`).
+- **Warnung:** Die Folienarten (in der Story nur als Notiz offen) habe ich so gelöst: `{.agenda}`
+  bleibt „Überschrift 2" mit der Liste; ohne Liste werden die **folgenden** `#`-Kapitel (ohne
+  `{.closing}`) eine nummerierte Liste (in PowerPoint alle Kapitel nach dem Titel — Word hat
+  keinen Titel-`#`); keine Kapitel → nichts, kein Fehler. `{.interim}` → „Standard fett" (keine
+  Überschrift, kein Verzeichniseintrag). `{.quote}` → Zitat und Quelle als „Zitat".
+  `{.contact}` → „Überschrift 2", `###` je Person „Standard fett", Foto ohne Beschriftung
+  höchstens 3 cm breit, Zeilenumbrüche bleiben Umbrüche, E-Mail ohne Link.
+- **Warnung:** Die Aufbaufehler der Folien (Agenda > 8 Punkte, Inhalt unter `{.interim}`,
+  Fazit-Box zu lang, Karte ohne `###` …) meldet weiterhin nur PowerPoint; Word meldet genau die
+  Fehler von `layout_syntax.check` (Akzeptanzkriterium 4, E02-S02).
+- Bildreihe: Bilder links in der Zelle, Zellen mit den Standard-Zellrändern von „Normal Table",
+  `cantSplit` je Zeile und „Absatz nicht vom nächsten trennen" für alle Absätze außer der
+  letzten Zeile. Ein einzelnes Bild bleibt eine Abbildung wie bisher.
+- Hinweis-Vorlagen: Linie `w:sz=24` (3 pt), Abstand 6 pt, Einzug links 6 pt, Fläche
+  `GREY_LIGHT`; aufeinanderfolgende Absätze bilden in Word einen Kasten.
+- **Prüfpunkte:** `.tmp/review/layouts-hoch.docx` in Word öffnen (keine Reparaturmeldung —
+  auf der Entwicklungsmaschine gibt es kein Word/LibreOffice); Aussehen von Hinweis-Linie und
+  Fläche, Bildreihe, Markierung in Tabellenzellen (Zellschattierung plus Zeichenschattierung,
+  gleiche Farbe).
+- PDF: die Story betrifft nur Word; die schlichte PDF-Darstellung bleibt E05-S04.

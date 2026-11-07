@@ -48,7 +48,7 @@ Zuordnung: `#`–`###` → „Überschrift 1–3" (nummeriert), tiefere → „Z
 Absätze → „Standard"; Listen → „Aufzählungszeichen" bzw. „Listenabsatz"; Tabellen →
 Tabellenformat „PTA", ein Absatz `Tabelle: …` direkt danach wird „Tabelle n: …"; ein Bild allein
 im Absatz bekommt „Abbildung n: …" aus Titel oder Alt-Text; Codeblöcke → „Code", Zitate →
-„Zitat"; Fußnoten werden Word-Fußnoten.
+„Zitat"; Fußnoten werden Word-Fußnoten. Folien-Syntax: siehe *Folien-Syntax in Word* unten.
 
 ## Markdown → PowerPoint
 
@@ -158,12 +158,12 @@ Front Matter mitgezählt).
 
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
-| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: alle werden entfernt, der Inhalt steht als normale Blöcke da (gestaltet ab E03-S03) |
-| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment` | PowerPoint: Flow-Folien; Word: Zäune entfallen, der Inhalt steht als normale Blöcke da |
-| Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: Markierungszeile entfällt, der Rest ist ein Zitat |
-| `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Gleichheitszeichen entfallen, Text normal |
-| `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen, Wörter fett; PowerPoint in der Signalfarbe (Word ab E03-S03) |
-| Front Matter `status.<kategorie>: Text; Text` | dieselben fünf Kategorien, jeder Text nur einmal | geprüft; PowerPoint: Status-Labels in Tabellen auf Flow-Folien (Word ab E03-S03) |
+| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
+| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment` | PowerPoint: Flow-Folien; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis" |
+| Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
+| `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
+| `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen; PowerPoint fett in der Signalfarbe, Word Zeichenvorlage „Status …" |
+| Front Matter `status.<kategorie>: Text; Text` | dieselben fünf Kategorien, jeder Text nur einmal | geprüft; PowerPoint: Status-Labels in Tabellen auf Flow-Folien; Word: Label-Zellen in der Zeichenvorlage „Status …" |
 
 Andere geschweifte und eckige Klammern bleiben Text (`## Mengen {a, b}`, `[a] {.success}`,
 `` `[a]{.success}` ``, `[a](https://…){.x}`); farbige Wörter gelten nie in Code und nie über
@@ -173,6 +173,33 @@ einen Zeilenumbruch. Die Bausteine für die späteren Zeichner: `markdown/parser
 `layout_syntax.py` (`CONTAINERS`, `ALERTS`, `check_container`, `is_important`, `column_widths`,
 `columns`, `coloured`), `coloured_words.py` (`apply` über beliebige Runs) und
 `layout_tokens.py` (`tags`, `labelled_tags`, `label_cell`, `marked_row`, `only_images`).
+
+### Folien-Syntax in Word
+
+Word zeigt die Folien-Syntax schlicht, über eigene Formatvorlagen statt Direktformatierung
+(E03-S03; die Vorlagen legt der Generator bei Bedarf an):
+
+| Syntax | In Word |
+| ------ | ------- |
+| Heading-Attribute (`kicker`, `.dark`, `layout`, `.closing`) | entfallen, `#` bleibt „Überschrift 1" |
+| `::: cards`, `rows`, `panel`, `statement`, `columns` | Inhalt als normale Blöcke nacheinander; eine Überschrift in einem Container (`### Karte`) und eine Kennzahl `**26 Tabellen**` werden „Standard fett" (keine Nummer, kein Verzeichniseintrag); der erste Absatz von `statement` wird „Standard fett"; die `---` zwischen Spalten entfallen |
+| `::: conclusion`, `::: comment` | „Hinweis", erster Absatz beginnt mit **Fazit:** bzw. **Kommentar:** |
+| `> [!NOTE]`, `[!TIP]` | „Hinweis" (Linie 3 pt PTA-Blau links, graue Fläche), beginnt mit **Hinweis:** bzw. **Tipp:** |
+| `> [!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]` | „Hinweis wichtig" (Linie Gelb `FDDC35`), beginnt mit **Wichtig:**, **Warnung:**, **Vorsicht:** (`sprache: en`: Note, Tip, Important, Warning, Caution, Conclusion, Comment) |
+| `==Markierung==` | Zeichenvorlage „Markierung" (Schattierung `FDDC35`); erste Tabellenzelle ganz markiert = alle Zellen der Zeile schattiert |
+| `[Wörter]{.success}` … | Zeichenvorlagen „Status Erfolg", „Status Warnung", „Status Gefahr", „Status Info", „Status Neutral" (fett in der Statusfarbe) |
+| Tabellenzelle nur `` `Erledigt` `` mit `status.success: Erledigt` | Zeichenvorlage der Kategorie (ohne Consolas); nicht zugeordnete Code-Zellen und Tags bleiben Code |
+| Absatz aus ≥ 2 Bildern | rahmenlose Tabelle „Bildreihe" über die Satzspiegelbreite, gleich breite Zellen, höchstens vier je Zeile, unter jedem Bild „Abbildung n: …"; Zeilen werden nicht getrennt |
+| `{.agenda}` | „Überschrift 2" mit der Liste; ohne Liste die folgenden `#`-Kapitel (ohne `{.closing}`) als nummerierte Liste |
+| `{.interim}` | die Aussage als „Standard fett" |
+| `{.quote}` | Zitat und Quelle als „Zitat" |
+| `{.contact}` | „Überschrift 2", je Person `###` als „Standard fett", Foto höchstens 3 cm breit ohne Beschriftung, jede Zeile für sich |
+
+Die Aufbauregeln der Folien (z. B. höchstens acht Agendapunkte, Fazit-Box höchstens zwei Zeilen)
+prüft nur PowerPoint; Word meldet die Fehler von `layout_syntax.check` wie PowerPoint. Der
+DOCX-Konverter liest die neuen Vorlagen wie „Standard"; „Hinweis …" wird wieder ein Zitat (ein
+Alert mit seiner Art, `> [!NOTE]`), eine Bildreihe wieder ein Absatz aus Bildern mit den
+Beschriftungen danach.
 
 ## Code-Block-Renderer und Bildkonverter
 
