@@ -53,13 +53,13 @@ unbenutzte Quelle; `watch` erzeugt das Dokument beim Speichern neu.
    (`ppt/comments/`) zurück ins Markdown? Vorschlag: ja, nur Kommentare, keine Änderungen (es gibt
    in PowerPoint keine Änderungsverfolgung).
 
->
+> (2026-11-07) Ja, nur Kommentare.
 
 2. Typografie (E17-S02) standardmäßig **an**, mit dem Risiko, dass ein Konverter-Rundweg andere
    Zeichen liefert als geschrieben — oder standardmäßig aus? Vorschlag: an; wer gerade Zeichen
    will, schreibt `typografie: nein`.
 
->
+> (2026-11-07) An; `typografie: nein` schaltet aus.
 
 ## Notizen
 

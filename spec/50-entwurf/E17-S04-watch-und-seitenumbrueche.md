@@ -90,19 +90,22 @@ stellen (`::: landscape`), ohne das ganze Dokument quer zu drehen.
    (eine Sekunde Verzögerung, keine Installation)? Vorschlag: beides — Extra, wenn vorhanden,
    sonst Polling mit Hinweis.
 
->
+> (2026-11-07) Beides: Extra, wenn vorhanden, sonst Polling mit Hinweis.
 
 2. Wenn Word die Zieldatei gesperrt hat: in `<name>.neu.docx` schreiben (Vorschlag), warten und
    erneut versuchen, oder Fehler?
 
->
+> (2026-11-07) In `<name>.neu.docx` schreiben, Meldung im Terminal.
 
 3. Gegenstück `::: portrait` für Querformat-Dokumente, oder nur `::: landscape` in
    Hochformat-Dokumenten? Vorschlag: beides, dieselbe Technik, kaum Mehraufwand.
 
->
+> (2026-11-07) Beides.
 
 ## Notizen
+
+- (2026-11-07) Seitenumbruch-Syntax entschieden: `::: pagebreak` als Block und `{.newpage}` auf
+  Überschriften; kein `\newpage`.
 
 - Abhängigkeiten: E02-S02 (Container), E10-S02 (`preview`), E05-S02/S03 (PDF-Seiten),
   E07-S02 (Konverter), E01-S02 (eingebettete Querformat-Vorlagen).

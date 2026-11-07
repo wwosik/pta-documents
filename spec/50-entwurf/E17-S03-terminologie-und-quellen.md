@@ -87,17 +87,17 @@ Quelle fehlt oder unbenutzt ist.
 1. Quellenverzeichnis automatisch, sobald Quellen verwendet werden (Vorschlag), oder nur mit
    `quellenverzeichnis: ja`?
 
->
+> (2026-11-07) Automatisch; `quellenverzeichnis: nein` schaltet ab.
 
 2. Reihenfolge im Verzeichnis: nach erster Verwendung (Vorschlag — wie Fußnoten) oder
    alphabetisch nach Autor?
 
->
+> (2026-11-07) Nach erster Verwendung.
 
 3. Soll `--fix` auch Einträge mit Hinweis (`Mandant → Kunde`) ersetzen, wenn `--fix=all`
    gesetzt ist? Vorschlag: nein, Hinweise bleiben Entscheidungen des Autors.
 
->
+> (2026-11-07) Nein.
 
 ## Notizen
 

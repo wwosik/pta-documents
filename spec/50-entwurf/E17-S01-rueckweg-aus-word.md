@@ -89,17 +89,17 @@ Markierung zur Durchsicht oder — auf Wunsch — direkt übernommen.
    **vorhergehenden** (wie eine Randnotiz)? Vorschlag: den folgenden; der Rückweg schreibt die
    Blöcke entsprechend **vor** den betroffenen Absatz.
 
->
+> (2026-11-07) Den folgenden Block.
 
 2. Verbname: `review-import` (Vorschlag), `import-review` oder `merge`?
 
->
+> (2026-11-07) `review-import`.
 
 3. Sollen die `::: comment`-Blöcke beim nächsten `generate` wieder Word-Kommentare werden
    (Dialog mit dem Kunden über mehrere Runden), oder nur Markierung für den Autor sein, die
    `generate` weglässt? Vorschlag: wieder Kommentare; wer sie loswerden will, löscht sie.
 
->
+> (2026-11-07) Wieder Kommentare.
 
 ## Notizen
 

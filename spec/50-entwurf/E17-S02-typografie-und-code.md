@@ -85,18 +85,18 @@ will, schaltet die Typografie ab.
    Bindestrich umbrechen? Vorschlag: nein — Word und PowerPoint zeigen U+2011 in manchen Schriften
    als Kästchen; nur das PDF könnte ihn gefahrlos setzen, dann aber ohne Nutzen in Word.
 
->
+> (2026-11-07) Nein.
 
 2. Blocksatz im PDF als Standard (klassischer Berichtsstil) oder aus (wie die Word-Vorlage,
    linksbündig)? Vorschlag: aus.
 
->
+> (2026-11-07) Aus; `blocksatz: ja` schaltet ein.
 
 3. Wo merkt sich das DOCX die Codesprache für die Rundreise — als unsichtbare Absatz-
    Eigenschaft (`w:pPr` Erweiterung, Word ignoriert sie) oder als erste Kommentarzeile im Code?
    Vorschlag: Absatz-Eigenschaft; der Konverter liest sie, Word stört sich nicht.
 
->
+> (2026-11-07) Absatz-Eigenschaft.
 
 ## Notizen
 
