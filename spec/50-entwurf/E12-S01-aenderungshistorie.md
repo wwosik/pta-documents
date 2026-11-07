@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E12 Dokumentpflege: Historie, Vergleich, Kennzeichnung](E12-dokumentpflege.md)
+> Milestone: [M06 Inhalte, Dokumenttypen und Dokumentpflege](M06-inhalte-und-dokumentpflege.md)
 
 ## Zusammenfassung
 

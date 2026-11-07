@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E17 Qualität und Arbeitsfluss](E17-qualitaet-und-arbeitsfluss.md)
+> Milestone: [M06 Inhalte, Dokumenttypen und Dokumentpflege](M06-inhalte-und-dokumentpflege.md)
 
 ## Zusammenfassung
 

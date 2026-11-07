@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E16 Schulung und Zielgruppen](E16-schulung-und-zielgruppen.md)
+> Milestone: [M04 Präsentieren und Schulung](M04-praesentieren-und-schulung.md)
 
 ## Zusammenfassung
 

@@ -35,6 +35,9 @@ weil ihm vertraut wird.
   daraus die Epics E08–E10. E11–E17 sind eigene Ideen (Bausteine, Dokumentpflege, lange
   Berichte, Dokumenttypen der Beratung, visuelle Bausteine, Schulung, Arbeitsfluss), alle Stand
   2026-11-07 im Entwurf und vom Menschen zur Umsetzung gewünscht; E08-S04 ist zurückgestellt.
+- **Umsetzungsreihenfolge** nach M01: Meilensteine M02 (Rückmeldung, Folien-Syntax) → M03
+  (Grafik, Charts) → M04 (Präsentieren, Schulung, Guides) → M05 (PDF) → M06 (Inhalte,
+  Dokumentpflege); jede der 59 offenen Stories nennt ihren Meilenstein im Kopf.
 - **Werkzeugverben und Schalter sind englisch** (`generate`, `check`, `preview`, `compare`,
   `--strict`), Front Matter und Anleitungen deutsch, Markdown-Syntaxnamen englisch
   (Entscheidung 2026-11-07).

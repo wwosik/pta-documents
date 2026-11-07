@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E11 Bausteine, Variablen und Datenquellen](E11-bausteine-variablen-datenquellen.md)
+> Milestone: [M06 Inhalte, Dokumenttypen und Dokumentpflege](M06-inhalte-und-dokumentpflege.md)
 
 ## Zusammenfassung
 

@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E02 Markdown-Grundlagen der Generatoren](E02-markdown-grundlagen.md)
+> Milestone: [M04 Präsentieren und Schulung](M04-praesentieren-und-schulung.md)
 
 ## Zusammenfassung
 

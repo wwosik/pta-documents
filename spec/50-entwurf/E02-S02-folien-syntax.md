@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E02 Markdown-Grundlagen der Generatoren](E02-markdown-grundlagen.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 

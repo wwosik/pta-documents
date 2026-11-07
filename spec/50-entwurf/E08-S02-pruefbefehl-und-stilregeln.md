@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E08 Rückmeldung an den Schreiber und KI-Anbindung](E08-rueckmeldung-und-ki-anbindung.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 

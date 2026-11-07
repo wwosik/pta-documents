@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E14 Dokumenttypen der Beratung](E14-dokumenttypen-der-beratung.md)
+> Milestone: [M06 Inhalte, Dokumenttypen und Dokumentpflege](M06-inhalte-und-dokumentpflege.md)
 
 ## Zusammenfassung
 

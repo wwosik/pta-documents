@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](E03-docx-generator.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 

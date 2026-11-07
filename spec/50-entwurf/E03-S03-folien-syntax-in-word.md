@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](E03-docx-generator.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 

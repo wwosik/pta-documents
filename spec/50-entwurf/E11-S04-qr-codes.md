@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E11 Bausteine, Variablen und Datenquellen](E11-bausteine-variablen-datenquellen.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 

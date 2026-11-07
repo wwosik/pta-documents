@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E17 Qualität und Arbeitsfluss](E17-qualitaet-und-arbeitsfluss.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 

@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E06 Diagramme und Charts](E06-diagramme-und-charts.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 

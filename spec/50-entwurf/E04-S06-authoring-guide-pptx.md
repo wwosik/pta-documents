@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](E04-pptx-generator.md)
+> Milestone: [M04 Präsentieren und Schulung](M04-praesentieren-und-schulung.md)
 
 ## Zusammenfassung
 

@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E02 Markdown-Grundlagen der Generatoren](E02-markdown-grundlagen.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 

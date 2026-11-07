@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E09 Präsentieren](E09-praesentieren.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 

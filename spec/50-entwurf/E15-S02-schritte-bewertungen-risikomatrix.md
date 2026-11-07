@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E15 Visuelle Bausteine](E15-visuelle-bausteine.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 

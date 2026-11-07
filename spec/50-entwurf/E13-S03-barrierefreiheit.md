@@ -2,6 +2,7 @@
 
 > Status: Entwurf
 > Epic: [E13 Lange Berichte: Abkürzungen, Querverweise, Barrierefreiheit](E13-lange-berichte.md)
+> Milestone: [M06 Inhalte, Dokumenttypen und Dokumentpflege](M06-inhalte-und-dokumentpflege.md)
 
 ## Zusammenfassung
 
