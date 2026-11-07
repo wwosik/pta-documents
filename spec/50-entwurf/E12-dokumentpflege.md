@@ -50,13 +50,12 @@ Historie mit zwei Zeilen; `./run.sh vergleich` beider Fassungen ergibt ein Word-
    Word-Vorlagen in `source-templates/` enthalten keine; der Vorschlag in E12-S01 folgt der
    üblichen Form Version | Datum | Autor | Änderung.
 
->
-
+> (2026-11-07) Keine feste Form bekannt; Vorschlag Version | Datum | Autor | Änderung gilt.
 2. Soll der Vergleich (E12-S02) auch für Präsentationen gelten (PowerPoint kennt keine
    Änderungsverfolgung; denkbar wäre ein Vergleichs-Deck mit gelb markierten Änderungen)?
    Vorschlag: zunächst nur Word.
 
->
+> (2026-11-07) Zunächst nur Word.
 
 ## Notizen
 

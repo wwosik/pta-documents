@@ -73,12 +73,11 @@ so, wie Word es selbst beim Vergleichen zeigt. Der Kunde sieht, was sich zwische
 1. Soll bei großen Umstellungen (mehr als die Hälfte der Blöcke geändert) das Werkzeug warnen,
    dass ein Vergleich wenig nützt, oder trotzdem schreiben? Vorschlag: schreiben und warnen.
 
->
-
+> (2026-11-07) Schreiben und warnen.
 2. Verschiebungen als `w:moveFrom`/`w:moveTo` erkennen (gleicher Block an anderer Stelle)?
    Vorschlag: in einer späteren Story, wenn der einfache Vergleich sich bewährt.
 
->
+> (2026-11-07) Später, eigene Story.
 
 ## Notizen
 

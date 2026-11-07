@@ -56,11 +56,10 @@ Ordner, aus dem `./run.sh generate` ohne Fehler und Hinweise ein Word-Dokument m
    und Statusbericht (über die Word-Vorlagen hinaus)? Die Skelette in E14-S04 folgen sonst
    der üblichen Praxis.
 
->
-
+> (2026-11-07) Nein; die Skelette folgen der üblichen Praxis.
 2. Sollen Aufgaben und Anforderungen auch in ein Werkzeug außerhalb des Dokuments wandern
    (Excel, Jira, Azure DevOps)? E14-S01/S02 sehen nur einen CSV-Export vor.
 
->
+> (2026-11-07) Nein, nur CSV-Export.
 
 ## Notizen

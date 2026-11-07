@@ -62,13 +62,12 @@ Teilnehmer einer Schulung oder Leser eines Berichts kommen so ohne Abtippen zum 
    (`pyzbar` hängt an der C-Bibliothek zbar; `opencv-python-headless` ist groß). Vorschlag: nein —
    segno ist geprüft, der Test vergleicht das PNG mit einer Erwartungsdatei.
 
->
-
+> (2026-11-07) Nein, kein Decoder; PNG gegen Erwartungsdatei.
 2. Weitere erzeugte Bilder nach demselben Muster — etwa `barcode:` oder ein Platzhalterbild
    `platzhalter:16x9` für Layout-Entwürfe? Vorschlag: `platzhalter:` als zweites Schema, weil
    Entwürfe oft noch keine Fotos haben.
 
->
+> (2026-11-07) Nein, vorerst kein `platzhalter:`.
 
 ## Notizen
 

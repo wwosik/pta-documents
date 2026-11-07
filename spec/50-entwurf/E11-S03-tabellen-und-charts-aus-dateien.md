@@ -66,13 +66,12 @@ Quelle. Zahlen aus dem Controlling landen so unverändert im Statusbericht und i
 1. Syntax: Zaun ```` ```table src=… ```` (Vorschlag — eine Form für Tabelle und Chart) oder ein
    Absatz `Tabelle aus: daten/kosten.csv` (lesbarer, aber ohne Platz für Attribute)?
 
->
-
+> (2026-11-07) Zaun ```` ```table src=… ````.
 2. Sollen große Dateien begrenzt werden (etwa 200 Zeilen, danach Fehler mit Hinweis auf
    `bereich=`)? In einer Folie passt ohnehin wenig; im Bericht wäre eine Tabelle über mehrere
    Seiten denkbar.
 
->
+> (2026-11-07) Ja, 200 Zeilen, dann Fehler mit Hinweis auf `bereich=`.
 
 ## Notizen
 

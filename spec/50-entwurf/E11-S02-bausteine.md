@@ -76,7 +76,7 @@ das ihn einbindet, bekommt beim nächsten Erzeugen den neuen Stand.
    die Einfügestelle an (`::: include firmenprofil` unter `##` hebt `#` → `##`)? Vorschlag:
    keine Anpassung — der Baustein wird so geschrieben, wie er eingefügt werden soll.
 
->
+> (2026-11-07) Keine Anpassung.
 
 ## Notizen
 

@@ -74,17 +74,15 @@ Liste der offenen Punkte. Die Präsentation bekommt eine Aufgaben-Folie.
    sich wie gesprochen) oder Attribute `::: task {wer="Müller" bis="2026-12-01"}` (eindeutiger,
    mehr Zeichen)?
 
->
-
+> (2026-11-07) `::: task @Müller bis 2026-12-01`.
 2. Sollen die Tabellen am **Ende** stehen (Vorschlag, wie in PTA-Protokollen üblich) oder direkt
    nach dem Deckblatt als Zusammenfassung?
 
->
-
+> (2026-11-07) Am Ende.
 3. Deutsche Containernamen (`::: beschluss`, `::: aufgabe`, `::: offen`), falls E02-S02 Frage 1
    so entschieden wird? Dann müssen sie hier und in `samples/protokoll/` nachgezogen werden.
 
->
+> (2026-11-07) Englisch — Entscheidung zu E02-S02 Frage 1 vom 2026-11-07 gilt für alle neuen Syntaxnamen.
 
 ## Notizen
 

@@ -59,13 +59,12 @@ Designmodell.
    (`source-templates/PTA-Powerpoint-Vorlagensammlung.pptx`) zeigt keine; die Stories schlagen
    eigene Maße im Raster vor.
 
->
-
+> (2026-11-07) Keine Muster vorhanden; eigene Maße im Raster.
 2. Sollen die Bausteine auch im **Bericht** (Word/PDF) alle verfügbar sein, oder reichen dort
    Gantt-Tabelle und Risikomatrix, weil Zeitstrahl und Chevrons Folienmuster sind? Vorschlag:
    alle, als Grafik — ein Konzept zeigt dasselbe Vorgehen wie die Folie dazu.
 
->
+> (2026-11-07) Alle, als Grafik.
 
 ## Notizen
 

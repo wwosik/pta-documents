@@ -77,18 +77,16 @@ deutschen Format. Beides wird beim Erzeugen berechnet und gezeichnet, in Word un
    damit Word nach einer Änderung mit F9 nachrechnet? Vorschlag: nein — das Feld zeigt bis zur
    Aktualisierung den alten Wert, und PDF kennt es nicht; wer ändert, erzeugt neu.
 
->
-
+> (2026-11-07) Nein, nur berechnete Werte.
 2. Reichen `mwst=19` (und `7`), oder braucht es Rabattzeilen (`rabatt=10`) und Zwischensummen je
    Abschnitt? Vorschlag: mit MwSt beginnen; Rabatt und Zwischensummen als Folge-Story, wenn
    Angebote in Markdown entstehen.
 
->
-
+> (2026-11-07) Mit MwSt beginnen; Rabatt und Zwischensummen als Folge-Story.
 3. Deutsche Namen (`::: unterschriften`, `{.rechnen}`), falls E02-S02 Frage 1 so entschieden
    wird?
 
->
+> (2026-11-07) Englisch — Entscheidung zu E02-S02 Frage 1 vom 2026-11-07 gilt für alle neuen Syntaxnamen.
 
 ## Notizen
 

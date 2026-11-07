@@ -77,13 +77,12 @@ nachführt; im PDF interne Links; in PowerPoint der Text ohne Nummer.
 1. Anker an Abbildungen: im Bildtitel (`"Unterschrift {#id}"`, Vorschlag — eine Zeile) oder als
    eigener Absatz `{#id}` unter dem Bild?
 
->
-
+> (2026-11-07) Im Bildtitel.
 2. Form eines Überschriftenverweises mit Text: „siehe 2.1 Architektur" (Vorschlag), „siehe
    Kapitel 2.1" oder „siehe Abschnitt »Architektur«"? Vielleicht als Option
    `querverweise: nummer-und-titel | kapitel | titel`.
 
->
+> (2026-11-07) „siehe 2.1 Architektur“; die Option `querverweise:` kann es ändern.
 
 ## Notizen
 

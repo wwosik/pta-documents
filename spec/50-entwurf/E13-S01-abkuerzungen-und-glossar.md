@@ -67,16 +67,14 @@ schreibt man als Definitionsliste in `::: glossar`.
 1. Abkürzungen auch in Überschriften ausschreiben? Vorschlag: nein — Überschriften bleiben kurz,
    das Inhaltsverzeichnis auch.
 
->
-
+> (2026-11-07) Nein.
 2. Standard `verzeichnis` (Vorschlag) oder `beides`?
 
->
-
+> (2026-11-07) `verzeichnis`.
 3. In PowerPoint die erste Verwendung je Folie ausschreiben, nur auf der ersten Folie, oder gar
    nicht? Vorschlag: gar nicht — Folien sind knapp; wer will, schreibt es hin.
 
->
+> (2026-11-07) Gar nicht.
 
 ## Notizen
 

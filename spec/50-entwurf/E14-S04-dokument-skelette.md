@@ -77,18 +77,16 @@ Markdown mit vorbelegtem Front Matter und der üblichen Gliederung der Dokumenta
 1. Gibt es im Haus verbindliche Gliederungen für Angebot, Konzept, Statusbericht, Protokoll
    (etwa aus dem Qualitätsmanagement)? Dann ersetzen sie die oben vorgeschlagenen.
 
->
-
+> (2026-11-07) Keine verbindlichen Gliederungen bekannt; die vorgeschlagenen gelten.
 2. Sollen die Skelette in `samples/skelette/` liegen (Vorschlag, neben den Beispielen) oder in
    einem eigenen Ordner `templates/` im Repo-Root, und dürfen Anwender eigene in
    `documents/_skelette/` ergänzen (Muster wie Bausteine, E11 Frage 1)?
 
->
-
+> (2026-11-07) `samples/skelette/`, eigene in `documents/_skelette/` (Muster wie Bausteine).
 3. Soll `new` ohne Angabe der Art ein Menü zeigen? Vorschlag: ja, interaktiv; nicht interaktiv
    Fehler mit Artenliste.
 
->
+> (2026-11-07) Ja: interaktiv Menü, nicht interaktiv Fehler mit Artenliste.
 
 ## Notizen
 

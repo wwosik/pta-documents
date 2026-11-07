@@ -73,12 +73,11 @@ Datum | Autor | Änderung) — geschrieben im Markdown als `::: historie` oder, 
 1. Position: direkt nach dem Deckblatt und **vor** dem Inhaltsverzeichnis (Vorschlag), oder am
    Ende des Dokuments?
 
->
-
+> (2026-11-07) Nach dem Deckblatt, vor dem Inhaltsverzeichnis.
 2. Woran erkennt das Werkzeug einen Historien-Commit — Betreff beginnt mit einer Versionsnummer
    (Vorschlag), ein Trailer `Version: 1.0`, oder jeder Commit zählt?
 
->
+> (2026-11-07) Betreff beginnt mit einer Versionsnummer; andere Commits zählen nicht.
 
 ## Notizen
 

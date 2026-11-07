@@ -54,12 +54,11 @@ PDF (nach E05), das veraPDF als PDF/A-2b und — soweit E13-S03 es erreicht — 
    (`abbildungsverzeichnis: ja`, `tabellenverzeichnis: ja`, als `TOC \c`-Felder — kleine
    Ergänzung zu E13-S02).
 
->
-
+> (2026-11-07) Vorschlag gilt: Inhalt vorn, Abkürzungen und Glossar am Ende, Abbildungs-/Tabellenverzeichnis nur auf Wunsch.
 2. Verlangen Kunden der PTA tatsächlich PDF/UA oder BITV-Konformität? Davon hängt ab, wie weit
    E13-S03 im PDF gehen muss.
 
->
+> (2026-11-07) Unbekannt. Versuch nach E05-S02 (E13-S03 Frage 1), Entscheidung mit dem Ergebnis.
 
 ## Notizen
 

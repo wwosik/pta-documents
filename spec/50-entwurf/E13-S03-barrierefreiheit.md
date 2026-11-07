@@ -71,16 +71,14 @@ Markdown. Für PDFs wird geklärt, wie weit PDF/UA-1 mit der Layout-Engine aus E
    PDF/A-2b mit Stufe A liefern und auf Word verweisen, das PDF/UA beim Export selbst schreibt?
    Vorschlag: Versuch nach E05-S02, Entscheidung mit Ergebnis in den Notizen.
 
->
-
+> (2026-11-07) Versuch nach E05-S02, Entscheidung mit dem Ergebnis.
 2. Standard `hinweis` (Vorschlag — Bestandsdokumente laufen weiter) oder `streng`?
 
->
-
+> (2026-11-07) `hinweis`.
 3. Gilt BITV für die Kunden der PTA tatsächlich (öffentliche Stellen), oder reicht die
    Word-Prüfung ohne Befund?
 
->
+> (2026-11-07) Unbekannt; siehe Frage 1.
 
 ## Notizen
 

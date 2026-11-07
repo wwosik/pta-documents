@@ -75,7 +75,7 @@ Generatoren (E03-S03, E04-S03, E05-S04).
    `{.zwischenfazit}`, `{.zitat}`, `{.kontakt}`)? Die Stories E04-S03/E04-S04 verwenden bis zur
    Antwort die englischen Namen.
 
->
+> (2026-11-07) Englisch wie die übrige Syntax (`::: conclusion`, `::: comment`, `{.agenda}`, `{.interim}`, `{.quote}`, `{.contact}`); gilt auch für alle späteren Epics (E14–E17).
 
 ## Notizen
 

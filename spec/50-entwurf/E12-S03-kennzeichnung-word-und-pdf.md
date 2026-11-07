@@ -80,7 +80,7 @@ PowerPoint entspricht das dem Sticker aus E04-S05; beide sollen über denselben 
    Kopfzeile? Vorschlag: nur Text — ein Wasserzeichen „VERTRAULICH" stört beim Lesen eines
    fertigen Dokuments, „ENTWURF" soll stören.
 
->
+> (2026-11-07) Nur Text in der Kopfzeile; Wasserzeichen nur für `entwurf`.
 
 ## Notizen
 

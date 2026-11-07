@@ -67,17 +67,15 @@ Querverweise verweisen auf die ID.
 1. Prioritätswerte: `muss | soll | kann` (Vorschlag, deutsch wie Front-Matter-Werte, nach der
    üblichen MuSS/SOLL/KANN-Einteilung) oder MoSCoW (`must | should | could | won't`)?
 
->
-
+> (2026-11-07) `muss | soll | kann`.
 2. Soll der CSV-Export Teil dieser Story sein oder in ein eigenes Werkzeug `export` mit mehr
    Zielen (Aufgaben, Historie, Abkürzungen) ausgelagert werden? Vorschlag: hier beginnen, das
    Werkzeug heißt von Anfang an `export`.
 
->
-
+> (2026-11-07) Hier beginnen; das Werkzeug heißt `export`.
 3. Deutsche Containernamen (`::: anforderung`), falls E02-S02 Frage 1 so entschieden wird?
 
->
+> (2026-11-07) Englisch — Entscheidung zu E02-S02 Frage 1 vom 2026-11-07 gilt für alle neuen Syntaxnamen.
 
 ## Notizen
 
