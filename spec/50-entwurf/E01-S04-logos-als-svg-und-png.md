@@ -66,7 +66,7 @@ für SVG- und PNG-Ausgaben, die ein Logo brauchen.
 1. Das Word-Logo ist im EMF mit `026FB9` gefüllt, das Theme-PTA-Blau ist `006FB9`. Soll das
    gewandelte Logo auf `006FB9` vereinheitlicht werden (Vorschlag), oder den EMF-Wert behalten?
 
->
+> (2026-11-07) Ja, auf `006FB9` vereinheitlichen.
 
 ## Notizen
 

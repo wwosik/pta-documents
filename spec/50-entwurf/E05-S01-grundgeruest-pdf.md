@@ -83,13 +83,13 @@ reportlab zeichnen und das Ergebnis mit pikepdf zu PDF/A-2b machen. Noch ohne Ma
    sein (Textmatrix, etwa 12°) oder aufrecht bleiben, solange Segoe UI fehlt? (Gilt nur, wenn
    E01-S03 das nicht schon festlegt.)
 
->
+> (2026-11-07) Schrägstellen, wie in E01-S03 entschieden.
 
 2. Codeschrift im PDF: Word nimmt Consolas (Entscheidung 2026-11-06), die nicht mitgeliefert
    werden darf. Vorschlag: Consolas aus dem System, sonst gebündelt **Cascadia Mono** (OFL, von
    Microsoft). Passt das, oder lieber eine andere Monospace-Schrift?
 
->
+> (2026-11-07) Consolas aus dem System, sonst **Inconsolata** (OFL) statt Cascadia Mono — Entscheidung in E01-S03.
 
 ## Notizen
 

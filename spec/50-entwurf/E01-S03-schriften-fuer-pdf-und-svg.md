@@ -73,20 +73,20 @@ das gebündelte Selawik (OFL); dazu Ersatzschriften für Code und Zitate, Breite
    (Vorschlag, 12° per Textmatrix), oder aufrecht bleiben? (Dieselbe Frage steht in E05-S01;
    die Antwort hier gilt für beide.)
 
->
+> (2026-11-07) Schrägstellen (12° per Textmatrix); gilt auch für E05-S01.
 
 2. Ersatz für Consolas im Code: **Inconsolata** (Vorschlag, ähnlicher Duktus, liegt schon in den
    DocLibs-Testdaten), **Cascadia Mono** (OFL, Microsoft; so vorgeschlagen in E05-S01) oder
    Liberation Mono (wie DocLibs, Courier-Breiten)? Die Antwort gilt auch für E05-S01.
 
->
+> (2026-11-07) Inconsolata (OFL); gilt auch für E05-S01.
 
 3. In PowerPoint stehen Zitate in Georgia kursiv; die Word-Formatvorlage `Zitat` (E03-S02) ist
    ein eingerückter Standard-Absatz. Sollen `Zitat` in Word und damit Zitate im PDF ebenfalls
    Georgia kursiv werden (dann wird Gelasio Italic im PDF gebraucht), oder bleibt Gelasio nur für
    SVG/PNG von Folieninhalten?
 
->
+> (2026-11-07) Nein — Word und PDF bleiben bei der Word-Vorlage; Gelasio nur für SVG/PNG von Folieninhalten.
 
 ## Notizen
 

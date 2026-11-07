@@ -74,6 +74,6 @@ wie im PDF von DocLibs, aber über Formatvorlagen statt Direktformatierung.
    bei Bildreihen), oder nacheinander wie im PDF von DocLibs (Vorschlag; liest sich in Word
    besser und bleibt einfach zu bearbeiten)?
 
->
+> (2026-11-07) Nacheinander.
 
 ## Notizen

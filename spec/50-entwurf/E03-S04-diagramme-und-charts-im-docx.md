@@ -68,7 +68,7 @@ Charts (`ChartGraphic`) als natives Word-Diagramm aus E06-S01 — beide gleich b
    (Vorschlag; braucht das Extra `svg`), oder als editierbare Word-Zeichnungsgruppe aus Formen
    (`wpg:wgp`, wie die Formgruppen in PowerPoint; ohne Extra, aber deutlich mehr Aufwand)?
 
->
+> (2026-11-07) Als Bild (SVG mit PNG-Ersatz, Extra `svg`).
 
 ## Notizen
 
