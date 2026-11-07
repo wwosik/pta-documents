@@ -87,3 +87,7 @@ Vektoren bzw. Bilder gesetzt.
   E06-S01 bis E06-S03, den SVG-Konverter E06-S04 — die Tests hier kommen ohne sie aus.
 - Die Graphem-Zerlegung ist bewusst einfach; sie deckt die DocLibs-Fälle ab, nicht alle Regeln
   von UAX #29. Reicht sie nicht, wäre das Paket `regex` (`\X`) die Alternative.
+- (2026-11-07, E08-S01) `Notes.characters(markdown, line_offset, in_text, in_code, effect,
+  alternatives)` in `generation/common/result.py` ist als Port von `GenerationNotes.Characters`
+  vorhanden und getestet; hier nur noch mit den Schriftprüfungen aufrufen. `alternatives`
+  ersetzt `AuthoringGuides.Symbols` (Zeichen → Ersatz in Vorzugsreihenfolge).

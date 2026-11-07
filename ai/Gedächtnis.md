@@ -49,6 +49,13 @@ weil ihm vertraut wird.
   Entwicklungsmaschine gibt es weder Word/PowerPoint noch LibreOffice; das Öffnen in Office ist
   ein offener Prüfpunkt der Stories.
 
+- **Hinweise an den Schreiber** (E08-S01): `generate()` beider Generatoren gibt
+  `GenerationResult(notes, slides, pages)` zurück (`generation/common/result.py`, auch aus
+  `pta_documents` importierbar). Neue Umgehungen melden mit `Notes.add(NoteCodes.X, line, msg)`
+  — der Sammler wird in `generate()` angelegt und an Parser und Writer übergeben; neue Codes in
+  `NoteCodes` (und `ALL`) eintragen und in `docs/verwendung.md` aufführen. `samples/` muss ohne
+  Hinweise erzeugen (Tests `test_the_samples_generate_without_notes`).
+
 ## Entscheidungen
 
 - **Entscheidungen des Menschen vom 2026-11-06:** Projektsprache Deutsch; portiert wird alles
@@ -81,5 +88,11 @@ weil ihm vertraut wird.
   `a:t`-Elemente lesen.
 - python-pptx legt Fußzeilen- und Foliennummer-Platzhalter beim Anlegen einer Folie nicht an;
   der Generator kopiert sie aus dem Layout.
+- Der gemeinsame Markdown-Parser (`markdown/parser.py`) hat seit E08-S01 `html: True`: rohes HTML
+  kommt als `html_block`/`html_inline` an und wird von den Generatoren weggelassen (Hinweis
+  `raw-html`). Ausnahmen in `generation/common/html.py`: Kommentare still weg, `<br>` = Umbruch
+  (die Konverter schreiben `<br>` in Tabellenzellen), die Checkbox des Tasklist-Plugins.
+- Inline-Token haben kein eigenes `map`-Feld pro Kind; die Zeile eines Kindes liefert
+  `markdown.parser.child_lines(inline, offset)` (zählt Soft-/Hardbreaks).
 - python-docx zeigt Stilnamen als UI-Namen („Heading 1"); verglichen wird mit dem `w:name` aus
   `styles.xml` („heading 1").

@@ -19,12 +19,14 @@ from pta_documents.design import slides as design
 from pta_documents.design import templates
 from pta_documents.design.variants import GeneratedTexts, Language, SlidesVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.pptx import fitting, visuals
 from pta_documents.generation.pptx.model import (
     ChapterSlide,
     ClosingSlide,
     Code,
     ContentSlide,
+    Image,
     Images,
     Kind,
     LayoutSlide,
@@ -45,6 +47,10 @@ P: Final = "http://schemas.openxmlformats.org/presentationml/2006/main"
 R: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 FOOTER_TYPES: Final = ("ftr", "sldNum")
 PICTURE_TYPES: Final = ("image/png", "image/jpeg", "image/gif", "image/bmp", "image/tiff")
+MAX_ENLARGEMENT: Final = 2.0
+"""Shown at more than this many times its natural size, an image gets an ``image-enlarged`` note."""
+MAX_CROPPED: Final = 0.25
+"""Losing more than this share of its area to a placeholder, an image gets ``image-cropped``."""
 
 
 def a(name: str) -> str:
@@ -70,8 +76,10 @@ class DeckWriter:
         options: PptxOptions,
         texts: GeneratedTexts,
         info: DeckInfo,
+        notes: Notes | None = None,
     ) -> None:
         self.presentation = presentation
+        self.notes = notes if notes is not None else Notes()
         self.options = options
         self.texts = texts
         self.info = info
@@ -149,8 +157,12 @@ class DeckWriter:
             height = fitting.text_height(self.body_style, part, smallest, area.width)
             return height <= area.height
 
-        for n, part in enumerate(fitting.pack(fitting.groups(body), fits)):
+        parts = fitting.pack(fitting.groups(body), fits)
+        self.note_split(slide, len(parts))
+        for n, part in enumerate(parts):
             part_scale = fitting.text_scale(self.body_style, part, area.width, area.height)
+            if part_scale is None:
+                self.note_overfull(slide)
             self.text_slide(self.continued(slide.title, n), part, part_scale or smallest, slide)
 
     def text_slide(
@@ -174,13 +186,15 @@ class DeckWriter:
                 shape = self.placeholder(target, design.PLACEHOLDERS.body)
                 width, height = int(shape.width), int(shape.height)
                 scale = fitting.text_scale(self.body_style, text, width, height)
+                if scale is None:
+                    self.note_overfull(slide)
                 self.set_paragraphs(
                     target,
                     design.PLACEHOLDERS.body,
                     text,
                     scale or self.body_style.scales()[-1],
                 )
-            self.fill_picture(target, design.PLACEHOLDERS.picture, image.resource, image.alt, slide)
+            self.fill_picture(target, design.PLACEHOLDERS.picture, image, slide)
             self.finish(target, footer=True)
             return
         self.visual_on_content_area(slide)
@@ -221,6 +235,7 @@ class DeckWriter:
                 Images(visual.images[i : i + per_row])
                 for i in range(0, len(visual.images), per_row)
             ]
+        self.note_split(slide, len(parts))
         for n, part in enumerate(parts):
             self.visual_part(
                 slide,
@@ -262,19 +277,25 @@ class DeckWriter:
         below_height = self.text_block_height(below)
         room = area.bottom - y - (below_height + fitting.GAP if below else 0)
         if isinstance(visual, Table):
-            table_layout = fitting.fit_table(visual, area.width, room) or fitting.table_layout(
-                visual, area.width, *fitting.table_steps()[-1]
-            )
+            table_layout = fitting.fit_table(visual, area.width, room)
+            if table_layout is None:
+                self.note_overfull(slide)
+                table_layout = fitting.table_layout(visual, area.width, *fitting.table_steps()[-1])
             used = visuals.draw_table(
                 target, visual, table_layout, area.left, y, self.run_element, self.lang
             )
         elif isinstance(visual, Code):
-            size = fitting.fit_code(len(visual.lines), room) or fitting.CODE_SIZES[-1]
+            size = fitting.fit_code(len(visual.lines), room)
+            if size is None:
+                self.note_overfull(slide)
+                size = fitting.CODE_SIZES[-1]
             used = visuals.draw_code(target, visual, size, area.left, y, area.width, self.lang)
         else:
-            used = visuals.draw_pictures(
+            used, factors = visuals.draw_pictures(
                 target, list(visual.images), area.left, y, area.width, room
             )
+            for image, factor in zip(visual.images, factors, strict=True):
+                self.note_enlarged(image, factor)
         y += used + fitting.GAP
         if below:
             body = visuals.text_box(target, area.left, y, area.width, below_height)
@@ -317,9 +338,7 @@ class DeckWriter:
                     pictures
                 ):
                     for image in visual.images:
-                        self.fill_picture(
-                            target, pictures[picture_index][0], image.resource, image.alt, slide
-                        )
+                        self.fill_picture(target, pictures[picture_index][0], image, slide)
                         picture_index += 1
                 else:
                     raise self.error(
@@ -368,9 +387,9 @@ class DeckWriter:
         shape = self.placeholder(slide, idx)
         self.write_paragraphs(slide, shape._element.txBody, paragraphs, scale)
 
-    def fill_picture(
-        self, slide: PptxSlide, idx: int, resource: Any, alt: str, where: Slide
-    ) -> None:
+    def fill_picture(self, slide: PptxSlide, idx: int, image: Image, where: Slide) -> None:
+        """The image in a picture placeholder, which crops it to fill the placeholder."""
+        resource = image.resource
         if resource.content_type not in PICTURE_TYPES:
             raise self.error(
                 f"The image '{resource.path}' is a {resource.content_type}; PPTX takes PNG, JPEG, "
@@ -379,7 +398,59 @@ class DeckWriter:
             )
         placeholder = self.placeholder(slide, idx)
         picture = placeholder.insert_picture(io.BytesIO(resource.content))
-        picture._element.nvPicPr.cNvPr.set("descr", alt)
+        picture._element.nvPicPr.cNvPr.set("descr", image.alt)
+        visible_x = 1.0 - float(picture.crop_left) - float(picture.crop_right)
+        visible_y = 1.0 - float(picture.crop_top) - float(picture.crop_bottom)
+        lost = 1.0 - visible_x * visible_y
+        if lost > MAX_CROPPED:
+            ratio = int(picture.width) / int(picture.height)
+            other = (
+                ""
+                if slide.slide_layout.name == design.LAYOUTS.title_image
+                else f", or put it alone on a slide, which gets the layout "
+                f"'{design.LAYOUTS.title_image}'"
+            )
+            self.notes.add(
+                NoteCodes.IMAGE_CROPPED,
+                image.line,
+                f"The image '{resource.path}' is cropped to its placeholder and loses "
+                f"{round(lost * 100)} % of its area. Crop it yourself to the placeholder's "
+                f"proportions (width : height = {ratio:.2f} : 1){other}.",
+            )
+        pixels_x, _ = visuals.picture_size(image)
+        if visible_x > 0:
+            self.note_enlarged(
+                image, int(picture.width) / (pixels_x * visible_x * visuals.EMU_PER_PIXEL)
+            )
+
+    # ------------------------------------------------------------------ notes
+
+    def note_split(self, slide: Slide, parts: int) -> None:
+        if parts > 1:
+            self.notes.add(
+                NoteCodes.SLIDE_SPLIT,
+                slide.line,
+                f'The slide "{plain_text(slide.title)}" has too much for one slide and continues '
+                f"on {parts - 1} more. Split it in the Markdown or shorten it.",
+            )
+
+    def note_overfull(self, slide: Slide) -> None:
+        self.notes.add(
+            NoteCodes.SLIDE_OVERFULL,
+            slide.line,
+            f'The slide "{plain_text(slide.title)}" does not fit even at the smallest text size '
+            f"({design.MIN_FONT_PT:g} pt) and runs past its bottom. Shorten it, or split it into "
+            "slides.",
+        )
+
+    def note_enlarged(self, image: Image, factor: float) -> None:
+        if factor > MAX_ENLARGEMENT:
+            self.notes.add(
+                NoteCodes.IMAGE_ENLARGED,
+                image.line,
+                f"The image '{image.resource.path}' is shown at {factor:.1f} times its size and "
+                "may look blurred. Use a larger image.",
+            )
 
     def finish(self, slide: PptxSlide, footer: bool = False) -> None:
         """Remove placeholders left empty (decorative ones stay) and add footer and number."""

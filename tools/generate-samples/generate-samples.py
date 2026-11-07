@@ -3,7 +3,8 @@
 usage: ./run.sh generate-samples <name> [<name> ...]   (no name: all samples)
 
 ``*-bericht.md`` becomes a DOCX, ``*-praesentation.md`` a PPTX; images are taken from the
-sample's ``images/`` folder as document resources.
+sample's ``images/`` folder as document resources. The notes of each file follow it; samples
+are meant to produce none, so any note makes the exit code 1.
 """
 
 from __future__ import annotations
@@ -32,31 +33,38 @@ def resources(folder: Path) -> list[DocumentResource]:
     ]
 
 
-def generate(name: str) -> None:
+def generate(name: str) -> bool:
+    """Generate one sample folder; False if a file had notes."""
     folder = SAMPLES / name
     target = OUTPUT / name
     target.mkdir(parents=True, exist_ok=True)
     images = resources(folder)
+    clean = True
     for source in sorted(folder.glob("*.md")):
         document = MarkdownDocument(source.read_text(encoding="utf-8"), images)
         if source.stem.endswith("-bericht"):
             out = target / (source.stem + ".docx")
             with out.open("wb") as stream:
-                DocxGenerator().generate(document, stream)
+                result = DocxGenerator().generate(document, stream)
         elif source.stem.endswith("-praesentation"):
             out = target / (source.stem + ".pptx")
             with out.open("wb") as stream:
-                PptxGenerator().generate(document, stream)
+                result = PptxGenerator().generate(document, stream)
         else:
             continue
         print(f"wrote {out.relative_to(REPO)}")
+        for note in result.notes:
+            print(f"  - {note}")
+        clean &= not result.notes
+    return clean
 
 
 def main(argv: list[str]) -> int:
     names = argv or sorted(p.name for p in SAMPLES.iterdir() if p.is_dir())
+    clean = True
     for name in names:
-        generate(name)
-    return 0
+        clean &= generate(name)
+    return 0 if clean else 1
 
 
 if __name__ == "__main__":

@@ -29,13 +29,14 @@ from PIL import Image
 from pta_documents.design import word
 from pta_documents.design.variants import GeneratedTexts
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import text_metrics
+from pta_documents.generation.common import code_blocks, html, text_metrics
 from pta_documents.generation.common.openxml import R, field_paragraph_runs, w
+from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.generation.docx.options import DocxOptions
 from pta_documents.markdown.document import MarkdownDocument
 from pta_documents.markdown.front_matter import FrontMatter
-from pta_documents.markdown.parser import create_parser, line_of
+from pta_documents.markdown.parser import child_lines, create_parser, line_of
 
 FORMAT: Final = DocumentFormat.DOCX
 EMU_PER_TWIP: Final = 635
@@ -45,6 +46,10 @@ LIST_INDENT_CM: Final = (0.6, 1.2, 1.8)
 TABLE_FONT_PT: Final = 10.0
 TABLE_CELL_GAP: Final = Cm(0.3)
 """Room between columns when sizing them; the PTA table style has no cell margins."""
+EMU_PER_PIXEL: Final = 9525
+"""A pixel at 96 dpi: the natural size an image is compared with for ``image-enlarged``."""
+MAX_ENLARGEMENT: Final = 2.0
+WHAT: Final = "the document"
 ABSOLUTE_URI: Final = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 SUPPORTED_IMAGES: Final = ("image/png", "image/jpeg", "image/gif", "image/bmp", "image/tiff")
 FOOTNOTES_RT: Final = RT.FOOTNOTES
@@ -79,8 +84,10 @@ class BodyWriter:
         front: FrontMatter,
         options: DocxOptions,
         texts: GeneratedTexts,
+        notes: Notes | None = None,
     ) -> None:
         self.document = document
+        self.notes = notes if notes is not None else Notes()
         self.source = source
         self.front = front
         self.options = options
@@ -134,7 +141,13 @@ class BodyWriter:
             case "table_open":
                 return self.table_block(tokens, i)
             case "fence" | "code_block":
+                if token.type == "fence":
+                    code_blocks.note_not_drawn(self.notes, token.info, self.line(token))
                 self.code_block(token.content)
+                return i + 1
+            case "html_block":
+                if not html.is_comment(token.content):
+                    html.note_raw_html(self.notes, self.line(token), WHAT)
                 return i + 1
             case "blockquote_open":
                 return self.container(tokens, i, "blockquote_close", word.STYLES.quote)
@@ -145,6 +158,9 @@ class BodyWriter:
                 return self.definition_list(tokens, i)
             case _:
                 return i + 1
+
+    def line(self, token: Token) -> int | None:
+        return line_of(token, self.front.body_line)
 
     def container(self, tokens: list[Token], i: int, close: str, style: str | None) -> int:
         depth = 0
@@ -168,8 +184,10 @@ class BodyWriter:
             self.caption(self.texts.table, inline, strip_prefix=True)
             return i + 3
         if style is None and _only_images(children):
-            for image in (c for c in children if c.type == "image"):
-                self.figure(image, line_of(tokens[i], self.front.body_line))
+            lines = child_lines(inline, self.front.body_line)
+            for image, line in zip(children, lines, strict=True):
+                if image.type == "image":
+                    self.figure(image, line)
             return i + 3
         if style is None and _only_strong(children):
             paragraph = self.paragraph(word.STYLES.normal_bold)
@@ -347,6 +365,15 @@ class BodyWriter:
                 "GIF, BMP and TIFF.",
             )
         width, height = self._image_size(resource.content)
+        with Image.open(io.BytesIO(resource.content)) as opened:
+            factor = width / (opened.size[0] * EMU_PER_PIXEL)
+        if factor > MAX_ENLARGEMENT:
+            self.notes.add(
+                NoteCodes.IMAGE_ENLARGED,
+                line,
+                f"The image '{source}' is shown at {factor:.1f} times its size (below "
+                f"{96 / factor:.0f} dpi) and may look blurred. Use a larger image.",
+            )
         run = paragraph.add_run()
         try:
             run.add_picture(io.BytesIO(resource.content), width=Emu(width), height=Emu(height))
@@ -450,11 +477,15 @@ class BodyWriter:
 
     def inline(self, paragraph: Paragraph, token: Token, plain_bold: bool = False) -> None:
         context = _Inline(paragraph._p, self.document.part, paragraph, plain_bold=plain_bold)
-        self._inline_children(context, token.children or [])
+        self._inline_children(context, token)
 
-    def _inline_children(self, context: _Inline, children: list[Token]) -> None:
+    def _inline_children(self, context: _Inline, token: Token, skip: tuple[str, ...] = ()) -> None:
+        """The children of the inline ``token`` (without those of a type in ``skip``)."""
         stack: list[etree._Element] = []
-        for child in children:
+        children = token.children or []
+        for child, line in zip(children, child_lines(token, self.front.body_line), strict=True):
+            if child.type in skip:
+                continue
             match child.type:
                 case "text":
                     self._run(context, child.content)
@@ -492,16 +523,18 @@ class BodyWriter:
                         context.target = stack.pop()
                 case "image":
                     if context.images and context.paragraph is not None:
-                        self.picture(context.paragraph, child, None)
+                        self.picture(context.paragraph, child, line)
                     else:
                         self._run(context, child.content)
                 case "footnote_ref":
                     self._footnote_reference(context, child)
                 case "html_inline":
-                    if "checkbox" in child.content:
+                    if html.is_checkbox(child.content):
                         self._run(context, "☒" if "checked" in child.content else "☐")
-                    else:
-                        self._run(context, child.content)
+                    elif html.is_line_break(child.content):
+                        etree.SubElement(self._new_run(context), w("br"))
+                    elif not html.is_comment(child.content):
+                        html.note_raw_html(self.notes, line, WHAT)
                 case _:
                     if child.content:
                         self._run(context, child.content)
@@ -584,9 +617,7 @@ class BodyWriter:
                 _append_text(p, " ")
             if inline is not None:
                 inner = _Inline(p, part, None, images=False)
-                self._inline_children(
-                    inner, [c for c in inline.children or [] if c.type != "footnote_anchor"]
-                )
+                self._inline_children(inner, inline, skip=("footnote_anchor",))
 
     def _save_footnotes(self) -> None:
         if self.footnotes_part is not None and self.footnotes_root is not None:

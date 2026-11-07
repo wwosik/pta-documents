@@ -85,3 +85,6 @@ Fehlerweitergabe als `DocumentConversionError`.
 
 - E06-S01 (Schritt 6) und E06-S04 (Schritt 5) schlagen bereits vor, `ChartRenderer` bzw.
   `SvgImageConverter` standardmäßig einzutragen; Frage 1 entscheidet das für alle zusammen.
+- (2026-11-07, E08-S01) `generation/common/code_blocks.py` hat `KNOWN_GRAPHIC_LANGUAGES` und
+  `note_not_drawn(notes, info, line)`; beide Generatoren rufen es heute für **jeden** `fence`
+  auf. Mit den Renderern nur noch aufrufen, wenn kein Renderer den Block gezeichnet hat.

@@ -75,3 +75,7 @@ vor; die Beispiele erzeugen ohne Hinweise; ihre Rundreise-Ergebnisse sind als
 
 - Diese Story ergänzt die Guide-Tests aus E02-S05 (Guide ↔ Code) um die dritte Seite (Guide ↔
   Beispiele).
+- (2026-11-07, E08-S01) `samples/funktionen/` erzeugt bereits ohne Hinweise; dafür wurden die
+  Demo-Folien „(Forts.)" und „geteilte Tabelle" entfernt und Bilder `*-folie.png` in Platzhalter-
+  Proportionen ergänzt. Tests: `test_the_samples_generate_without_notes` in
+  `tests/generation/{docx,pptx}/test_notes.py`.

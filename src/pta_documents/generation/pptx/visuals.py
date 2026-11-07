@@ -264,17 +264,26 @@ def picture_size(image: Image) -> tuple[int, int]:
         return picture.size
 
 
+EMU_PER_PIXEL: Final = 9525
+"""A pixel at 96 dpi: the natural size of an image on a slide."""
+
+
 def draw_pictures(
     slide: PptxSlide, images: list[Image], left: int, top: int, width: int, height: int
-) -> int:
-    """Pictures side by side, each in an equal share of the width, aligned to the top left."""
+) -> tuple[int, list[float]]:
+    """Pictures side by side, each in an equal share of the width, aligned to the top left.
+
+    Returns the height used and, per image, how many times its natural size it is shown at.
+    """
     count = len(images)
     share = (width - design.PICTURE_GAP * (count - 1)) // count
     used = 0
     x = left
+    factors: list[float] = []
     for image in images:
         pixels_x, pixels_y = picture_size(image)
         scale = min(share / pixels_x, height / pixels_y)
+        factors.append(scale / EMU_PER_PIXEL)
         w, h = int(pixels_x * scale), int(pixels_y * scale)
         picture: Any = slide.shapes.add_picture(
             io.BytesIO(image.resource.content), Emu(x), Emu(top), Emu(w), Emu(h)
@@ -282,7 +291,7 @@ def draw_pictures(
         picture._element.nvPicPr.cNvPr.set("descr", image.alt)
         x += share + design.PICTURE_GAP
         used = max(used, h)
-    return used
+    return used, factors
 
 
 def text_box(slide: PptxSlide, left: int, top: int, width: int, height: int) -> etree._Element:

@@ -17,6 +17,11 @@ Dateien nach Markdown lesen. Wer **an** der Bibliothek entwickelt, folgt stattde
 3. **Erzeugen und prüfen:** `./run.sh generate documents/<thema>`; der Befehl endet mit
    Code ≠ 0, wenn eine Datei einen Fehler hat. Fehlermeldungen (`ERROR <datei>: <grund>`) sind für
    den Schreiber formuliert — den Grund lesen, das Markdown korrigieren, neu erzeugen.
+   **Hinweise lesen:** unter `wrote <datei>` stehen eingerückt die Hinweise
+   (`  - line 12: …`), was der Generator umgehen musste. Das Markdown so ändern, dass keine mehr
+   kommen; `(Forts.)`-Folien (`slide-split`) sind fast immer ein Zeichen für zu viel Inhalt.
+   Mit `--strict` endet der Befehl auch bei Hinweisen mit Code 1 — so lässt sich prüfen, ob
+   alles sauber ist. Codes: [verwendung.md](verwendung.md#hinweise-generationresult).
 4. **Einmalig einrichten**, falls `.venv/` fehlt: `./run.sh setup` (Windows `.\run.ps1 setup`).
 5. **Fakten nicht erfinden.** Inhalte kommen vom Anwender oder aus Quellen, die er nennt. Fremde
    Bilder nur mit passender Lizenz; Urheber und Lizenz in der Bildunterschrift bzw. auf der
@@ -69,8 +74,9 @@ Word-Dokument sind Fehler.
   „Tabelle n: Beschreibung". Tabellentitel: ein Absatz nur aus `**Titel**` direkt davor.
 - Abbildung: Bild allein im Absatz, Unterschrift als Bildtitel:
   `![Alt-Text](images/a.jpg "Unterschrift (Foto: Name, CC BY 4.0)")` → „Abbildung n: …".
-- Kein HTML (wird als Text gezeigt), keine Diagramme/Mermaid/`chart`-Blöcke (werden als Code
-  gezeigt), keine `:::`-Container, Alerts (`> [!NOTE]`) oder `==Markierung==` — das ist geplant,
+- Kein HTML (wird weggelassen, Hinweis `raw-html`; nur `<br>` in Tabellenzellen ist ein
+  Zeilenumbruch), keine Diagramme/Mermaid/`chart`-Blöcke (werden als Code gezeigt, Hinweis
+  `code-not-drawn`), keine `:::`-Container, Alerts (`> [!NOTE]`) oder `==Markierung==` — das ist geplant,
   aber noch nicht umgesetzt; es erscheint als normaler Text.
 
 ## Präsentation
@@ -94,6 +100,9 @@ Gliederung:
 - Ein `**fetter**` Absatz direkt vor einer Tabelle wird deren Titelzeile.
 - Ein Bild + Text → Layout „Titel, Text und Bild 01" (Bild rechts, beschnitten); ein Bild allein →
   „Titel und Bild 01"; mehrere Bilder in einem Absatz → nebeneinander (max. vier je Folie).
+  Verliert ein Bild mehr als ein Viertel seiner Fläche an den Rahmen (`image-cropped`) oder wird
+  es mehr als doppelt vergrößert (`image-enlarged`), kommt ein Hinweis — dann ein Bild in
+  passenden Proportionen bzw. höherer Auflösung ablegen.
 - Ein bestimmtes PTA-Layout: `## Titel {layout="Titel und Text (zweispaltig)"}` und den Inhalt mit
   `---` in Spalten teilen. Nur exakte Layoutnamen; die Fehlermeldung listet alle. Andere
   Attribute als `.closing` und `layout="…"` sind Fehler.
@@ -113,7 +122,8 @@ document = MarkdownDocument(
 )
 try:
     with open("documents/x/x-bericht.docx", "wb") as out:
-        DocxGenerator().generate(document, out)
+        result = DocxGenerator().generate(document, out)
+    print(result)  # Hinweise als Liste "- line 12: …", sonst "No notes."
 except DocumentConversionError as error:
     print(error.reason)  # was im Markdown zu ändern ist
 ```
@@ -140,7 +150,8 @@ nach den Regeln oben aufbereiten (Front Matter, `#`/`##`-Gliederung) und die Bil
 
 ## Checkliste vor der Übergabe
 
-- [ ] `./run.sh generate documents/<thema>` läuft ohne `ERROR`.
+- [ ] `./run.sh generate documents/<thema>` läuft ohne `ERROR` und möglichst ohne Hinweise
+      (`--strict` endet dann mit Code 0); verbleibende Hinweise dem Anwender nennen.
 - [ ] Word: `titel` gesetzt (bei Deckblatt-Vorlagen), Kapitel mit `#`, keine Handnummern.
 - [ ] Präsentation: kein Inhalt unter Kapitel- und Abschluss-`#`, keine „(Forts.)"-Folien, die
       nicht gewollt sind.

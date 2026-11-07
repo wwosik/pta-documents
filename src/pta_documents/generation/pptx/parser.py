@@ -14,7 +14,8 @@ from typing import Final
 from markdown_it.token import Token
 
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import heading_attributes
+from pta_documents.generation.common import code_blocks, heading_attributes, html
+from pta_documents.generation.common.result import Notes
 from pta_documents.generation.pptx.model import (
     BREAK,
     Align,
@@ -37,9 +38,10 @@ from pta_documents.generation.pptx.model import (
     VisualSlide,
 )
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
-from pta_documents.markdown.parser import line_of, parse
+from pta_documents.markdown.parser import child_lines, line_of, parse
 
 FORMAT: Final = DocumentFormat.PPTX
+WHAT: Final = "the deck"
 
 
 @dataclass
@@ -58,10 +60,17 @@ class _Section:
 
 
 class DeckParser:
-    def __init__(self, document: MarkdownDocument, body: str, line_offset: int) -> None:
+    def __init__(
+        self,
+        document: MarkdownDocument,
+        body: str,
+        line_offset: int,
+        notes: Notes | None = None,
+    ) -> None:
         self.document = document
         self.body = body
         self.line_offset = line_offset
+        self.notes = notes if notes is not None else Notes()
         self.slides: list[Slide] = []
         self.has_cover = False
         self.chapters = 0
@@ -205,7 +214,13 @@ class DeckParser:
             case "table_open":
                 return self._table(tokens, i, out)
             case "fence" | "code_block":
+                if token.type == "fence":
+                    code_blocks.note_not_drawn(self.notes, token.info, self._line(token))
                 out.append(Code(tuple(token.content.rstrip("\n").split("\n"))))
+                return i + 1
+            case "html_block":
+                if not html.is_comment(token.content):
+                    html.note_raw_html(self.notes, self._line(token), WHAT)
                 return i + 1
             case "hr":
                 out.append(Separator())
@@ -267,8 +282,10 @@ class DeckParser:
         """Text and images apart: images after the paragraph, as their own visual."""
         runs = self._runs(inline, _Style(italic=italic), images_as_text=False)
         images = [
-            Image(self._resource(child, inline), child.content)
-            for child in (inline.children or [])
+            Image(self._resource(child, inline), child.content, line)
+            for child, line in zip(
+                inline.children or [], child_lines(inline, self.line_offset), strict=True
+            )
             if child.type == "image"
         ]
         text = _trim(runs)
@@ -324,7 +341,8 @@ class DeckParser:
                     Run(text, current.bold, current.italic, current.strike, code, current.link)
                 )
 
-        for child in inline.children or []:
+        children = inline.children or []
+        for child, line in zip(children, child_lines(inline, self.line_offset), strict=True):
             match child.type:
                 case "text":
                     add(child.content)
@@ -355,10 +373,12 @@ class DeckParser:
                     if images_as_text:
                         add(child.content)
                 case "html_inline":
-                    if "checkbox" in child.content:
+                    if html.is_checkbox(child.content):
                         add("☒" if "checked" in child.content else "☐")
-                    else:
-                        add(child.content)
+                    elif html.is_line_break(child.content):
+                        runs.append(BREAK)
+                    elif not html.is_comment(child.content):
+                        html.note_raw_html(self.notes, line, WHAT)
                 case "footnote_ref" | "footnote_anchor":
                     pass
                 case _:

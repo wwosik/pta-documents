@@ -86,3 +86,6 @@ lässt sie weg. Damit kann eine KI dem Vortragenden zu jeder Folie den Sprechtex
 
 - Abhängigkeit: `:::`-Container im Parser (E02-S02). Wird E09-S01 vorher umgesetzt, wird das
   Container-Plugin hier eingeführt und E02-S02 baut darauf auf.
+- (2026-11-07, E08-S01) Der Hinweis-Code `NoteCodes.NOTES_DROPPED` (`notes-dropped`) ist in
+  `generation/common/result.py` angelegt, wird aber noch nirgends erzeugt: der DOCX-Writer soll ihn
+  hier melden, wenn er `::: notes` weglässt (`self.notes.add(...)` im `BodyWriter`).

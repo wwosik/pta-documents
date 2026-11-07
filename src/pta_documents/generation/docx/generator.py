@@ -25,6 +25,7 @@ from pta_documents.generation.common.openxml import (
     set_update_fields,
     w,
 )
+from pta_documents.generation.common.result import GenerationResult, Notes
 from pta_documents.generation.docx.options import DocxOptions
 from pta_documents.generation.docx.writer import BodyWriter
 from pta_documents.markdown.document import MarkdownDocument, MetadataKeys
@@ -68,11 +69,15 @@ class DocxGenerator:
         document: MarkdownDocument,
         output: BinaryIO,
         options: DocxOptions | None = None,
-    ) -> None:
+    ) -> GenerationResult:
         """Write ``document`` as a DOCX to ``output``.
 
-        Raises ``DocumentConversionError`` for mistakes in the Markdown or its front matter.
+        Returns the notes on what had to be worked around (HTML left out, …), see
+        ``GenerationResult``; ``pages`` stays None, as Word counts pages only when it lays the
+        document out. Raises ``DocumentConversionError`` for mistakes in the Markdown or its
+        front matter.
         """
+        notes = Notes()
         front = FrontMatter.read(document.text, FORMAT)
         front.check_keys(VALID_KEYS, allow_status=True)
         options = apply_front_matter(front, options or DocxOptions())
@@ -97,12 +102,13 @@ class DocxGenerator:
             write_cover(result, info)
         if options.toc:
             write_toc(result, texts)
-        BodyWriter(result, document, front, options, texts).write()
+        BodyWriter(result, document, front, options, texts, notes).write()
         fill_headers_and_footers(result, info, options, texts)
         set_properties(result, info)
         if options.toc:
             set_update_fields(result.settings.element)
         result.save(output)
+        return GenerationResult(notes.to_tuple())
 
 
 def apply_front_matter(front: FrontMatter, options: DocxOptions) -> DocxOptions:

@@ -91,6 +91,8 @@ class Table:
 class Image:
     resource: DocumentResource
     alt: str
+    line: int | None = None
+    """The line of the image in the Markdown, for notes about it."""
 
 
 @dataclass(frozen=True)

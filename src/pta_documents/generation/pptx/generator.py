@@ -13,6 +13,7 @@ from pta_documents.design import slides as design
 from pta_documents.design import templates
 from pta_documents.design.variants import TEXTS, Language, SlidesVariant
 from pta_documents.errors import DocumentFormat
+from pta_documents.generation.common.result import GenerationResult, Notes
 from pta_documents.generation.pptx.model import Run, TitleSlide, plain_text
 from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.generation.pptx.parser import DeckParser
@@ -40,15 +41,18 @@ class PptxGenerator:
         document: MarkdownDocument,
         output: BinaryIO,
         options: PptxOptions | None = None,
-    ) -> None:
+    ) -> GenerationResult:
         """Write ``document`` as a PPTX to ``output``.
 
-        Raises ``DocumentConversionError`` for mistakes in the Markdown or its front matter.
+        Returns the number of slides and the notes on what had to be worked around (slides
+        split, HTML left out, …), see ``GenerationResult``. Raises ``DocumentConversionError``
+        for mistakes in the Markdown or its front matter.
         """
+        notes = Notes()
         front = FrontMatter.read(document.text, FORMAT)
         front.check_keys(VALID_KEYS, allow_status=True)
         options = apply_front_matter(front, options or PptxOptions())
-        slides = DeckParser(document, front.body, front.body_line).parse()
+        slides = DeckParser(document, front.body, front.body_line, notes).parse()
 
         first = next((s for s in slides if isinstance(s, TitleSlide)), None)
         title = (
@@ -80,7 +84,7 @@ class PptxGenerator:
         presentation = pptx.Presentation(
             io.BytesIO(templates.slides_template(options.variant, options.language))
         )
-        DeckWriter(presentation, options, TEXTS[options.language], info).write(slides)
+        DeckWriter(presentation, options, TEXTS[options.language], info, notes).write(slides)
 
         properties = presentation.core_properties
         now = dt.datetime.now(dt.UTC).replace(microsecond=0, tzinfo=None)
@@ -91,6 +95,7 @@ class PptxGenerator:
         properties.created = now
         properties.modified = now
         presentation.save(output)
+        return GenerationResult(notes.to_tuple(), slides=len(presentation.slides))
 
 
 def apply_front_matter(front: FrontMatter, options: PptxOptions) -> PptxOptions:

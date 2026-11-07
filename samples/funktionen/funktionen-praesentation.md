@@ -35,31 +35,21 @@ Text kann **fett** (in Segoe UI), *kursiv*, ~~durchgestrichen~~, `Code` und ein
 
 > Zitate erscheinen kursiv.
 
-## Viel Text wird verkleinert und fortgesetzt
+## Viel Text wird verkleinert
 
-- Punkt 1: Inhalte, die nicht auf eine Folie passen, werden zuerst verkleinert.
+- Punkt 1: Inhalte, die nicht in voller Größe auf eine Folie passen, werden verkleinert.
 - Punkt 2: Die Untergrenze ist 12 pt.
-- Punkt 3: Danach geht es auf einer weiteren Folie weiter.
-- Punkt 4: Deren Titel trägt den Zusatz „(Forts.)".
+- Punkt 3: Passt es auch dann nicht, geht es auf einer weiteren Folie mit „(Forts.)" weiter.
+- Punkt 4: Das meldet `./run.sh generate` als Hinweis `slide-split`.
 - Punkt 5: Geteilt wird zwischen Punkten, nie mitten in einem Punkt.
 - Punkt 6: Verschachtelte Punkte bleiben bei ihrem Elternpunkt.
   - zum Beispiel dieser
 - Punkt 7: Besser sind kurze Folien.
-- Punkt 8: Diese Folie zeigt das Verhalten absichtlich.
+- Punkt 8: Diese Folie zeigt das Verkleinern absichtlich.
 - Punkt 9: Noch ein Punkt.
 - Punkt 10: Noch ein Punkt.
 - Punkt 11: Noch ein Punkt.
 - Punkt 12: Noch ein Punkt.
-- Punkt 13: Noch ein Punkt.
-- Punkt 14: Noch ein Punkt.
-- Punkt 15: Noch ein Punkt.
-- Punkt 16: Noch ein Punkt.
-- Punkt 17: Noch ein Punkt.
-- Punkt 18: Noch ein Punkt.
-- Punkt 19: Noch ein Punkt.
-- Punkt 20: Noch ein Punkt.
-- Punkt 21: Noch ein Punkt.
-- Punkt 22: Noch ein Punkt.
 
 # Tabellen und Code
 
@@ -77,7 +67,7 @@ Text vor der Tabelle steht oben.
 
 Text nach der Tabelle steht unten, zum Beispiel eine Quelle.
 
-## Lange Tabellen werden geteilt
+## Längere Tabelle
 
 | Nr. | Eintrag | Wert |
 | --- | ------- | ---: |
@@ -90,11 +80,8 @@ Text nach der Tabelle steht unten, zum Beispiel eine Quelle.
 | 7 | Zeile | 70 |
 | 8 | Zeile | 80 |
 | 9 | Zeile | 90 |
-| 10 | Zeile | 100 |
-| 11 | Zeile | 110 |
-| 12 | Zeile | 120 |
-| 13 | Zeile | 130 |
-| 14 | Zeile | 140 |
+
+Längere Tabellen werden mit wiederholter Kopfzeile geteilt (Hinweis `slide-split`).
 
 ## Code
 
@@ -109,13 +96,13 @@ PptxGenerator().generate(document, output)
 ## Bild mit Text
 
 Ein Bild und Text ergeben das Layout „Titel, Text und Bild 01"; das Bild füllt seinen Rahmen
-und wird beschnitten.
+und wird beschnitten. Dieses Bild hat schon die Proportionen des Rahmens.
 
-![Balkendiagramm](images/diagramm.png)
+![Balkendiagramm](images/diagramm-folie.png)
 
 ## Bild allein
 
-![Breites Bild](images/banner.png)
+![Breites Bild](images/banner-folie.png)
 
 ## Bilder nebeneinander
 

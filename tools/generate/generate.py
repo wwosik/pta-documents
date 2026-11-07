@@ -1,6 +1,6 @@
 """Generate PTA documents from Markdown files.
 
-usage: ./run.sh generate <file-or-folder> [...] [--docx | --pptx] [--out <folder>]
+usage: ./run.sh generate <file-or-folder> [...] [--docx | --pptx] [--out <folder>] [--strict]
 
 A folder means every ``*.md`` in it. The target format comes from the file name —
 ``…-bericht.md`` / ``…-dokument.md`` → DOCX, ``…-praesentation.md`` / ``…-folien.md`` → PPTX —
@@ -8,6 +8,9 @@ or from ``--docx`` / ``--pptx``. Images are the image files below the Markdown f
 referenced relative to it (``images/foto.jpg``). The result is written next to the Markdown
 file unless ``--out`` names another folder. Mistakes in a document are reported with what to
 change; the other files are still generated.
+
+After each file come the notes on what the generator had to work around (``  - line 12: …``).
+Notes are not errors: the exit code is 1 only for errors, or with ``--strict`` also for notes.
 """
 
 from __future__ import annotations
@@ -16,6 +19,7 @@ import sys
 from pathlib import Path
 
 from pta_documents.errors import DocumentConversionError
+from pta_documents.generation.common.result import GenerationResult
 from pta_documents.generation.docx.generator import DocxGenerator
 from pta_documents.generation.pptx.generator import PptxGenerator
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
@@ -45,7 +49,13 @@ def target_format(source: Path, forced: str | None) -> str | None:
     return None
 
 
-def generate(source: Path, forced: str | None, out: Path | None) -> bool:
+def print_notes(result: GenerationResult) -> None:
+    for note in result.notes:
+        print(f"  - {note}")
+
+
+def generate(source: Path, forced: str | None, out: Path | None, strict: bool = False) -> bool:
+    """Generate one file; False on an error (or, with ``strict``, on notes)."""
     format = target_format(source, forced)
     if format is None:
         print(
@@ -59,23 +69,27 @@ def generate(source: Path, forced: str | None, out: Path | None) -> bool:
     generator = DocxGenerator() if format == "docx" else PptxGenerator()
     try:
         with target.open("wb") as stream:
-            generator.generate(document, stream)
+            result = generator.generate(document, stream)
     except DocumentConversionError as error:
         target.unlink(missing_ok=True)
         print(f"ERROR {source}: {error.reason}", file=sys.stderr)
         return False
     print(f"wrote {target}")
-    return True
+    print_notes(result)
+    return not (strict and result.notes)
 
 
 def main(argv: list[str]) -> int:
     forced: str | None = None
     out: Path | None = None
+    strict = False
     paths: list[Path] = []
     args = iter(argv)
     for arg in args:
         if arg in ("--docx", "--pptx"):
             forced = arg[2:]
+        elif arg == "--strict":
+            strict = True
         elif arg == "--out":
             out = Path(next(args))
         else:
@@ -89,7 +103,7 @@ def main(argv: list[str]) -> int:
         for source in files:
             if source.name.lower() in ("readme.md", "quellen.md"):
                 continue
-            ok &= generate(source, forced, out)
+            ok &= generate(source, forced, out, strict)
     return 0 if ok else 1
 
 

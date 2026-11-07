@@ -181,5 +181,22 @@ Fehler im Dokument melden sich als `DocumentConversionError` mit einem Satz, der
 - `… is a image/svg+xml` → SVG geht noch nicht; als PNG exportieren.
 - `The PTA layout of a chapter slide has no place for content` → Inhalt unter ein `##`.
 
+Neben Fehlern gibt es **Hinweise**: das Dokument wurde geschrieben, aber der Generator musste
+etwas umgehen. `./run.sh generate` zeigt sie eingerückt unter der Datei, mit Zeilennummer im
+Markdown (das Front Matter mitgezählt):
+
+```
+wrote documents/kunde/kunde-praesentation.pptx
+  - line 14: The slide "Kosten" has too much for one slide and continues on 1 more. Split it in the Markdown or shorten it.
+  - line 30: Raw HTML is left out of the deck. Write it in Markdown, or leave it out.
+```
+
+Hinweise sind keine Fehler, aber fast immer ein Grund, das Markdown zu ändern: eine
+„(Forts.)"-Folie heißt meist zu viel Inhalt — besser selbst auf zwei Folien mit eigenen Titeln
+aufteilen. Rohes HTML wird weggelassen, `mermaid`- und `chart`-Blöcke erscheinen (noch) als
+Code, beschnittene oder stark vergrößerte Bilder besser in passender Größe und passenden
+Proportionen ablegen. `--strict` lässt den Befehl bei Hinweisen wie bei Fehlern mit Code 1
+enden. Alle Codes: [verwendung.md](verwendung.md#hinweise-generationresult).
+
 Word fragt beim Öffnen eines Dokuments mit Inhaltsverzeichnis, ob Felder aktualisiert werden
 sollen — mit „Ja" bestätigen, dann füllt Word das Verzeichnis.

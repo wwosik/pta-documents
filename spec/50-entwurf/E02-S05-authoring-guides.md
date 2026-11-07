@@ -73,3 +73,6 @@ generiert. Die Guides selbst schreiben E03-S05, E04-S06 und E05-S05.
 > (2026-11-07) Nur Deutsch.
 
 ## Notizen
+
+- (2026-11-07, E08-S01) Der Abschnitt „Hinweise, die zurückkommen können" listet `NoteCodes.ALL`
+  (`generation/common/result.py`); die Tabelle in `docs/verwendung.md` (Hinweise) ist die Vorlage.
