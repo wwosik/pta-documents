@@ -91,3 +91,9 @@ Vektoren bzw. Bilder gesetzt.
   alternatives)` in `generation/common/result.py` ist als Port von `GenerationNotes.Characters`
   vorhanden und getestet; hier nur noch mit den Schriftprüfungen aufrufen. `alternatives`
   ersetzt `AuthoringGuides.Symbols` (Zeichen → Ersatz in Vorzugsreihenfolge).
+- (2026-11-07, E02-S02) Lesen und Prüfen der Folien-Syntax ist fertig: der PDF-Generator ruft
+  vor dem Schreiben `front.status_labels()` und `layout_syntax.check(tokens, DocumentFormat.PDF,
+  front.body_line)` auf und nimmt Überschriften über `layout_syntax.without_attributes`, farbige
+  Wörter über `layout_syntax.coloured` (Textkinder mit `meta[STATUS]`); die Fehlerfälle der Tests
+  in `tests/generation/common/test_layout_syntax.py` (dort für DOCX/PPTX parametrisiert) um PDF
+  ergänzen — das ist der Port von `SlideLayoutSyntaxTests.Mistakes_Throw_LikeInDecks`.

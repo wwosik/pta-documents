@@ -140,6 +140,17 @@ Einleitender Satz.              ← Textebene „Einleitungstext"
 - Text vor dem ersten `#` wird ignoriert. Fotos brauchen ihren Urheber auf der Folie, wenn die
   Lizenz das verlangt (siehe `samples/gsb/`).
 
+### Folien-Syntax
+
+Für Flow-Folien gibt es eine eigene Syntax, die Word und PowerPoint schon **annehmen und
+prüfen**, aber noch nicht gestalten (die Gestaltung folgt): Container `::: cards`, `::: rows`,
+`::: panel` (auch `::: panel dark`), `::: statement`, `::: columns 1:2` … `:::`; Hinweiskästen
+`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`; `==Markierung==`; farbige
+Wörter `[im Plan]{.success}` (`.warning`, `.danger`, `.info`, `.neutral`); an `##`-Überschriften
+`{.dark}` und `{kicker="Warum"}`; im Front Matter `status.success: Erledigt` usw. Heute bleibt
+davon der Inhalt als normaler Text stehen (farbige Wörter fett). Ein Tippfehler ergibt eine
+Fehlermeldung mit Zeilennummer und den gültigen Namen.
+
 ## 6. Aus Python aufrufen (optional)
 
 ```python

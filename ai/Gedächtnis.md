@@ -26,8 +26,9 @@ weil ihm vertraut wird.
   (`common/`, `docx/`, `pptx/`).
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
-  eingebettete Vorlagen. PDF, Diagramme/Charts, PDF-Konverter, Folien-Syntax und Flow-Layouts
-  sind nur geplant. Bedienung: `docs/verwendung.md`.
+  eingebettete Vorlagen. PDF, Diagramme/Charts, PDF-Konverter und Flow-Layouts
+  sind nur geplant; die Folien-Syntax wird seit E02-S02 gelesen und geprüft, aber noch nicht
+  gestaltet. Bedienung: `docs/verwendung.md`.
 - **Zweite Referenz:** `~/mvv/vt-tools-libs` (Schwesterbibliothek von DocLibs für die MVV,
   .NET) ist seit DocLibs `2610.28.22` weitergegangen — Hinweise an den Schreiber
   (`GenerationResult`), Sprechernotizen, Builds, Übergänge, Szenen, HTML-Decks,
@@ -94,5 +95,15 @@ weil ihm vertraut wird.
   (die Konverter schreiben `<br>` in Tabellenzellen), die Checkbox des Tasklist-Plugins.
 - Inline-Token haben kein eigenes `map`-Feld pro Kind; die Zeile eines Kindes liefert
   `markdown.parser.child_lines(inline, offset)` (zählt Soft-/Hardbreaks).
+- **Folien-Syntax** (E02-S02): Der Parser nimmt Container **jedes** Namens an (Token
+  `container_layout_open`, Name/Argumente über `markdown.parser.container(token)`); gültige Namen
+  prüft erst `layout_syntax.check`, das beide Generatoren vor dem Schreiben aufrufen. Neue
+  Container, Alerts oder Heading-Attribute dort bzw. in `heading_attributes.py` eintragen (eine
+  Stelle für alle Formate). `==mark==` ist eine eigene Inline-Regel (`markdown/mark.py`) —
+  mdit-py-plugins hat keine. Fehler dieser Prüfung beginnen mit `Line N: `; ältere Meldungen des
+  PPTX-Parsers hängen `(line N)` an.
+- Farbige Wörter werden auf **Token-Ebene** zerlegt (`layout_syntax.coloured`: Textkinder mit
+  `meta[STATUS]`), bevor ein Writer Runs baut — so maskieren Softbreaks und Code, auch wenn ein
+  Writer einen Softbreak später als Leerzeichen schreibt.
 - python-docx zeigt Stilnamen als UI-Namen („Heading 1"); verglichen wird mit dem `w:name` aus
   `styles.xml` („heading 1").

@@ -76,8 +76,9 @@ Word-Dokument sind Fehler.
   `![Alt-Text](images/a.jpg "Unterschrift (Foto: Name, CC BY 4.0)")` → „Abbildung n: …".
 - Kein HTML (wird weggelassen, Hinweis `raw-html`; nur `<br>` in Tabellenzellen ist ein
   Zeilenumbruch), keine Diagramme/Mermaid/`chart`-Blöcke (werden als Code gezeigt, Hinweis
-  `code-not-drawn`), keine `:::`-Container, Alerts (`> [!NOTE]`) oder `==Markierung==` — das ist geplant,
-  aber noch nicht umgesetzt; es erscheint als normaler Text.
+  `code-not-drawn`).
+- Folien-Syntax (`:::`-Container, Alerts `> [!NOTE]`, `==Markierung==`, `[Wörter]{.success}`)
+  wird angenommen und geprüft, aber **noch nicht gestaltet**: siehe *Folien-Syntax* unten.
 
 ## Präsentation
 
@@ -104,8 +105,26 @@ Gliederung:
   es mehr als doppelt vergrößert (`image-enlarged`), kommt ein Hinweis — dann ein Bild in
   passenden Proportionen bzw. höherer Auflösung ablegen.
 - Ein bestimmtes PTA-Layout: `## Titel {layout="Titel und Text (zweispaltig)"}` und den Inhalt mit
-  `---` in Spalten teilen. Nur exakte Layoutnamen; die Fehlermeldung listet alle. Andere
-  Attribute als `.closing` und `layout="…"` sind Fehler.
+  `---` in Spalten teilen. Nur exakte Layoutnamen; die Fehlermeldung listet alle.
+- Heading-Attribute: `#` kennt `.closing` und `layout="…"`, `##` kennt `.dark`, `kicker="…"` und
+  `layout="…"`; alles andere ist ein Fehler. `.dark` und `kicker` werden heute noch entfernt
+  (Gestaltung folgt).
+
+## Folien-Syntax (Word und PowerPoint)
+
+Beide Formate nehmen dieselbe Syntax an und melden dieselben Fehler mit Zeilennummer
+(`Line 12: …`). Gestaltet wird sie noch nicht — bis dahin gilt:
+
+| Schreiben | Gültig | Ergebnis heute |
+| --------- | ------ | -------------- |
+| `::: cards` … `:::` (außen `::::`, wenn verschachtelt) | `cards`, `rows`, `panel`, `panel dark`, `statement`, `columns`, `columns 1:2` | Zäune fallen weg, Inhalt bleibt normaler Text |
+| `> [!NOTE]` als erste Zeile eines Zitats | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | normales Zitat ohne die Markierung |
+| `==Wort==` | – | normaler Text |
+| `[im Plan]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | fett, ohne Klammern |
+| Front Matter `status.success: Erledigt; Fertig` | dieselben fünf Kategorien, jeder Text einmal | geprüft |
+
+Andere Namen sind Fehler; die Meldung listet die gültigen. Klammern, die nicht genau so aussehen
+(`[a] {.success}`, `## Mengen {a, b}`), bleiben Text.
 - Text vor dem ersten `#` wird ignoriert; Fußnoten werden auf Folien weggelassen.
 
 ## Aus Python statt per Befehl

@@ -29,7 +29,12 @@ from PIL import Image
 from pta_documents.design import word
 from pta_documents.design.variants import GeneratedTexts
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import code_blocks, html, text_metrics
+from pta_documents.generation.common import (
+    code_blocks,
+    html,
+    layout_syntax,
+    text_metrics,
+)
 from pta_documents.generation.common.openxml import R, field_paragraph_runs, w
 from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.common.text_metrics import TextRun
@@ -112,6 +117,7 @@ class BodyWriter:
     def write(self) -> None:
         env: dict[str, object] = {}
         tokens = create_parser().parse(self.front.body, env)
+        layout_syntax.check(tokens, FORMAT, self.front.body_line)
         end = next((i for i, t in enumerate(tokens) if t.type == "footnote_block_open"), None)
         if end is not None:
             self._collect_footnotes(tokens[end:])
@@ -132,7 +138,9 @@ class BodyWriter:
                 styles = word.STYLES
                 heading = styles.headings[level - 1] if level <= 3 else styles.sub_heading
                 paragraph = self.paragraph(heading)
-                self.inline(paragraph, tokens[i + 1])
+                # Heading attributes are checked, but have no effect in Word.
+                inline, _ = layout_syntax.without_attributes(tokens[i + 1], level, FORMAT)
+                self.inline(paragraph, inline)
                 return i + 3
             case "paragraph_open":
                 return self.paragraph_block(tokens, i, style)
@@ -482,11 +490,18 @@ class BodyWriter:
     def _inline_children(self, context: _Inline, token: Token, skip: tuple[str, ...] = ()) -> None:
         """The children of the inline ``token`` (without those of a type in ``skip``)."""
         stack: list[etree._Element] = []
+        # Coloured words are bold; their status character styles come with E03-S03.
+        token = layout_syntax.coloured(token, FORMAT)
         children = token.children or []
         for child, line in zip(children, child_lines(token, self.front.body_line), strict=True):
             if child.type in skip:
                 continue
             match child.type:
+                case "text" if layout_syntax.STATUS in child.meta:
+                    bold = context.format.bold
+                    context.format.bold = True
+                    self._run(context, child.content)
+                    context.format.bold = bold
                 case "text":
                     self._run(context, child.content)
                 case "softbreak":

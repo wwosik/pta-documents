@@ -14,7 +14,12 @@ from typing import Final
 from markdown_it.token import Token
 
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import code_blocks, heading_attributes, html
+from pta_documents.generation.common import (
+    code_blocks,
+    heading_attributes,
+    html,
+    layout_syntax,
+)
 from pta_documents.generation.common.result import Notes
 from pta_documents.generation.pptx.model import (
     BREAK,
@@ -77,6 +82,7 @@ class DeckParser:
 
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
+        layout_syntax.check(tokens, FORMAT, self.line_offset)
         end = next((i for i, t in enumerate(tokens) if t.type == "footnote_block_open"), None)
         if end is not None:
             tokens = tokens[:end]
@@ -109,7 +115,7 @@ class DeckParser:
             # Text before the first heading is ignored, as in DocLibs.
             return
         open_token, inline = heading
-        title, attributes = self._title(inline)
+        title, attributes = self._title(inline, int(open_token.tag[1]))
         line = self._line(open_token)
         layout = attributes.layout if attributes else None
         if open_token.tag == "h1":
@@ -154,18 +160,10 @@ class DeckParser:
             )
 
     def _title(
-        self, inline: Token
+        self, inline: Token, level: int
     ) -> tuple[tuple[Run, ...], heading_attributes.HeadingAttributes | None]:
-        runs = self._runs(inline, _Style(), images_as_text=True)
-        attributes = None
-        if runs and not runs[-1].is_break and runs[-1].link is None:
-            last = runs[-1]
-            text, attributes = heading_attributes.split(last.text, FORMAT)
-            if attributes is not None:
-                runs = runs[:-1] + (
-                    [Run(text, last.bold, last.italic, last.strike)] if text else []
-                )
-        return tuple(_trim(runs)), attributes
+        inline, attributes = layout_syntax.without_attributes(inline, level, FORMAT)
+        return tuple(_trim(self._runs(inline, _Style(), images_as_text=True))), attributes
 
     def _content(self, heading_runs: tuple[Run, ...], items: list[Item], line: int | None) -> None:
         above: list[Paragraph] = []
@@ -332,6 +330,9 @@ class DeckParser:
     # ------------------------------------------------------------------ inline
 
     def _runs(self, inline: Token, style: _Style, images_as_text: bool) -> list[Run]:
+        """The runs of an inline token; ``[words]{.success}`` bold without brackets and braces
+        (their colour comes with E04-S03)."""
+        inline = layout_syntax.coloured(inline, FORMAT)
         runs: list[Run] = []
         current = _Style(style.bold, style.italic, style.strike, style.link)
 
@@ -344,6 +345,11 @@ class DeckParser:
         children = inline.children or []
         for child, line in zip(children, child_lines(inline, self.line_offset), strict=True):
             match child.type:
+                case "text" if layout_syntax.STATUS in child.meta:
+                    bold = current.bold
+                    current.bold = True
+                    add(child.content)
+                    current.bold = bold
                 case "text":
                     add(child.content)
                 case "softbreak":

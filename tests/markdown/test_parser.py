@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from pta_documents.errors import DocumentFormat
 from pta_documents.markdown.front_matter import FrontMatter
-from pta_documents.markdown.parser import line_of, parse
+from pta_documents.markdown.parser import (
+    ALERT,
+    CONTAINER_CLOSE,
+    CONTAINER_OPEN,
+    container,
+    line_of,
+    parse,
+)
 
 SAMPLE = """---
 titel: Beispiel
@@ -68,3 +75,33 @@ def test_all_block_types_are_parsed_with_lines() -> None:
 def test_raw_html_is_text() -> None:
     tokens = parse("<b>x</b>\n")
     assert all(t.type != "html_block" for t in tokens)
+
+
+def test_containers_of_any_name_nest_with_longer_fences() -> None:
+    tokens = parse(":::: panel\n**F**\n\n::: cards dark\n- a\n:::\n::::\n\n:::\nno name\n:::\n")
+    opened = [container(t) for t in tokens if t.type == CONTAINER_OPEN]
+    assert opened == [("panel", ""), ("cards", "dark")]
+    assert sum(t.type == CONTAINER_CLOSE for t in tokens) == 2
+    # A fence without a name is no container but text.
+    assert any(t.type == "inline" and t.content.startswith(":::") for t in tokens)
+
+
+def test_marks_are_tokens() -> None:
+    inline = next(
+        t for t in parse("Some ==marked== text, a=b and ===x===.\n") if t.type == "inline"
+    )
+    children = inline.children or []
+    assert [c.type for c in children][:5] == ["text", "mark_open", "text", "mark_close", "text"]
+    assert children[2].content == "marked"
+    assert "a=b" in "".join(c.content for c in children)
+
+
+def test_alerts_lose_their_marker_and_keep_the_kind() -> None:
+    tokens = parse("> [!note]\n> **Fair:** text\n\n> [!WARNING]\n>\n> later\n\n> [!TIP] inline\n")
+    quotes = [t for t in tokens if t.type == "blockquote_open"]
+    assert [q.meta.get(ALERT) for q in quotes] == ["NOTE", "WARNING", None]
+    inlines = [t for t in tokens if t.type == "inline"]
+    assert inlines[0].content == "**Fair:** text"
+    assert inlines[0].map == [1, 2]
+    assert inlines[1].content == "later"
+    assert inlines[2].content == "[!TIP] inline"

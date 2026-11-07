@@ -77,6 +77,31 @@ eine Bildreihe bekommt eine eigene Folie (Text davor oben, danach unten); ein Bi
 kommt auf `Titel, Text und Bild 01`. Zu viel Inhalt wird bis 12 pt verkleinert und sonst auf
 „(Forts.)"-Folien fortgesetzt.
 
+## Folien-Syntax (gemeinsam für Word und PowerPoint)
+
+Beide Generatoren lesen und prüfen dieselbe Folien-Syntax aus DocLibs, bevor sie schreiben
+(`generation/common/layout_syntax.check`); ein Fehler ist eine `DocumentConversionError`, deren
+`reason` mit der Zeile beginnt (`Line 12: Unknown container '::: card'. Valid containers: …`,
+Front Matter mitgezählt).
+
+| Syntax | Gültig | Heute in Word und PowerPoint |
+| ------ | ------ | ---------------------------- |
+| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"` | `.closing`/`layout` wirken in PowerPoint (s. o.); `.dark`/`kicker` und in Word alle werden entfernt (gezeichnet ab E04-S03/E03-S03) |
+| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`) | Zäune entfallen, der Inhalt steht als normale Blöcke da |
+| Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | Markierungszeile entfällt, der Rest ist ein Zitat |
+| `==Markierung==` | – | Gleichheitszeichen entfallen, Text normal |
+| `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen, Wörter fett (Farbe ab E03-S03/E04-S03) |
+| Front Matter `status.<kategorie>: Text; Text` | dieselben fünf Kategorien, jeder Text nur einmal | geprüft; Status-Labels in Tabellen ab E03-S03/E04-S03 |
+
+Andere geschweifte und eckige Klammern bleiben Text (`## Mengen {a, b}`, `[a] {.success}`,
+`` `[a]{.success}` ``, `[a](https://…){.x}`); farbige Wörter gelten nie in Code und nie über
+einen Zeilenumbruch. Die Bausteine für die späteren Zeichner: `markdown/parser.py`
+(`CONTAINER_OPEN`, `container(token)`, `blockquote_open.meta[ALERT]`, Token `mark_open`),
+`generation/common/heading_attributes.py` (`split`, `check_level`, `VALID`),
+`layout_syntax.py` (`CONTAINERS`, `ALERTS`, `check_container`, `is_important`, `column_widths`,
+`columns`, `coloured`), `coloured_words.py` (`apply` über beliebige Runs) und
+`layout_tokens.py` (`tags`, `labelled_tags`, `label_cell`, `marked_row`, `only_images`).
+
 ## Hinweise (`GenerationResult`)
 
 `generate()` beider Generatoren gibt ein `GenerationResult` zurück (`pta_documents.GenerationResult`,

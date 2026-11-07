@@ -163,7 +163,7 @@ def test_title_from_front_matter_makes_a_cover() -> None:
         ("---\nfirma: X\n---\n# A\n", "'firma' is not supported here"),
         ("# A\n\n# B\n\nText unter dem Kapitel\n", "no place for content"),
         ('# A\n\n## B {layout="Gibt es nicht"}\n', "no layout 'Gibt es nicht'"),
-        ("# A\n\n## B {.dark}\n", "Unknown heading attribute '.dark'"),
+        ("# A\n\n## B {.wide}\n", "Unknown heading attribute '.wide'"),
         ("# A\n\n## B {.closing}\n", "{.closing} goes on a '#' heading"),
         ("# A\n\n## B\n\n![x](images/fehlt.png)\n", "'images/fehlt.png' is not among"),
     ],

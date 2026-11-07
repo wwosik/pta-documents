@@ -80,6 +80,7 @@ class DocxGenerator:
         notes = Notes()
         front = FrontMatter.read(document.text, FORMAT)
         front.check_keys(VALID_KEYS, allow_status=True)
+        front.status_labels()  # raises for an unknown category or a label in two
         options = apply_front_matter(front, options or DocxOptions())
         info = DocumentInfo(
             title=front.get(Keys.TITLE) or document.metadata.get(MetadataKeys.TITLE),
