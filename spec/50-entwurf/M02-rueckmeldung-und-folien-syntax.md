@@ -12,7 +12,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| [E08-S01](E08-S01-hinweise-aus-der-erzeugung.md) | Hinweise aus der Erzeugung | Entwurf |
+| [E08-S01](../55-in-arbeit/docs-2/E08-S01-hinweise-aus-der-erzeugung.md) | Hinweise aus der Erzeugung | in Bearbeitung (docs-2) |
 | [E02-S02](E02-S02-folien-syntax.md) | Folien-Syntax: Heading-Attribute, Container, Alerts, Markierungen, Status-Labels | Entwurf |
 | [E02-S04](E02-S04-code-block-renderer-und-bildkonverter.md) | Code-Block-Renderer und Bildkonverter | Entwurf |
 | [E04-S03](E04-S03-flow-layouts-im-pta-stil.md) | Flow-Layouts im PTA-Stil | Entwurf |
