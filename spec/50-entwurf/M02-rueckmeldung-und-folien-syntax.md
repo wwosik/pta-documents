@@ -14,7 +14,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | ----- | ------ | ------ |
 | [E08-S01](../60-prüfung/E08-S01-hinweise-aus-der-erzeugung.md) | Hinweise aus der Erzeugung | in Prüfung |
 | [E02-S02](../60-prüfung/E02-S02-folien-syntax.md) | Folien-Syntax: Heading-Attribute, Container, Alerts, Markierungen, Status-Labels | in Prüfung |
-| [E02-S04](E02-S04-code-block-renderer-und-bildkonverter.md) | Code-Block-Renderer und Bildkonverter | Entwurf |
+| [E02-S04](../55-in-arbeit/docs-2/E02-S04-code-block-renderer-und-bildkonverter.md) | Code-Block-Renderer und Bildkonverter | in Bearbeitung (docs-2) |
 | [E04-S03](E04-S03-flow-layouts-im-pta-stil.md) | Flow-Layouts im PTA-Stil | Entwurf |
 | [E04-S04](E04-S04-weitere-layouts.md) | Weitere Layouts: Agenda, Zwischenfazit, Zitat, Kontakt, Diagramme | Entwurf |
 | [E03-S03](E03-S03-folien-syntax-in-word.md) | Folien-Syntax in Word | Entwurf |

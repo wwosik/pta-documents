@@ -1,8 +1,8 @@
 # E02-S04 Code-Block-Renderer und Bildkonverter
 
-> Status: Entwurf
-> Epic: [E02 Markdown-Grundlagen der Generatoren](E02-markdown-grundlagen.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E02 Markdown-Grundlagen der Generatoren](../../50-entwurf/E02-markdown-grundlagen.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
