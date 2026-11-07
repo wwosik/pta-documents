@@ -1,8 +1,8 @@
 # E04-S04 Weitere Layouts: Agenda, Zwischenfazit, Zitat, Kontakt, Diagramme
 
-> Status: Entwurf
-> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](E04-pptx-generator.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](../../50-entwurf/E04-pptx-generator.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
