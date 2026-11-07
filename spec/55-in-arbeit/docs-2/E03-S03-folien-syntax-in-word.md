@@ -1,8 +1,8 @@
 # E03-S03 Folien-Syntax in Word
 
-> Status: Entwurf
-> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](E03-docx-generator.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E03 DOCX-Generator auf den PTA-Word-Vorlagen](../../50-entwurf/E03-docx-generator.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
