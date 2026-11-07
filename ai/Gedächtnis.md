@@ -145,3 +145,8 @@ eigenen Formatvorlagen. Bedienung:
   nicht an der Style-ID. Fett aus einer Zeichenvorlage sieht `run.bold` nicht (`run.style.font`).
 - python-docx zeigt Stilnamen als UI-Namen („Heading 1"); verglichen wird mit dem `w:name` aus
   `styles.xml` („heading 1").
+- **Sprechernotizen** (E09-S01): `DeckParser._take_notes` entfernt jedes `::: notes` vor dem
+  Lesen aus den Token und hängt die Absätze als `Slide.notes` (kw-only) an **alle** Folien der
+  Überschrift; `DeckWriter.new_slide` schreibt sie (`generation/pptx/notes.py`). Wer neue
+  Folienarten baut, muss dafür nichts tun, solange er `new_slide` nutzt. Word meldet
+  `notes-dropped`.

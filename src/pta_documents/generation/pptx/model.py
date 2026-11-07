@@ -149,6 +149,8 @@ Item = Paragraph | Table | Images | Code | Chart | Separator
 class Slide:
     title: tuple[Run, ...]
     line: int | None = None
+    notes: tuple[Paragraph, ...] = field(default=(), kw_only=True)
+    """The speaker notes (``::: notes`` of the heading): on every slide written for it."""
 
 
 @dataclass(frozen=True)

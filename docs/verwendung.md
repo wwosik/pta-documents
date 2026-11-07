@@ -149,6 +149,23 @@ Tabelle oder einem Bild bekommt eine eigene Folie; auf einer Flow-Folie ist er e
 `chart`-Renderer und den PTA-Diagrammstil liefert E06-S01; Word wirft für Charts bis dahin
 „does not support yet", Zeichnungen (`DrawingGraphic`) in beiden Formaten bis E02-S03/E06.
 
+### Sprechernotizen (E09-S01)
+
+Ein Container `::: notes` … `:::` (ohne Argumente, auch in anderen Containern) gehört zur
+Überschrift (`#` oder `##`), unter der er steht. `DeckParser` nimmt alle `::: notes` vor dem
+Lesen aus den Token (`_take_notes`), so dass sie keine Folie zur Flow-Folie machen und unter
+Titel-, Trenn- und Abschlussfolie erlaubt sind; mehrere Blöcke einer Überschrift werden
+zusammengefügt (`Slide.notes`). Jede Folie, die für die Überschrift entsteht, bekommt sie —
+auch jede „(Forts.)"-Folie und die Folgefolien eines zweiten Visuals (Entscheidung
+2026-11-07). `generation/pptx/notes.py` (`write_notes`, aus `DeckWriter.new_slide`) legt mit
+python-pptx die Notizenfolie auf dem Notizenmaster der PTA-Vorlage an und schreibt die Absätze
+in dessen Platzhalter `body`: Text auf Ebene 0, Listenpunkte auf Ebene 1–3 (die Aufzählungszeichen
+des Masters), nummerierte mit `buAutoNum`; fett, kursiv, Code (Consolas) und Links bleiben.
+Tabellen, Bilder, Codeblöcke und Linien in Notizen entfallen ohne Fehler. Ein Deck ohne
+`::: notes` hat keine `ppt/notesSlides/`. Ein `::: notes` vor dem ersten `#`/`##` ist ein Fehler
+von `layout_syntax.check` (`Line 3: A '::: notes' belongs under a heading: …`). Word lässt
+Notizen weg und meldet `notes-dropped`.
+
 ## Folien-Syntax (gemeinsam für Word und PowerPoint)
 
 Beide Generatoren lesen und prüfen dieselbe Folien-Syntax aus DocLibs, bevor sie schreiben
@@ -159,7 +176,7 @@ Front Matter mitgezählt).
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
 | Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
-| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment` | PowerPoint: Flow-Folien; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis" |
+| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
 | `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen; PowerPoint fett in der Signalfarbe, Word Zeichenvorlage „Status …" |
@@ -304,6 +321,10 @@ for image in document.resources:
 ```
 
 `ConversionOptions(resource_path_prefix="images/", include_images=True)` steuert die Bilder.
+Der PPTX-Konverter gibt die Notizenseite einer Folie (Platzhalter `body` der `notesSlide`)
+nach deren Inhalt als `::: notes` … `:::` aus, Listenebenen als `-`-Listen; leere Notizen und
+Notizen nur aus dem Aufforderungstext des Notizenmasters entfallen. `ConversionOptions(notes=False)`
+lässt sie weg.
 
 ## Beispiele
 

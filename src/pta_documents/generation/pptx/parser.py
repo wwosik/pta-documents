@@ -102,6 +102,8 @@ class DeckParser:
         self.chapters = 0
         self.dark = False
         """The current slide is dark (``## Title {.dark}``): for the code-block renderers."""
+        self.speaker_notes: dict[int, tuple[Paragraph, ...]] = {}
+        """The ``::: notes`` of each section: by the index of its heading in ``tokens``."""
 
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
@@ -109,7 +111,9 @@ class DeckParser:
         end = next((i for i, t in enumerate(tokens) if t.type == "footnote_block_open"), None)
         if end is not None:
             tokens = tokens[:end]
+        tokens, speaker_notes = self._take_notes(tokens)
         self.tokens = tokens
+        self.speaker_notes = speaker_notes
         heading: tuple[Token, Token] | None = None
         start = 0
         i = 0
@@ -142,6 +146,14 @@ class DeckParser:
         if heading is None:
             # Text before the first heading is ignored, as in DocLibs.
             return
+        first = len(self.slides)
+        self._slides_of(heading, start, end)
+        notes = self.speaker_notes.get(start - 3, ())
+        if notes:
+            # On every slide of the heading (decision 2026-11-07), split ones included.
+            self.slides[first:] = [replace(s, notes=notes) for s in self.slides[first:]]
+
+    def _slides_of(self, heading: tuple[Token, Token], start: int, end: int) -> None:
         open_token, inline = heading
         title, attributes = self._title(inline, int(open_token.tag[1]))
         line = self.line(open_token)
@@ -209,6 +221,74 @@ class DeckParser:
             self.slides.append(LayoutSlide(title, line, layout, tuple(segments)))
             return
         self._content(title, section, line)
+
+    # ------------------------------------------------------------------ speaker notes
+
+    def _take_notes(
+        self, tokens: list[Token]
+    ) -> tuple[list[Token], dict[int, tuple[Paragraph, ...]]]:
+        """``tokens`` without their ``::: notes`` (at any depth), and the paragraphs of those of
+        each section by the index of its heading in the tokens returned; several blocks of a
+        section are joined. ``layout_syntax.check`` rejects notes before the first heading."""
+        kept: list[Token] = []
+        notes: dict[int, list[Paragraph]] = {}
+        heading: int | None = None
+        i = 0
+        while i < len(tokens):
+            token = tokens[i]
+            if token.type == "heading_open" and token.tag in ("h1", "h2") and token.level == 0:
+                heading = len(kept)
+            if token.type == CONTAINER_OPEN and container(token)[0] == layout_syntax.NOTES:
+                end = flow_parser.block_end(tokens, i)
+                if heading is not None:
+                    paragraphs = notes.setdefault(heading, [])
+                    self._note_blocks(tokens, i + 1, end - 1, paragraphs, Kind.INTRO, 0, 1)
+                i = end
+                continue
+            kept.append(token)
+            i += 1
+        return kept, {k: tuple(v) for k, v in notes.items() if v}
+
+    def _note_blocks(
+        self,
+        tokens: list[Token],
+        start: int,
+        stop: int,
+        out: list[Paragraph],
+        kind: Kind,
+        depth: int,
+        number: int,
+    ) -> None:
+        """The text of the blocks ``tokens[start:stop]`` as note paragraphs: list items of
+        ``kind`` at ``depth``; tables, images, code and lines are left out."""
+        j = start
+        while j < stop:
+            token = tokens[j]
+            end = flow_parser.block_end(tokens, j)
+            match token.type:
+                case "paragraph_open" | "heading_open" | "dt_open":
+                    style = Style(bold=token.type != "paragraph_open")
+                    runs = trim(self.runs(tokens[j + 1], style, images_as_text=False))
+                    if runs:
+                        out.append(Paragraph(tuple(runs), kind, depth, number))
+                case "bullet_list_open" | "ordered_list_open":
+                    ordered = token.type == "ordered_list_open"
+                    first = int(token.attrs.get("start", 1)) if ordered and token.attrs else 1
+                    inner = depth + 1 if kind in (Kind.BULLET, Kind.NUMBERED) else 0
+                    for item in flow_parser.children(tokens, j):
+                        item_end = flow_parser.block_end(tokens, item) - 1
+                        list_kind = Kind.NUMBERED if ordered else Kind.BULLET
+                        self._note_blocks(tokens, item + 1, item_end, out, list_kind, inner, first)
+                case "html_block":
+                    if not html.is_comment(token.content):
+                        html.note_raw_html(self.notes, self.line(token), WHAT)
+                case "table_open" | "fence" | "code_block" | "hr":
+                    pass
+                case _ if token.nesting == 1:
+                    self._note_blocks(tokens, j + 1, end - 1, out, kind, depth, number)
+                case _:
+                    pass
+            j = end
 
     def _uses_layouts(
         self, start: int, end: int, attributes: heading_attributes.HeadingAttributes | None

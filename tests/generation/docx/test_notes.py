@@ -88,3 +88,14 @@ def test_the_samples_generate_without_notes() -> None:
         for source in sorted(root.glob("*-bericht.md")) + sorted(root.glob("*-dokument.md")):
             result = run(source.read_text(encoding="utf-8"), images)
             assert result.notes == (), f"{source.name}:\n{result}"
+
+
+def test_speaker_notes_are_left_out_with_a_note() -> None:
+    """E09-S01: ``::: notes`` belong to slides; Word drops them, without an error."""
+    markdown = FRONT + "# Kapitel\n\nText.\n\n::: notes\nNur für den **Vortrag**.\n\n- Punkt\n:::\n"
+    output = io.BytesIO()
+    result = DocxGenerator().generate(MarkdownDocument(markdown), output)
+    assert result.codes() == [NoteCodes.NOTES_DROPPED]
+    assert result.notes[0].line == 8
+    text = "\n".join(p.text for p in open_docx(output.getvalue()).paragraphs)
+    assert "Vortrag" not in text and "Punkt" not in text and "Text." in text

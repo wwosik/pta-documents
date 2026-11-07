@@ -11,8 +11,8 @@ from typing import Any, Final
 from lxml import etree
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.presentation import Presentation
+from pptx.slide import NotesSlide, SlideLayout
 from pptx.slide import Slide as PptxSlide
-from pptx.slide import SlideLayout
 from pptx.util import Emu
 
 from pta_documents.design import colors, templates
@@ -21,6 +21,7 @@ from pta_documents.design.variants import GeneratedTexts, Language, SlidesVarian
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.pptx import chart, fitting, flow, kinds, visuals
+from pta_documents.generation.pptx import notes as speaker_notes
 from pta_documents.generation.pptx.model import (
     AgendaSlide,
     ChapterSlide,
@@ -385,7 +386,10 @@ class DeckWriter:
                 f"The PTA template has no layout '{layout_name}'. Valid layouts: {valid}", slide
             )
         self.number += 1
-        return self.presentation.slides.add_slide(layout)
+        target = self.presentation.slides.add_slide(layout)
+        if slide.notes:
+            speaker_notes.write_notes(self, target, slide.notes)
+        return target
 
     def placeholder(self, slide: PptxSlide, idx: int) -> Any:
         for shape in slide.placeholders:
@@ -595,7 +599,7 @@ class DeckWriter:
         return element
 
     def run_element(
-        self, slide: PptxSlide, run: Run, size: int | None, color: str | None = None
+        self, slide: PptxSlide | NotesSlide, run: Run, size: int | None, color: str | None = None
     ) -> etree._Element:
         """A run; ``color`` is its text colour (None: the placeholder's or the theme's).
 

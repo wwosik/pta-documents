@@ -101,3 +101,9 @@ Vektoren bzw. Bilder gesetzt.
   (`HeadingAttributes.kind`) prüft `layout_syntax.check` auch für PDF; wie Word mindestens
   Überschrift und Inhalt zeigen. Charts aus `ChartGraphic` platziert PowerPoint bereits
   (`generation/pptx/kinds.py`).
+- (2026-11-07, E09-S01) `::: notes` ist ein gültiger Container (`layout_syntax.NOTES`, Prüfung
+  „vor der ersten Überschrift = Fehler" in `layout_syntax.check`). Das PDF lässt Notizen wie Word
+  weg (Hinweis `NoteCodes.NOTES_DROPPED`, vgl. `generation/docx/writer.py`
+  `layout_container`); mit `notizen: ja` (DocLibs/vt-tools-libs `showNotes`) zeigt es sie unter
+  der Folie. Die Absätze liefert der PPTX-Parser schon als `Slide.notes`
+  (`DeckParser._take_notes`).

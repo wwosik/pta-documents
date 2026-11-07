@@ -46,6 +46,8 @@ def test_deck_layouts(review_dir: Path) -> None:
         "Titel und Text",
         "Titel, Text und Bild 01",
         "Nur Titel",
+        "Titel und Text",
+        "Titel und Text",
         "Trennfolie",
         "Titel und Text (zweispaltig)",
         "Abbschlussfolie",

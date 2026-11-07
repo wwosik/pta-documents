@@ -253,6 +253,14 @@ class BodyWriter:
         """A ``:::`` container: its content as ordinary blocks, one after the other."""
         name, _ = container(tokens[i])
         end = _block_end(tokens, i)
+        if name == layout_syntax.NOTES:
+            self.notes.add(
+                NoteCodes.NOTES_DROPPED,
+                self.line(tokens[i]),
+                "Speaker notes (::: notes) are left out of the Word document; they show on the "
+                "notes pages of the PowerPoint deck.",
+            )
+            return end
         if name in (layout_syntax.CONCLUSION, layout_syntax.COMMENT):
             conclusion = name == layout_syntax.CONCLUSION
             label = self.texts.conclusion if conclusion else self.texts.comment

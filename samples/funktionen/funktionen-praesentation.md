@@ -12,6 +12,11 @@ Text vor der ersten Überschrift wird ignoriert.
 
 # Funktionsübersicht PTA Documents
 
+::: notes
+Begrüßen und sagen, dass jede Folie eine Funktion des Generators zeigt. Die Sprechernotizen
+stehen in der Notizenansicht von PowerPoint.
+:::
+
 # Text
 
 ## Textebenen der PTA-Vorlage
@@ -26,6 +31,14 @@ Ein Absatz ist die Ebene „Einleitungstext".
 
 Text kann **fett** (in Segoe UI), *kursiv*, ~~durchgestrichen~~, `Code` und ein
 [Link](https://www.pta.de) sein.
+
+::: notes
+Die Ebenen kommen aus dem Folienmaster der PTA-Vorlage. Sprechernotizen schreibt man in einen
+Block `::: notes` unter die Überschrift der Folie:
+
+- Absätze und Listen bleiben erhalten,
+- ebenso **fett**, *kursiv*, `Code` und [Links](https://www.pta.de).
+:::
 
 ## Nummerierte Listen
 
@@ -132,3 +145,7 @@ Platzhalter der Reihe nach.
 ![Kachel 2](images/kachel-2.png)
 
 # Vielen Dank! {.closing}
+
+::: notes
+Nach Fragen fragen.
+:::

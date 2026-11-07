@@ -116,6 +116,13 @@ Gliederung:
   `.dark` setzt die Folie auf den Verlauf der Titelfolie mit weißer Schrift (beides macht die
   Folie zur Flow-Folie, siehe unten).
 
+- **Sprechernotizen:** zu **jeder** Folie (auch Titel-, Trenn- und Abschlussfolie) einen Block
+  `::: notes` … `:::` unter ihre Überschrift schreiben, zwei bis fünf Sätze, die der
+  Vortragende sagt — nicht den Folientext wiederholen. PowerPoint legt sie auf die Notizenseite
+  (bei geteilten Folien auf jede), Word lässt sie weg (Hinweis `notes-dropped`, beim
+  Word-Bericht also keine Notizen schreiben). Absätze, Listen, fett, kursiv, Code und Links
+  bleiben; Tabellen und Bilder darin fallen weg. Nie vor dem ersten `#`.
+
 ## PTA-Folienarten (PowerPoint)
 
 Höchstens eine je `##`, nie zusammen mit `.dark`, `kicker` oder Containern/Alerts. Word zeigt
@@ -200,7 +207,8 @@ document.text  # Markdown
 document.resources  # Bilder: .path (images/image1.png), .content (bytes)
 ```
 
-Das Ergebnis ist ein Lesestand, kein verlustfreies Abbild: Folien verlieren Ebenen und
+Sprechernotizen einer Folie kommen als `::: notes` … `:::` nach ihrem Inhalt
+(`ConversionOptions(notes=False)` lässt sie weg). Das Ergebnis ist ein Lesestand, kein verlustfreies Abbild: Folien verlieren Ebenen und
 Formatierung, Word verliert u. a. Durchstreichung und Fußnoten. Vor dem Neu-Erzeugen das Markdown
 nach den Regeln oben aufbereiten (Front Matter, `#`/`##`-Gliederung) und die Bilder nach
 `images/` schreiben.

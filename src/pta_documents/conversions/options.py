@@ -17,6 +17,9 @@ class ConversionOptions:
     """Extract images as resources and reference them; without, images are left out."""
     file_name: str | None = None
     """The original file name, for format detection by extension."""
+    notes: bool = True
+    """PPTX: the speaker notes of each slide after it, as ``::: notes`` … ``:::``; without,
+    only the slides' content."""
 
 
 @dataclass

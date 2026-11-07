@@ -18,6 +18,9 @@ R: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 MC: Final = "http://schemas.openxmlformats.org/markup-compatibility/2006"
 
 PRESENTATION_PART: Final = "ppt/presentation.xml"
+RELATIONSHIPS: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+NOTES_SLIDE: Final = f"{RELATIONSHIPS}/notesSlide"
+NOTES_MASTER: Final = f"{RELATIONSHIPS}/notesMaster"
 
 
 def p(name: str) -> str:
@@ -63,6 +66,8 @@ class PptxConverter:
                     continue
                 number += 1
                 any_content |= _render_slide(package, part, number, images, out)
+                if options.notes:
+                    any_content |= _render_notes(package, part, out)
             metadata = {MetadataKeys.SLIDE_COUNT: str(number)}
             package.add_core_properties(metadata)
             return MarkdownDocument(
@@ -139,6 +144,48 @@ def _render_slide(
                 out.append(picture + "\n\n")
                 content = True
     return content
+
+
+def _render_notes(package: OpenXmlPackage, slide: str, out: list[str]) -> bool:
+    """The speaker notes of ``slide`` as ``::: notes`` … ``:::`` (list levels as ``-``);
+    nothing for empty notes or notes that are only the prompt text of the notes master."""
+    part = package.related(slide, NOTES_SLIDE)
+    notes = package.read_xml(part) if part else None
+    body = _notes_body(notes) if notes is not None else None
+    if part is None or body is None:
+        return False
+    lines = _note_lines(body)
+    master = package.related(part, NOTES_MASTER)
+    master_xml = package.read_xml(master) if master else None
+    master_body = _notes_body(master_xml) if master_xml is not None else None
+    prompts = {text for _, text in _note_lines(master_body)} if master_body is not None else set()
+    if all(text in prompts for _, text in lines):
+        return False
+    out.append("::: notes\n\n")
+    for depth, text in lines:
+        out.append(("  " * (depth - 1) + "- " if depth else "") + text + "\n\n")
+    out.append(":::\n\n")
+    return True
+
+
+def _notes_body(notes: etree._Element) -> etree._Element | None:
+    """The text body of the notes placeholder (``body``) of a notes slide or master."""
+    for shape in notes.iter(p("sp")):
+        if _placeholder_type(shape) == "body":
+            return shape.find(p("txBody"))
+    return None
+
+
+def _note_lines(body: etree._Element) -> list[tuple[int, str]]:
+    """The paragraphs of a notes body with text: (list level, 0 for text; text)."""
+    result: list[tuple[int, str]] = []
+    for paragraph in body.iter(a("p")):
+        text = " ".join(_paragraphs(paragraph))
+        if text:
+            p_pr = paragraph.find(a("pPr"))
+            level = int(p_pr.get("lvl", "0")) if p_pr is not None else 0
+            result.append((level, text))
+    return result
 
 
 def _picture(

@@ -77,3 +77,6 @@ Keine.
 
 - Abhängigkeiten: E02-S05; vollständig erst nach E04-S03 bis E04-S05 — bis dahin nennt der Guide
   nur, was der Generator schon kann.
+- (2026-11-07, E09-S01) Sprechernotizen `::: notes` aufnehmen (Regeln in `docs/ki-anleitung.md`,
+  Abschnitt *Präsentation*): zu jeder Folie zwei bis fünf Sätze; auf jeder Teilfolie wiederholt;
+  Tabellen/Bilder darin entfallen.

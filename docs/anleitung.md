@@ -140,6 +140,32 @@ Einleitender Satz.              ← Textebene „Einleitungstext"
 - Text vor dem ersten `#` wird ignoriert. Fotos brauchen ihren Urheber auf der Folie, wenn die
   Lizenz das verlangt (siehe `samples/gsb/`).
 
+### Sprechernotizen
+
+Was der Vortragende zu einer Folie sagt, steht in einem Block `::: notes` unter ihrer
+Überschrift. PowerPoint zeigt ihn in der Notizenansicht (auf dem Notizenmaster der PTA-Vorlage),
+Word lässt ihn weg (mit dem Hinweis `notes-dropped`).
+
+```markdown
+## Ergebnis des Quartals
+
+- Umsatz +4 %
+
+::: notes
+Zuerst die gute Nachricht nennen, dann **kurz** auf den Süden eingehen.
+
+- Zahlen sind vorläufig
+:::
+```
+
+- Gilt für jede Überschrift, auch für Titel-, Trenn- und Abschlussfolie (dort ist er der einzige
+  erlaubte Inhalt). Mehrere Blöcke einer Überschrift werden zusammengefügt; wird eine Folie
+  geteilt („Forts.") oder macht ihre Überschrift mehrere Folien, steht der Sprechtext auf jeder.
+- In Notizen bleiben Absätze, Listen, fett, kursiv, Code und Links erhalten; Tabellen, Bilder und
+  Codeblöcke darin werden ohne Fehler weggelassen.
+- Ein `::: notes` vor der ersten Überschrift ist ein Fehler.
+- Faustregel: zu jeder Folie zwei bis fünf Sätze Sprechtext.
+
 ### Folien-Syntax
 
 Mit einer eigenen Syntax werden aus einer `##`-Folie **Flow-Folien** im PTA-Stil. PowerPoint

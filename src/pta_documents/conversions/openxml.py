@@ -37,6 +37,21 @@ class OpenXmlPackage:
         except KeyError:
             return None
 
+    def related(self, part: str, type: str) -> str | None:
+        """The (first) internal part ``part`` relates to by the relationship ``type`` (its
+        full URI), resolved; None without one."""
+        folder, name = posixpath.split(part)
+        rels = self.read_xml(posixpath.join(folder, "_rels", name + ".rels"))
+        for rel in rels if rels is not None else ():
+            target = rel.get("Target")
+            if (
+                rel.get("Type") == type
+                and target is not None
+                and (rel.get("TargetMode") or "").lower() != "external"
+            ):
+                return resolve(folder, target)
+        return None
+
     def relationships(self, part: str) -> dict[str, str]:
         """Relationship id -> target part (resolved) or external URL."""
         folder, name = posixpath.split(part)

@@ -25,8 +25,10 @@ CONCLUSION: Final = "conclusion"
 """PTA: the conclusion box (Fazit-Box) at the foot of a slide (E04-S03)."""
 COMMENT: Final = "comment"
 """PTA: the comment box (Kommentarbox), a speech bubble on the block before it (E04-S03)."""
+NOTES: Final = "notes"
+"""Speaker notes of the slide(s) of its heading (E09-S01); Word leaves them out."""
 
-CONTAINER_NAMES: Final = (CARDS, ROWS, PANEL, STATEMENT, COLUMNS, CONCLUSION, COMMENT)
+CONTAINER_NAMES: Final = (CARDS, ROWS, PANEL, STATEMENT, COLUMNS, CONCLUSION, COMMENT, NOTES)
 CONTAINERS: Final = ", ".join(CONTAINER_NAMES)
 """The containers, for error messages."""
 
@@ -151,13 +153,23 @@ def check(tokens: Sequence[Token], format: DocumentFormat, line_offset: int = 0)
 
     ``tokens`` are those of ``markdown.parser.parse`` on the body, ``line_offset`` the lines of
     front matter before it. A mistake raises ``DocumentConversionError`` whose reason starts
-    with its line: ``Line 12: Unknown container '::: card'. …``.
+    with its line: ``Line 12: Unknown container '::: card'. …``. A ``::: notes`` before the
+    first ``#``/``##`` heading has no slide to belong to.
     """
+    headed = False
     for i, token in enumerate(tokens):
         line = line_of(token, line_offset)
         try:
+            if token.type == "heading_open" and token.tag in ("h1", "h2") and token.level == 0:
+                headed = True
             if token.type == CONTAINER_OPEN:
                 check_container(*container(token), format)
+                if not headed and container(token)[0] == NOTES:
+                    raise DocumentConversionError(
+                        format,
+                        "A '::: notes' belongs under a heading: put it below the '#' or '##' "
+                        "of its slide.",
+                    )
             elif token.type == "blockquote_open" and ALERT in token.meta:
                 is_important(str(token.meta[ALERT]), format)
             elif token.type == "heading_open" and token.tag in ("h1", "h2"):
