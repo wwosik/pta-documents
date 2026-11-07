@@ -22,7 +22,7 @@ zu jeder Folie sagt.
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| [E09-S01](E09-S01-sprechernotizen.md) | `::: notes` → Notizenseite der Folie auf dem Notizenmaster der PTA-Vorlage; Rückweg im PPTX-Konverter | Entwurf |
+| [E09-S01](../55-in-arbeit/docs-2/E09-S01-sprechernotizen.md) | `::: notes` → Notizenseite der Folie auf dem Notizenmaster der PTA-Vorlage; Rückweg im PPTX-Konverter | in Bearbeitung (docs-2) |
 | [E09-S02](E09-S02-builds.md) | `{.build}` / `{.frag}` als Fade-Eingänge in PPTX; Front Matter für „alle Listen" | Entwurf |
 | [E09-S03](E09-S03-uebergaenge.md) | Folienübergänge per Front Matter und Heading-Attribut; Morph mit Fade-Rückfall | Entwurf |
 | [E09-S04](E09-S04-szenen.md) | `::: scene`: benannte Formen auf dem Raster, Morph zwischen Szenenfolien | Entwurf |

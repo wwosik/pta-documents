@@ -1,8 +1,8 @@
 # E09-S01 Sprechernotizen
 
-> Status: Entwurf
-> Epic: [E09 Präsentieren](E09-praesentieren.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E09 Präsentieren](../../50-entwurf/E09-praesentieren.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
