@@ -55,6 +55,12 @@ class Keys:
     AUDIENCE: Final = "fassung"
     """``kunde`` (the default), ``intern`` or ``trainer``: the version of the document
     (E16-S01, ``generation.common.audience``); ``--audience`` overrides it."""
+    BEGIN: Final = "beginn"
+    """Only on slides (E16-S02): the start time of the training, ``09:00``; the agenda and the
+    schedule show clock times."""
+    LENGTH: Final = "laenge"
+    """Only on slides (E16-S02): the planned length, ``240`` or ``4h``; the schedule is compared
+    with it."""
     STATUS_PREFIX: Final = "status."
 
 

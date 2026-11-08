@@ -15,7 +15,8 @@ with what to change; the other files are still generated.
 ``--audience`` chooses the version (E16-S01) and wins over ``fassung:`` in the front matter;
 without either it is ``kunde``. The customer's version is ``<name>.<format>``, the others
 ``<name>-intern.<format>`` and ``<name>-trainer.<format>``; ``alle`` writes every version that
-differs from the ones before it (``kunde``, then ``intern``, then ``trainer``).
+differs from the ones before it (``kunde``, then ``intern``, then ``trainer``; a deck with a
+schedule, E16-S02, always gets its trainer version, whose notes carry the planned times).
 
 After each file come the notes on what the generator had to work around (``  - line 12: …``).
 Notes are not errors: the exit code is 1 only for errors, or with ``--strict`` also for notes.
@@ -29,6 +30,7 @@ from typing import TYPE_CHECKING, BinaryIO
 
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import audience as audiences
+from pta_documents.generation.common import training_schedule
 from pta_documents.generation.common.audience import Audience
 from pta_documents.generation.common.result import GenerationResult
 from pta_documents.generation.docx.generator import DocxGenerator
@@ -111,7 +113,15 @@ def audiences_of(text: str, format: str, requested: str | None) -> list[Audience
     if requested != ALL_AUDIENCES:
         return [Audience(requested)]
     try:
-        return list(audiences.versions(text, DocumentFormat(format)))
+        found: list[Audience | None] = list(audiences.versions(text, DocumentFormat(format)))
+        if (
+            format in ("pptx", "html")
+            and Audience.TRAINER not in found
+            and training_schedule.deck_schedule(MarkdownDocument(text)) is not None
+        ):
+            # The trainer's notes carry the planned times (E16-S02).
+            found.append(Audience.TRAINER)
+        return found
     except DocumentConversionError:
         return [None]  # the generator reports the mistake
 

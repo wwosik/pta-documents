@@ -556,3 +556,17 @@ weil ihm vertraut wird.
   `kennzeichnung` auf `intern`, wenn das Front Matter keine nennt. Die Stilregeln von `check` und
   `Notes.characters` (PDF) lesen das ungefilterte Markdown, nur die Statistik die Fassung.
   Beispiele mit Internem brauchen `fassung: trainer`, sonst kommt `audience-omitted`.
+- **Schulungs-Zeitplan** (E16-S02): `generation/common/training_schedule.py` (`Schedule`,
+  `ScheduleEntry`, `build` aus den Level-0-Überschriften, `deck_schedule(document, audience)`,
+  `schedule_document`; nicht zu verwechseln mit `schedule.py` = Zeitstrahl/Gantt E15-S01),
+  Zahlen/Uhrzeiten in `durations.py`. `dauer=5` ist der **einzige** Attributwert ohne
+  Anführungszeichen (`heading_attributes._BARE`); `.break` ist eine PTA-Folienart
+  (`SLIDE_KINDS`, `KIND_LAYOUTS["break"]` = Zwischenfazit-Layouts, `KindReader` macht ein
+  `InterimSlide` „Pause · 15 min"). `DeckParser.parse` baut den Zeitplan auf `self.tokens` (nach
+  `_take_notes`: `ScheduleEntry.heading` ist der Index dort, wie bei `speaker_notes`); die
+  Agenda (`KindReader.timed`) und die Zeitnotiz der Trainerfassung (`DeckParser._planned`) lesen
+  ihn. Front Matter `beginn`/`laenge` nur PPTX (`PptxOptions.begin`/`length`). Hinweise
+  `schedule-missing`/`schedule-length` aus dem Generator, `schedule-estimate` nur aus `check`
+  (`_with_estimate`, braucht die Statistik des Probedecks). `generate --audience alle` hängt für
+  Decks mit Zeitplan die Trainerfassung an (`tools/generate.audiences_of`), weil sich deren
+  Token-Strom nicht unterscheidet. Werkzeug `./run.sh schedule` → `<name>-zeitplan.docx`.

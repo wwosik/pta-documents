@@ -547,7 +547,7 @@ class BodyWriter:
             end += 1
         style: str | None = None
         match kind:
-            case heading_attributes.INTERIM:
+            case heading_attributes.INTERIM | heading_attributes.BREAK:
                 paragraph = self.paragraph(word.STYLES.normal_bold)
                 self.inline(paragraph, inline, plain_bold=True)
             case heading_attributes.QUOTE:

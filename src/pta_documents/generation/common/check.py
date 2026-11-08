@@ -35,9 +35,10 @@ from pta_documents.design import slides as design
 from pta_documents.design.variants import TEXTS
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import audience as audiences
+from pta_documents.generation.common import training_schedule
 from pta_documents.generation.common.audience import Audience
 from pta_documents.generation.common.layout_syntax import NOTES
-from pta_documents.generation.common.result import GenerationNote, GenerationResult
+from pta_documents.generation.common.result import GenerationNote, GenerationResult, Notes
 from pta_documents.generation.common.style_rules import (
     StyleLimits,
     close_of,
@@ -237,11 +238,28 @@ def check(
     if not errors:
         if format is DocumentFormat.PPTX:
             stats = deck_stats(output.getvalue())
+            notes = _with_estimate(notes, document, options.audience, stats)
         else:
             stats = report_stats(document, format, options.audience)
             if generated is not None and generated.pages is not None:
                 stats = replace(stats, counted_pages=generated.pages)
     return CheckResult(tuple(errors), notes, stats)
+
+
+def _with_estimate(
+    notes: tuple[GenerationNote, ...],
+    document: MarkdownDocument,
+    audience: Audience | None,
+    stats: DeckStats,
+) -> tuple[GenerationNote, ...]:
+    """``notes`` and ``schedule-estimate`` when the schedule of the deck (E16-S02) is far off
+    the rule of thumb of ``stats``."""
+    schedule = training_schedule.deck_schedule(document, audience)
+    if schedule is None:
+        return notes
+    found = Notes()
+    schedule.estimate_note(stats.minutes, found)
+    return tuple(sorted((*notes, *found.to_tuple()), key=lambda note: note.line or 0))
 
 
 class _Generator(Protocol):

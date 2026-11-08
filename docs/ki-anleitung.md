@@ -84,6 +84,8 @@ YAML, keine Listen). Schlüssel und Werte sind **deutsch**; `ja`/`nein`; Datum `
 | `pruefung` | ✓ | ✓ | nur `check`: `aus` · Liste von `style-…`-Codes, die nicht geprüft werden |
 | `aufbau` | – | ✓ | `listen` (jede Liste Punkt für Punkt) · `nein` (Standard) |
 | `uebergang` | – | ✓ | `none` (Standard) · `fade` · `push`/`wipe` (auch `-left`, `-right`, `-up`, `-down`) · `split` · `cover` · `uncover` · `zoom` · `cut` · `morph` |
+| `beginn` | – | ✓ | Uhrzeit `09:00` — Beginn der Schulung (Agenda mit Uhrzeiten), siehe [Schulungs-Zeitplan](#schulungs-zeitplan) |
+| `laenge` | – | ✓ | Minuten `240` · `4h` · `3h30` — geplante Länge, mit der Summe der `dauer` verglichen |
 | `fortschritt`, `kapitelanzeige` | – | nur `--html` | `ja` (Standard) · `nein` — nur im HTML-Deck; PowerPoint lehnt sie ab, also **nicht** in eine Präsentation schreiben, die als PPTX erzeugt wird |
 
 `firma`/`inhaltsverzeichnis` in einer Präsentation oder `fusszeile`/`titelfolie` in einem
@@ -221,6 +223,7 @@ Zwischenfazit fett, Zitat und Quelle als Zitat, Kontakt mit fettem Namen und kle
 | `## Agenda {.agenda}` + **eine** Liste (je Punkt eine Zeile, max. 8) | Agendafolie mit „01" …; ≤ 4 kurz, 5–8 lang; mehr = Fehler → zwei Agendafolien |
 | `## Agenda {.agenda}` ohne Inhalt | Agenda aus den `#`-Kapiteln (ohne Titel und `{.closing}`) |
 | `## Aussage {.interim}` — **kein** Inhalt darunter | Zwischenfazit (`layout="Zwischenfazit 02"` für die zweite Variante) |
+| `## Pause {.break dauer=15}` — **kein** Inhalt darunter | Pausenfolie „Pause · 15 min" auf dem Zwischenfazit-Layout, siehe [Schulungs-Zeitplan](#schulungs-zeitplan) |
 | `## Zitat {.quote}` + höchstens **ein** Absatz (die Quelle) | Zitatfolie (`layout="Zitat 02"`) |
 | `## Kontakt {.contact}` + je Person `### Name` und **ein** Absatz mit Foto und Zeilen Funktion / E-Mail (mit `@`) / Telefon (`+` oder Ziffer am Anfang) | Kontakt 01–05 nach Personenzahl (max. 5); genau eine Person + weiterer Text/Liste danach → „Kontakt mit Text" |
 
@@ -391,6 +394,38 @@ Die Lösung — nur beim Trainer; direkt nach (oder in) ihrem `::: exercise`.
   `<name>-intern.pptx`, `<name>-trainer.pptx`. Interne Fassungen bekommen von selbst die
   Kennzeichnung `intern`. Der Hinweis `audience-omitted` nennt, wie viel weggelassen wurde — er
   ist erwartet und kein Fehler. Vor der Übergabe an den Kunden die Kundenfassung ansehen.
+
+## Schulungs-Zeitplan
+
+Bei Schulungen (und wenn der Anwender eine Länge nennt) **jeder `##`-Folie oder jedem Kapitel
+eine Dauer geben** und `beginn:`/`laenge:` setzen:
+
+```markdown
+---
+beginn: 09:00
+laenge: 4h
+---
+# Titel
+
+## Agenda {.agenda dauer=5}       ← Agenda zeigt „09:05 Kapitel" und die Pausen
+
+# Kapitel {dauer=45}              ← Folien darin ohne dauer teilen sich den Rest
+
+## Folie {dauer=10}               ← Minuten: 5 · 90 · 4h · 1h30 (ohne Anführungszeichen)
+
+## Pause {.break dauer=15}        ← Pausenfolie „Pause · 15 min", KEIN Inhalt darunter
+
+# Danke {.closing}                ← keine dauer; was danach kommt, ist nicht geplant
+```
+
+- Die Summe muss `laenge:` treffen, sonst Hinweis `schedule-length`; Folien ohne Angabe zählen
+  2 Minuten (`schedule-missing`); `check` meldet `schedule-estimate`, wenn die Sprechzeit mehr
+  als die Hälfte von „2 Minuten je Folie plus Notizen" abweicht — dann Dauern oder Folienzahl
+  prüfen.
+- `.break` nur an `##`, immer mit `dauer`; Pausen zählen zu den höchstens acht Agendapunkten.
+- Die Trainerfassung (`--audience trainer`) schreibt „Geplant: 09:20–09:25 (5 min)" als erste
+  Notizenzeile; `./run.sh schedule <praesentation.md>` erzeugt `<name>-zeitplan.docx` mit der
+  Zeitplantabelle (`--markdown` zeigt sie als Markdown zum Prüfen).
 
 ## Aus Python statt per Befehl
 

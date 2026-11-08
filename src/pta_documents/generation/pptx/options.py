@@ -44,6 +44,11 @@ class PptxOptions:
     transition: SlideTransition = SlideTransition.NONE
     """``uebergang:``: how every slide comes in, unless its heading or chapter says otherwise
     (``{uebergang="…"}``, E09-S03)."""
+    begin: int | None = None
+    """``beginn:`` (E16-S02): the start, in minutes after midnight; the agenda shows clock times.
+    None: the schedule counts from +0:00."""
+    length: int | None = None
+    """``laenge:`` (E16-S02): the planned length in minutes, compared with the schedule."""
     code_block_renderers: tuple[CodeBlockRenderer, ...] = field(default_factory=default_renderers)
     """Asked in order for every fenced code block with an info string; the first graphic wins.
     Defaults to every renderer of the library that is available; ``()`` turns them off."""

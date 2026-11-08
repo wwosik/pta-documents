@@ -33,6 +33,7 @@ from pta_documents.generation.common import (
     layout_tokens,
     scene,
     schedule,
+    training_schedule,
 )
 from pta_documents.generation.common.image_attributes import Fit
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
@@ -153,6 +154,9 @@ class DeckParser:
         self.chapter_transition: SlideTransition | None = None
         """``{uebergang="…"}`` of the last ``#`` heading: for its slides and those of its
         chapter (E09-S03)."""
+        self.schedule: training_schedule.Schedule | None = None
+        """The training schedule (``dauer=…``, ``{.break}``, ``beginn:``, E16-S02); None when
+        the deck says nothing about time."""
 
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
@@ -177,6 +181,16 @@ class DeckParser:
         tokens, speaker_notes = self._take_notes(tokens)
         self.tokens = tokens
         self.speaker_notes = speaker_notes
+        self.schedule = training_schedule.build(
+            tokens,
+            FORMAT,
+            self.line_offset,
+            self.options.begin,
+            self.options.length,
+            self.options.language,
+        )
+        if self.schedule is not None:
+            self.schedule.add_notes(self.notes)
         heading: tuple[Token, Token] | None = None
         start = 0
         i = 0
@@ -222,12 +236,25 @@ class DeckParser:
         self._slides_of(heading, start, end)
         self._check_markers(start, end)
         notes = self.speaker_notes.get(start - 3, ())
+        planned = self._planned(start - 3)
+        if planned is not None:
+            notes = (planned, *notes)
         if notes:
             # On every slide of the heading (decision 2026-11-07), split ones included.
             self.slides[first:] = [replace(s, notes=notes) for s in self.slides[first:]]
         transition = self._transition(heading)
         if transition is not None:
             self.slides[first:] = [replace(s, transition=transition) for s in self.slides[first:]]
+
+    def _planned(self, heading: int) -> Paragraph | None:
+        """In the trainer version, the first line of the speaker notes of the slides of the
+        heading at ``tokens[heading]``: ``Geplant: 09:20–09:25 (5 min)`` (E16-S02)."""
+        if self.schedule is None or self.options.audience is not audience.Audience.TRAINER:
+            return None
+        entry = self.schedule.at(heading)
+        if entry is None:
+            return None
+        return Paragraph((Run(self.schedule.planned(entry)),))
 
     def _transition(self, heading: tuple[Token, Token]) -> SlideTransition | None:
         """The transition of the slides of ``heading``: its own, else its chapter's; a ``#``

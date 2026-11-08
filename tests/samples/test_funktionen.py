@@ -161,7 +161,7 @@ def attribute_used(attributes: heading_attributes.HeadingAttributes, entry: str)
             return attributes.kind == name
         return getattr(attributes, name, None) is True
     key = entry.partition("=")[0]
-    field = {"uebergang": "transition"}.get(key, key)
+    field = {"uebergang": "transition", "dauer": "duration"}.get(key, key)
     return getattr(attributes, field, None) is not None
 
 

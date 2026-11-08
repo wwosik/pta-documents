@@ -1,9 +1,10 @@
 """The PTA slide kinds of a ``##`` heading (E04-S04): agenda, interim conclusion, quote, contact.
 
 ``## Agenda {.agenda}`` takes one list (or none: the chapters of the deck), ``{.interim}`` no
-content, ``{.quote}`` one paragraph (its source), ``{.contact}`` one ``###`` per person with a
-photo and lines for function, e-mail and phone. Each picks its PTA layout itself;
-``layout="…"`` may choose another of the same kind. Mistakes raise ``DocumentConversionError``
+content (nor does a break, ``{.break dauer=15}``, E16-S02, on the same layouts), ``{.quote}``
+one paragraph (its source), ``{.contact}`` one ``###`` per person with a photo and lines for
+function, e-mail and phone. Each picks its PTA layout itself; ``layout="…"`` may choose another
+of the same kind. Mistakes raise ``DocumentConversionError``
 with the line in front, like ``layout_syntax.check``.
 """
 
@@ -16,7 +17,12 @@ from markdown_it.token import Token
 
 from pta_documents.design import slides as design
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import heading_attributes, html, layout_syntax
+from pta_documents.generation.common import (
+    heading_attributes,
+    html,
+    layout_syntax,
+    training_schedule,
+)
 from pta_documents.generation.pptx.flow_parser import LISTS, block_end, children
 from pta_documents.generation.pptx.model import (
     AgendaSlide,
@@ -39,6 +45,11 @@ if TYPE_CHECKING:
 
 FORMAT: Final = DocumentFormat.PPTX
 _BREAKS: Final = ("softbreak", "hardbreak")
+
+
+def _key(title: str) -> str:
+    """A title to compare an agenda item with a chapter: case and spacing aside."""
+    return " ".join(title.split()).casefold()
 
 
 class KindReader:
@@ -79,6 +90,16 @@ class KindReader:
                         self.tokens[blocks[0]],
                     )
                 return InterimSlide(title, line, layout or family[0])
+            case heading_attributes.BREAK:
+                if blocks:
+                    raise self.error(
+                        "A break {.break} is its heading alone ('## Pause {.break dauer=15}'); "
+                        "put the content on a slide of its own.",
+                        self.tokens[blocks[0]],
+                    )
+                _, attributes = layout_syntax.without_attributes(self.tokens[start - 2], 2, FORMAT)
+                minutes = attributes.duration if attributes is not None else None
+                return InterimSlide((*title, Run(f" · {minutes} min")), line, layout or family[0])
             case heading_attributes.QUOTE:
                 return self.quote(title, line, layout or family[0], blocks)
             case _:
@@ -127,10 +148,12 @@ class KindReader:
                 if len(kids) != 1 or tokens[kids[0]].type != "paragraph_open":
                     raise self.error("Each agenda item is one line of text.", tokens[item])
                 items.append(self.deck.text_runs(tokens[kids[0] + 1]))
+        items, breaks = self.timed(items)
         if len(items) > design.AGENDA_ITEMS:
+            counted = f" ({breaks} of them breaks)" if breaks else ""
             raise self.error(
                 f"An agenda holds {design.AGENDA_ITEMS} items at most, this one "
-                f"{len(items)}. Split it into two agenda slides.",
+                f"{len(items)}{counted}. Split it into two agenda slides.",
                 heading,
             )
         short = len(items) <= design.AGENDA_SHORT_ITEMS
@@ -142,6 +165,40 @@ class KindReader:
                 heading,
             )
         return AgendaSlide(title, line, tuple(items), chosen)
+
+    def timed(self, items: list[tuple[Run, ...]]) -> tuple[list[tuple[Run, ...]], int]:
+        """With ``beginn:`` and a schedule (E16-S02): each item that names a chapter with its
+        start in front (``09:00 Einführung``), each break an item of its own before the first
+        chapter after it; and the number of breaks added. Without, ``items`` as they are."""
+        schedule = self.deck.schedule
+        if schedule is None or schedule.begin is None:
+            return items, 0
+        starts = {
+            _key(e.title): e.start
+            for e in schedule.entries
+            if e.kind is training_schedule.EntryKind.CHAPTER
+        }
+        timed: list[tuple[tuple[Run, ...], int | None]] = []
+        for item in items:
+            start = starts.get(_key(plain_text(item)))
+            runs = item if start is None else (Run(schedule.time(start) + " "), *item)
+            timed.append((runs, start))
+        if all(start is None for _, start in timed):
+            return items, 0
+        for pause in schedule.breaks:
+            runs = (Run(f"{schedule.time(pause.start)} {pause.title}"),)
+            at = next(
+                (
+                    n
+                    for n, (_, start) in enumerate(timed)
+                    if start is not None and start >= pause.end
+                ),
+                None,
+            )
+            if at is None:
+                at = 1 + max(n for n, (_, start) in enumerate(timed) if start is not None)
+            timed.insert(at, (runs, None))
+        return [runs for runs, _ in timed], len(schedule.breaks)
 
     def chapters(self) -> list[tuple[Run, ...]]:
         """The ``#`` headings of the deck after the first (the title slide), the closing slide

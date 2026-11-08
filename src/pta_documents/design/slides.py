@@ -68,6 +68,7 @@ KIND_LAYOUTS: Final = {
     "interim": (LAYOUTS.interim_01, LAYOUTS.interim_02),
     "quote": (LAYOUTS.quote_01, LAYOUTS.quote_02),
     "contact": (*CONTACT_LAYOUTS, LAYOUTS.contact_text),
+    "break": (LAYOUTS.interim_01, LAYOUTS.interim_02),
 }
 """The layouts of each PTA slide kind (``heading_attributes.SLIDE_KINDS``), the default first:
 ``layout="…"`` may choose any of its own kind (E04-S04)."""

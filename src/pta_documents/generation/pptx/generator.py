@@ -13,7 +13,7 @@ from pta_documents.design import slides as design
 from pta_documents.design import templates
 from pta_documents.design.variants import TEXTS, Language, Marking, SlidesVariant
 from pta_documents.errors import DocumentFormat
-from pta_documents.generation.common import audience
+from pta_documents.generation.common import audience, durations
 from pta_documents.generation.common.result import GenerationResult, Notes
 from pta_documents.generation.common.slide_transition import SlideTransition
 from pta_documents.generation.pptx import sticker
@@ -42,6 +42,8 @@ VALID_KEYS: Final = (
     Keys.BUILD,
     Keys.TRANSITION,
     Keys.AUDIENCE,
+    Keys.BEGIN,
+    Keys.LENGTH,
 )
 
 
@@ -150,4 +152,10 @@ def apply_front_matter(front: FrontMatter, options: PptxOptions) -> PptxOptions:
         options = replace(options, transition=front.one_of(Keys.TRANSITION, value, choices))
     if (value := front.date()) is not None:
         options = replace(options, date=value)
+    if (value := front.get(Keys.BEGIN)) is not None:
+        what = f"The front matter key '{Keys.BEGIN}' has the value '{value}'; it"
+        options = replace(options, begin=durations.parse_clock(value, what, FORMAT))
+    if (value := front.get(Keys.LENGTH)) is not None:
+        what = f"The front matter key '{Keys.LENGTH}' has the value '{value}'; it"
+        options = replace(options, length=durations.parse_minutes(value, what, FORMAT))
     return options

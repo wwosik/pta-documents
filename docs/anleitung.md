@@ -163,6 +163,8 @@ datum: 2026-11-06
 | `pruefung` | ✓ | ✓ | nur für `./run.sh check`: `aus` schaltet die Stilregeln ab, `style-words, style-title` nur diese |
 | `aufbau` | | ✓ | `listen`: jede Liste erscheint beim Vortragen Punkt für Punkt (siehe [Klick für Klick](#klick-für-klick)); `nein` (Standard) |
 | `uebergang` | | ✓ | Übergang jeder Folie: `none` (Standard), `fade`, `push`, `wipe`, `morph` … (siehe [Folienübergänge](#folienübergänge)) |
+| `beginn` | | ✓ | Beginn einer Schulung, z. B. `09:00`: Agenda und Zeitplan zeigen Uhrzeiten (siehe [Schulung planen](#schulung-planen)) |
+| `laenge` | | ✓ | geplante Länge, z. B. `240` oder `4h`: der Zeitplan meldet, wenn die Folien eine andere Summe ergeben |
 | `fortschritt` | | nur HTML | `ja` (Standard) oder `nein`: Fortschrittsbalken unter der Folie im [HTML-Deck](#präsentation-im-browser-ansehen); PowerPoint lehnt den Schlüssel ab |
 | `kapitelanzeige` | | nur HTML | `ja` (Standard) oder `nein`: die Kapitel über der Folie im HTML-Deck, das aktuelle hervorgehoben; PowerPoint lehnt den Schlüssel ab |
 
@@ -466,6 +468,52 @@ Hinweis für den Trainer: hier 10 Minuten einplanen.
 - Überschriften `#`/`##` gehören nicht in diese Container; ein Block hat höchstens einen Marker
   (`{.build}` in ein `::: internal` hineinschreiben, nicht davor).
 - Übung und Lösung erscheinen schlicht als Text, ohne eigenen Kasten.
+
+### Schulung planen
+
+Minuten an Folien und Kapiteln ergeben einen Zeitplan: eine Agenda mit Uhrzeiten, die geplante
+Zeit in den Notizen des Trainers und ein Word-Dokument mit der Zeitplantabelle.
+
+```markdown
+---
+vorlage: schulung
+beginn: 09:00
+laenge: 4h
+---
+# Schulung Datenmodellierung
+
+## Agenda {.agenda dauer=5}
+
+# Grundlagen {dauer=45}
+
+## Begriffe {dauer=10}
+
+## Beispiele
+
+## Kaffeepause {.break dauer=15}
+
+# Praxis
+
+## Übung 1 {dauer=1h30}
+```
+
+- `{dauer=5}` an einer Folie sind fünf Minuten; auch `90`, `4h` oder `1h30`. An einem Kapitel
+  (`#`) gilt die Dauer für das ganze Kapitel — Folien darin ohne eigene Angabe teilen sich den
+  Rest gleichmäßig (oben: „Beispiele" bekommt 35 Minuten).
+- `## Pause {.break dauer=15}` ist eine Pausenfolie („Pause · 15 min"), die während der Pause
+  stehen bleibt; darunter kommt kein Inhalt.
+- Folien ohne Angabe (und ohne Kapitel mit Angabe) zählen zwei Minuten; der Generator meldet
+  das als Hinweis `schedule-missing`. Weicht die Summe von `laenge:` ab, kommt
+  `schedule-length`; `./run.sh check` meldet zusätzlich `schedule-estimate`, wenn die geplante
+  Zeit weit von seiner Schätzung (zwei Minuten je Folie plus Notizen) entfernt ist.
+- Mit `beginn:` zeigt die Agenda vor jedem Kapitel seine Uhrzeit („09:05 Grundlagen") und jede
+  Pause als eigenen Punkt; ohne `beginn:` bleibt sie wie bisher.
+- Die **Trainerfassung** (`fassung: trainer` oder `--audience trainer`) hat auf jeder Folie als
+  erste Notizenzeile „Geplant: 09:20–09:25 (5 min)"; die Kundenfassung bleibt ohne.
+- `./run.sh schedule documents/<thema>/kurs-praesentation.md` schreibt
+  `kurs-praesentation-zeitplan.docx`: eine Tabelle Von | Bis | Dauer | Kapitel/Folie | Notizen
+  (leer, zum Ausfüllen), Pausen gelb markiert, unten die Summe. Ohne `beginn:` stehen dort
+  relative Zeiten („+0:15").
 
 ### Agenda, Zwischenfazit, Zitat, Kontakt
 

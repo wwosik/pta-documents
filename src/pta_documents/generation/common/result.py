@@ -81,6 +81,18 @@ class NoteCodes:
     """Internal blocks or solutions left out of the version for an audience (``fassung:``,
     ``--audience``, E16-S01); one note with the numbers (PPTX, DOCX, PDF)."""
 
+    SCHEDULE_MISSING: Final = "schedule-missing"
+    """Slides of a deck with a schedule (``dauer=…``, ``{.break}``, ``beginn:``, ``laenge:``,
+    E16-S02) that have no length; the schedule counts 2 minutes each (PPTX)."""
+
+    SCHEDULE_LENGTH: Final = "schedule-length"
+    """The schedule sums to another length than ``laenge:``, or the slides of a chapter to more
+    than its ``dauer`` (PPTX, E16-S02)."""
+
+    SCHEDULE_ESTIMATE: Final = "schedule-estimate"
+    """The planned talking time is more than half off the rule of thumb of ``./run.sh check``
+    (2 minutes per content slide plus the notes); only the check reports it (E16-S02)."""
+
     ALL: Final = (
         SLIDE_SPLIT,
         SLIDE_OVERFULL,
@@ -94,6 +106,9 @@ class NoteCodes:
         IMAGE_SCALE_IN_TITLE,
         SCENE_DROPPED,
         AUDIENCE_OMITTED,
+        SCHEDULE_MISSING,
+        SCHEDULE_LENGTH,
+        SCHEDULE_ESTIMATE,
     )
     """Every code, in the order the guides list them."""
 

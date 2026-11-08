@@ -204,6 +204,8 @@ result.slides  # Zahl der erzeugten Folien
 | `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | wie in Word |
 | `aufbau` | `listen`, `nein` (Standard) | `listen`: jede äußere Liste Punkt für Punkt, siehe [Builds](#builds-e09-s02) |
 | `uebergang` | `none` (Standard), `fade`, `push`, `wipe` (mit `-left`/`-right`/`-up`/`-down`), `split`, `cover`, `uncover`, `zoom`, `cut`, `morph` | Übergang jeder Folie, siehe [Folienübergänge](#folienübergänge-e09-s03) |
+| `beginn` | Uhrzeit `09:00` | Beginn der Schulung: Agenda und Zeitplan mit Uhrzeiten, siehe [Schulungs-Zeitplan](#schulungs-zeitplan-e16-s02) |
+| `laenge` | Minuten `240` oder `4h`, `3h30` | geplante Gesamtlänge; der Zeitplan wird damit verglichen (Hinweis `schedule-length`) |
 
 Gliederung: erstes `#` = Titelfolie, weitere `#` = Trennfolie „01", „02" …,
 `# Text {.closing}` = Abschlussfolie, `##` = Folie. `## Titel {layout="Name"}` wählt ein
@@ -606,7 +608,7 @@ Front Matter mitgezählt).
 
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
-| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`, `uebergang="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, `uebergang="…"` (siehe [Folienübergänge](#folienübergänge-e09-s03)), PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`); beide: `.internal` (siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01)) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
+| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`, `uebergang="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, `uebergang="…"` (siehe [Folienübergänge](#folienübergänge-e09-s03)), PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`); beide: `.internal` (siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01)); beide: `dauer=5` (ohne Anführungszeichen, auch `dauer=1h30`), `##`: `.break` (Pause, eine PTA-Folienart, braucht `dauer`; siehe [Schulungs-Zeitplan](#schulungs-zeitplan-e16-s02)) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
 | Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)); `scene` (siehe [Szenen](#szenen-e09-s04)); `internal`, `exercise`, `solution` (siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01)) | alle Formate: `internal`/`exercise`/`solution` werden je Fassung weggelassen oder ohne Rahmen gezeigt; PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); `scene` als benannte Formen auf `Nur Titel`; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle, `scene` entfällt; PDF wie Word, die Grafiken als Vektoren, `scene` als Standbild |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
@@ -1659,6 +1661,78 @@ für `kunde`, `<name>-intern.<format>` und `<name>-trainer.<format>` sonst (auch
 `--audience`, wenn `fassung:` es sagt; ebenso `generate-samples`); `alle` erzeugt jede Fassung,
 deren Token-Strom sich von den vorigen unterscheidet (`audience.versions`), mindestens `kunde`.
 
+## Schulungs-Zeitplan (E16-S02)
+
+Minuten an Folien und Kapiteln ergeben einen Zeitplan (`generation/common/training_schedule.py`,
+`Schedule`, `build`, `deck_schedule`; Zahlen und Uhrzeiten in `durations.py`):
+
+```markdown
+---
+beginn: 09:00
+laenge: 4h
+---
+# Schulung
+
+## Agenda {.agenda dauer=5}
+
+# Grundlagen {dauer=45}
+
+## Begriffe {dauer=10}
+
+## Beispiele
+
+## Pause {.break dauer=15}
+```
+
+- `{dauer=…}` an `##`: Minuten der Folie (`5`, `90`, `4h`, `1h30`; auch `dauer="5"`). Eine
+  geteilte Folie („(Forts.)") zählt einmal.
+- `{dauer=…}` an `#`: Minuten des Kapitels; seine Folien ohne eigene Angabe teilen sich, was
+  übrig bleibt, gleichmäßig in ganzen Minuten (Entscheidung 2026-11-07). Bleibt Zeit übrig, endet
+  das Kapitel trotzdem erst nach seiner Dauer; brauchen die Folien mehr, gilt deren Summe (Hinweis
+  `schedule-length`).
+- Folien ohne Angabe in einem Kapitel ohne Angabe zählen 2 Minuten (die Faustregel von `check`)
+  — Hinweis `schedule-missing`. Titelfolie, Trennfolien und Abschlussfolie zählen 0.
+- `## Pause {.break dauer=15}` ist eine Pausenfolie auf `Zwischenfazit 01` (bzw. `layout="…"`
+  der Zwischenfazit-Layouts) mit dem Titel „Pause · 15 min", ohne Inhalt. Eine Pause zählt nicht
+  zur `dauer` ihres Kapitels; Pausen am Ende eines Kapitels stehen im Zeitplan hinter ihm.
+- Nach der Abschlussfolie (`{.closing}`) ist nichts mehr geplant. `dauer` an der Abschlussfolie
+  ist ein Fehler, ebenso `.break` ohne `dauer`, an `#` oder mit Inhalt, und jeder Wert, der keine
+  Dauer ist (`Line 3: The heading attribute dauer=abc is no length of time; write minutes or
+  hours and minutes, like '5', '90', '4h' or '1h30' (more than 0).`).
+- Einen Zeitplan hat ein Deck, sobald es `dauer`, eine Pause, `beginn:` oder `laenge:` nennt. Er
+  gilt für die Fassung (E16-S01): interne Folien zählen nur intern und beim Trainer.
+
+Wirkung in PowerPoint (und im HTML-Deck):
+
+- **Agenda** (`{.agenda}`, E04-S04) mit `beginn:`: jeder Punkt, der ein Kapitel nennt (Groß- und
+  Kleinschreibung egal), bekommt dessen Uhrzeit vorangestellt („09:05 Grundlagen"); jede Pause
+  wird ein eigener Punkt vor dem ersten Kapitel danach. Pausen zählen zu den höchstens acht
+  Punkten. Eine Liste, die kein Kapitel nennt, bleibt, wie sie ist; ohne `beginn:` ändert sich
+  nichts.
+- **Sprechernotizen** nur in der Trainerfassung: erste Zeile „Geplant: 09:20–09:25 (5 min)"
+  (englisch „Planned: …"), ohne `beginn:` relativ („+0:20–+0:25"); Trennfolien zeigen die Zeit
+  ihres Kapitels. Fehlt `::: notes`, entsteht die Notizenseite nur dafür. Kunden- und interne
+  Fassung bekommen keine Zeitnotiz. `./run.sh generate --audience alle` schreibt für ein Deck mit
+  Zeitplan immer auch die Trainerfassung.
+- Word und PDF nehmen `dauer` an und lassen es weg; eine Pause steht in Word als fetter Absatz
+  (wie `.interim`), im PDF als Überschrift (wie die übrigen Folienarten).
+
+`Schedule.to_markdown()` liefert die Tabelle Von | Bis | Dauer | Kapitel/Folie | Notizen (leer,
+für den Trainer): Kapitel fett, Pausen `==markiert==`, angenommene Dauern „≈ 2 min", zuletzt die
+Summe. `schedule_document(schedule, audience)` macht daraus ein Word-Markdown auf
+`hoch-ohne-deckblatt` (Überschrift „Zeitplan: <Titel>", Beginn, geplante Länge und Summe;
+Kennzeichnung `intern` außer für `kunde`).
+
+Werkzeug:
+
+```sh
+./run.sh schedule samples/funktionen/zeitplan-praesentation.md [--out <ordner>] [--markdown] [--strict] [--audience kunde|intern|trainer]
+```
+
+schreibt `<name>-zeitplan.docx` neben die Präsentation (Standard: Trainerfassung), zeigt die
+Hinweise des Decks und mit `--markdown` das Markdown des Dokuments. Ein genanntes Deck ohne
+Zeitplan ist ein Fehler, in einem Ordner wird es übersprungen.
+
 ## Hinweise (`GenerationResult`)
 
 `generate()` beider Generatoren gibt ein `GenerationResult` zurück (`pta_documents.GenerationResult`,
@@ -1690,6 +1764,9 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `image-scale-in-title` (`IMAGE_SCALE_IN_TITLE`) | PPTX, DOCX (E15-S04) | `scale=N` steht im Bildtitel; wirkt bis 2027-11, gehört aber als `{scale=N}` hinter das Bild |
 | `scene-dropped` (`SCENE_DROPPED`) | DOCX (E09-S04) | eine Szene (`::: scene`) fällt im Word-Dokument weg; PowerPoint zeigt sie als Formen, das PDF als Standbild |
 | `audience-omitted` (`AUDIENCE_OMITTED`) | PPTX, DOCX, PDF (E16-S01) | die Fassung hat interne Blöcke oder Lösungen weggelassen; **ein** Hinweis ohne Zeile mit den Zahlen („4 internal blocks and 1 solution were left out for the audience 'kunde'; …"), siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01) |
+| `schedule-missing` (`SCHEDULE_MISSING`) | PPTX (E16-S02) | ein Deck mit Zeitplan hat Folien ohne `dauer` (und ohne Kapitel mit `dauer`); **ein** Hinweis an der ersten („7 slides have no 'dauer'; the schedule assumes 2 min each. …"), siehe [Schulungs-Zeitplan](#schulungs-zeitplan-e16-s02) |
+| `schedule-length` (`SCHEDULE_LENGTH`) | PPTX (E16-S02) | die Summe weicht von `laenge:` ab („Planned 240 min ('laenge:'), slides sum to 265 min."), oder die Folien eines Kapitels brauchen mehr als seine `dauer` (Zeile des `#`) |
+| `schedule-estimate` (`SCHEDULE_ESTIMATE`) | nur `check` (E16-S02) | die geplante Sprechzeit (ohne Pausen) weicht um mehr als die Hälfte von der Faustregel des Prüfbefehls ab (2 Minuten je Inhaltsfolie plus Notizen); nur, wenn mindestens eine Folie `dauer` hat |
 
 Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate` zeigt die
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;
