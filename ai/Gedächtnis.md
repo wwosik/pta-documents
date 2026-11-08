@@ -163,8 +163,8 @@ weil ihm vertraut wird.
 - **Builds** (E09-S02): Marker-Zeilen (`{.build}`, `{.frag}`, `{.exit}`, `{.emphasize}`) nimmt
   eine Kernregel des gemeinsamen Parsers heraus (`markdown/block_markers.py`, `meta[MARKER]` am
   ersten Token des Blocks; falsche bleiben als Absatz mit `meta[ERROR]`, `layout_syntax.check`
-  wirft) — Word/PDF brauchen dafür keinen Code. Neue Blockmarker (geplant `{.calc}` E14-S03,
-  Zielgruppen E16-S01) in `NAMES` eintragen; PPTX wirft für jeden Marker, den `DeckParser.marked`
+  wirft) — Word/PDF brauchen dafür keinen Code. Neue Blockmarker (geplant `{.calc}` E14-S03; seit
+  E16-S01 `{.internal}`) in `NAMES` eintragen; PPTX wirft für jeden Marker, den `DeckParser.marked`
   nicht angewendet hat (`_check_markers`), also dort mit behandeln. Klicks: `model.Click` als
   kw-only `click` an Absätzen, Visuals und Flow-Blöcken; wer einen Block neu baut, gibt
   `deck.current` (Blöcke) bzw. `paragraph_click()` (Absätze) mit und zeichnet neue Formen in
@@ -530,3 +530,13 @@ weil ihm vertraut wird.
   (Test). Schnappschuss `tests/generation/html/samples/deck.expected.html` ändert sich bei jeder
   Änderung an PPTX-Layout oder Writer mit. Playwright ist Extra `preview` (nicht in
   `./run.sh setup`); `test_browser.py` überspringt ohne. Zum Ansehen: `.tmp/review/*.html`.
+- **Zielgruppenfassungen** (E16-S01): `generation/common/audience.py` (`Audience` `kunde`/`intern`/
+  `trainer`, `filter_tokens`, `check`, `versions`). Jeder Generator ruft **nach**
+  `layout_syntax.check` (prüft die Syntax für alle Fassungen) `filter_tokens` auf — ein neuer
+  Generator oder ein neuer Parse-Weg muss das auch, sonst geht Internes hinaus. Die Container
+  `internal`/`exercise`/`solution` werden ausgepackt (Inhalt eine `level` höher, kein Kasten),
+  `{.internal}` (Blockmarker und Überschriftenattribut) aus `meta` entfernt. `options.audience`
+  (Standard `None`) geht **vor** `fassung:` — umgekehrt wie sonst; nicht-`kunde` setzt
+  `kennzeichnung` auf `intern`, wenn das Front Matter keine nennt. Die Stilregeln von `check` und
+  `Notes.characters` (PDF) lesen das ungefilterte Markdown, nur die Statistik die Fassung.
+  Beispiele mit Internem brauchen `fassung: trainer`, sonst kommt `audience-omitted`.

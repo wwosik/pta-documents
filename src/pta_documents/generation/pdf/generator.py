@@ -17,7 +17,7 @@ from pta_documents.design import fonts as design_fonts
 from pta_documents.design.fonts import FontFace
 from pta_documents.design.variants import Language, Marking, WordVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import generated_images, layout_syntax, schedule
+from pta_documents.generation.common import audience, generated_images, layout_syntax, schedule
 from pta_documents.generation.common.result import GenerationResult, Notes
 from pta_documents.generation.pdf.frame import FrameInfo, lay_out
 from pta_documents.generation.pdf.layout import LayoutSettings
@@ -45,6 +45,7 @@ VALID_KEYS: Final = (
     Keys.CHECK,
     Keys.TOC,
     Keys.MARKING,
+    Keys.AUDIENCE,
 )
 MISSING_EFFECT: Final = "shows as '?' in the PDF"
 REPLACED_EFFECT: Final = "is replaced in the PDF (replace_unsupported)"
@@ -67,6 +68,10 @@ class PdfGenerator:
         front.check_keys(VALID_KEYS, allow_status=True)
         labels = front.status_labels()  # raises for an unknown category or a label in two
         options = apply_front_matter(front, options or PdfOptions())
+        chosen = audience.resolve(front, options.audience)
+        options = replace(options, audience=chosen)
+        if audience.needs_marking(chosen, front) and options.marking is Marking.NONE:
+            options = replace(options, marking=Marking.INTERNAL)
         title = front.get(Keys.TITLE) or document.metadata.get(MetadataKeys.TITLE)
         author = front.get(Keys.AUTHOR) or document.metadata.get(MetadataKeys.AUTHOR)
         if options.variant.has_cover and not title:
@@ -78,6 +83,7 @@ class PdfGenerator:
         tokens = create_parser().parse(front.body)
         today = schedule.reference_day(options.date)
         layout_syntax.check(tokens, FORMAT, front.body_line, today)
+        tokens = audience.filter_tokens(tokens, chosen, notes, FORMAT, front.body_line)
         document = generated_images.add_generated(document, tokens, FORMAT, front.body_line, notes)
         if options.typography:
             typeset(tokens, options.language)

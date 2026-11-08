@@ -77,6 +77,10 @@ class NoteCodes:
     """A scene (``::: scene``, E09-S04) left out of Word, which has no slides to move shapes
     on; the PDF shows it as a still picture (DOCX)."""
 
+    AUDIENCE_OMITTED: Final = "audience-omitted"
+    """Internal blocks or solutions left out of the version for an audience (``fassung:``,
+    ``--audience``, E16-S01); one note with the numbers (PPTX, DOCX, PDF)."""
+
     ALL: Final = (
         SLIDE_SPLIT,
         SLIDE_OVERFULL,
@@ -89,6 +93,7 @@ class NoteCodes:
         CODE_LANGUAGE_UNKNOWN,
         IMAGE_SCALE_IN_TITLE,
         SCENE_DROPPED,
+        AUDIENCE_OMITTED,
     )
     """Every code, in the order the guides list them."""
 

@@ -74,6 +74,30 @@ nicht geladen, und Text erscheint in der PTA-Schrift.
 
 Ein Fehler in einer Datei wird gemeldet, die anderen Dateien werden trotzdem erzeugt.
 
+### Kunden-, interne und Trainerfassung
+
+Aus einer Datei entstehen bis zu drei **Fassungen**: Was nur PTA lesen soll (Preise, interne
+Bemerkungen), steht in `::: internal` oder hinter `{.internal}`; Lösungen von Übungen stehen in
+`::: solution` (siehe [Übungen und interne Teile](#übungen-und-interne-teile)).
+
+```sh
+./run.sh generate documents/schulung --audience trainer
+./run.sh generate documents/schulung --audience alle
+```
+
+| `--audience` | zeigt | Datei | Kennzeichnung |
+| ------------ | ----- | ----- | ------------- |
+| `kunde` (Standard) | weder Internes noch Lösungen | `schulung-praesentation.pptx` | wie im Kopf |
+| `intern` | Internes, keine Lösungen | `schulung-praesentation-intern.pptx` | „Für den internen Gebrauch" |
+| `trainer` | alles | `schulung-praesentation-trainer.pptx` | „Für den internen Gebrauch" |
+| `alle` | jede Fassung, die sich von den vorigen unterscheidet | je Fassung eine Datei | |
+
+Ohne `--audience` gilt `fassung:` aus dem Kopf, sonst `kunde` — es geht also nie versehentlich
+etwas Internes hinaus. Die interne und die Trainerfassung tragen automatisch die Kennzeichnung
+`intern`, außer der Kopf setzt `kennzeichnung:` selbst. Unter jeder Fassung steht ein Hinweis,
+wie viele Blöcke sie weggelassen hat (`audience-omitted`). Für Word, PDF und das HTML-Deck gilt
+dasselbe; `./run.sh check --audience alle` prüft jede Fassung mit eigener Statistik.
+
 ### Prüfen, bevor man erzeugt
 
 ```sh
@@ -126,6 +150,7 @@ datum: 2026-11-06
 | `sprache` | ✓ | ✓ | `de` (Standard) oder `en` — z. B. „Page"/„Table"/„Figure", englisches Logo auf der Titelfolie (auch in der Schulungsvorlage) |
 | `fusszeile` | | ✓ | Text der Fußzeile „PTA – …" (sonst der Titel) |
 | `titelfolie` | | ✓ | `bild-02` (Standard), `bild-01`, `branchen`, `ohne-bild` |
+| `fassung` | ✓ | ✓ | `kunde` (Standard), `intern` oder `trainer`: welche [Fassung](#kunden--interne-und-trainerfassung) entsteht; `--audience` geht vor |
 | `kennzeichnung` | ✓ | ✓ | `vertraulich` („VERTRAULICH"), `intern` („Für den internen Gebrauch"), `entwurf` („ENTWURF"), `kein`. Folien: Sticker oben rechts auf jeder Folie; Standard `basis` ohne, `schulung` `intern` — dort ist `kein` nicht erlaubt. Word und PDF: Text in Blau unter dem Logo jeder Seite und auf dem Deckblatt, `entwurf` zusätzlich ein Wasserzeichen „ENTWURF" quer über jede Seite; Standard `kein`. Ein Entwurf, der an den Kunden geht, trägt das sichtbar — vor dem Versand auf `kein` (oder `vertraulich`) stellen |
 | `typografie` | ✓ | ✓ | `ja` (Standard) oder `nein`: Anführungszeichen, Gedankenstriche, geschützte Leerzeichen (siehe unten) |
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) oder `nein`: Codeblöcke mit Sprache farbig |
@@ -399,6 +424,42 @@ Ein Neubau ist günstiger als jede weitere Erweiterung.
 
 Ein Tippfehler oder ein falscher Aufbau (z. B. eine Karte ohne `###`) ergibt eine
 Fehlermeldung mit Zeilennummer, die sagt, was zu ändern ist.
+
+### Übungen und interne Teile
+
+```markdown
+## Übung 1
+
+::: exercise
+Wie viele Fassungen gibt es?
+:::
+
+::: solution
+Drei: kunde, intern, trainer.
+:::
+
+{.internal}
+Hinweis für den Trainer: hier 10 Minuten einplanen.
+
+::: internal
+| Leistung | Tagessatz |
+| -------- | --------: |
+| Beratung | 1.200 € |
+:::
+
+## Preise {.internal}
+```
+
+- `::: exercise` steht in jeder Fassung, `::: solution` nur in der Trainerfassung; die Lösung
+  steht direkt nach der Übung (oder in ihr), sonst meldet der Generator einen Fehler.
+- `{.internal}` in einer Zeile für sich vor einem Absatz, einer Liste, Tabelle, einem Bild oder
+  Container — der Block fehlt in der Kundenfassung. `::: internal` fasst mehrere Blöcke.
+- `{.internal}` am Ende einer `#`- oder `##`-Überschrift lässt das ganze Kapitel bzw. die ganze
+  Folie samt Sprechernotizen weg; die Kapitelnummern zählen ohne sie weiter. Die Titelfolie
+  (das erste `#`) ist nie intern.
+- Überschriften `#`/`##` gehören nicht in diese Container; ein Block hat höchstens einen Marker
+  (`{.build}` in ein `::: internal` hineinschreiben, nicht davor).
+- Übung und Lösung erscheinen schlicht als Text, ohne eigenen Kasten.
 
 ### Agenda, Zwischenfazit, Zitat, Kontakt
 

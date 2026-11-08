@@ -68,6 +68,7 @@ YAML, keine Listen). Schlüssel und Werte sind **deutsch**; `ja`/`nein`; Datum `
 | `inhaltsverzeichnis` | ✓ | – | `ja` · `nein` |
 | `fusszeile` | – | ✓ | Fußzeilentext nach „PTA – " |
 | `titelfolie` | – | ✓ | `bild-02` (Standard) · `bild-01` · `branchen` · `ohne-bild` |
+| `fassung` | ✓ | ✓ | `kunde` (Standard) · `intern` · `trainer` — siehe [Zielgruppenfassungen](#zielgruppenfassungen); `--audience` geht vor |
 | `kennzeichnung` | ✓ | ✓ | `vertraulich` · `intern` · `entwurf` · `kein`; PPTX: Sticker, Standard `basis` ohne, `schulung` `intern` (dort ist `kein` ein Fehler); Word/PDF: Text unter dem Logo und auf dem Deckblatt, `entwurf` mit Wasserzeichen, Standard `kein` — vertraulicher Inhalt: `vertraulich`; `entwurf` nur, solange das Dokument nicht verschickt wird |
 | `typografie` | ✓ | ✓ | `ja` (Standard) · `nein` — gerade Zeichen behalten |
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) · `nein` — Codeblöcke einfarbig |
@@ -347,6 +348,41 @@ für jede Art: `samples/funktionen/mermaid-praesentation.md`, für Word
   `code-not-drawn`; dann den Menschen fragen, statt das Diagramm anders nachzubauen.
 - Ein Syntaxfehler bricht mit Zeilennummer und der Meldung von Mermaid ab.
 
+## Zielgruppenfassungen
+
+Eine Quelle, drei Fassungen: `kunde` (Standard: nichts Internes, keine Lösungen), `intern`
+(Internes, keine Lösungen), `trainer` (alles). **Regel: Preise, Tagessätze, interne Bemerkungen
+und alles, was der Kunde nicht sehen soll, immer in `::: internal` oder hinter `{.internal}`
+schreiben, Lösungen immer in `::: solution`** — dann bleibt die Kundenfassung sauber, ohne dass
+eine zweite Datei gepflegt wird.
+
+```markdown
+{.internal}
+Ein Absatz (Liste, Tabelle, Bild, Container) nur für PTA.
+
+::: internal
+Mehrere Blöcke nur für PTA.
+:::
+
+::: exercise
+Die Aufgabe — steht in jeder Fassung.
+:::
+
+::: solution
+Die Lösung — nur beim Trainer; direkt nach (oder in) ihrem `::: exercise`.
+:::
+
+## Preise {.internal}        ← ganze Folie bzw. ganzes Kapitel (#) samt Notizen
+```
+
+- Nie `{.internal}` an das erste `#` (Titelfolie) und keine `#`/`##` in die drei Container.
+- `{.internal}` ersetzt keinen anderen Marker: ein `{.build}`-Block, der intern ist, kommt mit
+  seinem `{.build}` in ein `::: internal`.
+- `./run.sh generate … --audience kunde|intern|trainer|alle`; Dateien `<name>.pptx`,
+  `<name>-intern.pptx`, `<name>-trainer.pptx`. Interne Fassungen bekommen von selbst die
+  Kennzeichnung `intern`. Der Hinweis `audience-omitted` nennt, wie viel weggelassen wurde — er
+  ist erwartet und kein Fehler. Vor der Übergabe an den Kunden die Kundenfassung ansehen.
+
 ## Aus Python statt per Befehl
 
 ```python
@@ -412,6 +448,9 @@ nach den Regeln oben aufbereiten (Front Matter, `#`/`##`-Gliederung) und die Bil
       schreibt `<name>.html` mit denselben Folien (Anzahl, Titel, Teilung) — im Browser oder
       mit Playwright als Bild prüfen; die Datei nicht als Ergebnis ausliefern, sie ist nur
       Vorschau (Weitergabe nur auf Wunsch des Anwenders).
+- [ ] Preise, interne Bemerkungen und Lösungen stehen in `::: internal`/`{.internal}` bzw.
+      `::: solution`; was an den Kunden geht, ist die Fassung `kunde` (Datei ohne `-intern`/
+      `-trainer`).
 - [ ] Fremde Bilder: Lizenz und Urheber genannt, `QUELLEN.md` geschrieben.
 - [ ] Dem Anwender die erzeugten Dateien nennen und sagen, dass Word beim Öffnen eines
       Inhaltsverzeichnisses fragt, ob Felder aktualisiert werden sollen („Ja").

@@ -24,7 +24,7 @@ import io
 import math
 import statistics
 from dataclasses import dataclass, field, replace
-from typing import BinaryIO, Final, Protocol, cast
+from typing import Any, BinaryIO, Final, Protocol, cast
 
 import pptx
 from lxml import etree
@@ -34,6 +34,8 @@ from pptx.slide import Slide as PptxSlide
 from pta_documents.design import slides as design
 from pta_documents.design.variants import TEXTS
 from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.common import audience as audiences
+from pta_documents.generation.common.audience import Audience
 from pta_documents.generation.common.layout_syntax import NOTES
 from pta_documents.generation.common.result import GenerationNote, GenerationResult
 from pta_documents.generation.common.style_rules import (
@@ -44,7 +46,9 @@ from pta_documents.generation.common.style_rules import (
     words,
 )
 from pta_documents.generation.docx.generator import DocxGenerator
+from pta_documents.generation.docx.options import DocxOptions
 from pta_documents.generation.pptx.generator import PptxGenerator
+from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.markdown.document import MarkdownDocument
 from pta_documents.markdown.front_matter import FrontMatter
 from pta_documents.markdown.parser import CONTAINER_OPEN, container, parse
@@ -79,6 +83,9 @@ class CheckOptions:
     skip: tuple[str, ...] = ()
     """Style codes not to check, on top of the front matter key ``pruefung``."""
     limits: StyleLimits = field(default_factory=StyleLimits)
+    audience: Audience | None = None
+    """The version to check (E16-S01): errors, notes and statistics are those of generating it.
+    None: ``fassung:`` of the front matter, else ``kunde``."""
 
 
 @dataclass(frozen=True)
@@ -195,11 +202,15 @@ def check(
     output = io.BytesIO()
     try:
         if format is DocumentFormat.PPTX:
-            generated = PptxGenerator().generate(document, output)
+            generated = PptxGenerator().generate(
+                document, output, PptxOptions(audience=options.audience)
+            )
         elif format is DocumentFormat.PDF:
-            generated = _pdf_generator().generate(document, output)
+            generated = _pdf_generator().generate(document, output, _pdf_options(options.audience))
         else:
-            generated = DocxGenerator().generate(document, output)
+            generated = DocxGenerator().generate(
+                document, output, DocxOptions(audience=options.audience)
+            )
     except DocumentConversionError as error:
         errors.append(error.reason)
     except ImportError as error:  # PDF without the extra: the message names it
@@ -227,20 +238,27 @@ def check(
         if format is DocumentFormat.PPTX:
             stats = deck_stats(output.getvalue())
         else:
-            stats = report_stats(document, format)
+            stats = report_stats(document, format, options.audience)
             if generated is not None and generated.pages is not None:
                 stats = replace(stats, counted_pages=generated.pages)
     return CheckResult(tuple(errors), notes, stats)
 
 
 class _Generator(Protocol):
-    def generate(self, document: MarkdownDocument, output: BinaryIO) -> GenerationResult: ...
+    def generate(
+        self, document: MarkdownDocument, output: BinaryIO, options: Any
+    ) -> GenerationResult: ...
 
 
 def _pdf_generator() -> _Generator:
     """The PDF generator, imported only now: it needs the extra ``pdf``."""
     module = importlib.import_module("pta_documents.generation.pdf")
     return cast(_Generator, module.PdfGenerator())
+
+
+def _pdf_options(audience: Audience | None) -> object:
+    module = importlib.import_module("pta_documents.generation.pdf")
+    return module.PdfOptions(audience=audience)
 
 
 def deck_stats(deck: bytes) -> DeckStats:
@@ -315,9 +333,14 @@ def _title(slide: PptxSlide) -> str:
     return ""
 
 
-def report_stats(document: MarkdownDocument, format: DocumentFormat) -> ReportStats:
-    """Count the words, headings, tables and figures of a Word document's Markdown."""
-    tokens = parse(FrontMatter.read(document.text, format).body)
+def report_stats(
+    document: MarkdownDocument, format: DocumentFormat, audience: Audience | None = None
+) -> ReportStats:
+    """Count the words, headings, tables and figures of a Word document's Markdown, in the
+    version for ``audience`` (default: ``fassung:``, else ``kunde``)."""
+    front = FrontMatter.read(document.text, format)
+    chosen = audiences.resolve(front, audience)
+    tokens = audiences.filter_tokens(parse(front.body), chosen, None, format)
     text_words = headings = tables = figures = 0
     i = 0
     while i < len(tokens):

@@ -2,6 +2,7 @@
 
 usage: ./run.sh check <file-or-folder> [...] [--docx | --pptx | --pdf] [--strict]
                       [--skip <code>,...] [--sources] [--json]
+                      [--audience kunde|intern|trainer|alle]
 
 Files and formats as with ``generate``: a folder means every ``*.md`` in it, ``…-bericht.md`` /
 ``…-dokument.md`` are Word, ``…-praesentation.md`` / ``…-folien.md`` PowerPoint, or
@@ -14,6 +15,10 @@ The style rule ``style-image-source`` runs when the file's folder has a ``QUELLE
 ``--sources``. ``--skip style-words,style-title`` leaves rules out (also front matter
 ``pruefung: aus`` or ``pruefung: style-words``). ``--json`` prints one JSON object per run for
 tools. The exit code is 1 for errors, with ``--strict`` also for notes.
+
+``--audience`` checks that version (E16-S01) instead of the one of ``fassung:`` (default
+``kunde``); ``alle`` checks every version that differs, each with its statistics
+(``OK <file> (fassung: intern)``).
 """
 
 from __future__ import annotations
@@ -21,11 +26,12 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
 from pta_documents.errors import DocumentFormat
+from pta_documents.generation.common.audience import Audience
 from pta_documents.generation.common.check import CheckOptions, CheckResult, DeckStats, check
 from pta_documents.markdown import MarkdownDocument
 
@@ -57,11 +63,23 @@ def check_file(source: Path, forced: str | None, options: CheckOptions) -> Check
     return check(
         document,
         DocumentFormat(format),
-        CheckOptions(sources, options.skip, options.limits),
+        CheckOptions(sources, options.skip, options.limits, options.audience),
     )
 
 
-def as_json(source: Path, result: CheckResult) -> dict[str, Any]:
+def versions(source: Path, forced: str | None, requested: str | None) -> list[Audience | None]:
+    """The versions to check: as ``generate --audience`` writes them."""
+    format: str | None = GENERATE.target_format(source, forced)
+    if format is None or requested is None:
+        return [None]
+    return GENERATE.audiences_of(source.read_text(encoding="utf-8"), format, requested)
+
+
+def label(source: Path, audience: Audience | None) -> str:
+    return f"{source} (fassung: {audience.value})" if audience is not None else str(source)
+
+
+def as_json(source: Path, result: CheckResult, audience: Audience | None = None) -> dict[str, Any]:
     stats: dict[str, Any] | None = None
     if result.stats is not None:
         stats = asdict(result.stats)
@@ -71,6 +89,7 @@ def as_json(source: Path, result: CheckResult) -> dict[str, Any]:
             stats["pages"] = result.stats.pages
     return {
         "file": str(source),
+        "audience": audience.value if audience is not None else None,
         "ok": result.ok,
         "errors": list(result.errors),
         "notes": [asdict(note) for note in result.notes],
@@ -78,11 +97,12 @@ def as_json(source: Path, result: CheckResult) -> dict[str, Any]:
     }
 
 
-def print_result(source: Path, result: CheckResult) -> None:
+def print_result(source: Path, result: CheckResult, audience: Audience | None = None) -> None:
+    name = label(source, audience)
     if result.ok:
-        print(f"OK {source}")
+        print(f"OK {name}")
     for error in result.errors:
-        print(f"ERROR {source}: {error}")
+        print(f"ERROR {name}: {error}")
     for note in result.notes:
         print(f"  - {note} [{note.code}]")
     if result.stats is not None:
@@ -94,6 +114,7 @@ def main(argv: list[str]) -> int:
     forced: str | None = None
     strict = as_machine = sources = False
     skip: list[str] = []
+    audience: str | None = None
     paths: list[Path] = []
     args = iter(argv)
     for arg in args:
@@ -105,6 +126,12 @@ def main(argv: list[str]) -> int:
             as_machine = True
         elif arg == "--sources":
             sources = True
+        elif arg == "--audience":
+            audience = next(args, "").strip().lower()
+            if audience not in GENERATE.AUDIENCE_VALUES:
+                values = ", ".join(GENERATE.AUDIENCE_VALUES)
+                print(f"--audience takes {values}, not '{audience}'", file=sys.stderr)
+                return 1
         elif arg == "--skip":
             skip.extend(code.strip() for code in next(args, "").split(",") if code.strip())
         else:
@@ -120,19 +147,20 @@ def main(argv: list[str]) -> int:
         for source in files:
             if source.name.lower() in ("readme.md", SOURCES_FILE.lower()):
                 continue
-            result = check_file(source, forced, options)
-            if result is None:
-                if not as_machine:
-                    print(
-                        f"skipped {source}: name it …-bericht.md or …-praesentation.md, "
-                        "or pass --docx / --pptx / --pdf"
-                    )
-                continue
-            ok &= result.ok and not (strict and result.notes)
-            if as_machine:
-                report.append(as_json(source, result))
-            else:
-                print_result(source, result)
+            for version in versions(source, forced, audience):
+                result = check_file(source, forced, replace(options, audience=version))
+                if result is None:
+                    if not as_machine:
+                        print(
+                            f"skipped {source}: name it …-bericht.md or …-praesentation.md, "
+                            "or pass --docx / --pptx / --pdf"
+                        )
+                    continue
+                ok &= result.ok and not (strict and result.notes)
+                if as_machine:
+                    report.append(as_json(source, result, version))
+                else:
+                    print_result(source, result, version)
     if as_machine:
         print(json.dumps({"ok": ok, "files": report}, ensure_ascii=False, indent=2))
     return 0 if ok else 1

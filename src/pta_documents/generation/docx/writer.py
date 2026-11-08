@@ -43,6 +43,7 @@ from pta_documents.drawing import steps as steps_drawing
 from pta_documents.drawing.model import Drawing
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
+    audience,
     block_shapes,
     code_blocks,
     code_highlight,
@@ -188,6 +189,13 @@ class BodyWriter:
         env: dict[str, object] = {}
         tokens = create_parser().parse(self.front.body, env)
         layout_syntax.check(tokens, FORMAT, self.front.body_line, self.today)
+        tokens = audience.filter_tokens(
+            tokens,
+            self.options.audience or audience.Audience.KUNDE,
+            self.notes,
+            FORMAT,
+            self.front.body_line,
+        )
         self.source = generated_images.add_generated(
             self.source, tokens, FORMAT, self.front.body_line, self.notes
         )

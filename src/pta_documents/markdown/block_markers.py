@@ -6,6 +6,8 @@ before the block, or as the first line of the paragraph it marks — and is take
 token stream by a core rule of the shared parser, so that every format reads the same
 Markdown: decks build the block (``generation.pptx.animations``), Word and PDF show it as if the
 line were not there. ``{.build}`` and ``{.frag}`` take an entrance, ``{.build=fly}``.
+``{.internal}`` (E16-S01) is no build: it keeps the block out of the customer version in every
+format (``generation.common.audience.filter_tokens``, which takes the marker away).
 
 The marked block's first token carries the ``Marker`` in ``meta[MARKER]``. A marker line that is
 wrong stays in the stream as the paragraph it is, with the reason in
@@ -36,14 +38,17 @@ EXIT: Final = "exit"
 """The block is there from the start and fades out on its click."""
 EMPHASIZE: Final = "emphasize"
 """Text that turns PTA blue on its click."""
-NAMES: Final = (BUILD, FRAGMENT, EXIT, EMPHASIZE)
+INTERNAL: Final = "internal"
+"""The block only in the internal and the trainer version (E16-S01,
+``generation.common.audience``); in every format."""
+NAMES: Final = (BUILD, FRAGMENT, EXIT, EMPHASIZE, INTERNAL)
 
 FADE: Final = "fade"
 ENTRANCES: Final = (FADE, "appear", "fly", "wipe")
 """The entrances of ``{.build=…}`` and ``{.frag=…}``; ``fade`` is the default."""
 WITH_ENTRANCE: Final = (BUILD, FRAGMENT)
 
-VALID: Final = "{.build}, {.frag}, {.exit}, {.emphasize}"
+VALID: Final = "{.build}, {.frag}, {.exit}, {.emphasize}, {.internal}"
 """The markers, for error messages."""
 VALID_ENTRANCES: Final = ", ".join(f"={e}" for e in ENTRANCES)
 
@@ -219,11 +224,20 @@ def _wrong_target(marker: Marker, target: Token | None) -> str | None:
     if MARKER in target.meta:
         return f"The block after '{marker.text}' has a second block marker."
     if target.type == "heading_open" and target.tag in _SLIDE_HEADINGS and target.level == 0:
+        if marker.name == INTERNAL:
+            return (
+                "'{.internal}' before a '#' or '##' heading: write it at the end of the heading "
+                "instead ('## Title {.internal}') to leave out the whole chapter or slide."
+            )
         return (
             f"The block marker '{marker.text}' stands before a heading that starts a slide; put "
             "it before a block under the heading."
         )
-    if target.type.startswith("container_") and target.info.strip().split(" ")[0] == "notes":
+    if (
+        target.type.startswith("container_")
+        and target.info.strip().split(" ")[0] == "notes"
+        and marker.name != INTERNAL
+    ):
         return f"The block marker '{marker.text}' cannot mark speaker notes."
     if marker.name == EMPHASIZE and target.type not in TEXT_BLOCKS:
         return (

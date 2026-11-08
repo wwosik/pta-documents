@@ -4,7 +4,8 @@ Port of DocLibs ``HeadingAttributes``. Only a trailing ``{…}`` made of classes
 ``key="value"`` pairs counts; any other braces stay text (``## Sets {a, b}``). Which heading
 takes which attribute is ``check_level``'s business: ``.closing`` goes on ``#``, ``.dark``,
 ``kicker`` and the PTA slide kinds (``.agenda``, ``.interim``, ``.quote``, ``.contact``, E04-S04)
-on ``##``, ``layout`` and ``uebergang`` (the slide transition, E09-S03) on both.
+on ``##``, ``layout``, ``uebergang`` (the slide transition, E09-S03) and ``.internal`` (the
+chapter or slide only in the internal and trainer version, E16-S01) on both.
 """
 
 from __future__ import annotations
@@ -28,13 +29,14 @@ SLIDE_KINDS: Final = (AGENDA, INTERIM, QUOTE, CONTACT)
 """The PTA slide kinds of a ``##`` heading: one at most, not with ``.dark`` or ``kicker``."""
 
 VALID: Final = (
-    '.closing, .dark, kicker="…", layout="…", uebergang="…", .agenda, .interim, .quote, .contact'
+    '.closing, .dark, kicker="…", layout="…", uebergang="…", .agenda, .interim, .quote, .contact, '
+    ".internal"
 )
 """Every heading attribute, as it is written, for error messages."""
-VALID_ON_SECTION: Final = '.closing, layout="…", uebergang="…"'
+VALID_ON_SECTION: Final = '.closing, layout="…", uebergang="…", .internal'
 """The attributes of a ``#`` heading."""
 VALID_ON_SLIDE: Final = (
-    '.dark, kicker="…", layout="…", uebergang="…", .agenda, .interim, .quote, .contact'
+    '.dark, kicker="…", layout="…", uebergang="…", .agenda, .interim, .quote, .contact, .internal'
 )
 """The attributes of a ``##`` heading."""
 
@@ -58,6 +60,9 @@ class HeadingAttributes:
     transition: SlideTransition | None = None
     """``uebergang="…"`` (E09-S03): how the slide comes in; on a ``#`` heading for its slide and
     every slide of the chapter. None: the chapter's, else the deck's."""
+    internal: bool = False
+    """``.internal`` (E16-S01): the chapter (``#``) or slide (``##``) only in the internal and
+    the trainer version (``generation.common.audience``)."""
     block: str = ""
     """The attributes as written (``{.dark kicker="Why"}``), for error messages."""
 
@@ -72,7 +77,7 @@ def split(text: str, format: DocumentFormat) -> tuple[str, HeadingAttributes | N
         return text, None
     block = match.group(0).strip()
     seen: set[str] = set()
-    closing = dark = False
+    closing = dark = internal = False
     layout: str | None = None
     kicker: str | None = None
     kind: str | None = None
@@ -89,6 +94,8 @@ def split(text: str, format: DocumentFormat) -> tuple[str, HeadingAttributes | N
                 closing = True
             case ".dark":
                 dark = True
+            case ".internal":
+                internal = True
             case "layout":
                 layout = token.group("value")
             case "kicker":
@@ -115,6 +122,7 @@ def split(text: str, format: DocumentFormat) -> tuple[str, HeadingAttributes | N
         kicker=kicker,
         kind=kind,
         transition=transition,
+        internal=internal,
         block=block,
     )
     return text[: match.start()].rstrip(), attributes

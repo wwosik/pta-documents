@@ -21,6 +21,7 @@ from pta_documents.design import slides as design
 from pta_documents.design.colors import StatusCategory
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
+    audience,
     code_blocks,
     code_highlight,
     generated_images,
@@ -157,6 +158,13 @@ class DeckParser:
         tokens = parse(self.body)
         layout_syntax.check(
             tokens, FORMAT, self.line_offset, schedule.reference_day(self.options.date)
+        )
+        tokens = audience.filter_tokens(
+            tokens,
+            self.options.audience or audience.Audience.KUNDE,
+            self.notes,
+            FORMAT,
+            self.line_offset,
         )
         self.document = generated_images.add_generated(
             self.document, tokens, FORMAT, self.line_offset, self.notes
