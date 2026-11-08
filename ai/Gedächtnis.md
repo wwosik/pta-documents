@@ -197,3 +197,14 @@ eigenen Formatvorlagen. Bedienung:
   Modul-Docstring nachziehen. Selawik hat **kein U+00A0** (Typografie setzt es!): der
   PDF-Generator (E05) muss für fehlende Glyphen ausweichen. Segoe UI wird nur mit allen fünf
   Dateien (inkl. `segoeuil.ttf`) übernommen.
+- **Logos** (E01-S04): `pta_documents.design.logos` (Unterpaket; SVG/PNG als Paketdaten daneben)
+  — `Logo` (`WORD`, `SLIDES`, `SLIDES_PLAIN`), `svg()`, `png()`, `size()`, `aspect_ratio()`,
+  `shapes()` (liest die eigene SVG-Teilmenge: nur `<path>` mit absolutem `M`/`L`/`C`/`Z`).
+  **`drawing()` fehlt noch** — E02-S03 baut es aus `shapes()` (Koordinaten = viewBox-Einheiten,
+  Ursprung oben links, `even_odd` → Füllregel). Erzeugt werden die Dateien von
+  `prepare-templates` mit dem EMF-Leser `tools/prepare-templates/emf.py` (unbekannte Datensätze
+  brechen ab); EMF-Farben werden über `LOGO_COLORS` im Werkzeug auf `design.colors` abgebildet
+  (`026FB9` → PTA-Blau). Das Werkzeug braucht resvg (Extra `svg`) — auch für `--check`, das
+  `test_embedded_templates_are_up_to_date` aufruft; PNGs werden nach Pixeln verglichen.
+  `pyproject.toml`: pyright `extraPaths = ["src", "tools/prepare-templates"]` (ohne `src` verliert
+  pyright die automatische Suche dort) und pytest `pythonpath`, damit `import emf` geht.

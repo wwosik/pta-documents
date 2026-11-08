@@ -359,6 +359,42 @@ schriften.has_glyph(0x20AC, FontFace.LIGHT)  # nur BMP; U+00A0 fehlt in Selawik
 - Fehlt fontTools, nennt der `ImportError` die Extras; `bundled()` und `fonts.read(name)`
   (Bytes einer mitgelieferten Datei) gehen auch ohne.
 
+## Logos als SVG und PNG (E01-S04)
+
+Die Vorlagen tragen das PTA-Logo nur als EMF. `./run.sh prepare-templates` wandelt es einmal in
+SVG und PNG und legt die Dateien als Paketdaten in `src/pta_documents/design/logos/` ab;
+`./run.sh prepare-templates --check` meldet, wenn sie nicht mehr zu `source-templates/` passen.
+Zur Laufzeit wird nichts gewandelt, das Modul braucht kein Extra:
+
+```python
+from pta_documents.design import logos
+from pta_documents.design.logos import Logo
+
+logos.svg(Logo.WORD)  # Bytes des SVG
+logos.png(Logo.SLIDES)  # 2000 px breit, transparenter Grund
+logos.aspect_ratio(Logo.WORD)  # Breite / Höhe, ≈ 1,75
+logos.size(Logo.WORD)  # Breite und Höhe der viewBox
+logos.shapes(Logo.WORD)  # Vektorpfade (LogoShape: segments, fill, even_odd)
+```
+
+| `Logo` | Datei | Quelle | Farbe |
+| ------ | ----- | ------ | ----- |
+| `WORD` | `logo-word` | Kopfzeile der Word-Hochformatvorlage (alle vier gleich) | PTA-Blau `006FB9` |
+| `SLIDES` | `logo-slides` | Folienlayout `Titelfolie mit Bild 01`, mit Slogan | weiß |
+| `SLIDES_PLAIN` | `logo-slides-plain` | Folienlayout `Abbschlussfolie`, ohne Slogan | weiß |
+
+- Gefunden werden die Logos **über die Beziehungen** (Kopfzeilen des Dokuments bzw. das
+  EMF-Bild des benannten Layouts), nicht über Dateinamen.
+- Der EMF-Leser (`tools/prepare-templates/emf.py`) kennt nur die Datensätze der PTA-Logos
+  (Pfade, Bézierkurven, Polygone, Vollton-Pinsel, Null-Stift); alles andere bricht mit der
+  Nummer des Datensatzes ab. Bringt eine neue Vorlage ein anderes EMF, muss er erweitert werden.
+- Das Word-Logo ist im EMF `026FB9` gefüllt und wird auf das PTA-Blau gesetzt
+  (Entscheidung 2026-11-07); jede Füllfarbe muss in `design.colors` stehen.
+- Die SVGs enthalten nur `<path>` mit `d` (absolutes `M`/`L`/`C`/`Z`), `fill` und `fill-rule`;
+  `shapes()` liest genau diese Teilmenge zurück. Ein `Drawing` daraus kommt mit E02-S03.
+- Das englische Logo gibt es weiter nur als PNG (`templates.ENGLISH_LOGO`).
+- Die PNGs rastert resvg (Extra `svg`) beim Vorbereiten; `--check` vergleicht PNGs nach Pixeln.
+
 ## Hinweise (`GenerationResult`)
 
 `generate()` beider Generatoren gibt ein `GenerationResult` zurück (`pta_documents.GenerationResult`,

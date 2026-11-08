@@ -4,26 +4,52 @@ Strips SharePoint metadata, trash parts, sample slides and sample text and perso
 writes the result to src/pta_documents/design/templates/ deterministically: running it again
 without a template change produces identical bytes.
 
+Also converts the vector logos (EMF, found through the relationships of the Word header and of
+two slide layouts) to SVG and PNG in src/pta_documents/design/logos/ (E01-S04); the PNG needs
+resvg from the extra ``svg``.
+
 usage: ./run.sh prepare-templates [--check]
-  --check  only compare; exit 1 if the embedded templates are out of date
+  --check  only compare; exit 1 if the embedded templates or logos are out of date
 """
 
 from __future__ import annotations
 
 import io
 import posixpath
+import re
 import sys
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import emf
 from lxml import etree
+from PIL import Image
 
+from pta_documents.design import colors
 from pta_documents.design.variants import SLIDES_SOURCES, WordVariant
 
 REPO = Path(__file__).resolve().parents[2]
 SOURCE = REPO / "source-templates"
 TARGET = REPO / "src" / "pta_documents" / "design" / "templates"
+LOGO_TARGET = REPO / "src" / "pta_documents" / "design" / "logos"
+LOGO_SUFFIXES = (".svg", ".png")
+LOGO_PNG_WIDTH = 2000
+
+WORD_LOGO_SOURCE = WordVariant.PORTRAIT
+SLIDES_LOGO_SOURCE = "PTA-Powerpoint-Basisvorlage.potx"
+SLIDES_LOGO_LAYOUTS = {
+    "logo-slides": "Titelfolie mit Bild 01",
+    "logo-slides-plain": "Abbschlussfolie",
+}
+"""Logo file stem -> name of the slide layout whose EMF picture is that logo."""
+
+LOGO_COLORS = {
+    colors.PTA_BLUE: colors.PTA_BLUE,
+    colors.WHITE: colors.WHITE,
+    "026FB9": colors.PTA_BLUE,
+}
+"""EMF fill colour -> colour of design.colors; the Word logo's 026FB9 becomes PTA blue (E01-S04)."""
 
 CT = "http://schemas.openxmlformats.org/package/2006/content-types"
 PR = "http://schemas.openxmlformats.org/package/2006/relationships"
@@ -260,6 +286,97 @@ def slide_pictures(package: Package) -> list[tuple[str, bytes]]:
     return result
 
 
+def word_logo(source: Path) -> bytes:
+    """The EMF picture in the headers of a Word template (all headers must show the same one)."""
+    package = Package.read(source)
+    document = "word/document.xml"
+    headers = [
+        rel_target(document, str(rel.get("Target")))
+        for rel in package.xml(rels_name(document))
+        if rel.get("Type") == REL_TYPES + "header"
+    ]
+    found = {data for header in sorted(headers) for data in emf_pictures(package, header)}
+    if len(found) != 1:
+        raise SystemExit(f"{source.name}: expected one EMF logo in the headers, found {len(found)}")
+    return found.pop()
+
+
+def slides_logo(source: Path, layout_name: str) -> bytes:
+    """The EMF picture of the slide layout called ``layout_name``."""
+    package = Package.read(source)
+    for name in sorted(n for n in package.parts if re.fullmatch(r"ppt/slideLayouts/[^/]+\.xml", n)):
+        layout = package.xml(name)
+        c_sld = layout.find(f"{{{P}}}cSld")
+        if c_sld is None or c_sld.get("name") != layout_name:
+            continue
+        found = emf_pictures(package, name)
+        if len(found) != 1:
+            raise SystemExit(f"{layout_name}: expected one EMF logo, found {len(found)}")
+        return found[0]
+    raise SystemExit(f"{source.name}: no slide layout '{layout_name}'")
+
+
+def emf_pictures(package: Package, part: str) -> list[bytes]:
+    """The EMF pictures a part references through ``a:blip`` (in document order)."""
+    rels = rels_name(part)
+    if rels not in package.parts:
+        return []
+    targets = {
+        str(rel.get("Id")): rel_target(part, str(rel.get("Target"))) for rel in package.xml(rels)
+    }
+    result: list[bytes] = []
+    for blip in package.xml(part).iterfind(f".//{{{A}}}blip"):
+        target = targets.get(str(blip.get(f"{{{R}}}embed")), "")
+        if target.lower().endswith(".emf") and target in package.parts:
+            result.append(package.parts[target])
+    return result
+
+
+def logo_color(value: str) -> str:
+    try:
+        return LOGO_COLORS[value]
+    except KeyError:
+        raise SystemExit(f"logo colour {value} is not mapped to design.colors") from None
+
+
+def rasterize(svg: bytes) -> bytes:
+    try:
+        import resvg_py
+    except ImportError:
+        raise SystemExit("the logo PNGs need resvg: pip install -e '.[svg]'") from None
+    return bytes(
+        resvg_py.svg_to_bytes(
+            svg_string=svg.decode("utf-8"), width=LOGO_PNG_WIDTH, skip_system_fonts=True
+        )
+    )
+
+
+def build_logos() -> dict[str, bytes]:
+    sources = {"logo-word": word_logo(SOURCE / WORD_LOGO_SOURCE.source_file)}
+    for stem, layout in SLIDES_LOGO_LAYOUTS.items():
+        sources[stem] = slides_logo(SOURCE / SLIDES_LOGO_SOURCE, layout)
+    files: dict[str, bytes] = {}
+    for stem, data in sorted(sources.items()):
+        try:
+            svg = emf.read(data).svg(logo_color)
+        except emf.EmfError as error:
+            raise SystemExit(f"{stem}: {error}") from None
+        files[stem + ".svg"] = svg
+        files[stem + ".png"] = rasterize(svg)
+    return files
+
+
+def same_png(a: bytes, b: bytes) -> bool:
+    """PNGs count as equal when their pixels are, whatever the encoder wrote around them."""
+    if a == b:
+        return True
+    with Image.open(io.BytesIO(a)) as first, Image.open(io.BytesIO(b)) as second:
+        return (
+            first.size == second.size
+            and first.convert("RGBA").tobytes() == second.convert("RGBA").tobytes()
+        )
+
+
 def build() -> dict[str, bytes]:
     files: dict[str, bytes] = {}
     for variant in WordVariant:
@@ -274,32 +391,53 @@ def build() -> dict[str, bytes]:
     return files
 
 
-def main(argv: list[str]) -> int:
-    check = "--check" in argv
-    files = build()
-    stale = [
-        name
-        for name, data in files.items()
-        if not (TARGET / name).exists() or (TARGET / name).read_bytes() != data
-    ]
+def up_to_date(path: Path, data: bytes) -> bool:
+    if not path.exists():
+        return False
+    current = path.read_bytes()
+    if path.suffix == ".png":
+        return same_png(current, data)
+    return current == data
+
+
+def sync(target: Path, files: dict[str, bytes], owned: tuple[str, ...] | None, check: bool) -> bool:
+    """Compares (and unless ``check`` writes) ``files`` in ``target``; True when all were current.
+
+    Files in ``target`` that are not in ``files`` are removed — only those with a suffix in
+    ``owned`` when it is given (the logo folder also holds the module).
+    """
+    stale = [name for name, data in files.items() if not up_to_date(target / name, data)]
     extra = (
-        sorted(p.name for p in TARGET.glob("*") if p.is_file() and p.name not in files)
-        if TARGET.exists()
+        sorted(
+            p.name
+            for p in target.glob("*")
+            if p.is_file() and p.name not in files and (owned is None or p.suffix in owned)
+        )
+        if target.exists()
         else []
     )
     if check:
         for name in stale + extra:
             print(f"out of date: {name}")
-        return 1 if stale or extra else 0
-    TARGET.mkdir(parents=True, exist_ok=True)
+        return not stale and not extra
+    target.mkdir(parents=True, exist_ok=True)
     for name in stale:
-        (TARGET / name).write_bytes(files[name])
+        (target / name).write_bytes(files[name])
         print(f"wrote {name} ({len(files[name]) // 1024} KB)")
     for name in extra:
-        (TARGET / name).unlink()
+        (target / name).unlink()
         print(f"removed {name}")
-    if not stale and not extra:
-        print("templates are up to date")
+    return not stale and not extra
+
+
+def main(argv: list[str]) -> int:
+    check = "--check" in argv
+    current = sync(TARGET, build(), None, check)
+    current = sync(LOGO_TARGET, build_logos(), LOGO_SUFFIXES, check) and current
+    if check:
+        return 0 if current else 1
+    if current:
+        print("templates and logos are up to date")
     return 0
 
 

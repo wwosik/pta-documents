@@ -1,4 +1,4 @@
-"""The PTA design: colours, fonts, measures, template variants and the embedded templates."""
+"""The PTA design: colours, fonts, logos, measures, template variants and the embedded templates."""
 
 from pta_documents.design.variants import (
     DEFAULT_SLIDES_VARIANT,

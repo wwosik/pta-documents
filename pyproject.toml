@@ -36,6 +36,8 @@ include = ["src/pta_documents", "tests", "README.md", "pyproject.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# tests/design/test_logos.py checks the EMF interpreter of prepare-templates.
+pythonpath = ["tools/prepare-templates"]
 addopts = "-ra"
 
 [tool.ruff]
@@ -49,6 +51,9 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
 ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.pyright]
+# "src" is implied only without extraPaths; tools/prepare-templates holds the EMF interpreter
+# that prepare-templates.py and tests/design/test_logos.py import.
+extraPaths = ["src", "tools/prepare-templates"]
 include = ["src", "tests", "tools"]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
