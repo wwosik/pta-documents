@@ -700,3 +700,40 @@ Zeilen in der ==Hervorhebungsfarbe== brauchen einen Menschen. Stand heute:
 ```
 
 Zeilen in der Hervorhebungsfarbe brauchen einen Menschen. Stand heute: im Plan, unter Beobachtung, gestoppt, zur Kenntnis und ohne Bewertung.
+
+## Zeitstrahl
+
+::: timeline macht aus einer Liste von Terminen einen Zeitstrahl in Satzspiegelbreite. Termine sind ein Jahr, ein Monat, ein Quartal, ein Tag oder heute; Erledigtes ({.done}) und alles vor dem Datum des Dokuments ist grau:
+
+```markdown
+::: timeline
+- 2026-01: Kick-off {.done}
+- 2026-Q2: Analyse abgeschlossen
+- 15.09.2026: Go-live
+- 2027: Betrieb
+:::
+```
+
+![2026-01: Kick-off; 2026-Q2: Analyse abgeschlossen; 15.09.2026: Go-live; 2027: Betrieb](images/image11.png)
+
+## Projektplan
+
+::: gantt macht aus einer Tabelle (Vorgang, Start, Ende und wahlweise Wer) eine Tabelle mit einer Spalte je Monat (oder Woche, Quartal: raster=…); die Laufzeit ist schattiert, ein Meilenstein (Start = Ende) eine Raute, rechts der Spalte von heute steht eine dunkelblaue Linie:
+
+```markdown
+::: gantt raster=monat
+| Vorgang   | Start      | Ende       | Wer   |
+| --------- | ---------- | ---------- | ----- |
+| Analyse   | 2026-10-05 | 2026-11-27 | PTA   |
+| Umsetzung | 2026-11-30 | 2027-03-31 | PTA   |
+| Abnahme   | 2027-04-01 | 2027-04-16 | Kunde |
+| Go-live   | 2027-04-19 | 2027-04-19 | PTA   |
+:::
+```
+
+| Vorgang | Wer | Okt 26 | Nov | Dez | Jan 27 | Feb | Mär | Apr |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Analyse | PTA | ■ | ■ |  |  |  |  |  |
+| Umsetzung | PTA |  | ■ | ■ | ■ | ■ | ■ |  |
+| Abnahme | Kunde |  |  |  |  |  |  | ■ |
+| Go-live | PTA |  |  |  |  |  |  | ◆ |

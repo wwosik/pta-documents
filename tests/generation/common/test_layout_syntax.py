@@ -112,7 +112,8 @@ def test_the_layouts_sample_is_accepted(
         (
             "## T\n\n::: card\n- **a** b\n:::\n",
             "Line 3: Unknown container '::: card'. "
-            "Valid containers: cards, rows, panel, statement, columns, conclusion, comment, notes.",
+            "Valid containers: cards, rows, panel, statement, columns, conclusion, comment, notes, "
+            "timeline, gantt.",
         ),
         ("## T\n\n::: cards dark\n- **a** b\n:::\n", "Line 3: The container '::: cards dark'"),
         ("## T\n\n::: cards dark\n- **a** b\n:::\n", "takes no arguments."),

@@ -703,9 +703,57 @@ Die Texte stehen im Front Matter: status.success: Erledigt usw.
 
 :::
 
-## Diagramme
+## Zeitstrahl und Projektplan
 
 06
+
+## Zeitstrahl
+
+Visuelle Bausteine
+
+:::: notes
+
+```
+## Zeitstrahl {kicker="Visuelle Bausteine"}
+
+::: timeline
+- 2026-01: Kick-off {.done}
+- 2026-Q2: Analyse abgeschlossen
+- 15.09.2026: Go-live
+- 2027: Betrieb
+:::
+```
+
+Termine: Jahr, Monat, Quartal, Tag oder heute. Erledigtes ({.done}) und alles vor dem datum ist grau.
+
+::::
+
+## Projektplan
+
+Visuelle Bausteine
+
+:::: notes
+
+```
+## Projektplan {kicker="Visuelle Bausteine"}
+
+::: gantt raster=monat
+| Vorgang   | Start      | Ende       | Wer   |
+| --------- | ---------- | ---------- | ----- |
+| Analyse   | 2026-10-05 | 2026-11-27 | PTA   |
+| Umsetzung | 2026-11-30 | 2027-03-31 | PTA   |
+| Abnahme   | 2027-04-01 | 2027-04-16 | Kunde |
+| Go-live   | 2027-04-19 | 2027-04-19 | PTA   |
+:::
+```
+
+Ein Meilenstein hat Start = Ende; wer nicht wie die erste Zeile heißt, ist hellblau.
+
+::::
+
+## Diagramme
+
+07
 
 ## Balkendiagramm
 
@@ -842,7 +890,7 @@ Jahr, Marge
 
 ## Finanzdiagramme
 
-07
+08
 
 ## Finanzdiagramm: Entwicklung
 
@@ -1022,7 +1070,7 @@ Mit `"culture": "en"` stehen Zahlen und Beschriftungen auf Englisch.
 
 ## PTA-Folienarten
 
-08
+09
 
 ## Agenda
 

@@ -35,7 +35,12 @@ from pta_documents.design.colors import StatusCategory
 from pta_documents.design.slides import TITLE_SLIDES
 from pta_documents.design.variants import Language, SlidesVariant, WordVariant
 from pta_documents.errors import DocumentFormat
-from pta_documents.generation.common import generated_images, heading_attributes, layout_syntax
+from pta_documents.generation.common import (
+    generated_images,
+    heading_attributes,
+    layout_syntax,
+    schedule,
+)
 from pta_documents.generation.common.code_blocks import KNOWN_GRAPHIC_LANGUAGES, fence_language
 from pta_documents.generation.common.coloured_words import PATTERN
 from pta_documents.generation.docx import generator as docx_generator
@@ -167,6 +172,8 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
                 shown.add(f"::: {name} {arguments}")
             if name == layout_syntax.COLUMNS and layout_syntax.column_widths(arguments):
                 shown.add(f"::: {name} <widths>")
+            if name == layout_syntax.GANTT and arguments:
+                shown.add(f"::: {name} {arguments.partition('=')[0]}=<grid>")
         elif token.type == "blockquote_open" and ALERT in token.meta:
             shown.add(f"> [!{token.meta[ALERT]}]")
         elif token.type == "heading_open" and token.tag in ("h1", "h2") and token.level == 0:
@@ -252,6 +259,7 @@ def required(format: DocumentFormat) -> set[str]:
     result |= {f"::: {name}" for name in containers}
     # The arguments ``check_container`` accepts.
     result |= {f"::: {layout_syntax.PANEL} dark", f"::: {layout_syntax.COLUMNS} <widths>"}
+    result.add(f"::: {layout_syntax.GANTT} {schedule.GRID_KEY}=<grid>")
     result |= {f"> [!{kind}]" for kind in layout_syntax.ALERT_KINDS}
     result.add("==mark==")
     result |= {GENERATED_IMAGE.format(scheme=scheme) for scheme in generated_images.SCHEMES}

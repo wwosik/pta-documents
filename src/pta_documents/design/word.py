@@ -121,3 +121,13 @@ CHART_HEIGHT_RATIO: Final = 5 / 8
 """A chart is as wide as the text and at most this ratio of its width high (E03-S04)."""
 TABLE_BASE_STYLE: Final = "Normal Table"
 """The built-in table style without rules the picture row style is based on."""
+
+
+GANTT_NAME_SHARE: Final = 0.28
+"""The share of the text width the task column of a Gantt table takes (E15-S01)."""
+GANTT_OWNER_SHARE: Final = 0.12
+"""The share of the column who does the task, if the table has one."""
+GANTT_MILESTONE: Final = "\u25c6"
+"""A milestone in a Gantt table: a diamond (◆) in dark blue."""
+GANTT_TODAY_RULE: Final = 12
+"""The width of the rule right of today's column, in eighths of a point."""

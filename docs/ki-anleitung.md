@@ -106,6 +106,12 @@ Sprache = Hinweis `code-language-unknown`.
 - QR-Code: `![QR-Code zur Umfrage](qr:https://… "https://…")` → QR-Code in PTA-Blau, 3 × 3 cm,
   den Link als Titel (wird „Abbildung n: https://…", gedruckt lesbar). `scale=0.5` im Titel
   halbiert ihn. Keine Bilddatei nötig, keine Quelle in `QUELLEN.md`.
+- Zeitstrahl und Projektplan (Word und Präsentation gleich): `::: timeline` mit 2–8 Einträgen
+  `- 2026-Q2: Text` (aufsteigend; Termin = `2026`, `2026-03`, `2026-Q2`, `2026-03-15`,
+  `15.03.2026` oder `heute`; `{.done}` am Ende = erledigt, grau) und `::: gantt` (Argument
+  `raster=woche|monat|quartal` nur bei Bedarf) mit einer Tabelle `| Vorgang | Start | Ende | Wer |`
+  (vierte Spalte optional; 1–12 Zeilen; Start = Ende = Meilenstein; höchstens 24 Raster-Spalten).
+  Auf Folien: eigene `##`-Folie. In Word wird der Gantt eine Tabelle, der Zeitstrahl ein Bild.
 
 ## Präsentation
 

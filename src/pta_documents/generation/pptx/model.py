@@ -10,6 +10,7 @@ from pta_documents.design.colors import StatusCategory
 from pta_documents.drawing.model import Drawing
 from pta_documents.generation.common.code_highlight import CodeLine
 from pta_documents.generation.common.renderers import ChartGraphic
+from pta_documents.generation.common.schedule import Schedule
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.markdown.document import DocumentResource
 
@@ -404,6 +405,14 @@ class CommentBlock:
     paragraphs: tuple[Paragraph, ...]
 
 
+@dataclass(frozen=True)
+class ScheduleBlock:
+    """``::: timeline`` or ``::: gantt`` (E15-S01): a group of editable shapes as wide as its
+    place on the slide, as high as its content."""
+
+    schedule: Schedule
+
+
 FlowBlock = (
     TextBlock
     | CodeLinesBlock
@@ -418,6 +427,7 @@ FlowBlock = (
     | TagsBlock
     | LabelledTagsBlock
     | CommentBlock
+    | ScheduleBlock
 )
 
 

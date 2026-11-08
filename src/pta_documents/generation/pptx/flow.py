@@ -20,8 +20,9 @@ from pptx.util import Emu
 
 from pta_documents.design import colors
 from pta_documents.design import slides as design
+from pta_documents.drawing import schedule as schedule_drawing
 from pta_documents.generation.common import text_metrics
-from pta_documents.generation.pptx import fitting, visuals
+from pta_documents.generation.pptx import drawing, fitting, visuals
 from pta_documents.generation.pptx.model import (
     CalloutBlock,
     Card,
@@ -39,6 +40,7 @@ from pta_documents.generation.pptx.model import (
     Paragraph,
     RowsBlock,
     Run,
+    ScheduleBlock,
     StatementBlock,
     TableBlock,
     TagsBlock,
@@ -212,6 +214,8 @@ class FlowWriter:
                 return self.code(block, box, look)
             case CommentBlock():
                 return 0
+            case ScheduleBlock():
+                return self.schedule(block, box, look)
 
     # ------------------------------------------------------------------ text and visuals
 
@@ -285,6 +289,18 @@ class FlowWriter:
                 visuals.code_runs(paragraph, text, spans, size, lang)
                 end = etree.SubElement(paragraph, a("endParaRPr"), lang=lang)
                 end.set("sz", str(round(size * 100)))
+        return height
+
+    def schedule(self, block: ScheduleBlock, box: Box, look: Look) -> int:
+        """A timeline or Gantt chart (E15-S01) as a group of shapes as wide as ``box``; its
+        sizes stay as designed (text never below 10 pt), the slide is split or noted instead."""
+        picture = schedule_drawing.draw(
+            block.schedule, box.w / drawing.EMU_PER_PIXEL, dark=look.dark
+        )
+        height = round(picture.height * drawing.EMU_PER_PIXEL)
+        if self.slide is not None:
+            alt = block.schedule.alt
+            drawing.place(self.slide, picture, box.x, box.y, box.w, height, alt, self.deck.lang)
         return height
 
     # ------------------------------------------------------------------ containers

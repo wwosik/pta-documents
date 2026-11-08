@@ -24,7 +24,7 @@ from docx.image.exceptions import UnrecognizedImageError
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.opc.packuri import PackURI
 from docx.opc.part import Part
-from docx.shared import Cm, Emu, Pt
+from docx.shared import Cm, Emu, Pt, RGBColor
 from docx.styles.style import ParagraphStyle
 from docx.table import Table
 from docx.text.paragraph import Paragraph
@@ -32,9 +32,10 @@ from lxml import etree
 from markdown_it.token import Token
 from PIL import Image
 
-from pta_documents.design import word
+from pta_documents.design import colors, word
 from pta_documents.design.colors import STATUS_COLORS, StatusCategory
 from pta_documents.design.variants import GeneratedTexts
+from pta_documents.drawing import schedule as schedule_drawing
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     code_blocks,
@@ -44,6 +45,7 @@ from pta_documents.generation.common import (
     html,
     layout_syntax,
     layout_tokens,
+    schedule,
     svg_blip,
     text_metrics,
 )
@@ -163,13 +165,15 @@ class BodyWriter:
         vertical = int(section.top_margin or 0) + int(section.bottom_margin or 0)
         self.text_width = page_width - margins
         self.text_height = page_height - vertical
+        self.today = schedule.reference_day(options.date)
+        """What ``heute`` in a timeline or Gantt chart is (E15-S01)."""
 
     # ------------------------------------------------------------------ entry
 
     def write(self) -> None:
         env: dict[str, object] = {}
         tokens = create_parser().parse(self.front.body, env)
-        layout_syntax.check(tokens, FORMAT, self.front.body_line)
+        layout_syntax.check(tokens, FORMAT, self.front.body_line, self.today)
         self.source = generated_images.add_generated(
             self.source, tokens, FORMAT, self.front.body_line
         )
@@ -300,6 +304,15 @@ class BodyWriter:
                 "notes pages of the PowerPoint deck.",
             )
             return end
+        if name == layout_syntax.TIMELINE:
+            offset = self.front.body_line
+            self.timeline(schedule.read_timeline(tokens, i, FORMAT, offset, self.today), tokens[i])
+            return end
+        if name == layout_syntax.GANTT:
+            language = self.options.language
+            offset = self.front.body_line
+            self.gantt(schedule.read_gantt(tokens, i, FORMAT, offset, self.today, language))
+            return end
         if name in (layout_syntax.CONCLUSION, layout_syntax.COMMENT):
             conclusion = name == layout_syntax.CONCLUSION
             label = self.texts.conclusion if conclusion else self.texts.comment
@@ -322,6 +335,74 @@ class BodyWriter:
             first = False
         self.container_depth -= 1
         return end
+
+    def timeline(self, timeline: schedule.Timeline, token: Token) -> None:
+        """A ``::: timeline`` as a picture as wide as the text (E15-S01), drawn like the
+        drawings of the code-block renderers (SVG with a PNG beside it)."""
+        line = self.line(token)
+        picture = schedule_drawing.timeline(timeline, self.text_width / EMU_PER_PIXEL)
+        self.drawings += 1
+        conversion = docx_drawings.convert(
+            picture, layout_syntax.TIMELINE, line, self.drawings, self.options.image_converters
+        )
+        paragraph = self.paragraph(word.STYLES.normal)
+        self.insert_picture(
+            paragraph,
+            conversion.image,
+            conversion.image.path,
+            timeline.alt,
+            "",
+            line,
+            natural=(conversion.width, conversion.height),
+            svg=conversion.svg,
+        )
+
+    def gantt(self, gantt: schedule.Gantt) -> None:
+        """A ``::: gantt`` as a table in the PTA table style (E15-S01): the task, who (if the
+        Markdown has the column), then a narrow column per week, month or quarter; the columns a
+        task runs in are shaded (light blue for another owner than the first), a milestone is a
+        diamond, the column of today has a dark blue rule on its right."""
+        owner = gantt.owner_heading is not None
+        units = gantt.units
+        columns = 1 + int(owner) + len(units)
+        table = self.document.add_table(rows=1 + len(gantt.rows), cols=columns)
+        table.style = word.STYLES.table
+        table.autofit = False
+        name_width = int(self.text_width * word.GANTT_NAME_SHARE)
+        owner_width = int(self.text_width * word.GANTT_OWNER_SHARE) if owner else 0
+        unit_width = (self.text_width - name_width - owner_width) // len(units)
+        widths = [name_width] + ([owner_width] if owner else []) + [unit_width] * len(units)
+        _set_table_width(table, widths)
+        _repeat_header(table, 0)
+        first = 1 + int(owner)
+        heads = [gantt.name_heading] + ([gantt.owner_heading or ""] if owner else [])
+        heads += [unit.label for unit in units]
+        today = gantt.today_unit
+        for r in range(len(gantt.rows) + 1):
+            row = gantt.rows[r - 1] if r else None
+            for c in range(columns):
+                cell = table.cell(r, c)
+                cell.width = Emu(widths[c])
+                paragraph = cell.paragraphs[0]
+                properties = cell._tc.get_or_add_tcPr()
+                if c >= first:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                if row is None:
+                    paragraph.add_run(heads[c])
+                elif c == 0:
+                    paragraph.add_run(row.name)
+                elif owner and c == 1:
+                    paragraph.add_run(row.owner or "")
+                elif gantt.covers(row, units[c - first]):
+                    if row.is_milestone:
+                        run = paragraph.add_run(word.GANTT_MILESTONE)
+                        run.font.color.rgb = RGBColor.from_string(colors.DARK_BLUE)
+                    else:
+                        secondary = gantt.is_secondary(row)
+                        _shade(properties, colors.LIGHT_BLUE if secondary else colors.PTA_BLUE)
+                if today is not None and c == first + today:
+                    # After the shading: both go right after the width, the borders first.
+                    _right_rule(properties, colors.DARK_BLUE)
 
     def note_box(self, tokens: list[Token], start: int, stop: int, style: str, label: str) -> None:
         """The blocks ``tokens[start:stop]`` in the note ``style``, the first paragraph starting
@@ -1207,6 +1288,21 @@ def _shade(properties: etree._Element, fill: str) -> None:
         width = properties.find(w("tcW"))
         if width is not None:
             width.addnext(shading)
+
+
+def _right_rule(properties: etree._Element, color: str) -> None:
+    """A rule on the right of a cell (the column of today in a Gantt table), in schema order."""
+    borders = etree.Element(w("tcBorders"))
+    right = etree.SubElement(borders, w("right"))
+    right.set(w("val"), "single")
+    right.set(w("sz"), str(word.GANTT_TODAY_RULE))
+    right.set(w("space"), "0")
+    right.set(w("color"), color)
+    width = properties.find(w("tcW"))
+    if width is not None:
+        width.addnext(borders)
+    else:
+        properties.insert(0, borders)
 
 
 def _only_images(children: list[Token]) -> bool:

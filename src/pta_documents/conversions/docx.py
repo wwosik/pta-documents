@@ -10,7 +10,7 @@ from lxml import etree
 
 from pta_documents.conversions.openxml import OpenXmlPackage, guard, read_input
 from pta_documents.conversions.options import ConversionOptions, ResourceCollector
-from pta_documents.design import word
+from pta_documents.design import colors, word
 from pta_documents.design.variants import TEXTS
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown import text as md
@@ -20,6 +20,9 @@ from pta_documents.markdown.document import MarkdownDocument
 W: Final = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 MC: Final = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+GANTT_CELL: Final = "■"
+"""An empty cell shaded in PTA blue or light blue: a column a task of a Gantt table runs in."""
+GANTT_FILLS: Final = (colors.PTA_BLUE, colors.LIGHT_BLUE)
 A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
 WP: Final = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
 C: Final = "http://schemas.openxmlformats.org/drawingml/2006/chart"
@@ -376,12 +379,20 @@ def _render_table(table: etree._Element, context: _Context, out: list[str]) -> N
             parts = [
                 _render_runs(p, context).strip() for p in cell.iter(w("p")) if not _in_text_box(p)
             ]
-            cells.append("<br>".join(p for p in parts if p))
+            text = "<br>".join(p for p in parts if p)
+            cells.append(text or (GANTT_CELL if _is_running(cell) else ""))
         grid.append(cells)
     if all(not c for r in grid for c in r):
         return
     _ensure_blank_line(out)
     out.append(md.table(grid))
+
+
+def _is_running(cell: etree._Element) -> bool:
+    """Whether an empty cell is shaded like the columns a task runs in (Gantt table, E15-S01)."""
+    shading = cell.find(f"{w('tcPr')}/{w('shd')}")
+    fill = shading.get(w("fill")) if shading is not None else None
+    return fill is not None and fill.upper() in GANTT_FILLS
 
 
 def _render_runs(container: etree._Element, context: _Context) -> str:

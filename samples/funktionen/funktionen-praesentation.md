@@ -647,6 +647,61 @@ Zeilen in der ==Hervorhebungsfarbe== brauchen einen Menschen. Stand: [im Plan]{.
 Die Texte stehen im Front Matter: `status.success: Erledigt` usw.
 ::::
 
+# Zeitstrahl und Projektplan
+
+## Zeitstrahl {kicker="Visuelle Bausteine"}
+
+::: timeline
+- 2026-01: Kick-off {.done}
+- 2026-Q2: Analyse abgeschlossen
+- 15.09.2026: Go-live
+- 2027: Betrieb
+:::
+
+:::: notes
+```markdown
+## Zeitstrahl {kicker="Visuelle Bausteine"}
+
+::: timeline
+- 2026-01: Kick-off {.done}
+- 2026-Q2: Analyse abgeschlossen
+- 15.09.2026: Go-live
+- 2027: Betrieb
+:::
+```
+
+Termine: Jahr, Monat, Quartal, Tag oder `heute`. Erledigtes (`{.done}`) und alles vor dem
+`datum` ist grau.
+::::
+
+## Projektplan {kicker="Visuelle Bausteine"}
+
+::: gantt raster=monat
+| Vorgang   | Start      | Ende       | Wer   |
+| --------- | ---------- | ---------- | ----- |
+| Analyse   | 2026-10-05 | 2026-11-27 | PTA   |
+| Umsetzung | 2026-11-30 | 2027-03-31 | PTA   |
+| Abnahme   | 2027-04-01 | 2027-04-16 | Kunde |
+| Go-live   | 2027-04-19 | 2027-04-19 | PTA   |
+:::
+
+:::: notes
+```markdown
+## Projektplan {kicker="Visuelle Bausteine"}
+
+::: gantt raster=monat
+| Vorgang   | Start      | Ende       | Wer   |
+| --------- | ---------- | ---------- | ----- |
+| Analyse   | 2026-10-05 | 2026-11-27 | PTA   |
+| Umsetzung | 2026-11-30 | 2027-03-31 | PTA   |
+| Abnahme   | 2027-04-01 | 2027-04-16 | Kunde |
+| Go-live   | 2027-04-19 | 2027-04-19 | PTA   |
+:::
+```
+
+Ein Meilenstein hat Start = Ende; wer nicht wie die erste Zeile heißt, ist hellblau.
+::::
+
 # Diagramme
 
 ## Balkendiagramm

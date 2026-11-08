@@ -15,7 +15,12 @@ from typing import TYPE_CHECKING, Final
 from markdown_it.token import Token
 
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import heading_attributes, layout_syntax, layout_tokens
+from pta_documents.generation.common import (
+    heading_attributes,
+    layout_syntax,
+    layout_tokens,
+    schedule,
+)
 from pta_documents.generation.pptx.model import (
     CalloutBlock,
     Card,
@@ -39,6 +44,7 @@ from pta_documents.generation.pptx.model import (
     Row,
     RowsBlock,
     Run,
+    ScheduleBlock,
     StatementBlock,
     Table,
     TableBlock,
@@ -105,6 +111,8 @@ class FlowReader:
         self.deck = deck
         self.tokens = deck.tokens
         self.conclusion: ConclusionBlock | None = None
+        self.today = schedule.reference_day(deck.options.date)
+        """What ``heute`` in a timeline or Gantt chart is."""
 
     def slide(
         self,
@@ -264,6 +272,15 @@ class FlowReader:
                         token,
                     )
                 target.add(CommentBlock(paragraphs))
+            case layout_syntax.TIMELINE:
+                read = schedule.read_timeline(tokens, i, FORMAT, self.deck.line_offset, self.today)
+                target.add(ScheduleBlock(read))
+            case layout_syntax.GANTT:
+                language = self.deck.options.language
+                read = schedule.read_gantt(
+                    tokens, i, FORMAT, self.deck.line_offset, self.today, language
+                )
+                target.add(ScheduleBlock(read))
             case _:  # pragma: no cover - layout_syntax.check refused it before
                 layout_syntax.check_container(name, arguments, FORMAT)
 

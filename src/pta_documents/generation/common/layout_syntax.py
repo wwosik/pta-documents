@@ -7,13 +7,14 @@ mistakes with the same message — ``check`` runs before anything is written.
 
 from __future__ import annotations
 
+import datetime as dt
 from collections.abc import Sequence
 from typing import Final
 
 from markdown_it.token import Token
 
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import coloured_words, heading_attributes
+from pta_documents.generation.common import coloured_words, heading_attributes, schedule
 from pta_documents.markdown.parser import ALERT, CONTAINER_OPEN, child_lines, container, line_of
 
 CARDS: Final = "cards"
@@ -27,8 +28,24 @@ COMMENT: Final = "comment"
 """PTA: the comment box (Kommentarbox), a speech bubble on the block before it (E04-S03)."""
 NOTES: Final = "notes"
 """Speaker notes of the slide(s) of its heading (E09-S01); Word leaves them out."""
+TIMELINE: Final = "timeline"
+"""A timeline from a list of dates (E15-S01): shapes on slides, a picture in Word."""
+GANTT: Final = "gantt"
+"""A Gantt chart from a table of tasks (E15-S01): shapes on slides, a table in Word; takes
+``raster=woche|monat|quartal``."""
 
-CONTAINER_NAMES: Final = (CARDS, ROWS, PANEL, STATEMENT, COLUMNS, CONCLUSION, COMMENT, NOTES)
+CONTAINER_NAMES: Final = (
+    CARDS,
+    ROWS,
+    PANEL,
+    STATEMENT,
+    COLUMNS,
+    CONCLUSION,
+    COMMENT,
+    NOTES,
+    TIMELINE,
+    GANTT,
+)
 CONTAINERS: Final = ", ".join(CONTAINER_NAMES)
 """The containers, for error messages."""
 
@@ -45,7 +62,8 @@ STATUS: Final = "status"
 
 def check_container(name: str, arguments: str, format: DocumentFormat) -> None:
     """Raise for an unknown container or arguments it does not take: ``panel`` takes ``dark``,
-    ``columns`` a ratio of two or three widths (``1:2``), the others none."""
+    ``columns`` a ratio of two or three widths (``1:2``), ``gantt`` a grid (``raster=monat``),
+    the others none."""
     if name not in CONTAINER_NAMES:
         raise DocumentConversionError(
             format, f"Unknown container '::: {name}'. Valid containers: {CONTAINERS}."
@@ -57,6 +75,9 @@ def check_container(name: str, arguments: str, format: DocumentFormat) -> None:
                 f"The container '::: columns {arguments}' takes the widths of its columns as a "
                 "ratio of two or three whole numbers, such as 1:2.",
             )
+        return
+    if name == GANTT:
+        schedule.grid_argument(arguments, format)
         return
     if arguments and not (name == PANEL and arguments == "dark"):
         but = " but dark" if name == PANEL else ""
@@ -148,14 +169,21 @@ def coloured(inline: Token, format: DocumentFormat) -> Token:
     return inline if result == children else inline.copy(children=result)
 
 
-def check(tokens: Sequence[Token], format: DocumentFormat, line_offset: int = 0) -> None:
+def check(
+    tokens: Sequence[Token],
+    format: DocumentFormat,
+    line_offset: int = 0,
+    today: dt.date | None = None,
+) -> None:
     """Check every container, alert, heading attribute and coloured word of a document.
 
     ``tokens`` are those of ``markdown.parser.parse`` on the body, ``line_offset`` the lines of
     front matter before it. A mistake raises ``DocumentConversionError`` whose reason starts
     with its line: ``Line 12: Unknown container '::: card'. …``. A ``::: notes`` before the
-    first ``#``/``##`` heading has no slide to belong to.
+    first ``#``/``##`` heading has no slide to belong to. Timelines and Gantt charts are read
+    (``schedule``), ``heute`` in them is ``today`` (default: the day of generating).
     """
+    day = schedule.reference_day(today)
     headed = False
     for i, token in enumerate(tokens):
         line = line_of(token, line_offset)
@@ -176,6 +204,11 @@ def check(tokens: Sequence[Token], format: DocumentFormat, line_offset: int = 0)
                 heading(tokens[i + 1], int(token.tag[1]), format)
         except DocumentConversionError as error:
             raise at_line(error, line) from None
+        if token.type == CONTAINER_OPEN and container(token)[0] == TIMELINE:
+            # These name the line of the entry or row that is wrong themselves.
+            schedule.read_timeline(tokens, i, format, line_offset, day)
+        elif token.type == CONTAINER_OPEN and container(token)[0] == GANTT:
+            schedule.read_gantt(tokens, i, format, line_offset, day)
         if token.type == "inline":
             heading_level = (
                 int(tokens[i - 1].tag[1])

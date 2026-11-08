@@ -149,6 +149,8 @@ der Generator als Hinweis `code-language-unknown`.
 | `Tabelle: Text` direkt unter der Tabelle | Beschriftung „Tabelle 1: Text" |
 | Bild allein im Absatz | Bild in Satzspiegelbreite, darunter „Abbildung 1: …" aus dem Bildtitel (in `"…"`) oder dem Alt-Text |
 | `![Zur Umfrage](qr:https://… "https://…")` | QR-Code in PTA-Blau, 3 × 3 cm, mit „Abbildung n: …"; `scale=0.5` im Titel halbiert ihn (siehe [QR-Codes](#qr-codes)) |
+| `::: timeline` mit `- 2026-03: Text` | Zeitstrahl als Bild in Satzspiegelbreite (siehe [Zeitstrahl und Projektplan](#zeitstrahl-und-projektplan)) |
+| `::: gantt` mit Tabelle Vorgang, Start, Ende (, Wer) | Projektplan als Tabelle mit schattierten Monats-/Wochenspalten |
 | ```` ``` ```` Codeblock | Formatvorlage Code (Consolas, grau hinterlegt) |
 | ```` ```chart ```` mit Einstellungen und CSV | echtes Word-Diagramm über die Textbreite, darunter „Abbildung n: …" aus `title` (siehe [Diagramme aus Daten](#diagramme-aus-daten)) |
 | ```` ```mermaid ```` oder ```` ```financial-chart ```` | scharfes Bild in natürlicher Größe, höchstens über die Textbreite (siehe [Diagramme mit Mermaid](#diagramme-mit-mermaid), [Finanzdiagramme](#finanzdiagramme)) |
@@ -434,6 +436,39 @@ er den Bildrahmen (eingepasst, nicht beschnitten); `scale=0.5` im Titel halbiert
 `scale=2` verdoppelt ihn in Word. Liest man das Dokument wieder nach Markdown ein, ist der
 QR-Code ein gewöhnliches Bild.
 
+### Zeitstrahl und Projektplan
+
+Termine als Liste in `::: timeline`, ein Projektplan als Tabelle in `::: gantt` — in Word und
+PowerPoint:
+
+```markdown
+::: timeline
+- 2026-01: Kick-off
+- 2026-Q2: Analyse abgeschlossen {.done}
+- 15.09.2026: Go-live
+- 2027: Betrieb
+:::
+
+::: gantt
+| Vorgang   | Start      | Ende       | Wer   |
+| --------- | ---------- | ---------- | ----- |
+| Analyse   | 2026-01-12 | 2026-02-27 | PTA   |
+| Abnahme   | 2026-07-01 | 2026-07-15 | Kunde |
+| Go-live   | 2026-07-20 | 2026-07-20 | PTA   |
+:::
+```
+
+- Termine: Jahr, Monat (`2026-03`), Quartal (`2026-Q2`), Tag (`2026-03-15` oder `15.03.2026`)
+  oder `heute` (= `datum` im Front Matter). Ein Zeitstrahl hat 2 bis 8 Einträge in zeitlicher
+  Reihenfolge; Erledigtes (`{.done}`) und Vergangenes ist grau.
+- Ein Projektplan hat 1 bis 12 Vorgänge; Start = Ende ist ein Meilenstein (Raute). Die Spalten
+  sind Kalenderwochen, Monate oder Quartale, je nach Dauer — `::: gantt raster=monat` (oder
+  `woche`, `quartal`) legt es fest; mehr als 24 Spalten gehen nicht. Wer in der vierten Spalte
+  anders heißt als in der ersten Zeile (z. B. „Kunde"), ist hellblau.
+- **Folie:** eine eigene `##`-Folie, gern mit einem Satz davor; alle Formen lassen sich in
+  PowerPoint einzeln verschieben. **Word:** der Zeitstrahl ist ein Bild, der Projektplan eine
+  Tabelle, die sich in Word weiter bearbeiten lässt.
+
 ## 6. Aus Python aufrufen (optional)
 
 ```python
@@ -474,6 +509,9 @@ Fehler im Dokument melden sich als `DocumentConversionError` mit einem Satz, der
   `images/` oder der Pfad ist falsch geschrieben (für einen QR-Code `qr:` davor schreiben).
 - `Line 12: The QR code has 1210 characters, more than 1000` → kürzeren Link nehmen;
   `'scale=0' is no scale` → eine Zahl über 0 und höchstens 5 schreiben.
+- `Line 12: 'Mai 2026' is no date. Write a date as …` → Termin wie `2026-05` schreiben;
+  `… has 1 to 12 tasks, not 14; split …` → Plan auf zwei `::: gantt` aufteilen;
+  `… has 53 columns (woche), 24 at most …` → `raster=monat` nehmen.
 - `The image 'images/plan.svg' cannot be converted: it has no size …` → dem SVG `width` und
   `height` oder eine `viewBox` geben (im Grafikprogramm mit fester Größe exportieren).
 - `… SVG images need the extra 'svg'` oder `… is a drawing, which Word places as an SVG image;

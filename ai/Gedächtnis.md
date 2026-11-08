@@ -316,3 +316,16 @@ weil ihm vertraut wird.
   Bild in den Platzhalter einpassen statt beschneiden (`visuals.fit_picture`). Ein neues Schema
   in `SCHEMES` eintragen; `test_funktionen.py` verlangt jedes im Beispiel.
   `style-image-source` überspringt erzeugte Bilder (`style_rules.needs_source`).
+- **Zeitstrahl und Gantt** (E15-S01): Container `timeline`/`gantt` in `layout_syntax`
+  (`CONTAINER_NAMES`; `gantt` nimmt `raster=…`, geprüft über `schedule.grid_argument`). Modell
+  und Leser in `generation/common/schedule.py` (`read_timeline`, `read_gantt`, `parse_date`,
+  `grid_for`, `units`); **`layout_syntax.check` liest beide schon** (Fehler `Line N: …` aus dem
+  Leser, nicht doppelt präfixen) und nimmt dafür `today` — „heute" ist `options.date`
+  (Front Matter `datum`), sonst `date.today()` (`schedule.reference_day`). Zeichnung
+  formatunabhängig in `drawing/schedule.py` (`draw(schedule, width_px, dark=)`). PowerPoint:
+  Flow-Block `ScheduleBlock` → `FlowWriter.schedule` → `generation/pptx/drawing.place` (eine
+  Gruppe `Drawing <n>`, Breite des Platzes, nie geschrumpft). Word: `BodyWriter.timeline` (Bild
+  über `docx_drawings.convert`, Extra `svg`) und `BodyWriter.gantt` (Tabelle „PTA",
+  Schattierung, `tcBorders` **nach** `w:shd` anlegen, sonst falsche Schema-Reihenfolge). Der
+  DOCX-Konverter liest leere Zellen mit Füllung PTA-Blau/Hellblau als `■`. Ein PDF-Generator
+  muss beide Container selbst zeichnen (E05-S04).

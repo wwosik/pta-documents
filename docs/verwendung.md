@@ -201,7 +201,7 @@ Front Matter mitgezählt).
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
 | Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
-| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt |
+| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt` als Formgruppe; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline` als Bild, `gantt` als Tabelle |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
 | `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen; PowerPoint fett in der Signalfarbe, Word Zeichenvorlage „Status …" |
@@ -755,6 +755,79 @@ resource = resolve("qr:https://pta.de", DocumentFormat.DOCX)  # DocumentResource
 Beide Generatoren rufen `add_generated(document, tokens, format, line_offset)` nach
 `layout_syntax.check` auf; es gibt das Dokument mit den erzeugten Bildern als zusätzliche
 Ressourcen zurück (eine eigene Ressource mit dem Pfad `qr:…` geht vor).
+
+## Zeitstrahl und Gantt (E15-S01)
+
+`::: timeline` macht aus einer Liste von Terminen einen Zeitstrahl, `::: gantt` aus einer Tabelle
+einen Projektplan — ohne Extra (außer dem Bild des Zeitstrahls in Word) und im PTA-Design:
+
+```markdown
+::: timeline
+- 2026-01: Kick-off
+- 2026-Q2: Analyse abgeschlossen {.done}
+- 15.09.2026: Go-live
+- 2027: Betrieb
+:::
+
+::: gantt raster=monat
+| Vorgang   | Start      | Ende       | Wer   |
+| --------- | ---------- | ---------- | ----- |
+| Analyse   | 2026-01-12 | 2026-02-27 | PTA   |
+| Abnahme   | 2026-07-01 | 2026-07-15 | Kunde |
+| Go-live   | 2026-07-20 | 2026-07-20 | PTA   |
+:::
+```
+
+- **Termine:** Jahr (`2026`), Monat (`2026-03`), Quartal (`2026-Q2`), Tag (`2026-03-15` oder
+  `15.03.2026`) oder `heute` (auch `today`). **Heute** ist das Front-Matter-`datum`, ohne
+  `datum` der Tag des Erzeugens. Im Gantt ist der Start der erste, das Ende der letzte Tag des
+  Termins (`2026-03` bis `2026-04` = 1. März bis 30. April).
+- **Zeitstrahl:** eine Liste mit 2–8 Einträgen `Termin: Text`, aufsteigend; `{.done}` am Ende
+  markiert Erledigtes. Die Marken stehen gleichmäßig verteilt auf einer Linie `AFAFAF` über die
+  volle Breite, erledigte und vergangene (Ende vor heute) in Grau `787878`, die übrigen
+  PTA-Blau; der Termin steht 12 pt fett über der Linie, der Text 12 pt darunter (bis drei
+  Zeilen). Wäre eine Beschriftung breiter als ihr Platz, stehen die Einträge abwechselnd unter
+  und über der Linie (doppelter Platz). Über der Linie stehen die Jahre, ein Strich markiert
+  den Jahreswechsel.
+- **Gantt:** eine Tabelle Vorgang, Start, Ende und wahlweise eine vierte Spalte (frei benannt,
+  z. B. Wer); 1–12 Vorgänge. Start = Ende ist ein **Meilenstein** (Raute `004676`).
+  Abhängigkeiten gibt es nicht. Das Raster wird auf ganze Einheiten gerundet (Montag,
+  Monatsanfang, Quartalsanfang): Wochen (Kalenderwochen `KW 03`) bis 16 Wochen Gesamtdauer,
+  Quartale ab zwei Jahren, sonst Monate (`Jan 26`, `Feb`, …; das Jahr am Anfang und im Januar);
+  ergäbe das mehr als 24 Spalten, nimmt es die nächstgröbere Einheit. `raster=woche|monat|quartal`
+  erzwingt eine; mehr als 24 Spalten sind dann ein Fehler mit Hinweis.
+  Vorgänge, deren vierte Spalte nicht der ersten Zeile gleicht, sind hellblau `9FD8FF` mit
+  dunkler Schrift, die übrigen PTA-Blau. Englisch (`sprache: en`): `CW 03`, `Mar`.
+- **PowerPoint:** eine Gruppe einzeln verschiebbarer Formen (`Drawing <n>`, Alternativtext =
+  die Einträge) über die Breite ihres Platzes auf einer Flow-Folie (`Nur Titel`), gestapelt mit
+  Text davor und danach; Höhe nach Inhalt (Zeitstrahl ≈ 3–4 cm, Gantt 0,9 cm je Vorgang plus
+  Kopf). Die Größen schrumpfen nie; passt die Folie nicht, geht es auf „(Forts.)" weiter
+  (`slide-split`/`slide-overfull`). Gantt: Namen 14 pt links, Rasterlinien `E6E6E6`,
+  Kopf 10 pt `787878`, Balken 60 % der Zeilenhöhe, die vierte Spalte im Balken (sonst daneben),
+  Heute-Linie `004676` gestrichelt, wenn heute im Raster liegt.
+- **Word:** der Zeitstrahl als Bild in Satzspiegelbreite (SVG mit PNG, wie Zeichnungen aus
+  E03-S04; braucht das Extra `svg`), der Gantt als **Tabelle** im Tabellenformat „PTA": Vorgang,
+  wahlweise die vierte Spalte, dann eine schmale Spalte je Einheit; die Zellen der Laufzeit
+  schattiert (`w:shd` `006FB9`, andere Verantwortliche `9FD8FF`), ein Meilenstein `◆` in
+  `004676`, die Spalte von heute mit rechtem Rand `004676`.
+- **Fehler mit Zeile** (in allen Formaten gleich, aus `layout_syntax.check`):
+  `Line N: 'Mai 2026' is no date. …`, `… has 2 to 8 entries, not 9; split …`,
+  `… The timeline goes from early to late …`, `… A '::: gantt' has 1 to 12 tasks, not 13; split …`,
+  `… The grid of the '::: gantt' has 53 columns (woche), 24 at most; take a coarser grid …`,
+  `… ends before it starts`, `Unknown attribute '{.x}' of a timeline entry. Valid: {.done}.`
+- **Rundreise:** der PPTX-Konverter lässt die Formgruppe weg (wie alle `Drawing`-Gruppen), der
+  DOCX-Konverter liest den Zeitstrahl als Bild und den Gantt als Markdown-Tabelle, gefüllte
+  Zellen als `■`, Meilensteine als `◆`.
+- **PDF** (E05-S04) soll beide als Grafik zeichnen; das gibt es noch nicht.
+
+```python
+from pta_documents.drawing import schedule as drawing
+from pta_documents.generation.common import schedule
+
+timeline = schedule.read_timeline(tokens, i, DocumentFormat.PPTX, line_offset, today)
+gantt = schedule.read_gantt(tokens, i, DocumentFormat.DOCX, line_offset, today, Language.DE)
+picture = drawing.draw(gantt, width=1179)  # Drawing in CSS-Pixeln
+```
 
 ## Logos als SVG und PNG (E01-S04)
 

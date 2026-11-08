@@ -27,6 +27,7 @@ from pta_documents.generation.common import (
     html,
     layout_syntax,
     layout_tokens,
+    schedule,
 )
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
 from pta_documents.generation.common.renderers import (
@@ -120,7 +121,9 @@ class DeckParser:
 
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
-        layout_syntax.check(tokens, FORMAT, self.line_offset)
+        layout_syntax.check(
+            tokens, FORMAT, self.line_offset, schedule.reference_day(self.options.date)
+        )
         self.document = generated_images.add_generated(
             self.document, tokens, FORMAT, self.line_offset
         )
