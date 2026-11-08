@@ -114,6 +114,7 @@ aus (aus dem Code erzeugt, also immer aktuell); die Punkte hier sind das Wichtig
 - Derselbe Bericht geht mit `--pdf` (bei `generate` und `check`) auch als PDF: gleiche Syntax,
   Grafiken als Vektoren, Gantt als Tabelle. Zeichen, die der Schrift fehlen (Emoji, Griechisch,
   Kyrillisch ohne Segoe UI), werden `?` mit Hinweis `character-missing` — in Worten schreiben.
+  Welche Symbole fehlen und was stattdessen geht, sagt `./run.sh authoring-guide pdf`.
 - Tabellenbeschriftung: direkt unter der Tabelle ein Absatz `Tabelle: Beschreibung` →
   „Tabelle n: Beschreibung". Tabellentitel: ein Absatz nur aus `**Titel**` direkt davor.
 - Abbildung: Bild allein im Absatz, Unterschrift als Bildtitel:

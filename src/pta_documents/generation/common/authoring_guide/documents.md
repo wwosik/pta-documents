@@ -1,4 +1,4 @@
-## Ein PTA-Word-Dokument aus Markdown
+## {{heading}}
 
 Inhalt schreiben, nicht formatieren: Schrift, Farben, Nummern, Kopf- und Fußzeile kommen aus der
 PTA-Vorlage. Kein HTML.
@@ -14,7 +14,7 @@ PTA-Vorlage. Kein HTML.
 
 ## Inhalte
 
-| Markdown | In Word |
+| Markdown | {{target}} |
 | -------- | ------- |
 | Absatz; `\` am Zeilenende bricht um | „Standard“ |
 | Absatz nur aus `**fett**` | „Standard fett“ |
@@ -27,8 +27,8 @@ PTA-Vorlage. Kein HTML.
 | `![QR-Code](qr:https://pta.de "https://pta.de")` | QR-Code in PTA-Blau, ohne Bilddatei |
 | `{.round}`, `{.grey}` oder `{scale=0.5}` direkt nach dem Bild | rund, grau, halb so groß |
 | Codeblock, `> Zitat`, `---` | „Code“, „Zitat“, Trennlinie |
-| `Satz.[^1]` und `[^1]: Text` | Word-Fußnote |
-| `[PTA](https://pta.de)` | Link; relative Links bleiben Text |
+| `Satz.[^1]` und `[^1]: Text` | {{footnote}} |
+{{links}}
 
 Bildformate: {{imageFormats}}. Die Dateien gibt der Aufrufer mit; `images/a.png` muss darunter
 sein.
@@ -38,6 +38,8 @@ sein.
 {{icons}}
 
 {{typography}}
+
+{{characters}}
 
 {{diagrams}}
 
@@ -50,7 +52,7 @@ Ein Fehler bricht ab und sagt (englisch), was zu ändern ist:
 - `vorlage: hoch` ohne `titel:` — `… has a cover page and needs a title`.
 - `::: karte` — `Line 12: Unknown container '::: karte'. Valid containers: …`.
 - Bilddatei fehlt — `The image 'images/a.png' (line 8) is not among the document's resources.`
-- Bildformat ohne Konverter — `… DOCX takes PNG, JPEG, GIF, BMP and TIFF …`.
+- Bildformat ohne Konverter — `… {{imageError}} …`.
 
 {{notes}}
 

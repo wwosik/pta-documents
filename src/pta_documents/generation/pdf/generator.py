@@ -14,14 +14,18 @@ from dataclasses import replace
 from typing import BinaryIO, Final
 
 from pta_documents.design import fonts as design_fonts
-from pta_documents.design.fonts import FontFace
 from pta_documents.design.variants import Language, Marking, WordVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import audience, generated_images, layout_syntax, schedule
 from pta_documents.generation.common.result import GenerationResult, Notes
 from pta_documents.generation.pdf.frame import FrameInfo, lay_out
 from pta_documents.generation.pdf.layout import LayoutSettings
-from pta_documents.generation.pdf.layout.fonts import ALIASES, question_mark
+from pta_documents.generation.pdf.layout.fonts import (
+    CODE_FACES,
+    TEXT_FACES,
+    question_mark,
+    shows,
+)
 from pta_documents.generation.pdf.metadata import PdfInfo
 from pta_documents.generation.pdf.options import PdfOptions
 from pta_documents.generation.pdf.pdfa import to_pdfa
@@ -92,17 +96,13 @@ class PdfGenerator:
 
         fonts = design_fonts.resolve(system_fonts=options.system_fonts)
 
-        def shown(char: str, *faces: FontFace) -> bool:
-            code = ord(char)
-            return code in ALIASES or all(fonts.has_glyph(code, face) for face in faces)
-
         if options.replace_unsupported is not None:
             # Without a replacement the layout stops at the first such character instead.
             notes.characters(
                 front.body,
                 front.body_line,
-                lambda c: shown(c, FontFace.REGULAR, FontFace.BOLD),
-                lambda c: shown(c, FontFace.MONO),
+                lambda c: shows(fonts, ord(c), TEXT_FACES),
+                lambda c: shows(fonts, ord(c), CODE_FACES),
                 MISSING_EFFECT if options.replace_unsupported is question_mark else REPLACED_EFFECT,
             )
         settings = LayoutSettings(
@@ -140,6 +140,16 @@ class PdfGenerator:
         pdf = lay_out(tokens, document, settings, frame_info, notes, info)
         output.write(to_pdfa(pdf.content, info))
         return GenerationResult(notes.to_tuple(), pages=pdf.pages)
+
+    def authoring_guide(self, options: PdfOptions | None = None) -> str:
+        """How to write Markdown for a PTA PDF: the German guide „Dokumente“ from ``##`` for
+        people and AI agents (E05-S05), with the PDF's own parts, from the same options as
+        ``generate`` — the default template, the image converters, the code block renderers
+        (their sections), the fonts and ``replace_unsupported`` (the section on characters the
+        fonts lack) come from ``options``. Under 2 500 words; every example in it generates."""
+        from pta_documents.generation.pdf import guide
+
+        return guide.authoring_guide(options or PdfOptions())
 
 
 def apply_front_matter(front: FrontMatter, options: PdfOptions) -> PdfOptions:

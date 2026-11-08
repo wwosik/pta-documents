@@ -665,26 +665,45 @@ def characters_section(
     intro: str,
 ) -> str:
     """The body of a section on characters: ``intro`` (what happens to a character the fonts
-    lack), then a table of the ``SYMBOLS`` the fonts lack with the first replacement they all
-    have — or only ``intro`` when they have every symbol. Only the PDF needs it: Word and
-    PowerPoint take the installed font."""
+    lack), then a table of the ``SYMBOLS`` the fonts lack, grouped by the first replacement they
+    all have, and a sentence each on those only the text or only the code font lacks — or only
+    ``intro`` when they have every symbol. Only the PDF needs it: Word and PowerPoint take the
+    installed font. (Symbols are no words for ``words``: the grouping keeps the guide short.)"""
 
     def everywhere(text: str) -> bool:
         return all(has_text_glyph(ord(c)) and has_code_glyph(ord(c)) for c in text)
 
-    rows: list[str] = []
+    groups: dict[str, list[str]] = {}
+    in_code: list[str] = []
+    in_text: list[str] = []
     for symbol, replacements in SYMBOLS:
-        in_text, in_code = has_text_glyph(ord(symbol)), has_code_glyph(ord(symbol))
-        if in_text and in_code:
+        text_has, code_has = has_text_glyph(ord(symbol)), has_code_glyph(ord(symbol))
+        if text_has and code_has:
             continue
         instead = next((r for r in replacements if everywhere(r)), replacements[-1])
-        where = " (in Code möglich)" if in_code else " (nur in Code vermeiden)" if in_text else ""
-        rows.append(f"| {symbol}{where} | `{instead.replace('|', chr(92) + '|')}` |")
-    if not rows:
+        groups.setdefault(instead, []).append(symbol)
+        if code_has:
+            in_code.append(symbol)
+        elif text_has:
+            in_text.append(symbol)
+    if not groups:
         return intro.strip("\n") + "\n"
-    return (
-        intro.strip("\n")
-        + "\n\n| Vermeiden | Stattdessen |\n| --------- | ----------- |\n"
-        + "\n".join(rows)
-        + "\n"
-    )
+    rows = [
+        f"| {' '.join(symbols)} | `{instead.replace('|', chr(92) + '|')}` |"
+        for instead, symbols in groups.items()
+    ]
+    lines = [
+        intro.strip("\n"),
+        "",
+        "| Vermeiden | Stattdessen |",
+        "| --------- | ----------- |",
+        *rows,
+    ]
+    remarks = [
+        f"{label} {' '.join(symbols)}."
+        for label, symbols in (("In Code gehen:", in_code), ("Nur im Text gehen:", in_text))
+        if symbols
+    ]
+    if remarks:
+        lines += ["", " ".join(remarks)]
+    return "\n".join(lines) + "\n"

@@ -81,6 +81,18 @@ def test_a_heading_stays_with_its_image(offset: int) -> None:
     assert [i for i in pdf.images[page] if float(i["width"]) > 10]
 
 
+@pytest.mark.parametrize("offset", OFFSETS)
+def test_a_heading_stays_with_its_figure_and_caption(offset: int) -> None:
+    # E05-S05: an image with a title is a KeepTogether of picture and caption, which once broke
+    # the measuring of the heading before it.
+    push, resource = spacer(offset)
+    markdown = filler(10) + push + '## Überschrift\n\n![](bild.png "Der Plan")\n'
+    pdf = Pdf(make_pdf(markdown, [resource, image("bild.png", 400, 100)]))
+    page = pdf.page_of("Überschrift")
+    assert page == pdf.page_of("Der Plan")
+    assert [i for i in pdf.images[page] if float(i["width"]) > 10]
+
+
 def test_later_top_headings_do_not_start_a_new_page() -> None:
     pdf = Pdf(make_pdf("# Eins\n\nText.\n\n# Zwei\n\nText."))
     assert pdf.pages == 1

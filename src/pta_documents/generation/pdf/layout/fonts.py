@@ -18,7 +18,7 @@ from __future__ import annotations
 import hashlib
 import io
 import unicodedata
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from functools import cache
 from typing import Final
@@ -51,6 +51,13 @@ ALIASES: Final = {0x00A0: 0x0020, 0x202F: 0x0020, 0x2011: 0x002D}
 """Characters a face may lack that look like others: no-break spaces like the space, the
 no-break hyphen like the hyphen (the typography of E17-S02 sets U+00A0, which Selawik lacks).
 They keep their meaning for the line breaking; only the glyph is borrowed."""
+
+
+def shows(fonts: FontSet, code_point: int, faces: Iterable[FontFace]) -> bool:
+    """Whether every one of ``faces`` of ``fonts`` has ``code_point`` (an alias counts): the rule
+    of ``PdfFonts.shown``, of the generator's ``character-missing`` and of the guide's section
+    on characters."""
+    return code_point in ALIASES or all(fonts.has_glyph(code_point, face) for face in faces)
 
 
 @dataclass(frozen=True)

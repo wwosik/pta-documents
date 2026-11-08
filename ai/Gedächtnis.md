@@ -427,7 +427,9 @@ weil ihm vertraut wird.
   Kursive (`truetype.slanted`) heißt deshalb `…-Slanted`, sonst landet sie nicht im PDF;
   `Frame(overlapAttachedSpace=0)`, sonst verschluckt reportlab den kleineren von Abstand nach/vor
   (Word addiert); Absätze mit `allowWidows=0`/`allowOrphans=0`; Seitenumbruch vor Überschriften
-  über `KeepWithStart` (eigener `CondPageBreak`, nie oben auf einer Seite), Fußnoten über
+  über `KeepWithStart` (eigener `CondPageBreak`, nie oben auf einer Seite; `start_height` misst
+  ein `KeepTogether` — Bild mit Beschriftung — Teil für Teil, weil dessen `wrap` ohne Canvas
+  scheitert und immer „teilen" antwortet, E05-S05), Fußnoten über
   `FootnoteAnchor`, das `frame._y1p` hebt — `handle_frameBegin` setzt den Rahmen mit
   `frame._geom()` zurück. Zeilenhöhe „einfach" = `FontInfo.line_height` (Windows-Ascent +
   -Descent), nicht reportlabs `face.ascent`. Neue Blockarten im PDF in `layout/story.py`
@@ -599,8 +601,8 @@ weil ihm vertraut wird.
   Werkzeug `./run.sh handout`; `./run.sh preview` kennt seitdem `--audience`
   (`vorschau/<name>-trainer/`).
 - **Authoring Guides** (E02-S05): Bausteine in `generation/common/authoring_guides.py`, Vorlagen
-  je Generator in `<paket>/authoring_guide/<name>.md` (Paketdaten, `template(package, name)`;
-  E05-S05 nannte noch `generation/pdf/authoring_guide.md` — dem gemeinsamen Ort folgen). Ein
+  in `<paket>/authoring_guide/<name>.md` (Paketdaten, `template(package, name)`; der Guide
+  „Dokumente“ von Word und PDF in `generation/common/authoring_guide/documents.md`). Ein
   Guide entsteht aus `fill(template(…), {…})` mit den Abschnitten (`front_matter_section`,
   `layout_syntax_section`, `icons_section`, `notes_section`, `typography_section`,
   `renderers_section`, für das PDF `characters_section`); `front_matter_section` wirft
@@ -614,17 +616,32 @@ weil ihm vertraut wird.
   ein neuer Front-Matter-Schlüssel braucht eine `GuideKey`-Zeile im Guide des Generators, ein
   neuer Renderer sein `authoring_guide`. Was ein Guide an Syntax nennt (`named_syntax`, Regex
   `SYNTAX_PATTERN` wie vt-tools-libs), muss wortgleich in `samples/funktionen/` des Formats stehen
-  (`test_the_samples_show_the_syntax_the_guide_names`, heute aus den gemeinsamen Abschnitten;
-  E03-S05/E04-S06 stellen `guide_syntax` auf den ganzen Guide um, ohne die Fehlerbeispiele). Im
+  (`test_the_samples_show_the_syntax_the_guide_names`; `guide_syntax` liest für Word den ganzen
+  Guide ohne die Fehlerbeispiele, für PowerPoint bis E04-S06 die gemeinsamen Abschnitte; das PDF
+  hat keine eigenen Beispiele — `tests/generation/pdf/test_authoring_guide.py` verlangt, dass
+  der PDF-Guide außer `{uebergang` aus der Szenenzeile nichts nennt, was der Word-Guide nicht
+  nennt). Im
   Word-Guide stehen `.agenda`/`.interim`/`.quote`/`.contact` nur als bloße Namen, weil der
   Word-Bericht sie nicht zeigt. Die Icon-Liste steht weiter in `docs/ki-anleitung.md` (Test
   E15-S03), bis die Guides sie übernehmen.
 - **Word-Guide** (E03-S05): `DocxGenerator().authoring_guide(options)` → `generation/docx/guide.py`
-  (Vorlage `generation/docx/authoring_guide/docx.md`, Satz je Vorlage in `VARIANT_TEXTS`,
-  Front-Matter-Zeilen mit den Standardwerten der Optionen). `guide_syntax` in
+  (Word-Texte in `guide.TEXTS`; Aufbau, Satz je Vorlage `VARIANT_TEXTS` und Front-Matter-Zeilen
+  mit den Standardwerten der Optionen seit E05-S05 in `generation/common/document_guide.py`, den
+  Word und PDF teilen). `guide_syntax` in
   `tests/samples/test_funktionen.py` liest für Word den ganzen Guide ohne „Wenn etwas falsch ist“
   (darunter steht auch `### Hinweise`, weil `notes_section` `{.backup}` nennt). **Wortbudget:**
   mit allen Renderern rund 2 460 von 2 500 Wörtern — wer Word-Syntax, Schlüssel oder einen
   Renderer-Abschnitt ergänzt, muss anderswo kürzen (`test_the_guide_stays_under_the_word_limit`);
   Erwartung `tests/generation/docx/samples/authoring-guide.expected.md` mit
   `PTA_DOCUMENTS_UPDATE_EXPECTED=1` erneuern.
+- **PDF-Guide** (E05-S05): `PdfGenerator().authoring_guide(options)` → `generation/pdf/guide.py`
+  füllt **dieselbe** Vorlage `documents.md` wie Word (ein Guide „Dokumente“, Entscheidung
+  2026-11-07) mit eigenen `FormatTexts` (Überschrift, Spalte „Im PDF“, Fußnote, Links auf
+  `#anker`, Inhaltsverzeichnis, Bildformate mit WebP, `EFFECT`, Fehlermeldung zum Bildformat)
+  und dem Abschnitt *Zeichen* (`characters_section` mit den Schriften der Optionen und
+  `layout.fonts.shows`, derselben Regel wie `character-missing`; Satz davor nach
+  `replace_unsupported`). Was in der Vorlage steht, gilt für beide Formate: Änderungen dort
+  ändern beide Erwartungsdateien. **Wortbudget:** mit allen Renderern rund 2 480 von 2 500
+  Wörtern (Word 2 464) — `characters_section` gruppiert die Symbole je Ersatz, weil Symbole
+  keine Wörter zählen. Erwartung `tests/generation/pdf/samples/authoring-guide.expected.md`
+  (mit `system_fonts=False`, Selawik/Inconsolata).

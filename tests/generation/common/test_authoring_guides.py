@@ -135,17 +135,20 @@ def test_the_characters_section_names_what_the_fonts_lack_with_a_replacement_the
         lambda c: c not in lacking_text, lambda c: c != ord("─"), INTRO
     )
     assert section.startswith(INTRO + "\n\n| Vermeiden | Stattdessen |\n")
-    assert "| ✓ (in Code möglich) | `[x]` |" in section
+    assert "| ✓ | `[x]` |" in section
     # The first replacement (•) is missing too, so the next one.
-    assert "| ● (in Code möglich) | `*` |" in section
-    assert "| ▲ (in Code möglich) | `hoch` |" in section
-    assert "| ─ (nur in Code vermeiden) | `-` |" in section
-    assert "| ✔" not in section
+    assert "| ● | `*` |" in section
+    # Symbols with the same replacement share a row (symbols are no words: a short guide).
+    assert "| ↑ ▲ | `hoch` |" in section
+    assert "| ─ | `-` |" in section
+    assert "✔" not in section
+    assert section.endswith("\n\nIn Code gehen: ✓ ● ↑ ▲. Nur im Text gehen: ─.\n")
 
 
 def test_a_missing_character_in_both_fonts_has_no_remark_and_pipes_are_escaped() -> None:
     section = guides.characters_section(lambda c: c != ord("│"), lambda c: c != ord("│"), INTRO)
     assert "| │ | `\\|` |" in section
+    assert "gehen:" not in section
 
 
 def test_with_every_symbol_the_characters_section_is_the_intro() -> None:

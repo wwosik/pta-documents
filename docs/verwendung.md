@@ -124,6 +124,11 @@ print(result.pages, result)
 ./run.sh check bericht.md --pdf        # Probelauf, zählt die Seiten
 ```
 
+Wie man das Markdown dafür schreibt, sagt der Guide des PDF-Generators (E05-S05):
+`PdfGenerator().authoring_guide(options)` bzw. `./run.sh authoring-guide pdf` — der Guide
+„Dokumente“ wie für Word, mit dem Abschnitt *Zeichen* (siehe
+[Authoring Guides](#authoring-guides-e02-s05)).
+
 - **Stand:** Das Ergebnis ist ein PDF/A-2b mit eingebetteten Schriften und Metadaten. Den Rumpf
   setzt die [Layout-Engine](#pdf-layout-engine-e05-s02) in den Formatvorlagen und auf dem
   Satzspiegel der gewählten Word-Vorlage (Nummerierung, Listen, Tabellen, Bilder, QR-Codes, Code
@@ -2134,8 +2139,9 @@ Markdown für einen Generator schreibt — Markdown ab `##`, damit ein Aufrufer 
 Ohne Guide endet das Werkzeug mit Code 1 und einer Meldung, bei falschen Argumenten mit Code 2;
 das PDF braucht das Extra `pdf`.
 
-**Word** (E03-S05): `DocxGenerator().authoring_guide(options)` (`generation/docx/guide.py`, Vorlage
-`generation/docx/authoring_guide/docx.md`) — Abschnitte *Ein PTA-Word-Dokument aus Markdown* (je
+**Word** (E03-S05): `DocxGenerator().authoring_guide(options)` (`generation/docx/guide.py` mit den
+Word-Texten `guide.TEXTS`; gemeinsamer Aufbau in `generation/common/document_guide.py`, Vorlage
+`generation/common/authoring_guide/documents.md`) — Abschnitte *Ein PTA-Word-Dokument aus Markdown* (je
 Vorlage ein Satz aus `guide.VARIANT_TEXTS`), *Gliederung*, *Inhalte* (Markdown → Formatvorlage,
 Bilder, QR, Bildstile, Fußnoten; die Bildformate aus `image_converters`), *Folien-Syntax* mit der
 Word-Wirkung, *Icons*, *Typografie und Code*, die Abschnitte der `code_block_renderers` (Charts,
@@ -2146,6 +2152,20 @@ vollständiger *Beispiel*-Bericht. `tests/generation/docx/test_authoring_guide.p
 Beispiel in allen vier Vorlagen ohne Hinweise, prüft die Fehlerbeispiele gegen die echten
 Meldungen, die Grenze von 2 500 Wörtern (mit allen Renderern knapp darunter) und vergleicht mit
 `tests/generation/docx/samples/authoring-guide.expected.md`.
+
+**PDF** (E05-S05): `PdfGenerator().authoring_guide(options)` (`generation/pdf/guide.py`) füllt
+dieselbe Vorlage — Word und PDF nehmen dasselbe Markdown, es gibt **einen** Guide „Dokumente“
+(Entscheidung 2026-11-07). Eigen sind dem PDF die Texte in `FormatTexts` (Überschrift *Ein
+PTA-PDF aus Markdown*, Spalte „Im PDF“, Fußnote am Seitenende, Links auf `#anker`,
+Inhaltsverzeichnis mit Seitenzahlen, Bildformate mit WebP, die Wirkung der Folien-Syntax mit
+`::: scene` als Grafik, die Fehlermeldung zum Bildformat, die Hinweise des PDFs) und der
+Abschnitt *Zeichen* nach *Typografie und Code*: die `SYMBOLS`, die den Schriften der Optionen
+fehlen (`design.fonts.resolve(system_fonts)`, dieselbe Regel `layout.fonts.shows` wie beim
+Erzeugen), gruppiert nach dem Ersatz, den alle Schriften haben; der Satz davor folgt
+`replace_unsupported` (`?`, eigener Ersatz oder Fehler). `tests/generation/pdf/test_authoring_guide.py`
+erzeugt jedes Beispiel als PDF in allen vier Vorlagen ohne Hinweise, prüft Fehlerbeispiele,
+Wortgrenze, Zeichenabschnitt und Ersatz in jeder Schrift und vergleicht (mit Selawik und
+Inconsolata, `system_fonts=False`) mit `tests/generation/pdf/samples/authoring-guide.expected.md`.
 
 Die gemeinsamen Bausteine in `pta_documents.generation.common.authoring_guides` (kein Extra
 nötig) entstehen aus den Listen im Code, damit Guide, Prüfung und Code nicht auseinanderlaufen:
@@ -2159,7 +2179,7 @@ nötig) entstehen aus den Listen im Code, damit Guide, Prüfung und Code nicht a
 | `icons_section(format)`, `notes_section(format)`, `typography_section()` | alle Icon-Namen; die Hinweis-Codes des Formats mit „Was tun"; Typografie und Codefarben |
 | `renderers_section(renderers)` | die Abschnitte der Code-Block-Renderer (`CodeBlockRenderer.authoring_guide`), z. B. „Charts" |
 | `image_formats(native, converters)` | die Bildformate eines Generators, die der Konverter (`ImageConverter.format`) eingeschlossen |
-| `characters_section(text, code, intro)` | nur PDF: die `SYMBOLS` (✓, →, ● …), die den Schriften fehlen, mit dem ersten Ersatz, den alle Schriften haben |
+| `characters_section(text, code, intro)` | nur PDF: die `SYMBOLS` (✓, →, ● …), die den Schriften fehlen, je Zeile die mit demselben ersten Ersatz, den alle Schriften haben; darunter, welche davon nur in Code bzw. nur im Text gehen |
 | `words(guide)`, `named_syntax(guide)`, `named_keys(guide)` | Wörter zählen; die Syntax bzw. die Front-Matter-Schlüssel, die ein Guide nennt |
 
 Testhilfen für die Guides der Generatoren in `tests/generation/guides.py`: `examples`,

@@ -17,7 +17,7 @@ from reportlab.lib import colors as rl_colors
 from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Flowable, Image, Paragraph, Table
 from reportlab.platypus import paragraph as rl_paragraph
-from reportlab.platypus.flowables import CondPageBreak
+from reportlab.platypus.flowables import CondPageBreak, KeepTogether
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_config import paraFontSizeHeightOffset
 
@@ -237,6 +237,16 @@ def start_height(flowable: Flowable, width: float, frame_height: float) -> float
     if isinstance(flowable, FootnoteAnchor):
         notes = flowable.area.needed(flowable.notes, width)
         return notes + start_height(flowable.following, width, frame_height)
+    if isinstance(flowable, KeepTogether):
+        # A figure and its caption: all of it. Its own ``wrap`` needs the canvas of a build and
+        # answers a forced split, so the parts are measured one by one.
+        parts: list[Flowable] = list(getattr(flowable, "_content", []))
+        total = 0.0
+        for n, part in enumerate(parts):
+            _, height = part.wrap(width, frame_height)
+            total += float(part.getSpaceBefore()) if n else 0.0
+            total += height + (float(part.getSpaceAfter()) if n < len(parts) - 1 else 0.0)
+        return float(flowable.getSpaceBefore()) + total
     _, height = flowable.wrap(width, frame_height)
     before = float(flowable.getSpaceBefore())
     if isinstance(flowable, Paragraph):
