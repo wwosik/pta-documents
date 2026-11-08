@@ -24,7 +24,7 @@ Aufzählungen", Satzzeichen, Schreibweisen), die sich zum Teil prüfen lassen.
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
 | [E08-S01](../60-prüfung/E08-S01-hinweise-aus-der-erzeugung.md) | `GenerationResult` mit `GenerationNote`s aus DOCX, PPTX (und PDF): geteilte Folien, HTML weggelassen, Diagramm nicht gezeichnet, Bild vergrößert, fehlende Zeichen; Ausgabe im Werkzeug `generate` | in Prüfung |
-| [E08-S02](E08-S02-pruefbefehl-und-stilregeln.md) | `./run.sh check`: Hinweise ohne Erzeugen, Stilregeln der PTA-Musterfolien, Statistik (Folien, Wörter, Dauer), Bild ohne Quelle | Entwurf |
+| [E08-S02](../55-in-arbeit/docs-2/E08-S02-pruefbefehl-und-stilregeln.md) | `./run.sh check`: Hinweise ohne Erzeugen, Stilregeln der PTA-Musterfolien, Statistik (Folien, Wörter, Dauer), Bild ohne Quelle | in Bearbeitung (docs-2) |
 | [E08-S03](E08-S03-funktionsuebersicht-durch-tests.md) | `samples/funktionen/` als gesicherte Feature-Tour: zeigt jede Syntax der Guides, erzeugt ohne Hinweise, Rundreise-Erwartungen committet | Entwurf |
 | [E08-S04](E08-S04-werkzeug-make-document.md) | `make_document` für KI-Hosts: Beschreibung, JSON Schema, Guide aus den Optionen, `run`, `reply` | zurückgestellt (2026-11-07) |
 

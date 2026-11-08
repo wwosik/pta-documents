@@ -1,8 +1,8 @@
 # E08-S02 Prüfbefehl und Stilregeln
 
-> Status: Entwurf
-> Epic: [E08 Rückmeldung an den Schreiber und KI-Anbindung](E08-rueckmeldung-und-ki-anbindung.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E08 Rückmeldung an den Schreiber und KI-Anbindung](../../50-entwurf/E08-rueckmeldung-und-ki-anbindung.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
