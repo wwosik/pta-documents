@@ -320,6 +320,45 @@ options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgN
   sind beide Listen leer — Charts, Mermaid (E06-S01/S03) und SVG → PNG (E06-S04, Extra `svg`)
   tragen sich dort ein.
 
+## Schriften für PDF und SVG (E01-S03)
+
+Word und PowerPoint nehmen die installierten Schriften und betten nichts ein. Wer Schriftdateien
+braucht (PDF-Generator, SVG → PNG), holt sie aus `pta_documents.design.fonts` (Extra `pdf` oder
+`svg`, wegen fontTools; der Kern importiert das Modul nie):
+
+```python
+from pta_documents.design import fonts
+from pta_documents.design.fonts import FontFace
+
+schriften = fonts.resolve()  # Segoe UI aus dem System, sonst Selawik
+schriften = fonts.bundled()  # nur die mitgelieferten Schriften
+schriften.name  # "Segoe UI" oder "Selawik"
+datei = schriften.file(FontFace.BOLD)  # FontFile(family, content, synthetic_italic)
+schriften.width("Text", FontFace.REGULAR, 10)  # Breite in Punkt, ohne Kerning
+schriften.has_glyph(0x20AC, FontFace.LIGHT)  # nur BMP; U+00A0 fehlt in Selawik
+```
+
+- **Schnitte** (`FontFace`): `REGULAR`, `BOLD`, `ITALIC`, `BOLD_ITALIC`, `LIGHT`, `MONO`,
+  `MONO_BOLD`, `QUOTE`.
+- **Mitgeliefert** (OFL 1.1, Lizenztexte `OFL-*.txt` neben den Dateien): Selawik Regular, Bold,
+  Light; Inconsolata Regular und Bold für Code; Gelasio Italic für Zitate (nur für SVG/PNG von
+  Folieninhalten — Word und PDF setzen Zitate nach der Word-Vorlage). Selawik hat keine Kursive:
+  `ITALIC`/`BOLD_ITALIC` sind Regular/Bold mit `synthetic_italic=True`; die PDF-Engine schrägt sie
+  um `SYNTHETIC_ITALIC_ANGLE` (12°).
+- **Aus dem System** (`resolve(system_fonts=True, search_dirs=None)`): gesucht wird rekursiv und
+  ohne Rücksicht auf Groß/Klein in `%WINDIR%\Fonts`, `%LOCALAPPDATA%\Microsoft\Windows\Fonts`,
+  `/usr/share/fonts`, `/usr/local/share/fonts`, `~/.local/share/fonts`, `~/.fonts`,
+  `/Library/Fonts`, `~/Library/Fonts` (oder nur in `search_dirs`). Eine Familie ersetzt die
+  mitgelieferte nur ganz: Segoe UI mit `segoeui.ttf`, `segoeuib.ttf`, `segoeuii.ttf`,
+  `segoeuiz.ttf` **und** `segoeuil.ttf`; Consolas mit `consola.ttf` und `consolab.ttf`; Georgia
+  kursiv mit `georgiai.ttf`. Dateien, die nicht eingebettet werden dürfen (`fsType`
+  „eingeschränkt"), CFF-Umrisse haben oder nicht lesbar sind, zählen als fehlend. Es gibt keinen
+  Cache; `system_fonts=False` ergibt `bundled()`.
+- **CSS** für SVG: `CSS_FAMILY` (`Segoe UI, Selawik, sans-serif`), `CSS_MONO_FAMILY`
+  (`Consolas, Inconsolata, monospace`), `CSS_QUOTE_FAMILY` (`Georgia, Gelasio, serif`).
+- Fehlt fontTools, nennt der `ImportError` die Extras; `bundled()` und `fonts.read(name)`
+  (Bytes einer mitgelieferten Datei) gehen auch ohne.
+
 ## Hinweise (`GenerationResult`)
 
 `generate()` beider Generatoren gibt ein `GenerationResult` zurück (`pta_documents.GenerationResult`,

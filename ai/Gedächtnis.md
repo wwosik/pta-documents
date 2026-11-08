@@ -19,7 +19,8 @@ weil ihm vertraut wird.
   `M01-pta-dokumente-aus-markdown.md`.
 - **Stack:** Python ≥ 3.12, venv + pip (kein uv), hatchling, pytest, ruff, pyright strict.
   Kern: python-docx, python-pptx, lxml, markdown-it-py + mdit-py-plugins, Pillow. Extras:
-  `pdf` (reportlab, pikepdf, pdfplumber), `svg` (resvg-py), `diagrams` (mermaid-cli, extern).
+  `pdf` (reportlab, pikepdf, pdfplumber, fontTools), `svg` (resvg-py, fontTools), `diagrams`
+  (mermaid-cli, extern).
 - **Paketstruktur** (`src/pta_documents/`): `errors.py` (`DocumentConversionError`,
   `DocumentFormat`), `markdown/` (Dokumentmodell, Front Matter, Parser), `design/`
   (Designmodell, eingebettete Vorlagen), `conversions/` (→ Markdown), `generation/`
@@ -186,3 +187,13 @@ eigenen Formatvorlagen. Bedienung:
   `varianten-…-dokument.md`/`-folien.md`. Codeblöcke in `::: notes` schreibt der PPTX-Generator
   seit E08-S03 als Consolas-Zeilen, der Konverter liest sie als Zaun zurück, `check` zählt sie
   nicht als gesprochene Wörter. `generate-samples` kennt auch `-dokument`/`-folien`.
+- **Schriften für PDF und SVG** (E01-S03): `pta_documents.design.fonts` (Unterpaket mit den
+  `.ttf` und `OFL-*.txt` als Paketdaten) — `bundled()`, `resolve()`, `FontSet.width/has_glyph`,
+  `CSS_*FAMILY`. fontTools nur in `fonts/truetype.py` und dort lazy; Kern und
+  `design/__init__.py` dürfen das Modul nie importieren (Test). Selawik Regular/Bold sind die
+  Release-Binärdateien 1.01 (über npm `@docx-editor.dev/fonts`), **Selawik Light ist aus der
+  UFO-Quelle mit fontmake gebaut** (GitHub-Releases waren nicht erreichbar) — wird sie durch
+  `selawkl.ttf` des Releases ersetzt, die SHA-256 in `tests/design/test_fonts.py` und im
+  Modul-Docstring nachziehen. Selawik hat **kein U+00A0** (Typografie setzt es!): der
+  PDF-Generator (E05) muss für fehlende Glyphen ausweichen. Segoe UI wird nur mit allen fünf
+  Dateien (inkl. `segoeuil.ttf`) übernommen.
