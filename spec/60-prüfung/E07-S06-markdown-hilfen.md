@@ -1,7 +1,7 @@
 # E07-S06 Markdown-Hilfen
 
-> Status: in Bearbeitung (docs-2) — reaktiviert 2026-11-08 auf Wunsch des Menschen
-> Epic: [E07 Konvertierung nach Markdown](../../50-entwurf/E07-konvertierung-nach-markdown.md)
+> Status: in Prüfung — reaktiviert 2026-11-08 auf Wunsch des Menschen
+> Epic: [E07 Konvertierung nach Markdown](../50-entwurf/E07-konvertierung-nach-markdown.md)
 
 ## Zusammenfassung
 
@@ -48,11 +48,11 @@ schreiben, und schließt die Lücken in Tests und Beschreibung.
 
 ## Akzeptanzkriterien
 
-- [ ] `pta_documents.markdown.text.__all__` nennt genau die acht Funktionen aus DocLibs;
+- [x] `pta_documents.markdown.text.__all__` nennt genau die acht Funktionen aus DocLibs;
       pyright strict und ruff sind grün.
-- [ ] Jede Funktion hat einen Docstring, der ihr Verhalten an einem Beispiel zeigt.
-- [ ] Die zusätzlichen Grenzfälle und die Rundreise-Eigenschaft sind getestet und grün.
-- [ ] `docs/verwendung.md` beschreibt die Hilfen mit einem lauffähigen Beispiel.
+- [x] Jede Funktion hat einen Docstring, der ihr Verhalten an einem Beispiel zeigt.
+- [x] Die zusätzlichen Grenzfälle und die Rundreise-Eigenschaft sind getestet und grün.
+- [x] `docs/verwendung.md` beschreibt die Hilfen mit einem lauffähigen Beispiel.
 
 ## Offene Fragen
 
@@ -61,9 +61,37 @@ schreiben, und schließt die Lücken in Tests und Beschreibung.
    miterledigt?
 
 > (2026-11-07) Gestrichen; Schnittstelle, Tests und Doku werden bei der Prüfung von E07-S02 miterledigt.
+> (2026-11-08) Auf Wunsch des Menschen doch umgesetzt.
 
 ## Notizen
 
 - Die Anker für Überschriften (GitHub-artige Kennungen für `[x](#anker)`) entstehen in E05-S02
   als `markdown/anchors.py`; sie sind keine DocLibs-`MarkdownText`-Funktion und gehören nicht
   hierher.
+
+## Implementierungsnotizen
+
+- `src/pta_documents/markdown/text.py`: `__all__` mit genau den acht DocLibs-Funktionen;
+  Modul- und Funktions-Docstrings beschreiben, was geschützt wird und was nicht, jede mit einem
+  Doctest-Beispiel. Verhalten unverändert (kein Code außer `__all__` und Docstrings geändert).
+- `pta_documents.markdown.__init__` nennt `text` und den Aufruf `text as md` im Docstring;
+  `text` wird bewusst nicht in `__all__` des Pakets aufgenommen (es ist ein Modul, kein Name).
+- Tests (`tests/markdown/test_text.py`, 7 → 70 Fälle): `__all__`, alle Docstring-Beispiele
+  über `doctest.testmod`, `\` am Ende und vor Satzzeichen, `<` vor `/`, `!`, `?` (und `<1`
+  bleibt), `+` als Listenmarke ohne Unterstreichungsregel (`+++` bleibt), neun Ziffern als
+  Grenze (zehn bleiben), `table()` mit ungleich langen Zeilen, Tabs, `\r\n` und harten
+  Umbrüchen in Zellen, `normalize("")` und nur Leerraum → `""`. Rundreise-Eigenschaft:
+  `escape_line_start(escape(x))` als Absatz durch `markdown.parser.parse` ergibt nur
+  `text`-Kinder, deren Inhalt wieder `x` ist — für 24 heikle Eingaben.
+- Alle in der Story vermuteten Grenzfälle verhalten sich wie angenommen.
+- `docs/verwendung.md`: Abschnitt „Markdown selbst schreiben (E07-S06)" vor „Beliebiges
+  Dokument → Markdown" mit Beispiel (Tabelle aus Daten, Text sicher einsetzen, `code`,
+  `destination`, `normalize` am Ende) und dessen Ausgabe; das Beispiel wurde ausgeführt, die
+  Ausgabe ist byte-gleich.
+- **Warnung:** `escape` schützt wie DocLibs keine HTML-Entities (`&amp;` liest der Parser als
+  `&`) und nicht die PTA-Erweiterungen `==markiert==` und `:icon-name:`; ebenso schützt
+  `escape_line_start` keine `:::`-Zeilen und keine Definitionslisten (`: …` nach einer Zeile).
+  Vorsichtigste Wahl: Verhalten DocLibs-gleich gelassen, im Docstring und in der Doku als
+  „nicht geschützt" benannt und per Test festgehalten (`test_escape_leaves_entities_and_pta_extensions`).
+  Ob `escape` diese Folgen künftig schützen soll, entscheidet der Mensch; die Konverter wären
+  davon mitbetroffen.

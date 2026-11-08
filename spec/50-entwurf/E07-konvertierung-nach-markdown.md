@@ -21,7 +21,7 @@ Außerdem nützen sie allein: vorhandene PTA-Dokumente als Markdown lesbar mache
 | [E07-S03](../60-prüfung/E07-S03-pptx-nach-markdown.md) | PPTX → Markdown | in Prüfung |
 | [E07-S04](../60-prüfung/E07-S04-pdf-nach-markdown.md) | PDF → Markdown (pdfplumber; Absatz-, Silbentrennungs- und Listenheuristik) | in Prüfung |
 | E07-S05 | ~~Markdown ↔ JIRA-Wiki~~ | entfällt (2026-11-06) |
-| [E07-S06](../55-in-arbeit/docs-2/E07-S06-markdown-hilfen.md) | Markdown-Hilfen (`escape`, `code`, `table`, `normalize` …) | in Bearbeitung (docs-2) |
+| [E07-S06](../60-prüfung/E07-S06-markdown-hilfen.md) | Markdown-Hilfen (`escape`, `code`, `table`, `normalize` …) — Funktionen seit E07-S02, hier Schnittstelle, Tests, Doku | in Prüfung |
 
 ## Bereichsweite Entscheidungen
 

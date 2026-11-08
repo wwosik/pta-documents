@@ -1972,6 +1972,64 @@ und ignorieren ihn.
   die echte Seitenzahl kennt erst Word beim Öffnen.
 - PDF (`ReportStats` wie Word, dazu `counted_pages`): `pages` sind die Seiten des Probe-PDFs.
 
+## Markdown selbst schreiben (E07-S06)
+
+```python
+from pta_documents.markdown import text as md
+
+title = "Preise *2026* für customfield_10682"
+rows = [
+    {"item": "Birne | grün", "price": "0,90\nje kg", "note": "[siehe Liste]"},
+    {"item": "Apfel", "price": "1,20", "note": ""},
+]
+
+grid = [["Artikel", "Preis", "Hinweis"]]
+grid += [[md.escape(r["item"]), md.escape(r["price"]), md.escape(r["note"])] for r in rows]
+
+markdown = md.normalize(
+    "# " + md.escape(title) + "\n\n"
+    + md.escape_line_start(md.escape("2026. war ein gutes Jahr.")) + "\n\n"
+    + md.table(md.compact(grid))
+    + "Mehr in " + md.code("preise`alt.xlsx") + " und [Bild](" + md.destination("bilder/a b.png") + ")."
+)
+print(markdown, end="")
+```
+
+ergibt
+
+```markdown
+# Preise \*2026\* für customfield_10682
+
+2026\. war ein gutes Jahr.
+
+| Artikel | Preis | Hinweis |
+| --- | --- | --- |
+| Birne \| grün | 0,90<br>je kg | \[siehe Liste] |
+| Apfel | 1,20 |  |
+
+Mehr in ``preise`alt.xlsx`` und [Bild](<bilder/a b.png>).
+```
+
+`pta_documents.markdown.text` ist die öffentliche Schnittstelle für alle, die Markdown selbst
+erzeugen (Port von DocLibs `MarkdownText`); die DOCX- und PPTX-Konverter nutzen dieselben
+Hilfen. Das Modul wird als Ganzes eingebunden (`text as md`), weil `escape`, `code` und `table`
+als nackte Namen zu allgemein sind. `__all__` nennt genau diese acht Funktionen:
+
+| Funktion | Wirkung |
+| -------- | ------- |
+| `escape(text)` | schützt nur, was innerhalb einer Zeile formatieren würde: `*`, `` ` ``, `[`, `~` immer, `_` nur am Wortrand (`customfield_10682` bleibt), `\` am Ende und vor Satzzeichen (`C:\pfad` bleibt), `<` vor Buchstabe, `/`, `!`, `?` (`a < b` bleibt) |
+| `escape_line_start(line)` | schützt einen Zeilenanfang, der einen Block beginnen würde: `#`, `>`, `\|`, Listenmarken `-`, `+`, `=`, Linien aus `-` oder `=`, `1.` bis neun Ziffern vor `.`/`)`; nach `escape` anwenden |
+| `code(content)` | Inline-Code mit einem Backtick-Zaun länger als jede Folge im Inhalt |
+| `destination(url)` | Linkziel; mit Leerzeichen, Klammern oder `<>` in `<…>` |
+| `cell(markdown)` | schützt nur `\|` für eine Tabellenzelle |
+| `table(rows)` | Pipe-Tabelle, erste Zeile ist der Kopf; Zellen über `cell`, Zeilenumbrüche (auch `\r\n` und harte Umbrüche) → `<br>`, Tabs → Leerzeichen, kurze Zeilen aufgefüllt; endet mit einer Leerzeile |
+| `compact(rows)` | entfernt leere Zeilen und Spalten (nur Leerraum zählt als leer) |
+| `normalize(markdown)` | Zeilenenden `\n`, Leerraum am Zeilenende weg, Leerzeilen zusammengefasst, genau ein `\n` am Ende (leerer Text → `""`); harte Umbrüche daher nur als `\` am Zeilenende |
+
+Nicht geschützt werden HTML-Entities (`&amp;` liest sich als `&`) und die PTA-Erweiterungen
+`==markiert==` und `:icon-name:`; Text mit solchen Folgen ist vorher selbst zu behandeln.
+`table` erwartet Markdown in den Zellen — Klartext also erst durch `escape`.
+
 ## Beliebiges Dokument → Markdown
 
 ```python
