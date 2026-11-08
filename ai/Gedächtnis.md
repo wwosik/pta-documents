@@ -384,3 +384,16 @@ weil ihm vertraut wird.
   -Descent), nicht reportlabs `face.ascent`. Neue Blockarten im PDF in `layout/story.py`
   (`StoryBuilder.block`) eintragen, gemeinsame Erkennungen mit dem DOCX in
   `generation/common/block_shapes.py`.
+- **Icons** (E15-S03): `:icon-name:` ist eine Inline-Regel (`markdown/icon.py`, Token `icon`,
+  `meta["name"]`, vor `emphasis`; Code-Spans laufen vorher). 162 Tabler-SVGs (MIT, unverändert)
+  in `design/icons/` mit `ICONS`, `svg`, `colored_svg`, `alt`/`from_alt` (`icon:<name>`),
+  `loader.drawing` (nur `<path>`, Quadrat `stroke="none"` entfällt) und `raster.png` (Pillow,
+  Name im PNG-Textfeld `pta-documents-icon`). Gemeinsames in `generation/common/icons.py`
+  (`check` — von `layout_syntax.check` gerufen —, `leading`, `without_leading`, `list_icons`:
+  nur Bullet-Listen, **jeder** Punkt mit Icon). PPTX: `Card.icon` → `FlowWriter.icon` (Gruppe
+  `icon:<name>`), `Paragraph.icon` → `DeckWriter.icon_bullet` (`a:buBlip`); jedes andere Icon
+  in Folientext wirft in `DeckParser.runs`. Word: `BodyWriter.icon_picture`/`icon_bullet`
+  (`numId 0`, hängender Einzug, `w:tab` im Bild-Run); PDF: `InlineWriter` lässt Icons mit
+  `code-not-drawn` weg (bis E05-S04). Konverter: DOCX über `docPr/@descr`, PPTX über Gruppenname
+  und PNG-Textfeld. `docs/ki-anleitung.md` muss jeden Namen nennen (Test
+  `tests/design/icons/test_icons.py`).

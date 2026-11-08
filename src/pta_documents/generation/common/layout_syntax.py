@@ -17,6 +17,7 @@ from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     coloured_words,
     heading_attributes,
+    icons,
     risks,
     schedule,
     steps,
@@ -198,7 +199,7 @@ def check(
     with its line: ``Line 12: Unknown container '::: card'. …``. A ``::: notes`` before the
     first ``#``/``##`` heading has no slide to belong to. Timelines and Gantt charts are read
     (``schedule``), ``heute`` in them is ``today`` (default: the day of generating), steps and
-    risk matrices too (``steps``, ``risks``).
+    risk matrices too (``steps``, ``risks``). Icons must be bundled ones (``icons.check``).
     """
     day = schedule.reference_day(today)
     headed = False
@@ -237,6 +238,7 @@ def check(
                 else None
             )
             _check_coloured_words(token, heading_level, format, line_offset)
+            icons.check(token, format, line_offset)
 
 
 def _check_coloured_words(
@@ -269,7 +271,7 @@ def token_text(child: Token) -> str:
             return child.content
         case "softbreak" | "hardbreak":
             return "\n"
-        case "image" | "html_inline" | "footnote_ref":
+        case "image" | "html_inline" | "footnote_ref" | "icon":
             return coloured_words.MASK
         case _:
             return ""

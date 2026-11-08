@@ -17,8 +17,10 @@ from pptx.util import Emu
 
 from pta_documents.design import colors, templates
 from pta_documents.design import slides as design
+from pta_documents.design.icons import raster as icon_raster
 from pta_documents.design.variants import GeneratedTexts, Language, SlidesVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.common import icons
 from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.pptx import chart, drawing, fitting, flow, kinds, visuals
 from pta_documents.generation.pptx import notes as speaker_notes
@@ -591,6 +593,8 @@ class DeckWriter:
             auto.set("type", "arabicPeriod")
             if paragraph.start != 1:
                 auto.set("startAt", str(paragraph.start))
+        if paragraph.icon is not None:
+            self.icon_bullet(slide, p_pr, paragraph.icon, color)
         if not len(p_pr) and not p_pr.attrib:
             element.remove(p_pr)
         size = (
@@ -612,6 +616,19 @@ class DeckWriter:
         if size is not None:
             end.set("sz", str(size))
         return element
+
+    def icon_bullet(
+        self, slide: PptxSlide, p_pr: etree._Element, name: str, color: str | None
+    ) -> None:
+        """The icon ``name`` as the picture bullet of a paragraph (E15-S03): a PNG in PTA blue
+        (white on dark areas) as high as the text."""
+        dark = color == colors.WHITE
+        png = icon_raster.png(name, icons.color_on(dark), design.ICON_BULLET_PIXELS)
+        _, r_id = slide.part.get_or_add_image_part(io.BytesIO(png))
+        size = etree.SubElement(p_pr, a("buSzPct"))
+        size.set("val", str(design.ICON_BULLET_SIZE))
+        blip = etree.SubElement(etree.SubElement(p_pr, a("buBlip")), a("blip"))
+        blip.set(f"{{{R}}}embed", r_id)
 
     def run_element(
         self, slide: PptxSlide | NotesSlide, run: Run, size: int | None, color: str | None = None

@@ -25,6 +25,7 @@ from pta_documents.generation.common import (
     generated_images,
     heading_attributes,
     html,
+    icons,
     layout_syntax,
     layout_tokens,
     schedule,
@@ -77,6 +78,11 @@ from pta_documents.markdown.typography import typeset, typeset_text
 
 FORMAT: Final = DocumentFormat.PPTX
 WHAT: Final = "the deck"
+INLINE_ICON: Final = (
+    "Icons in slide text are not drawn. On a slide, an icon goes at the start of a card title "
+    "('### :icon-check: Title' in '::: cards') or at the start of every item of a bullet list; "
+    "Word also shows it within text."
+)
 
 
 @dataclass
@@ -497,6 +503,8 @@ class DeckParser:
         close = "ordered_list_close" if ordered else "bullet_list_close"
         kind = Kind.NUMBERED if ordered else Kind.BULLET
         start = int(tokens[i].attrs.get("start", 1)) if ordered and tokens[i].attrs else 1
+        bullets = icons.list_icons(tokens, i)
+        item = 0
         j = i + 1
         while tokens[j].type != close:
             if tokens[j].type != "list_item_open":
@@ -504,10 +512,13 @@ class DeckParser:
                 continue
             j += 1
             marked = False
+            icon = bullets[item] if bullets else None
+            item += 1
             while tokens[j].type != "list_item_close":
                 t = tokens[j]
                 if t.type == "paragraph_open" and not marked:
-                    self._paragraph(tokens[j + 1], out, kind, depth, start, italic)
+                    inline = icons.without_leading(tokens[j + 1]) if icon else tokens[j + 1]
+                    self._paragraph(inline, out, kind, depth, start, italic, icon)
                     marked = True
                     j += 3
                 elif t.type in ("bullet_list_open", "ordered_list_open"):
@@ -518,9 +529,17 @@ class DeckParser:
         return j + 1
 
     def _paragraph(
-        self, inline: Token, out: list[Item], kind: Kind, depth: int, start: int, italic: bool
+        self,
+        inline: Token,
+        out: list[Item],
+        kind: Kind,
+        depth: int,
+        start: int,
+        italic: bool,
+        icon: str | None = None,
     ) -> None:
-        """Text and images apart: images after the paragraph, as their own visual."""
+        """Text and images apart: images after the paragraph, as their own visual; ``icon``
+        is the bullet of a list item (E15-S03)."""
         runs = self.runs(inline, Style(italic=italic), images_as_text=False)
         images = [
             self._placeable(self._image(child, inline, line), inline)
@@ -530,8 +549,8 @@ class DeckParser:
             if child.type == "image"
         ]
         text = trim(runs)
-        if text or not images:
-            out.append(Paragraph(tuple(text), kind, depth, start))
+        if text or not images or icon:
+            out.append(Paragraph(tuple(text), kind, depth, start, icon=icon))
         if images:
             out.append(Images(tuple(images)))
 
@@ -717,6 +736,13 @@ class DeckParser:
                         html.note_raw_html(self.notes, line, WHAT)
                 case "footnote_ref" | "footnote_anchor":
                     pass
+                case "icon":
+                    raise DocumentConversionError(FORMAT, at_line(INLINE_ICON, line))
                 case _:
                     add(child.content)
         return runs
+
+
+def at_line(reason: str, line: int | None) -> str:
+    """``reason`` with its line in front, as ``layout_syntax.check`` reports."""
+    return f"Line {line}: {reason}" if line else reason

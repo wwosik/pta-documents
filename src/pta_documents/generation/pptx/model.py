@@ -66,6 +66,8 @@ class Paragraph:
     """Nesting depth of list items (0-2)."""
     start: int = 1
     """The first number of a numbered list."""
+    icon: str | None = field(default=None, kw_only=True)
+    """The icon that is the bullet of a list item (E15-S03): a picture bullet."""
 
     @property
     def level(self) -> int:
@@ -329,6 +331,8 @@ class Card:
     title: tuple[Run, ...]
     figure: tuple[Run, ...] | None
     blocks: tuple[FlowBlock, ...]
+    icon: str | None = field(default=None, kw_only=True)
+    """The icon at the start of the title (E15-S03): the card's figure, drawn above the title."""
 
 
 @dataclass(frozen=True)

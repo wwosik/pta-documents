@@ -799,3 +799,22 @@ Eine Tabellenzelle, die genau \[n/4] enthält (n von 0 bis 4), wird ein Harvey B
 | 2 | Daten unvollständig | Früh Stichproben |
 | 3 | Schnittstelle verspätet | Mit Mock beginnen |
 | 4 | Geringe Akzeptanz | Schulung und Lotsen |
+
+## Icons
+
+:icon-check: setzt eines der gebündelten Strich-Icons (Tabler Icons, MIT) in PTA-Blau. Beginnt jeder Punkt einer Liste mit einem Icon, ersetzt es das Aufzählungszeichen; sonst steht es im Text:
+
+```markdown
+- :icon-circle-check: Ist-Aufnahme abgeschlossen
+- :icon-clock: Konzept in Abstimmung
+- :icon-alert-triangle: Schnittstelle verspätet
+
+Im Text steht ein Icon so hoch wie die Schrift: der Server :icon-server: meldet sich
+stündlich, der Bericht :icon-file-text: kommt per :icon-mail: E-Mail.
+```
+
+- :icon-circle-check: Ist-Aufnahme abgeschlossen
+- :icon-clock: Konzept in Abstimmung
+- :icon-alert-triangle: Schnittstelle verspätet
+
+Im Text steht ein Icon so hoch wie die Schrift: der Server :icon-server: meldet sich stündlich, der Bericht :icon-file-text: kommt per :icon-mail: E-Mail.

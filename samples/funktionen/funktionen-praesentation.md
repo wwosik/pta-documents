@@ -788,6 +788,57 @@ Ein `###` je Schritt, 3 bis 6 Schritte; `{.current}` hebt einen hervor.
 Wahrscheinlichkeit und Auswirkung von 1 bis 5; die Legende steht rechts der Matrix.
 ::::
 
+## Icons in Karten {kicker="Visuelle Bausteine"}
+
+::: cards
+### :icon-target: Ziel
+Ein Bild der Lage für den Lenkungskreis
+
+### :icon-users: Team
+Fachbereich, IT und Betrieb an einem Tisch
+
+### :icon-rocket: Start
+Erste Ergebnisse nach sechs Wochen
+:::
+
+:::: notes
+```markdown
+## Icons in Karten {kicker="Visuelle Bausteine"}
+
+::: cards
+### :icon-target: Ziel
+Ein Bild der Lage für den Lenkungskreis
+
+### :icon-users: Team
+Fachbereich, IT und Betrieb an einem Tisch
+
+### :icon-rocket: Start
+Erste Ergebnisse nach sechs Wochen
+:::
+```
+
+Ein Icon am Anfang des `###`-Titels wird die Figur der Karte, in PTA-Blau.
+::::
+
+## Icons als Aufzählung {kicker="Visuelle Bausteine"}
+
+- :icon-circle-check: Ist-Aufnahme abgeschlossen
+- :icon-clock: Konzept in Abstimmung
+- :icon-alert-triangle: Schnittstelle verspätet
+
+:::: notes
+```markdown
+## Icons als Aufzählung {kicker="Visuelle Bausteine"}
+
+- :icon-circle-check: Ist-Aufnahme abgeschlossen
+- :icon-clock: Konzept in Abstimmung
+- :icon-alert-triangle: Schnittstelle verspätet
+```
+
+Beginnt jeder Punkt mit einem Icon, wird es das Aufzählungssymbol. Im Folientext sonst
+sind Icons ein Fehler.
+::::
+
 # Diagramme
 
 ## Balkendiagramm

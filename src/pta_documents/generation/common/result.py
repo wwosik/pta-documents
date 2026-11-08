@@ -56,7 +56,8 @@ class NoteCodes:
     CODE_NOT_DRAWN: Final = "code-not-drawn"
     """A code block in a diagram or chart language (``mermaid``, ``chart`` …) that no renderer
     drew, so it shows as code (PPTX, DOCX, PDF). The PDF draws no charts and drawings yet and
-    shows ``::: timeline``/``::: gantt`` as their content, with this note (until E05-S04)."""
+    shows ``::: timeline``/``::: gantt`` as their content, with this note (until E05-S04); it
+    also leaves icons (``:icon-check:``, E15-S03) out with it, and so does Word in footnotes."""
 
     CHARACTER_MISSING: Final = "character-missing"
     """A character the document's fonts lack; it shows as ``?`` (PDF)."""

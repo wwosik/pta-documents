@@ -20,7 +20,7 @@ from pta_documents.design import word
 from pta_documents.design.colors import STATUS_COLORS
 from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common import html, layout_syntax
-from pta_documents.generation.common.result import Notes
+from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.pdf.layout.styles import PdfStyles
 from pta_documents.markdown.parser import child_lines
 
@@ -116,6 +116,14 @@ class InlineWriter:
                     parts.append(links.pop() if links else "")
                 case "image":
                     parts.append(self.text(child.content, options))
+                case "icon":
+                    # Drawn in the PDF with E05-S04; Word and PowerPoint show it.
+                    self.notes.add(
+                        NoteCodes.CODE_NOT_DRAWN,
+                        line,
+                        f"The icon ':icon-{child.meta['name']}:' is left out: the PDF does not "
+                        "draw icons yet (E05-S04).",
+                    )
                 case "footnote_ref":
                     options.footnotes.append(child)
                     parts.append(f"<super>{self.footnote_number(child)}</super>")

@@ -10,11 +10,13 @@ from lxml import etree
 
 from pta_documents.conversions.openxml import OpenXmlPackage, guard, read_input
 from pta_documents.conversions.options import ConversionOptions, ResourceCollector
+from pta_documents.design.icons import raster as icon_raster
 from pta_documents.design.slides import CODE_FONT
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown import text as md
 from pta_documents.markdown import typography
 from pta_documents.markdown.document import MarkdownDocument, MetadataKeys
+from pta_documents.markdown.icon import markdown as icon_markdown
 
 P: Final = "http://schemas.openxmlformats.org/presentationml/2006/main"
 A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -29,6 +31,8 @@ DRAWING_GROUP: Final = "Drawing"
 """The name start of the shape groups ``generation.pptx.drawing`` writes (``GROUP_NAME``)."""
 HARVEY: Final = re.compile(r"harvey-([0-4])")
 """The name of a Harvey ball's group over a table cell (``generation.pptx.visuals``)."""
+ICON_GROUP: Final = re.compile(r"icon:([a-z0-9-]+)")
+"""The name of the group of an icon that is a card's figure (``generation.pptx.flow``, E15-S03)."""
 
 
 def p(name: str) -> str:
@@ -109,6 +113,30 @@ def _is_drawing(group: etree._Element) -> bool:
     return name.startswith(DRAWING_GROUP + " ")
 
 
+def _group_name(group: etree._Element) -> str:
+    properties = group.find(f"{p('nvGrpSpPr')}/{p('cNvPr')}")
+    return properties.get("name", "") if properties is not None else ""
+
+
+def _icon_group(group: etree._Element) -> str | None:
+    """The icon a group of the generator draws (``icon:check``, E15-S03); None: no icon."""
+    match = ICON_GROUP.fullmatch(_group_name(group))
+    return match.group(1) if match else None
+
+
+def _bullet_icons(package: OpenXmlPackage, rels: dict[str, str]) -> dict[str, str]:
+    """The relationship ids of the slide's pictures that are bundled icons (picture bullets,
+    E15-S03), with the icons' names."""
+    result: dict[str, str] = {}
+    for rel_id, part in rels.items():
+        if part.lower().endswith(".png"):
+            content = package.read_bytes(part)
+            name = icon_raster.name_of(content) if content else None
+            if name is not None:
+                result[rel_id] = name
+    return result
+
+
 def _harvey_balls(tree: etree._Element) -> list[tuple[int, int, int]]:
     """The Harvey balls the generator drew over table cells (groups ``harvey-3``, E15-S02):
     their centre in EMU and the quarters filled."""
@@ -174,11 +202,18 @@ def _render_slide(
     rels = package.relationships(part)
     content = bool(title)
     balls = _harvey_balls(tree)
+    bullets = _bullet_icons(package, rels)
+    figure: str | None = None
+    """The icon of a card's figure, written before the card's title (E15-S03)."""
     for element in tree.iter():
         if any(anc.tag in (f"{{{MC}}}Fallback", a("tbl")) for anc in element.iterancestors()):
             continue
-        if any(_is_drawing(anc) for anc in element.iterancestors(p("grpSp"))):
-            # A drawing of the generator (financial chart): shapes, not text to read back.
+        groups = list(element.iterancestors(p("grpSp")))
+        if any(_is_drawing(anc) or _icon_group(anc) for anc in groups):
+            # A drawing of the generator (financial chart) or an icon: shapes, not text.
+            continue
+        if element.tag == p("grpSp") and (icon := _icon_group(element)) is not None:
+            figure = icon
             continue
         parent = element.getparent()
         if (
@@ -187,7 +222,10 @@ def _render_slide(
             and parent is not title_shape
             and not _is_footer(parent)
         ):
-            lines = _paragraphs(element)
+            lines = _paragraphs(element, bullets)
+            if lines and figure is not None:
+                lines[0] = f"{icon_markdown(figure)} {lines[0]}"
+                figure = None
             if lines:
                 out.append("\n\n".join(lines) + "\n\n")
                 content = True
@@ -313,16 +351,23 @@ def _picture(
     return f"![{md.escape(alt).replace(chr(10), ' ')}]({md.destination(path)})"
 
 
-def _paragraphs(container: etree._Element) -> list[str]:
+def _paragraphs(container: etree._Element, bullets: dict[str, str] | None = None) -> list[str]:
+    """The paragraphs with text; with ``bullets``, a picture bullet that is a bundled icon
+    (relationship id → name) comes first as ``:icon-name:``."""
     result: list[str] = []
     for paragraph in container.iter(a("p")):
         parts: list[str] = []
+        blip = paragraph.find(f"{a('pPr')}/{a('buBlip')}/{a('blip')}")
+        rel_id = blip.get(f"{{{R}}}embed") if blip is not None else None
+        icon = bullets.get(rel_id) if bullets and rel_id else None
         for element in paragraph:
             if element.tag == a("br"):
                 parts.append(" ")
             else:
                 parts.append("".join(t.text or "" for t in element.iter(a("t"))))
         text = "".join(parts).strip()
-        if text:
+        if text and icon is not None:
+            result.append(f"{icon_markdown(icon)} {md.escape(text)}")
+        elif text:
             result.append(md.escape(text))
     return result

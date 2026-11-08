@@ -125,7 +125,7 @@ def _proxy(child: Token) -> str:
             return child.content
         case "softbreak" | "hardbreak":
             return " "
-        case "code_inline" | "image" | "html_inline" | "footnote_ref":
+        case "code_inline" | "image" | "html_inline" | "footnote_ref" | "icon":
             return "x"
         case _:
             return ""

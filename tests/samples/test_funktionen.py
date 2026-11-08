@@ -9,7 +9,8 @@ slide syntax, ``==mark==``, coloured words, status labels, the ``chart`` blocks 
 setting and separator), in the deck the ``financial-chart`` blocks (every type and option), in
 the report one of them and an ``Abbildung: …`` caption after a graphic (E03-S04), and every
 scheme of generated images (``qr:``, E11-S04), Harvey balls ``[n/4]`` and the thresholds of
-``::: riskmatrix`` (E15-S02).
+``::: riskmatrix`` (E15-S02), icons as bullets, before a card title (deck) and in text (report,
+E15-S03).
 When the authoring guides exist (E02-S05), the list comes from their syntax instead.
 """
 
@@ -39,6 +40,7 @@ from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common import (
     generated_images,
     heading_attributes,
+    icons,
     layout_syntax,
     layout_tokens,
     schedule,
@@ -67,6 +69,9 @@ FIGURE_CAPTION: Final = "Abbildung: … after a graphic"
 FIGURE_CAPTIONS: Final = ("Abbildung:", "Figure:")
 GENERATED_IMAGE: Final = "![…]({scheme}…)"
 HARVEY_BALL: Final = "[n/4] in a table cell"
+ICON_BULLETS: Final = ":icon-name: before every item of a list"
+ICON_CARD: Final = ":icon-name: before a card title"
+ICON_IN_TEXT: Final = ":icon-name: in text"
 """The language of the fences that show the Markdown source of a feature."""
 DOCX: Final = DocumentFormat.DOCX
 PPTX: Final = DocumentFormat.PPTX
@@ -179,6 +184,8 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
                 shown.add(f"::: {name} {arguments.partition('=')[0]}=<grid>")
             if name == layout_syntax.RISK_MATRIX and arguments:
                 shown.add(f"::: {name} <thresholds>")
+        elif token.type == "bullet_list_open" and icons.list_icons(tokens, i):
+            shown.add(ICON_BULLETS)
         elif token.type == "blockquote_open" and ALERT in token.meta:
             shown.add(f"> [!{token.meta[ALERT]}]")
         elif token.type == "heading_open" and token.tag in ("h1", "h2") and token.level == 0:
@@ -193,6 +200,11 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
         elif token.type == "inline":
             if any(child.type == "mark_open" for child in token.children or ()):
                 shown.add("==mark==")
+            leading = icons.leading(token)
+            if leading is not None and tokens[i - 1].type == "heading_open":
+                shown.add(ICON_CARD)
+            elif leading is None and any(c.type == "icon" for c in token.children or ()):
+                shown.add(ICON_IN_TEXT)
             for child in token.children or ():
                 source = str(child.attrs.get("src", "")) if child.type == "image" else ""
                 if generated_images.is_generated(source):
@@ -269,6 +281,8 @@ def required(format: DocumentFormat) -> set[str]:
     result.add(f"::: {layout_syntax.GANTT} {schedule.GRID_KEY}=<grid>")
     result.add(f"::: {layout_syntax.RISK_MATRIX} <thresholds>")
     result.add(HARVEY_BALL)
+    # Slide text takes icons only as bullets and card figures (E15-S03).
+    result |= {ICON_BULLETS, ICON_IN_TEXT if format is DOCX else ICON_CARD}
     result |= {f"> [!{kind}]" for kind in layout_syntax.ALERT_KINDS}
     result.add("==mark==")
     result |= {GENERATED_IMAGE.format(scheme=scheme) for scheme in generated_images.SCHEMES}

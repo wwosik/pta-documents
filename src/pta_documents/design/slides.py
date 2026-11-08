@@ -235,6 +235,13 @@ def grid(columns: int) -> tuple[tuple[int, int], ...]:
     return tuple((area.left + n * (width + COLUMN_GAP), width) for n in range(columns))
 
 
+ICON_BULLET_PIXELS: Final = 96
+"""The edge of the PNG of an icon that is a bullet (E15-S03): sharp up to 0.5 cm at 2× and
+more."""
+ICON_BULLET_SIZE: Final = 110_000
+"""The size of an icon bullet in thousandths of a percent of the text (``a:buSzPct``)."""
+
+
 @dataclass(frozen=True)
 class FlowStyle:
     """Flow slides (cards, rows, panels, alerts, tags, code, statement, kicker) in the PTA style,
@@ -246,6 +253,8 @@ class FlowStyle:
     title_pt: float = 18
     """Card and row titles: like the subheadline (Segoe UI, PTA blue)."""
     figure_pt: float = 32
+    icon: int = cm(1.2)
+    """The edge of an icon that is a card's figure (E15-S03), above the title."""
     statement_pt: float = 24
     kicker_pt: float = 12
     kicker_left: int = cm(1.33)

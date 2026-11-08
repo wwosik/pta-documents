@@ -33,7 +33,9 @@ from markdown_it.token import Token
 from PIL import Image
 
 from pta_documents.design import colors, word
+from pta_documents.design import icons as icon_set
 from pta_documents.design.colors import STATUS_COLORS, StatusCategory
+from pta_documents.design.icons import raster as icon_raster
 from pta_documents.design.variants import GeneratedTexts
 from pta_documents.drawing import riskmatrix as risk_drawing
 from pta_documents.drawing import schedule as schedule_drawing
@@ -47,6 +49,7 @@ from pta_documents.generation.common import (
     generated_images,
     heading_attributes,
     html,
+    icons,
     layout_syntax,
     layout_tokens,
     risks,
@@ -55,7 +58,12 @@ from pta_documents.generation.common import (
     text_metrics,
 )
 from pta_documents.generation.common import steps as steps_model
-from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
+from pta_documents.generation.common.images import (
+    GENERATOR_SCALE,
+    convert_image,
+    refusal_hint,
+    svg_available,
+)
 from pta_documents.generation.common.openxml import R, field_paragraph_runs, w
 from pta_documents.generation.common.renderers import (
     ChartGraphic,
@@ -615,6 +623,8 @@ class BodyWriter:
             num_id = self._new_num(list_style) if ordered else self._style_num(list_style)
         assert num_id is not None
         level = min(depth, 2)
+        bullets = icons.list_icons(tokens, i)
+        item = 0
         j = i + 1
         while tokens[j].type != close:
             if tokens[j].type != "list_item_open":
@@ -622,10 +632,17 @@ class BodyWriter:
                 continue
             j += 1
             first = True
+            icon = bullets[item] if bullets else None
+            item += 1
             while tokens[j].type != "list_item_close":
                 t = tokens[j]
                 if t.type == "paragraph_open":
-                    if first:
+                    if first and icon is not None:
+                        paragraph = self.paragraph(list_style)
+                        self.icon_bullet(paragraph, icon, level, self.line(tokens[j]))
+                        self.inline(paragraph, icons.without_leading(tokens[j + 1]))
+                        first = False
+                    elif first:
                         paragraph = self.paragraph(list_style)
                         _set_numbering(paragraph, num_id, level)
                         self.inline(paragraph, tokens[j + 1])
@@ -643,6 +660,51 @@ class BodyWriter:
                     first = False
             j += 1
         return j + 1
+
+    def icon_bullet(self, paragraph: Paragraph, name: str, level: int, line: int | None) -> None:
+        """The icon ``name`` as the bullet of a list item (E15-S03): the list's style without
+        its numbering, the icon hanging out before the text, a tab between them."""
+        p_pr = paragraph._p.get_or_add_pPr()
+        num_pr = etree.SubElement(p_pr, w("numPr"))
+        etree.SubElement(num_pr, w("ilvl")).set(w("val"), "0")
+        etree.SubElement(num_pr, w("numId")).set(w("val"), "0")
+        _order_ppr(p_pr)
+        paragraph.paragraph_format.left_indent = Cm(LIST_INDENT_CM[level])
+        paragraph.paragraph_format.first_line_indent = -Cm(word.ICON_BULLET_HANGING_CM)
+        run = self.icon_picture(paragraph, paragraph._p, name, word.ICON_BULLET_PT, line)
+        etree.SubElement(run, w("tab"))
+
+    def icon_picture(
+        self,
+        paragraph: Paragraph,
+        target: etree._Element,
+        name: str,
+        size_pt: float,
+        line: int | None,
+    ) -> etree._Element:
+        """The icon ``name`` as an inline picture ``size_pt`` high in ``target`` (the paragraph
+        or a hyperlink in it), in PTA blue: a PNG drawn without any extra, with the SVG beside
+        it when the extra ``svg`` is installed (E06-S04). Its alternative text ``icon:name``
+        brings ``:icon-name:`` back in the converter. Returns the picture's run."""
+        png = icon_raster.png(name, icons.COLOR, word.ICON_PIXELS)
+        resource = DocumentResource(f"icon-{name}.png", "image/png", png)
+        svg = icon_set.colored_svg(name, icons.COLOR) if svg_available() else None
+        pixels = size_pt / 72 * 96
+        before = len(paragraph._p)
+        self.insert_picture(
+            paragraph,
+            resource,
+            resource.path,
+            icon_set.alt(name),
+            "",
+            line,
+            natural=(pixels, pixels),
+            svg=svg,
+        )
+        run = paragraph._p[before]
+        if target is not paragraph._p:
+            target.append(run)
+        return run
 
     def definition_list(self, tokens: list[Token], i: int) -> int:
         j = i + 1
@@ -1187,6 +1249,16 @@ class BodyWriter:
                         self._run(context, child.content)
                 case "footnote_ref":
                     self._footnote_reference(context, child)
+                case "icon" if context.images and context.paragraph is not None:
+                    name = icons.name_of(child)
+                    self.icon_picture(context.paragraph, context.target, name, word.ICON_PT, line)
+                case "icon":
+                    self.notes.add(
+                        NoteCodes.CODE_NOT_DRAWN,
+                        line,
+                        f"The icon ':icon-{icons.name_of(child)}:' is left out: Word shows no "
+                        "icons in footnotes.",
+                    )
                 case "html_inline":
                     if html.is_checkbox(child.content):
                         self._run(context, "☒" if "checked" in child.content else "☐")

@@ -156,6 +156,7 @@ der Generator als Hinweis `code-language-unknown`.
 | `::: steps` mit einem `###` je Schritt | Schrittfolge als Pfeile, Bild in Satzspiegelbreite (siehe [Schrittfolge, Bewertung und Risiken](#schrittfolge-bewertung-und-risiken)) |
 | `[3/4]` allein in einer Tabellenzelle | Harvey Ball ◕ in PTA-Blau |
 | `::: riskmatrix` mit Tabelle Nr, Risiko, Wahrscheinlichkeit, Auswirkung (, Maßnahme) | 5 × 5-Risikomatrix als Bild, darunter die Legende als Tabelle |
+| `:icon-check:` im Text oder vor jedem Listenpunkt | Icon in PTA-Blau im Text bzw. statt des Aufzählungszeichens (siehe [Icons](#icons)) |
 | ```` ``` ```` Codeblock | Formatvorlage Code (Consolas, grau hinterlegt) |
 | ```` ```chart ```` mit Einstellungen und CSV | echtes Word-Diagramm über die Textbreite, darunter „Abbildung n: …" aus `title` (siehe [Diagramme aus Daten](#diagramme-aus-daten)) |
 | ```` ```mermaid ```` oder ```` ```financial-chart ```` | scharfes Bild in natürlicher Größe, höchstens über die Textbreite (siehe [Diagramme mit Mermaid](#diagramme-mit-mermaid), [Finanzdiagramme](#finanzdiagramme)) |
@@ -509,6 +510,34 @@ In Sprints
 - **Risiken:** Wahrscheinlichkeit und Auswirkung von 1 bis 5, jede Nummer einmal, 1 bis 15
   Risiken. Grün bis Produkt 4, gelb bis 12, darüber rot; `::: riskmatrix green=6 yellow=15`
   verschiebt die Grenzen. Auf der Folie steht die Legende rechts der Matrix, in Word darunter.
+
+### Icons
+
+`:icon-name:` setzt ein mitgeliefertes Strich-Icon in PTA-Blau — ohne Bilddatei:
+
+```markdown
+::: cards
+### :icon-rocket: Start
+Erste Ergebnisse nach sechs Wochen
+
+### :icon-users: Team
+Fachbereich, IT und Betrieb
+:::
+
+- :icon-circle-check: Ist-Aufnahme abgeschlossen
+- :icon-clock: Konzept in Abstimmung
+```
+
+- **Am Anfang eines Kartentitels** (PowerPoint) wird das Icon die Figur der Karte, über dem
+  Titel; auf dunklen Folien weiß. Icon und Kennzahl zugleich gehen nicht.
+- **Vor jedem Punkt einer Liste** ersetzt es das Aufzählungszeichen, in Word und PowerPoint.
+- **Im Text** zeigt es nur Word. Auf Folien ist ein Icon an anderer Stelle ein Fehler; das PDF
+  lässt Icons vorerst weg.
+- Die Namen stehen in [ki-anleitung.md](ki-anleitung.md#icons-icon-name-word-und-powerpoint)
+  (etwa 160, z. B. `check`, `x`, `alert-triangle`, `users`, `server`, `cloud`, `lock`,
+  `rocket`, `target`, `chart-bar`, `currency-euro`, `mail`, `bulb`). Ein Tippfehler meldet die
+  ähnlichsten Namen. Die Icons sind [Tabler Icons](https://tabler.io/icons) (MIT-Lizenz) und
+  brauchen keinen Eintrag in `QUELLEN.md`.
 
 ## 6. Aus Python aufrufen (optional)
 

@@ -13,6 +13,7 @@ from mdit_py_plugins.deflist import deflist_plugin
 from mdit_py_plugins.footnote import footnote_plugin
 from mdit_py_plugins.tasklists import tasklists_plugin
 
+from pta_documents.markdown.icon import icon_plugin
 from pta_documents.markdown.mark import mark_plugin
 
 CONTAINER_OPEN: Final = "container_layout_open"
@@ -26,7 +27,8 @@ _ALERT_MARKER: Final = re.compile(r"^\[!([A-Za-z]+)\][ \t]*(?:\n|$)")
 
 def create_parser() -> MarkdownIt:
     """CommonMark plus tables, strikethrough, footnotes, task lists, definition lists and the
-    slide-layout syntax: ``:::`` containers, ``==marks==`` and GitHub alerts.
+    slide-layout syntax: ``:::`` containers, ``==marks==``, ``:icon-name:`` (E15-S03) and GitHub
+    alerts.
 
     Raw HTML is recognised (``html_block``/``html_inline`` tokens) so that the generators can
     leave it out and say so (``raw-html`` note); none of them renders it.
@@ -41,6 +43,7 @@ def create_parser() -> MarkdownIt:
     parser.enable(["table", "strikethrough"])
     parser.use(footnote_plugin).use(tasklists_plugin).use(deflist_plugin)
     parser.use(container_plugin, "layout", validate=_any_name).use(mark_plugin)
+    parser.use(icon_plugin)
     parser.core.ruler.before("inline", "alerts", _alerts)
     return parser
 

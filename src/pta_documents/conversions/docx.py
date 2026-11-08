@@ -10,12 +10,13 @@ from lxml import etree
 
 from pta_documents.conversions.openxml import OpenXmlPackage, guard, read_input
 from pta_documents.conversions.options import ConversionOptions, ResourceCollector
-from pta_documents.design import colors, word
+from pta_documents.design import colors, icons, word
 from pta_documents.design.variants import TEXTS
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown import text as md
 from pta_documents.markdown import typography
 from pta_documents.markdown.document import MarkdownDocument
+from pta_documents.markdown.icon import markdown as icon_markdown
 
 W: Final = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -454,11 +455,17 @@ def _render_run(run: etree._Element, context: _Context, segments: list[Segment])
     bold = _is_on(properties.find(w("b")) if properties is not None else None)
     italic = _is_on(properties.find(w("i")) if properties is not None else None)
     content: list[str] = []
+    icon = False
     for child in run:
-        if child.tag == w("t"):
+        after_icon, icon = icon, False
+        if child.tag == w("drawing") and (name := _icon(child)) is not None:
+            # A bundled icon of the generator (E15-S03): its Markdown again, not a picture.
+            content.append(icon_markdown(name))
+            icon = True
+        elif child.tag == w("t"):
             content.append(md.escape(child.text or ""))
         elif child.tag == w("tab"):
-            content.append("\t")
+            content.append(" " if after_icon else "\t")
         elif child.tag == w("br") and child.get(w("type")) in ("page", "column"):
             # PTA: page and column breaks are layout, not text (DocLibs wrote a line break).
             continue
@@ -473,8 +480,14 @@ def _render_run(run: etree._Element, context: _Context, segments: list[Segment])
         segments.extend((image, "") for image in _images(run, context))
 
 
+def _icon(drawing: etree._Element) -> str | None:
+    """The bundled icon a ``w:drawing`` shows (alternative text ``icon:check``); None: none."""
+    doc_pr = next(drawing.iter(f"{{{WP}}}docPr"), None)
+    return icons.from_alt(doc_pr.get("descr")) if doc_pr is not None else None
+
+
 def _images(run: etree._Element, context: _Context) -> list[str]:
-    """DrawingML pictures (a:blip) and legacy VML pictures (v:imagedata)."""
+    """DrawingML pictures (a:blip) and legacy VML pictures (v:imagedata); icons aside."""
     assert context.images is not None
     result: list[str] = []
     for element in run.iter(f"{{{A}}}blip", f"{{{V}}}imagedata"):
@@ -483,6 +496,8 @@ def _images(run: etree._Element, context: _Context) -> list[str]:
         if element.tag == f"{{{A}}}blip":
             rel_id = element.get(f"{{{R}}}embed")
             drawing = next((a for a in element.iterancestors(w("drawing"))), None)
+            if drawing is not None and _icon(drawing) is not None:
+                continue
             doc_pr = next(drawing.iter(f"{{{WP}}}docPr"), None) if drawing is not None else None
             alt = None
             if doc_pr is not None:

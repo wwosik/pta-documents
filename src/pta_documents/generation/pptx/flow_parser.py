@@ -17,6 +17,7 @@ from markdown_it.token import Token
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     heading_attributes,
+    icons,
     layout_syntax,
     layout_tokens,
     risks,
@@ -303,11 +304,17 @@ class FlowReader:
         if len(kids) == 1 and tokens[kids[0]].type in LISTS:
             cards: list[Card] = []
             for item in children(tokens, kids[0]):
+                first = children(tokens, item)
+                icon = (
+                    icons.leading(tokens[first[0] + 1])
+                    if first and tokens[first[0]].type == "paragraph_open"
+                    else None
+                )
                 title, rest, others = self.item(item, layout_syntax.CARDS)
                 body = self.flow(others, in_container=True)
                 if rest:
                     body.insert(0, TextBlock((Paragraph(rest),)))
-                cards.append(Card(title, None, tuple(body)))
+                cards.append(Card(title, None, tuple(body), icon=icon))
             return cards
 
         cards = []
@@ -326,8 +333,17 @@ class FlowReader:
             ):
                 figure = self.paragraph_runs(blocks[0])
                 rest = blocks[1:]
+            inline = tokens[heading + 1]
+            icon = icons.leading(inline)
+            if icon is not None and figure is not None:
+                raise self.error(
+                    "A card has one figure: an icon at the start of its title or a **number** "
+                    "below it, not both.",
+                    tokens[heading],
+                )
             body = self.flow(rest, in_container=True)
-            cards.append(Card(self.paragraph_runs(heading), figure, tuple(body)))
+            title = self.deck.text_runs(icons.without_leading(inline))
+            cards.append(Card(title, figure, tuple(body), icon=icon))
 
         for kid in kids:
             token = tokens[kid]
@@ -372,7 +388,11 @@ class FlowReader:
         kids = children(tokens, i)
         runs: list[Run] = []
         if kids and tokens[kids[0]].type == "paragraph_open":
-            runs = list(self.paragraph_runs(kids[0]))
+            # In '::: cards', an icon before the title is the card's figure (E15-S03).
+            inline = tokens[kids[0] + 1]
+            if name == layout_syntax.CARDS:
+                inline = icons.without_leading(inline)
+            runs = list(self.deck.text_runs(inline))
         bold: list[Run] = []
         for run in runs:
             if run.is_break or not run.bold:

@@ -19,11 +19,13 @@ from pptx.slide import Slide as PptxSlide
 from pptx.util import Emu
 
 from pta_documents.design import colors
+from pta_documents.design import icons as icon_set
 from pta_documents.design import slides as design
+from pta_documents.design.icons import loader as icon_loader
 from pta_documents.drawing import riskmatrix as risk_drawing
 from pta_documents.drawing import schedule as schedule_drawing
 from pta_documents.drawing import steps as steps_drawing
-from pta_documents.generation.common import text_metrics
+from pta_documents.generation.common import icons, text_metrics
 from pta_documents.generation.pptx import drawing, fitting, visuals
 from pta_documents.generation.pptx.model import (
     CalloutBlock,
@@ -404,12 +406,26 @@ class FlowWriter:
         if card.figure is not None:
             figure = Paragraph(bold(card.figure), Kind.SUBHEADLINE)
             y += self.text([figure], inner.below(y), look.pt(FLOW.figure_pt), look.heading_color)
+        if card.icon is not None:
+            y += self.icon(card.icon, inner.x, y, look) + FLOW.row_pad
         title = Paragraph(card.title, Kind.SUBHEADLINE)
         y += self.text([title], inner.below(y), look.pt(FLOW.title_pt), look.heading_color)
         if card.blocks:
             y += FLOW.row_pad
             y += self.stack(card.blocks, inner.below(y), look)
         return y - inner.y + 2 * pad
+
+    def icon(self, name: str, x: int, y: int, look: Look) -> int:
+        """The icon ``name`` (E15-S03) as a group of shapes ``FLOW.icon`` wide, its top left
+        corner at (``x``, ``y``), in PTA blue (white on dark areas); returns its height."""
+        size = round(FLOW.icon * min(look.scale, 1.0))
+        if self.slide is not None:
+            picture = icon_loader.drawing(
+                name, icons.color_on(look.dark), size / drawing.EMU_PER_PIXEL
+            )
+            alt = icon_set.alt(name)
+            drawing.place(self.slide, picture, x, y, size, size, alt, self.deck.lang, alt)
+        return size
 
     def rows(self, block: RowsBlock, box: Box, look: Look) -> int:
         """The term in the left third, the description beside it; a light rule above each row

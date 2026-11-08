@@ -212,6 +212,41 @@ Andere Namen sind Fehler; die Meldung listet die gültigen. Klammern, die nicht 
 (`[a] {.success}`, `## Mengen {a, b}`), bleiben Text.
 - Text vor dem ersten `#` wird ignoriert; Fußnoten werden auf Folien weggelassen.
 
+## Icons (`:icon-name:`, Word und PowerPoint)
+
+`:icon-check:` setzt ein gebündeltes Strich-Icon (Tabler Icons, MIT) in PTA-Blau — keine
+Bilddatei, keine Quelle in `QUELLEN.md`.
+
+- **Karte** (PowerPoint): `### :icon-rocket: Start` in `::: cards` (oder
+  `- :icon-rocket: **Start** – Text`) → Icon als Figur über dem Titel. Icon und `**Kennzahl**` in derselben Karte = Fehler.
+- **Aufzählung**: beginnt **jeder** Punkt einer `-`-Liste mit einem Icon, wird es das
+  Aufzählungssymbol (Word und PowerPoint). Sonst steht es im Text.
+- **Im Text**: nur Word (so hoch wie die Schrift). Auf Folien ist ein Icon im Text, in Titeln,
+  Tabellen oder Notizen ein Fehler — dort nur Karten und Listen. Das PDF lässt Icons noch weg
+  (Hinweis `code-not-drawn`).
+- Nur diese Namen; ein anderer ist ein Fehler mit den drei ähnlichsten:
+
+`access-point` `adjustments` `alert-circle` `alert-triangle` `api` `arrow-down` `arrow-left`
+`arrow-right` `arrow-up` `arrows-exchange` `award` `ban` `bell` `bolt` `book` `brain`
+`briefcase` `bug` `building` `building-community` `bulb` `calculator` `calendar`
+`calendar-event` `cash` `certificate` `chart-bar` `chart-dots` `chart-line` `chart-pie` `check`
+`checklist` `circle-check` `circle-x` `clipboard-check` `clipboard-list` `clock` `cloud`
+`cloud-download` `cloud-upload` `code` `coin` `compass` `components` `copyright` `cpu`
+`currency-euro` `database` `device-desktop` `device-laptop` `device-mobile` `download` `edit`
+`eye` `file` `file-check` `file-text` `files` `filter` `flag` `flame` `flask` `folder`
+`folder-open` `gavel` `git-branch` `git-merge` `globe` `hand-stop` `headset` `heart`
+`heart-handshake` `help-circle` `hierarchy` `hierarchy-2` `home` `hourglass` `id-badge-2`
+`infinity` `info-circle` `key` `layers-intersect` `layout-dashboard` `leaf` `license` `lifebuoy`
+`link` `list-check` `loader` `lock` `lock-open` `mail` `map` `map-pin` `message`
+`message-circle` `messages` `microscope` `minus` `mood-sad` `mood-smile` `network` `notebook`
+`package` `pencil` `percentage` `phone` `player-pause` `player-play` `plug` `plus`
+`presentation` `printer` `progress` `puzzle` `receipt` `recycle` `refresh` `repeat`
+`report-analytics` `report-money` `robot` `rocket` `rotate` `route` `scale` `school` `search`
+`server` `server-2` `settings` `share` `shield` `shield-check` `shopping-cart` `sitemap`
+`sort-ascending` `sparkles` `square-check` `star` `target` `target-arrow` `terminal-2`
+`test-pipe` `thumb-down` `thumb-up` `tool` `tools` `trash` `trending-down` `trending-up` `truck`
+`upload` `user` `user-check` `users` `users-group` `wifi` `world` `writing` `x` `zoom-check`
+
 ## Diagramme aus Daten (`chart`, Word und PowerPoint)
 
 Zahlen als Diagramm: ein Codeblock `chart` mit Einstellungen, einer Zeile `---` und den Daten

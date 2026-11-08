@@ -266,6 +266,7 @@ Front Matter mitgezählt).
 | Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
+| Icon `:icon-name:` | die gebündelten Namen (siehe [Icons](#icons-e15-s03)) | PowerPoint: am Anfang eines Kartentitels die Figur der Karte, vor jedem Punkt einer Liste das Aufzählungssymbol, sonst Fehler; Word: Bild im Text, vor jedem Punkt einer Liste statt des Aufzählungszeichens; PDF: entfällt mit `code-not-drawn` |
 | `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen; PowerPoint fett in der Signalfarbe, Word Zeichenvorlage „Status …" |
 | Front Matter `status.<kategorie>: Text; Text` | dieselben fünf Kategorien, jeder Text nur einmal | geprüft; PowerPoint: Status-Labels in Tabellen auf Flow-Folien; Word: Label-Zellen in der Zeichenvorlage „Status …" |
 
@@ -1050,6 +1051,51 @@ Das Zeichenmodell kennt dafür die Formarten `ShapeKind.CHEVRON`, `HOME_PLATE` (
 `point_depth`) und `PIE` (Feld `angles`, Grad im Uhrzeigersinn ab drei Uhr); Konstruktoren in
 `drawing.shapes` (`chevron`, `pie`). SVG zeichnet sie als Pfad, PowerPoint als Autoform mit
 `adj`-Werten.
+
+## Icons (E15-S03)
+
+`:icon-check:` setzt ein Icon aus einer gebündelten Teilmenge der **Tabler Icons** (MIT,
+Version in `design.icons.TABLER_VERSION`, Lizenz `design/icons/LICENSE-tabler-icons.txt` im
+Paket). Die SVGs liegen unverändert in `src/pta_documents/design/icons/`, die Liste aller Namen
+ist `design.icons.ICONS` (alle Namen auch in [ki-anleitung.md](ki-anleitung.md#icons-icon-name-word-und-powerpoint);
+ein Test hält beide gleich). Ein neues Icon: die SVG aus `icons/outline/` des npm-Pakets
+`@tabler/icons` dazulegen und den Namen in `ICONS` und der KI-Anleitung ergänzen.
+
+```markdown
+::: cards
+### :icon-rocket: Start
+Erste Ergebnisse nach sechs Wochen
+:::
+
+- :icon-circle-check: Ist-Aufnahme abgeschlossen
+- :icon-clock: Konzept in Abstimmung
+
+Der Server :icon-server: meldet sich stündlich.
+```
+
+- **Syntax:** eigene Inline-Regel (`markdown/icon.py`, Token `icon`, Name in `meta["name"]`);
+  in Code-Spans und -Blöcken bleibt der Text stehen. `layout_syntax.check` prüft die Namen —
+  ein unbekannter ist in allen Formaten ein Fehler mit Zeile und den drei ähnlichsten Namen
+  (`Line 5: Unknown icon ':icon-chek:'. Did you mean :icon-check:, …?`).
+- **Karte** (PowerPoint): steht das Icon am Anfang des `###`-Titels in `::: cards` (oder am
+  Anfang eines Punkts der Listenform), wird es die Figur der Karte: eine Formgruppe
+  `icon:<name>` von 1,2 cm über dem Titel, Strich in PTA-Blau, auf dunklen Flächen weiß. Icon
+  und Kennzahl (`**26 %**`) in derselben Karte sind ein Fehler.
+- **Liste:** beginnt **jeder** Punkt einer `-`-Liste mit einem Icon, wird es das
+  Aufzählungssymbol — PowerPoint als Bild-Aufzählungszeichen (`a:buBlip`, PNG, 110 % der
+  Schrift), Word als Bild 11 pt vor dem Text mit hängendem Einzug und Tabulator, die
+  Nummerierung des Absatzes ausgeschaltet (`numId 0`). Sonst steht das Icon im Text.
+- **Im Text:** Word setzt das Icon als Bild 10 pt hoch auf die Grundlinie. Auf Folien ist ein
+  Icon im Text (Absatz, Titel, Tabelle, Notizen) ein Fehler mit Hinweis auf Karten und Listen;
+  das PDF lässt es bis E05-S04 mit Hinweis `code-not-drawn` weg, Word ebenso in Fußnoten.
+- **Bilder:** `design.icons.loader.drawing(name, farbe, größe)` liest ein Icon als `Drawing`
+  (nur `<path>`, Bögen werden Béziers; das unsichtbare Quadrat jedes Tabler-Icons entfällt),
+  `design.icons.raster.png(name, farbe, pixel)` zeichnet es ohne Extra mit Pillow (Béziers in
+  16 Stücken, 4-fach überabgetastet, transparent, byte-gleich). Word bekommt dieses PNG und,
+  wenn das Extra `svg` installiert ist, die SVG in der Farbe daneben (`asvg:svgBlip`).
+- **Rundreise:** Word-Bilder tragen die Bildbeschreibung `icon:<name>`, die Formgruppen auf
+  Folien heißen so, die PNGs der Aufzählungszeichen tragen den Namen in einem PNG-Textfeld
+  (`pta-documents-icon`) — die Konverter schreiben daraus wieder `:icon-name:`.
 
 ## Logos als SVG und PNG (E01-S04)
 

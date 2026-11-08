@@ -139,3 +139,13 @@ fit at neither, they follow the picture as a list."""
 HARVEY_FONT: Final = "Segoe UI Symbol"
 """The font of a Harvey ball (○ ◔ ◑ ◕ ●) in a table cell (E15-S02)."""
 HARVEY_PT: Final = 12
+ICON_PT: Final = 10
+"""The height of an icon within text (E15-S03): about the cap height plus ascender of the body
+text; it stands on the baseline like a character."""
+ICON_BULLET_PT: Final = 11
+"""The height of an icon that is the bullet of a list item (E15-S03)."""
+ICON_BULLET_HANGING_CM: Final = 0.6
+"""How far the first line of an item with an icon bullet hangs out: the icon, a tab, the text
+at the indent of the list level."""
+ICON_PIXELS: Final = 96
+"""The edge of the PNG of an icon in Word: sharp at more than 4× its size."""
