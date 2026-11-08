@@ -659,6 +659,81 @@ schriften.has_glyph(0x20AC, FontFace.LIGHT)  # nur BMP; U+00A0 fehlt in Selawik
 - Fehlt fontTools, nennt der `ImportError` die Extras; `bundled()` und `fonts.read(name)`
   (Bytes einer mitgelieferten Datei) gehen auch ohne.
 
+## PDF-Layout-Engine (E05-S02)
+
+Die Layout-Engine setzt den Markdown-Rumpf auf Seiten im Design der PTA-Word-Vorlage; der
+PDF-Generator (E05-S01) ruft sie auf und macht aus dem Ergebnis PDF/A. Sie liegt in
+`pta_documents.generation.pdf.layout` (Extra `pdf`) und arbeitet auf reportlabs Platypus:
+
+```python
+from pta_documents.generation.common import layout_syntax
+from pta_documents.generation.pdf.layout import LayoutSettings, PdfInfo, layout
+from pta_documents.markdown.parser import create_parser
+
+tokens = create_parser().parse(front.body)
+layout_syntax.check(tokens, DocumentFormat.PDF, front.body_line)
+einstellungen = LayoutSettings(
+    variant=WordVariant.PORTRAIT,  # Vorlage: Formatvorlagen und Satzspiegel
+    language=Language.DE,          # „Tabelle"/„Abbildung", Hinweis-Wörter
+    fonts=None,                    # None: Selawik/Inconsolata; fonts.resolve() für Segoe UI
+    justify=False,                 # Blocksatz (Beschriftungen, Zellen, Code bleiben links)
+    highlight=True,                # Code farbig (E17-S02)
+    image_converters=(), code_block_renderers=(),
+    line_offset=front.body_line,
+    status_labels={},              # FrontMatter.status_labels(), für Statusbeschriftungen
+)
+pdf = layout(tokens, dokument, einstellungen, notes, PdfInfo(title=..., author=...))
+pdf.content, pdf.pages  # PDF-Bytes (noch kein PDF/A), Seitenzahl
+```
+
+`layout(…, decorate=f)` setzt die Seiten zweimal: zuerst, um sie zu zählen, dann mit
+`f(canvas, seite, seitenzahl)` am Ende jeder Seite (für Kopf- und Fußzeile, E05-S03). Wer
+eigene Flowables davor- oder dahintersetzen will, nimmt die beiden Hälften:
+`build_story(tokens, dokument, prepare(einstellungen), notes)` und `render(story, info, decorate,
+page_count)`.
+
+- **Werte aus der Vorlage:** `pta_documents.design.word_styles.read(variante)` liest Größe,
+  fett, kursiv, Versalien, Farbe, Abstand vor/nach, Zeilenabstand, Einzug/hängend und „mit
+  nächstem Absatz zusammen" jeder Formatvorlage aus `styles.xml` (über `basedOn`,
+  `docDefaults` und das Theme), die Einzüge nummerierter Vorlagen aus `numbering.xml`, die
+  Tabellenvorlage `PTA` und den Satzspiegel aus `w:sectPr`. Was die Vorlagen nicht haben, kommt
+  wie im DOCX aus `design/word.py` (Code, Zitat, Hinweis-Boxen).
+- **Zuordnung wie im DOCX:** `#`–`###` → Überschrift 1–3 mit Nummer (`1`, `1.1`, `1.1.1`) im
+  hängenden Einzug, tiefere → „Zwischenüberschrift" in Versalien; Überschriften in Containern →
+  „Standard fett"; ein ganz fetter Absatz → „Standard fett"; `Tabelle: …` nach einer Tabelle →
+  „Tabelle n: …", ein Bild allein mit Titel oder Alt-Text → „Abbildung n: …" (beide in
+  „Beschriftung"); Listen beginnen bei 1, die äußere Liste bestimmt die Vorlage
+  („Aufzählungszeichen" oder „Listenabsatz"), tiefere Ebenen nehmen deren Ebenen 2 und 3.
+  `#` beginnt keine neue Seite.
+- **Seitenumbruch:** Überschriften (auch mehrere hintereinander) und der Titel „Standard fett"
+  über einer Tabelle stehen nie allein am Seitenende — es muss der Anfang des Folgenden
+  mitpassen (zwei Zeilen eines Absatzes, Kopf und erste Zeile einer Tabelle, ein ganzes Bild).
+  Kein Absatz lässt eine einzelne Zeile oben oder unten auf einer Seite. Listenzeichen gehen mit
+  der ersten Zeile. Tabellen wiederholen ihren Kopf und teilen zu hohe Zeilen. Abstand nach und
+  Abstand vor addieren sich wie in Word.
+- **Bilder:** 96 dpi (ein Pixel = 0,75 pt), `"scale=0.5"` im Titel skaliert, sonst werden sie
+  nur verkleinert: auf die Satzspiegelbreite, auf 80 % der Satzspiegelhöhe und so weit, dass sie
+  mit der Überschrift davor auf eine Seite passen. PNG und JPEG direkt, GIF/BMP/TIFF/WebP über
+  Pillow, alles andere über die Bildkonverter. Mehrere Bilder in einem Absatz stehen
+  nebeneinander (bis vier je Reihe).
+- **Listenzeichen** sind gezeichnet: Ebene 1 ■ in PTA-Blau, Ebene 2/3 ― schwarz, Aufgaben ☐/☒
+  als Kästchen.
+- **Lesezeichen** für Überschrift 1–3 mit ihrer Nummer, beim Öffnen sichtbar. **Links:**
+  `[x](#anker)` springt auf die Überschrift mit dem GitHub-Anker (`markdown/anchors.py`:
+  Kleinbuchstaben, Satzzeichen weg, Leerzeichen → `-`, Wiederholungen `-1`, `-2`); externe Links
+  brauchen eine absolute URL (`https:`, `mailto:` …), sonst bleibt nur der Text.
+- **Fußnoten** stehen am Fuß der Seite mit dem Verweis („Fußnotentext", Trennlinie 2 Zoll);
+  passen sie mit dem Anfang des Absatzes nicht mehr hin, wandern beide auf die nächste Seite.
+- **Schriften:** jede Schrift wird bei reportlab unter `PTA-<sha8>` ihres Inhalts registriert.
+  Fehlende Leerzeichen-Glyphen (U+00A0, U+202F, U+2011 in Selawik) leihen sich die Glyphe von
+  Leerzeichen bzw. Bindestrich (`truetype.with_aliases`); Kursiv ist eine schräggestellte Kopie
+  (`truetype.slanted`, 12°). Zeilenhöhe „einfach" = Windows-Ascent + -Descent der Schrift wie
+  in Word.
+- **Noch nicht** (spätere Stories): Deckblatt, Kopf-/Fußzeile, Inhaltsverzeichnis (E05-S03),
+  Ersetzen fehlender Zeichen, Folien-Syntax als Boxen und Spalten, Charts und Zeichnungen
+  (E05-S04; bis dahin bleibt ein `chart`/`mermaid`-Block Code mit Hinweis `code-not-drawn`),
+  Silbentrennung.
+
 ## Zeichenmodell und SVG (E02-S03)
 
 Diagramme, Charts, Logos und später die visuellen Bausteine liegen als **`Drawing`** vor, bevor

@@ -38,6 +38,7 @@ from pta_documents.design.variants import GeneratedTexts
 from pta_documents.drawing import schedule as schedule_drawing
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
+    block_shapes,
     code_blocks,
     code_highlight,
     generated_images,
@@ -276,8 +277,7 @@ class BodyWriter:
         return None, i
 
     def _is_figure_caption(self, inline: Token) -> bool:
-        prefixes = (self.texts.figure + ":", "Abbildung:", "Figure:")
-        return inline.content.startswith(prefixes)
+        return block_shapes.is_figure_caption(inline, self.texts)
 
     def container(self, tokens: list[Token], i: int, close: str, style: str | None) -> int:
         depth = 0
@@ -506,13 +506,13 @@ class BodyWriter:
             at = {id(c): line for c, line in zip(children, lines, strict=True)}
             self.picture_row([(image, at[id(image)]) for image in images])
             return i + 3
-        if style is None and _only_images(children):
+        if style is None and block_shapes.only_images(children):
             lines = child_lines(inline, self.front.body_line)
             for image, line in zip(children, lines, strict=True):
                 if image.type == "image":
                     self.figure(image, line)
             return i + 3
-        if style is None and _only_strong(children):
+        if style is None and block_shapes.only_strong(children):
             paragraph = self.paragraph(word.STYLES.normal_bold)
             self.inline(paragraph, inline, plain_bold=True)
             if after is not None and after.type == "table_open":
@@ -678,8 +678,7 @@ class BodyWriter:
         return bool(last) and last[-1].tag == w("tbl")
 
     def _is_table_caption(self, inline: Token) -> bool:
-        prefixes = (self.texts.table + ":", "Tabelle:", "Table:")
-        return inline.content.startswith(prefixes)
+        return block_shapes.is_table_caption(inline, self.texts)
 
     # ------------------------------------------------------------------ figures and captions
 
@@ -764,7 +763,7 @@ class BodyWriter:
         _append_text(paragraph._p, ": ")
         if inline is not None:
             if strip_prefix:
-                inline = _strip_caption_prefix(inline)
+                inline = block_shapes.strip_caption_prefix(inline)
             self.inline(paragraph, inline)
         elif text:
             _append_text(paragraph._p, text)
@@ -1305,33 +1304,6 @@ def _right_rule(properties: etree._Element, color: str) -> None:
         properties.insert(0, borders)
 
 
-def _only_images(children: list[Token]) -> bool:
-    images = [c for c in children if c.type == "image"]
-    rest = [c for c in children if c.type != "image"]
-    return bool(images) and all(
-        c.type == "softbreak" or (c.type == "text" and not c.content.strip()) for c in rest
-    )
-
-
-def _only_strong(children: list[Token]) -> bool:
-    children = [c for c in children if not (c.type == "text" and not c.content)]
-    if (
-        len(children) < 3
-        or children[0].type != "strong_open"
-        or children[-1].type != "strong_close"
-    ):
-        return False
-    depth = 0
-    for n, child in enumerate(children):
-        if child.type == "strong_open":
-            depth += 1
-        elif child.type == "strong_close":
-            depth -= 1
-            if depth == 0 and n != len(children) - 1:
-                return False
-    return True
-
-
 def _plain_runs(token: Token) -> list[TextRun]:
     runs: list[TextRun] = []
     bold = False
@@ -1347,15 +1319,6 @@ def _plain_runs(token: Token) -> list[TextRun]:
         elif child.content:
             runs.append(TextRun(child.content, bold))
     return runs
-
-
-def _strip_caption_prefix(inline: Token) -> Token:
-    children = list(inline.children or [])
-    if children and children[0].type == "text":
-        first = children[0]
-        content = first.content.split(":", 1)[1].lstrip() if ":" in first.content else first.content
-        children[0] = first.copy(content=content)
-    return inline.copy(children=children)
 
 
 def _append_code_span(parent: etree._Element, span: code_highlight.CodeSpan) -> None:

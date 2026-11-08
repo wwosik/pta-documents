@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -245,3 +246,33 @@ def test_only_this_package_and_tests_name_fonttools() -> None:
     pattern = re.compile(r"^\s*(import|from) fontTools|[\"']fontTools[.\"']", re.MULTILINE)
     users = {p for p in sources if pattern.search(p.read_text(encoding="utf-8"))}
     assert users == {FONT_DIR / "truetype.py"}
+
+
+def test_slanted_slants_every_outline_and_keeps_the_advances() -> None:
+    upright = fonts.read("Selawik-Regular.ttf")
+    slanted = truetype.slanted(upright, fonts.SYNTHETIC_ITALIC_ANGLE)
+    assert slanted == truetype.slanted(upright, fonts.SYNTHETIC_ITALIC_ANGLE)
+    before = truetype.read_info(upright)
+    after = truetype.read_info(slanted)
+    assert after.advances == before.advances
+    assert after.truetype_outlines
+    from fontTools.ttLib import TTFont
+
+    original = TTFont(io.BytesIO(upright))
+    font = TTFont(io.BytesIO(slanted))
+    top = original["glyf"]["l"].yMax
+    shift = top * 0.2125  # tan(12°)
+    assert font["glyf"]["l"].xMax == pytest.approx(original["glyf"]["l"].xMax + shift, abs=2)
+    post: Any = font["post"]
+    assert post.italicAngle == -fonts.SYNTHETIC_ITALIC_ANGLE
+    assert str(font["name"].getDebugName(6)).endswith("-Slanted")
+
+
+def test_with_aliases_lends_missing_characters_a_glyph() -> None:
+    content = fonts.read("Selawik-Regular.ttf")
+    assert not truetype.read_info(content).advances.get(0xA0)
+    aliased = truetype.with_aliases(content, {0xA0: 0x20, 0x41: 0x42})
+    info = truetype.read_info(aliased)
+    assert info.advances[0xA0] == info.advances[0x20]
+    assert info.advances[0x41] == truetype.read_info(content).advances[0x41]  # kept
+    assert truetype.with_aliases(aliased, {0xA0: 0x20}) == aliased
