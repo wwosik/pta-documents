@@ -27,7 +27,10 @@ Ob alles läuft, zeigt das Beispiel zum Hauptbeskidenweg:
 Danach liegen `gsb-bericht.docx` und `gsb-praesentation.pptx` in `documents/gsb/`. Die
 Markdown-Dateien in `samples/gsb/` sind die beste Vorlage für eigene Dokumente; alles, was
 die Generatoren können, zeigt `samples/funktionen/`
-(`./run.sh generate samples/funktionen --out documents/funktionen`).
+(`./run.sh generate samples/funktionen --out documents/funktionen`). Sie ist das
+Nachschlagewerk: Der Word-Bericht `funktionen-bericht.docx` zeigt zu jeder Funktion den
+Markdown-Quelltext und darunter das Ergebnis, die Präsentation hat den Quelltext jeder Folie in
+deren Notizen. Nach `./run.sh test` liegen alle diese Dokumente auch in `.tmp/review/funktionen/`.
 
 Später holst du Neuerungen mit `git pull` und danach einmal `./run.sh setup`.
 
@@ -184,7 +187,9 @@ Einleitender Satz.              ← Textebene „Einleitungstext"
 
 Was der Vortragende zu einer Folie sagt, steht in einem Block `::: notes` unter ihrer
 Überschrift. PowerPoint zeigt ihn in der Notizenansicht (auf dem Notizenmaster der PTA-Vorlage),
-Word lässt ihn weg (mit dem Hinweis `notes-dropped`).
+Word lässt ihn weg (mit dem Hinweis `notes-dropped`). Ein Codeblock in den Notizen bleibt Zeile
+für Zeile in Consolas erhalten; enthält er selbst `:::`-Zeilen, braucht der Notizblock einen
+längeren Zaun (`:::: notes` … `::::`).
 
 ```markdown
 ## Ergebnis des Quartals

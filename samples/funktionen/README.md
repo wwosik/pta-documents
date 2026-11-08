@@ -1,13 +1,19 @@
 # Beispiel: Funktionsübersicht
 
-Zeigt alles, was die Generatoren heute können — jede Datei deckt einen Bereich ab.
+Zeigt alles, was die Generatoren heute können — jede Datei deckt einen Bereich ab. Der
+Word-Bericht zeigt zu jeder Funktion den Markdown-Quelltext als Codeblock und darunter das
+Ergebnis; in der Präsentation steht der Quelltext jeder Folie auf ihrer Notizenseite.
 
 | Datei | Zeigt |
 | ----- | ----- |
-| `funktionen-bericht.md` | Word: alle Front-Matter-Schlüssel, Überschriften 1–6, Zeichenformate, Links, Fußnoten, Listen (verschachtelt, Neustart, Aufgaben, Definitionen), Tabellen mit Titel, Ausrichtung und Beschriftung, Abbildungen, Bild im Text, Code, Zitat, Trennlinie, Inhaltsverzeichnis |
-| `funktionen-praesentation.md` | PowerPoint: Titel-, Trenn- und Abschlussfolie, Textebenen, nummerierte Listen mit Startwert, Verkleinern, Tabelle im PTA-Stil mit Titelzeile, längere Tabelle, Code, Bild mit Text, Bild allein, Bildreihe, benannte Layouts mit `---`, Sprechernotizen (`::: notes`) |
+| `funktionen-bericht.md` | Word: alle Front-Matter-Schlüssel, Überschriften 1–6, Zeichenformate, Links, Fußnoten, Typografie, Listen (verschachtelt, Neustart, Aufgaben, Definitionen), Tabellen mit Titel, Ausrichtung und Beschriftung, Status-Labels, markierte Zeile, Abbildungen, Bild im Text, Bildreihe, Code, Zitat, Trennlinie, Inhaltsverzeichnis; die Folien-Syntax in Word: alle Container außer `notes`, Alerts, `==Markierung==`, farbige Wörter |
+| `funktionen-praesentation.md` | PowerPoint: Titel-, Trenn- und Abschlussfolie, Textebenen, nummerierte Listen mit Startwert, Verkleinern, Tabelle im PTA-Stil mit Titelzeile, längere Tabelle, Code, Bild mit Text, Bild allein, Bildreihe, benannte Layouts mit `---`, Sprechernotizen (`::: notes`), Flow-Folien (alle Container, `.dark`, `kicker`, Alerts, Markierung, farbige Wörter, Status-Labels), PTA-Folienarten (`.agenda`, `.interim`, `.quote`, `.contact`) |
 | `varianten-dokument.md` | Word-Variante `quer-ohne-deckblatt` mit `sprache: en` und `firma` |
+| `varianten-hochformat-dokument.md` | Word-Variante `hoch-ohne-deckblatt` mit `inhaltsverzeichnis: nein`, `typografie: nein`, `syntaxhervorhebung: nein` |
+| `varianten-querformat-dokument.md` | Word-Variante `quer` (mit Deckblatt) |
 | `varianten-folien.md` | Schulungsvorlage, `titelfolie: ohne-bild`, `sprache: en` |
+| `varianten-bild-01-folien.md` | `titelfolie: bild-01` |
+| `varianten-branchen-folien.md` | `titelfolie: branchen` |
 | `images/` | selbst erzeugte Bilder in den PTA-Farben (keine fremden Rechte); `*-folie.png` sind dieselben Bilder in den Proportionen der Folien-Bildplatzhalter |
 
 ```sh
@@ -21,5 +27,10 @@ verkleinert" ist absichtlich zu voll, darum schaltet `funktionen-praesentation.m
 Geteilte „(Forts.)"-Folien zeigt die Funktionsübersicht deshalb nicht; was dabei gemeldet wird,
 steht in [docs/anleitung.md](../../docs/anleitung.md), Abschnitt 8.
 
-Noch nicht enthalten, weil noch nicht umgesetzt: PDF, Mermaid, Charts, `:::`-Container,
-Alerts, `==Markierung==`, Status-Labels, SVG-Bilder.
+`./run.sh test` hält die Übersicht aktuell (`tests/samples/test_funktionen.py`): Fehlt einer
+Syntax, einem Front-Matter-Schlüssel oder einer Vorlagenvariante ein Beispiel hier, schlägt
+ein Test fehl und nennt das Fehlende. Jede Datei muss in der Tabelle oben stehen. Die erzeugten
+Dokumente liegen danach in `.tmp/review/funktionen/`, ihre Rundreise durch die Konverter in
+`tests/samples/funktionen/*.roundtrip.expected.md`.
+
+Noch nicht enthalten, weil noch nicht umgesetzt: PDF, Mermaid, Charts, SVG-Bilder.

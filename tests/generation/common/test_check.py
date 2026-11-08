@@ -80,6 +80,17 @@ def test_deck_statistics() -> None:
     assert len(stats.lines()) == 2
 
 
+def test_code_in_the_notes_is_not_spoken() -> None:
+    """E08-S03: the Markdown source in the notes does not count; inline code does."""
+    markdown = (
+        "# Deck\n\n## Eins\n\nText.\n\n::: notes\nSag `drei` Wörter.\n\n"
+        "```markdown\n## Eins\n\nText und noch mehr.\n```\n:::\n"
+    )
+    stats = check(MarkdownDocument(markdown), PPTX).stats
+    assert isinstance(stats, DeckStats)
+    assert stats.notes_words == 3
+
+
 def test_continued_slides_are_counted() -> None:
     markdown = "# Deck\n\n## Lang\n\n" + "\n".join(f"- Punkt {i}" for i in range(40)) + "\n"
     stats = check(MarkdownDocument(markdown), PPTX, CheckOptions(skip=StyleCodes.ALL)).stats

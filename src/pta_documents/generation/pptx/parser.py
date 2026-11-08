@@ -278,7 +278,8 @@ class DeckParser:
         number: int,
     ) -> None:
         """The text of the blocks ``tokens[start:stop]`` as note paragraphs: list items of
-        ``kind`` at ``depth``; tables, images, code and lines are left out."""
+        ``kind`` at ``depth``, code one paragraph per line in the code font (E08-S03: the
+        Markdown source of a slide); tables, images and lines are left out."""
         j = start
         while j < stop:
             token = tokens[j]
@@ -300,7 +301,10 @@ class DeckParser:
                 case "html_block":
                     if not html.is_comment(token.content):
                         html.note_raw_html(self.notes, self.line(token), WHAT)
-                case "table_open" | "fence" | "code_block" | "hr":
+                case "fence" | "code_block":
+                    for text in token.content.rstrip("\n").split("\n"):
+                        out.append(Paragraph((Run(text, code=True),) if text else ()))
+                case "table_open" | "hr":
                     pass
                 case _ if token.nesting == 1:
                     self._note_blocks(tokens, j + 1, end - 1, out, kind, depth, number)

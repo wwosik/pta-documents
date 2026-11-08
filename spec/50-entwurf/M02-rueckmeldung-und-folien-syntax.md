@@ -22,7 +22,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E07-S01](../60-prüfung/E07-S01-formaterkennung-und-registry.md) | Formaterkennung und Registry | in Prüfung |
 | [E17-S02](../60-prüfung/E17-S02-typografie-und-code.md) | Deutsche Typografie, Silbentrennung, Code-Highlighting | in Prüfung |
 | [E08-S02](../60-prüfung/E08-S02-pruefbefehl-und-stilregeln.md) | Prüfbefehl und Stilregeln | in Prüfung |
-| [E08-S03](../55-in-arbeit/docs-2/E08-S03-funktionsuebersicht-durch-tests.md) | Funktionsübersicht durch Tests gesichert | in Bearbeitung (docs-2) |
+| [E08-S03](../60-prüfung/E08-S03-funktionsuebersicht-durch-tests.md) | Funktionsübersicht durch Tests gesichert | in Prüfung |
 
 ## Offene Fragen
 

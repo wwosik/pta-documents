@@ -175,3 +175,14 @@ eigenen Formatvorlagen. Bedienung:
   (Test prüft das). Front-Matter-Schlüssel `pruefung` (`Keys.CHECK`) steht in `VALID_KEYS` beider
   Generatoren, die ihn ignorieren — ein neuer Generator (PDF) muss ihn auch annehmen. `samples/`
   muss `check --strict` bestehen (`test_the_samples_pass_the_check_without_notes`).
+- **Funktionsübersicht** (E08-S03): `tests/samples/test_funktionen.py` verlangt, dass
+  `samples/funktionen/` jede Syntax, jeden Front-Matter-Schlüssel (`VALID_KEYS` je Generator,
+  `status.<kategorie>`) und jede Vorlagenvariante (`vorlage`, `sprache`, `titelfolie`) zeigt —
+  die Liste kommt aus dem Code (`layout_syntax`, `heading_attributes.VALID`, Enums). Wer etwas
+  davon hinzufügt, ergänzt das Beispiel (Bericht: `##` + Satz + ```` ```markdown ````-Zaun +
+  dasselbe als Ergebnis; Präsentation: Quelltext als Zaun in `:::: notes` am Ende der Folie),
+  die `README.md`-Tabelle bei neuen Dateien, und erneuert die Rundreisen
+  (`tests/samples/funktionen/*.roundtrip.expected.md`). Eine neue Variante = eine neue kleine
+  `varianten-…-dokument.md`/`-folien.md`. Codeblöcke in `::: notes` schreibt der PPTX-Generator
+  seit E08-S03 als Consolas-Zeilen, der Konverter liest sie als Zaun zurück, `check` zählt sie
+  nicht als gesprochene Wörter. `generate-samples` kennt auch `-dokument`/`-folien`.

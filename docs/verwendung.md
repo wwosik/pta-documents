@@ -166,7 +166,10 @@ auch jede „(Forts.)"-Folie und die Folgefolien eines zweiten Visuals (Entschei
 python-pptx die Notizenfolie auf dem Notizenmaster der PTA-Vorlage an und schreibt die Absätze
 in dessen Platzhalter `body`: Text auf Ebene 0, Listenpunkte auf Ebene 1–3 (die Aufzählungszeichen
 des Masters), nummerierte mit `buAutoNum`; fett, kursiv, Code (Consolas) und Links bleiben.
-Tabellen, Bilder, Codeblöcke und Linien in Notizen entfallen ohne Fehler. Ein Deck ohne
+Ein Codeblock wird ein Absatz je Zeile, ganz in Consolas, ohne Hervorhebung (E08-S03: so steht
+der Markdown-Quelltext einer Folie in `samples/funktionen/` auf ihrer Notizenseite); enthält er
+`:::`-Zeilen, braucht der Notizblock einen längeren Zaun (`:::: notes`). Tabellen, Bilder und
+Linien in Notizen entfallen ohne Fehler. Ein Deck ohne
 `::: notes` hat keine `ppt/notesSlides/`. Ein `::: notes` vor dem ersten `#`/`##` ist ein Fehler
 von `layout_syntax.check` (`Line 3: A '::: notes' belongs under a heading: …`). Word lässt
 Notizen weg und meldet `notes-dropped`.
@@ -386,8 +389,9 @@ und ignorieren ihn.
 
 - PowerPoint (`DeckStats`, gezählt am Probe-Deck): Folien gesamt, Titel-, Kapitel-, Inhalts-
   (davon „(Forts.)") und Abschlussfolien; Wörter gesamt (ohne Titel und Fußzeilen) und je
-  Inhaltsfolie min/median/max; Wörter der Sprechernotizen; Dauer `minutes` = 2 Minuten je
-  Inhaltsfolie plus Notizen bei 120 Wörtern je Minute.
+  Inhaltsfolie min/median/max; Wörter der Sprechernotizen (ohne Absätze, die ganz Code sind —
+  Codeblöcke werden nicht gesprochen); Dauer `minutes` = 2 Minuten je Inhaltsfolie plus Notizen
+  bei 120 Wörtern je Minute.
 - Word (`ReportStats`, gezählt am Markdown): Wörter (ohne Code und Notizen), Überschriften,
   Tabellen, Abbildungen; `pages` = Wörter / 350 plus eine halbe Seite je Tabelle und Abbildung —
   die echte Seitenzahl kennt erst Word beim Öffnen.
@@ -444,7 +448,9 @@ for image in document.resources:
 
 `ConversionOptions(resource_path_prefix="images/", include_images=True)` steuert die Bilder.
 Der PPTX-Konverter gibt die Notizenseite einer Folie (Platzhalter `body` der `notesSlide`)
-nach deren Inhalt als `::: notes` … `:::` aus, Listenebenen als `-`-Listen; leere Notizen und
+nach deren Inhalt als `::: notes` … `:::` aus, Listenebenen als `-`-Listen, aufeinanderfolgende
+Absätze ganz in Consolas als Zaun ohne Sprache (der Notizzaun wird länger als jede `:::`-Zeile
+darin); leere Notizen und
 Notizen nur aus dem Aufforderungstext des Notizenmasters entfallen. `ConversionOptions(notes=False)`
 lässt sie weg.
 
@@ -457,7 +463,27 @@ eine Rundreise den geschriebenen Text wiederfindet. Codeblöcke des DOCX-Generat
 ## Beispiele
 
 `samples/` enthält Beispielinhalte, z. B. `samples/gsb/` (Hauptbeskidenweg, mit CC-Fotos).
-`./run.sh generate-samples [name]` erzeugt daraus DOCX (`*-bericht.md`) und PPTX
-(`*-praesentation.md`) nach `.tmp/samples/<name>/`. Für beliebige Ordner und Dateien gibt es
-`./run.sh generate <pfad> [--docx|--pptx] [--out <ordner>] [--strict]` (siehe [anleitung.md](anleitung.md)).
-Die Beispiele erzeugen ohne Hinweise.
+`./run.sh generate-samples [name]` erzeugt daraus DOCX (`*-bericht.md`, `*-dokument.md`) und
+PPTX (`*-praesentation.md`, `*-folien.md`) nach `.tmp/samples/<name>/`. Für beliebige Ordner und
+Dateien gibt es `./run.sh generate <pfad> [--docx|--pptx] [--out <ordner>] [--strict]` (siehe
+[anleitung.md](anleitung.md)). Die Beispiele erzeugen ohne Hinweise.
+
+**Funktionsübersicht** (E08-S03): `samples/funktionen/` zeigt jede Funktion; der Word-Bericht
+setzt unter jede `##`-Überschrift einen Zaun ```` ```markdown ```` mit dem Quelltext und darunter
+denselben Text als Ergebnis, die Präsentation hat den Quelltext jeder `##`-Folie als
+```` ```markdown ```` in ihren `::: notes`. `tests/samples/test_funktionen.py` hält das aktuell:
+
+- jede Datei erzeugt im Format, das `tools/generate` aus dem Namen wählt, ohne Hinweise; die
+  Dokumente landen in `.tmp/review/funktionen/`, ihre Rundreise durch den Konverter wird mit
+  `tests/samples/funktionen/<datei>.roundtrip.expected.md` verglichen
+  (`PTA_DOCUMENTS_UPDATE_EXPECTED=1` erneuert);
+- jede Datei steht in der Tabelle der `README.md` der Beispiele;
+- **Vollständigkeit** je Format: jeder Schlüssel aus `VALID_KEYS` des Generators,
+  `status.<kategorie>` jeder Kategorie (auch als Status-Label in einer Tabellenzelle), jede
+  `vorlage:`-Variante, jede `sprache:`, jeder Container aus `layout_syntax.CONTAINER_NAMES` (Word
+  ohne `notes`), `::: panel dark`, `::: columns` mit Breiten, jeder Alert, `==Markierung==`,
+  farbige Wörter jeder Kategorie; nur PowerPoint: jedes Heading-Attribut aus
+  `heading_attributes.VALID` und jede `titelfolie:`. Der Test nennt, was fehlt — wer eine neue
+  Syntax, einen Schlüssel oder eine Variante einführt, ergänzt die Beispiele;
+- Bericht und Präsentation: jede `##`-Funktion hat ihren Quelltext, und jeder Quelltext steht
+  außerhalb seines Zauns wortgleich als Ergebnis.

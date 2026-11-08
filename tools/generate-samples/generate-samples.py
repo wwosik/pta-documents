@@ -2,7 +2,8 @@
 
 usage: ./run.sh generate-samples <name> [<name> ...]   (no name: all samples)
 
-``*-bericht.md`` becomes a DOCX, ``*-praesentation.md`` a PPTX; images are taken from the
+``*-bericht.md`` / ``*-dokument.md`` becomes a DOCX, ``*-praesentation.md`` / ``*-folien.md`` a
+PPTX (the names ``./run.sh generate`` knows); images are taken from the
 sample's ``images/`` folder as document resources. The notes of each file follow it; samples
 are meant to produce none, so any note makes the exit code 1.
 """
@@ -19,6 +20,8 @@ from pta_documents.markdown import DocumentResource, MarkdownDocument, content_t
 REPO = Path(__file__).resolve().parents[2]
 SAMPLES = REPO / "samples"
 OUTPUT = REPO / ".tmp" / "samples"
+DOCX_SUFFIXES = ("-bericht", "-dokument")
+PPTX_SUFFIXES = ("-praesentation", "-folien")
 
 
 def resources(folder: Path) -> list[DocumentResource]:
@@ -42,11 +45,11 @@ def generate(name: str) -> bool:
     clean = True
     for source in sorted(folder.glob("*.md")):
         document = MarkdownDocument(source.read_text(encoding="utf-8"), images)
-        if source.stem.endswith("-bericht"):
+        if source.stem.endswith(DOCX_SUFFIXES):
             out = target / (source.stem + ".docx")
             with out.open("wb") as stream:
                 result = DocxGenerator().generate(document, stream)
-        elif source.stem.endswith("-praesentation"):
+        elif source.stem.endswith(PPTX_SUFFIXES):
             out = target / (source.stem + ".pptx")
             with out.open("wb") as stream:
                 result = PptxGenerator().generate(document, stream)

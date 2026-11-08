@@ -47,7 +47,9 @@ Dateinamen mit `--docx`/`--pptx`; Ausgabe woanders mit `--out <ordner>`.
 
 Vollständige, funktionierende Beispiele: `samples/gsb/gsb-bericht.md` und
 `samples/gsb/gsb-praesentation.md`; jede unterstützte Funktion einmal zeigt
-`samples/funktionen/` (siehe dessen `README.md`). Bei Unsicherheit an ihnen orientieren.
+`samples/funktionen/` (siehe dessen `README.md`; `funktionen-bericht.md` zeigt zu jeder
+Funktion den Quelltext als ```` ```markdown ```` und darunter das Ergebnis). Bei Unsicherheit an
+ihnen orientieren.
 
 ## Front Matter
 

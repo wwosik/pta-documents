@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import re
+from dataclasses import dataclass
 from typing import BinaryIO, Final
 
 from lxml import etree
 
 from pta_documents.conversions.openxml import OpenXmlPackage, guard, read_input
 from pta_documents.conversions.options import ConversionOptions, ResourceCollector
+from pta_documents.design.slides import CODE_FONT
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown import text as md
 from pta_documents.markdown import typography
@@ -149,8 +152,9 @@ def _render_slide(
 
 
 def _render_notes(package: OpenXmlPackage, slide: str, out: list[str]) -> bool:
-    """The speaker notes of ``slide`` as ``::: notes`` … ``:::`` (list levels as ``-``);
-    nothing for empty notes or notes that are only the prompt text of the notes master."""
+    """The speaker notes of ``slide`` as ``::: notes`` … ``:::`` (list levels as ``-``, lines in
+    the code font as a fence, E08-S03); nothing for empty notes or notes that are only the
+    prompt text of the notes master."""
     part = package.related(slide, NOTES_SLIDE)
     notes = package.read_xml(part) if part else None
     body = _notes_body(notes) if notes is not None else None
@@ -160,14 +164,34 @@ def _render_notes(package: OpenXmlPackage, slide: str, out: list[str]) -> bool:
     master = package.related(part, NOTES_MASTER)
     master_xml = package.read_xml(master) if master else None
     master_body = _notes_body(master_xml) if master_xml is not None else None
-    prompts = {text for _, text in _note_lines(master_body)} if master_body is not None else set()
-    if all(text in prompts for _, text in lines):
+    prompts = {line.text for line in _note_lines(master_body)} if master_body is not None else set()
+    if all(line.text in prompts for line in lines):
         return False
-    out.append("::: notes\n\n")
-    for depth, text in lines:
-        out.append(("  " * (depth - 1) + "- " if depth else "") + text + "\n\n")
-    out.append(":::\n\n")
+    blocks: list[str] = []
+    code: list[str] = []
+    for line in [*lines, _NoteLine(0, "")]:
+        if line.code:
+            code.append(line.text)
+            continue
+        if code:
+            blocks.append(_fence(code))
+            code = []
+        if line.text:
+            blocks.append(("  " * (line.level - 1) + "- " if line.level else "") + line.text)
+    colons = max(
+        (len(m) for b in blocks for m in re.findall(r"^:{3,}", b, re.MULTILINE)), default=0
+    )
+    marker = ":" * max(3, colons + 1)
+    out.append(f"{marker} notes\n\n" + "".join(b + "\n\n" for b in blocks) + f"{marker}\n\n")
     return True
+
+
+def _fence(lines: list[str]) -> str:
+    """Code lines of the notes as a fence (without blank lines at its ends)."""
+    code = "\n".join(lines).strip("\n")
+    longest = max((len(run) for run in re.findall("`+", code)), default=0)
+    fence = "`" * max(3, longest + 1)
+    return f"{fence}\n{code}\n{fence}"
 
 
 def _notes_body(notes: etree._Element) -> etree._Element | None:
@@ -178,16 +202,41 @@ def _notes_body(notes: etree._Element) -> etree._Element | None:
     return None
 
 
-def _note_lines(body: etree._Element) -> list[tuple[int, str]]:
-    """The paragraphs of a notes body with text: (list level, 0 for text; text)."""
-    result: list[tuple[int, str]] = []
+@dataclass(frozen=True)
+class _NoteLine:
+    level: int
+    """The list level, 0 for text."""
+    text: str
+    """Markdown; for code the line as it is."""
+    code: bool = False
+
+
+def _note_lines(body: etree._Element) -> list[_NoteLine]:
+    """The paragraphs of a notes body with text; an empty paragraph only between code lines."""
+    result: list[_NoteLine] = []
     for paragraph in body.iter(a("p")):
+        if _is_code(paragraph):
+            text = "".join(t.text or "" for t in paragraph.iter(a("t"))).rstrip()
+            result.append(_NoteLine(0, text, code=True))
+            continue
         text = " ".join(_paragraphs(paragraph))
         if text:
             p_pr = paragraph.find(a("pPr"))
             level = int(p_pr.get("lvl", "0")) if p_pr is not None else 0
-            result.append((level, text))
+            result.append(_NoteLine(level, text))
+        elif result and result[-1].code:
+            result.append(_NoteLine(0, "", code=True))
     return result
+
+
+def _is_code(paragraph: etree._Element) -> bool:
+    """Whether every run of ``paragraph`` is in the code font (a line of a code block)."""
+    runs = paragraph.findall(a("r"))
+    for run in runs:
+        font = run.find(f"{a('rPr')}/{a('latin')}")
+        if font is None or font.get("typeface") != CODE_FONT:
+            return False
+    return bool(runs)
 
 
 def _picture(

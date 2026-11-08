@@ -47,7 +47,8 @@ from pta_documents.markdown.document import MarkdownDocument
 from pta_documents.markdown.front_matter import FrontMatter
 from pta_documents.markdown.parser import CONTAINER_OPEN, container, parse
 
-A: Final = "{http://schemas.openxmlformats.org/drawingml/2006/main}t"
+DRAWING: Final = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+A: Final = f"{DRAWING}t"
 MINUTES_PER_SLIDE: Final = 2
 """Rule of thumb: talking time per content slide."""
 NOTES_WORDS_PER_MINUTE: Final = 120
@@ -228,7 +229,7 @@ def deck_stats(deck: bytes) -> DeckStats:
         count = _slide_words(slide)
         total += count
         if slide.has_notes_slide:
-            notes_words += words(" ".join(_texts(slide.notes_slide.element)))
+            notes_words += words(" ".join(_spoken_texts(slide.notes_slide.element)))
         if layout in titles:
             title += 1
         elif layout == design.LAYOUTS.chapter:
@@ -257,6 +258,18 @@ def deck_stats(deck: bytes) -> DeckStats:
 def _texts(element: etree._Element) -> list[str]:
     # python-pptx's itertext() repeats text; read the a:t elements (ai/Gedächtnis.md).
     return [t.text or "" for t in element.iter(A)]
+
+
+def _spoken_texts(element: etree._Element) -> list[str]:
+    """The texts of the paragraphs of ``element`` that are not all code: a code block in the
+    notes (the Markdown source of a slide, E08-S03) is not spoken, inline code is."""
+    result: list[str] = []
+    for paragraph in element.iter(f"{DRAWING}p"):
+        fonts = [run.find(f"{DRAWING}rPr/{DRAWING}latin") for run in paragraph.iter(f"{DRAWING}r")]
+        if fonts and all(f is not None and f.get("typeface") == design.CODE_FONT for f in fonts):
+            continue
+        result.extend(_texts(paragraph))
+    return result
 
 
 def _slide_words(slide: PptxSlide) -> int:

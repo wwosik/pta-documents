@@ -79,6 +79,32 @@ def test_notes_keep_lists_and_inline_formatting_and_leave_out_tables_and_images(
     assert "Left" not in "".join(t.text or "" for t in root.iter(f"{{{A}}}t"))
 
 
+def test_code_in_notes_keeps_its_lines_in_the_code_font() -> None:
+    """E08-S03: the Markdown source of a slide goes into its notes as a fence."""
+    markdown = (
+        "# Deck\n\n## A\n\nText.\n\n:::: notes\nSo steht es da:\n\n"
+        "```markdown\n::: cards\n  - eingerückt\n\n:::\n```\n::::\n"
+    )
+    notes = open_pptx(generate(markdown)).slides[1].notes_slide
+    root = etree.fromstring(etree.tostring(notes.element))
+    body = [p for p in root.iter(f"{{{A}}}p") if p.find(f"{{{A}}}endParaRPr") is not None]
+    lines = ["".join(t.text or "" for t in p.iter(f"{{{A}}}t")) for p in body]
+    assert lines == ["So steht es da:", "::: cards", "  - eingerückt", "", ":::"]
+    fonts = root.xpath(".//a:r[a:t=':::']/a:rPr/a:latin/@typeface", namespaces=NS)
+    assert fonts == [design.CODE_FONT]
+
+
+def test_the_converter_reads_code_in_notes_back_as_a_fence() -> None:
+    markdown = (
+        "# Deck\n\n## A\n\nText.\n\n:::: notes\nVorher.\n\n"
+        "```markdown\n::: cards\n  - `x`\n\n:::\n```\n\nNachher.\n::::\n"
+    )
+    back = PptxConverter().convert(generate(markdown)).text
+    assert (
+        ":::: notes\n\nVorher.\n\n```\n::: cards\n  - `x`\n\n:::\n```\n\nNachher.\n\n::::\n"
+    ) in back
+
+
 def test_notes_pages_use_the_notes_master_of_the_pta_template() -> None:
     data = deck()
     with zipfile.ZipFile(io.BytesIO(data)) as z:
