@@ -928,3 +928,36 @@ stündlich, der Bericht :icon-file-text: kommt per :icon-mail: E-Mail.
 
 Im Text steht ein Icon so hoch wie die Schrift: der Server :icon-server: meldet sich
 stündlich, der Bericht :icon-file-text: kommt per :icon-mail: E-Mail.
+
+# Glossar {.appendix}
+
+Ab `# … {.appendix}` sind die Kapitel Anhänge: Sie heißen A, B, C statt 1, 2, 3, ihre
+Abschnitte A.1, A.1.1. Die Überschrift mit dem Attribut ist der erste Anhang; das
+Inhaltsverzeichnis zeigt die Anhänge mit ihren Buchstaben, Abbildungen und Tabellen zählen
+weiter durch. Dieses Kapitel ist Anhang A:
+
+```markdown
+# Glossar {.appendix}
+```
+
+## Begriffe
+
+Die Abschnitte eines Anhangs zählen A.1, A.2:
+
+```markdown
+Backup
+: Folien hinter der Abschlussfolie einer Präsentation.
+
+Anhang
+: Kapitel hinter dem eigentlichen Bericht, mit Buchstaben gezählt.
+```
+
+Backup
+: Folien hinter der Abschlussfolie einer Präsentation.
+
+Anhang
+: Kapitel hinter dem eigentlichen Bericht, mit Buchstaben gezählt.
+
+# Quellen
+
+Der zweite Anhang heißt B, ohne eigenes Attribut: Alle Kapitel nach `{.appendix}` sind Anhänge.

@@ -242,6 +242,9 @@ class Slide:
     """The speaker notes (``::: notes`` of the heading): on every slide written for it."""
     transition: SlideTransition | None = field(default=None, kw_only=True)
     """How the slide comes in (E09-S03): of its heading or chapter; None: the deck's."""
+    backup: bool = field(default=False, kw_only=True)
+    """A backup slide (``# … {.backup}`` and after, E16-S04): behind the closing slide, its
+    footer ends in " · Backup"."""
 
 
 @dataclass(frozen=True)
@@ -252,7 +255,8 @@ class TitleSlide(Slide):
 
 @dataclass(frozen=True)
 class ChapterSlide(Slide):
-    number: int = 1
+    number: int | None = 1
+    """The chapter number; None: none (the chapters of the backup, E16-S04)."""
     layout: str | None = None
 
 

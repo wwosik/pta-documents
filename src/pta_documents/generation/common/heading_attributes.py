@@ -5,7 +5,9 @@ Port of DocLibs ``HeadingAttributes``. Only a trailing ``{…}`` made of classes
 takes which attribute is ``check_level``'s business: ``.closing`` goes on ``#``, ``.dark``,
 ``kicker`` and the PTA slide kinds (``.agenda``, ``.interim``, ``.quote``, ``.contact``, E04-S04)
 on ``##``, ``layout``, ``uebergang`` (the slide transition, E09-S03) and ``.internal`` (the
-chapter or slide only in the internal and trainer version, E16-S01) on both.
+chapter or slide only in the internal and trainer version, E16-S01) on both; ``.backup`` (the
+chapters behind the closing slide of a deck) and ``.appendix`` (the chapters lettered A, B, C in
+Word and PDF, E16-S04) on ``#`` only.
 """
 
 from __future__ import annotations
@@ -30,10 +32,10 @@ SLIDE_KINDS: Final = (AGENDA, INTERIM, QUOTE, CONTACT)
 
 VALID: Final = (
     '.closing, .dark, kicker="…", layout="…", uebergang="…", .agenda, .interim, .quote, .contact, '
-    ".internal"
+    ".internal, .backup, .appendix"
 )
 """Every heading attribute, as it is written, for error messages."""
-VALID_ON_SECTION: Final = '.closing, layout="…", uebergang="…", .internal'
+VALID_ON_SECTION: Final = '.closing, layout="…", uebergang="…", .internal, .backup, .appendix'
 """The attributes of a ``#`` heading."""
 VALID_ON_SLIDE: Final = (
     '.dark, kicker="…", layout="…", uebergang="…", .agenda, .interim, .quote, .contact, .internal'
@@ -63,6 +65,12 @@ class HeadingAttributes:
     internal: bool = False
     """``.internal`` (E16-S01): the chapter (``#``) or slide (``##``) only in the internal and
     the trainer version (``generation.common.audience``)."""
+    backup: bool = False
+    """``.backup`` (E16-S04), on a ``#`` heading: it and every chapter after it are backup
+    slides behind the closing slide of a deck; Word and PDF ignore it."""
+    appendix: bool = False
+    """``.appendix`` (E16-S04), on a ``#`` heading: it and every chapter after it are appendices
+    A, B, C in Word and PDF; decks ignore it."""
     block: str = ""
     """The attributes as written (``{.dark kicker="Why"}``), for error messages."""
 
@@ -77,7 +85,7 @@ def split(text: str, format: DocumentFormat) -> tuple[str, HeadingAttributes | N
         return text, None
     block = match.group(0).strip()
     seen: set[str] = set()
-    closing = dark = internal = False
+    closing = dark = internal = backup = appendix = False
     layout: str | None = None
     kicker: str | None = None
     kind: str | None = None
@@ -96,6 +104,10 @@ def split(text: str, format: DocumentFormat) -> tuple[str, HeadingAttributes | N
                 dark = True
             case ".internal":
                 internal = True
+            case ".backup":
+                backup = True
+            case ".appendix":
+                appendix = True
             case "layout":
                 layout = token.group("value")
             case "kicker":
@@ -123,6 +135,8 @@ def split(text: str, format: DocumentFormat) -> tuple[str, HeadingAttributes | N
         kind=kind,
         transition=transition,
         internal=internal,
+        backup=backup,
+        appendix=appendix,
         block=block,
     )
     return text[: match.start()].rstrip(), attributes
@@ -138,6 +152,29 @@ def check_level(attributes: HeadingAttributes, level: int, format: DocumentForma
             format,
             f"The heading attribute '{name}' in '{attributes.block}' goes on a '##' heading. "
             f"Valid attributes on '#': {VALID_ON_SECTION}.",
+        )
+    if level == 2 and (attributes.backup or attributes.appendix):
+        name = ".backup" if attributes.backup else ".appendix"
+        raise DocumentConversionError(
+            format,
+            f"{{{name}}} goes on a '#' heading: the first chapter of the "
+            f"{'backup' if attributes.backup else 'appendix'}. "
+            f"Valid attributes on '##': {VALID_ON_SLIDE}.",
+        )
+    if attributes.closing and (attributes.backup or attributes.appendix):
+        name = ".backup" if attributes.backup else ".appendix"
+        raise DocumentConversionError(
+            format,
+            f"The heading attributes '{attributes.block}' name .closing and {name}; the closing "
+            f"slide is no chapter of the {name[1:]}. Put {name} on the '#' after it.",
+        )
+    if attributes.internal and (attributes.backup or attributes.appendix):
+        name = ".backup" if attributes.backup else ".appendix"
+        raise DocumentConversionError(
+            format,
+            f"The heading attributes '{attributes.block}' name .internal and {name}; left out of "
+            f"the customer's version, the chapters after it would no longer be the {name[1:]}. "
+            f"Mark the chapters after it .internal instead, or put {name} on a heading of its own.",
         )
     if level == 2 and attributes.closing:
         raise DocumentConversionError(

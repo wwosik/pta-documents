@@ -113,6 +113,10 @@ class DeckWriter:
         """What the slide being written builds (E09-S02); its timing goes in when the next
         slide begins, or at the end."""
         self.built: PptxSlide | None = None
+        self.backup = False
+        """The slide being written is a backup slide: its footer says so (E16-S04)."""
+        self.opened_backup = False
+        """The backup's divider slide is written (E16-S04)."""
 
     # ------------------------------------------------------------------ entry
 
@@ -145,7 +149,14 @@ class DeckWriter:
                 self.title_slide(slide)
             case ChapterSlide():
                 target = self.new_slide(slide.layout or design.LAYOUTS.chapter, slide)
-                self.set_text(target, design.PLACEHOLDERS.chapter_number, f"{slide.number:02d}")
+                if slide.number is not None:
+                    number = f"{slide.number:02d}"
+                    self.set_text(target, design.PLACEHOLDERS.chapter_number, number)
+                elif slide.backup and not self.opened_backup:
+                    # The backup's divider slide, by its name for the HTML deck and the
+                    # converter (E16-S04).
+                    target._element.cSld.set("name", design.BACKUP_SLIDE_NAME)
+                    self.opened_backup = True
                 self.set_title(target, slide.title)
                 self.finish(target)
             case ClosingSlide():
@@ -459,6 +470,7 @@ class DeckWriter:
                 f"The PTA template has no layout '{layout_name}'. Valid layouts: {valid}", slide
             )
         self.number += 1
+        self.backup = slide.backup
         self.write_builds()
         target = self.presentation.slides.add_slide(layout)
         self.built = target
@@ -607,7 +619,8 @@ class DeckWriter:
                     sp_pr.remove(child)
             texts = list(shape.iter(a("t")))
             if ph_type == "ftr" and texts:
-                texts[0].text = self.info.footer
+                suffix = design.BACKUP_FOOTER_SUFFIX if self.backup else ""
+                texts[0].text = self.info.footer + suffix
                 for extra in texts[1:]:
                     extra.text = ""
             elif ph_type == "sldNum" and texts:

@@ -81,6 +81,11 @@ class NoteCodes:
     """Internal blocks or solutions left out of the version for an audience (``fassung:``,
     ``--audience``, E16-S01); one note with the numbers (PPTX, DOCX, PDF)."""
 
+    ATTRIBUTE_IGNORED: Final = "attribute-ignored"
+    """A heading attribute of the other kind of document (E16-S04): ``{.backup}`` in Word and
+    PDF, which have no closing slide, ``{.appendix}`` on slides, which number no appendices
+    (PPTX, DOCX, PDF)."""
+
     ALL: Final = (
         SLIDE_SPLIT,
         SLIDE_OVERFULL,
@@ -94,6 +99,7 @@ class NoteCodes:
         IMAGE_SCALE_IN_TITLE,
         SCENE_DROPPED,
         AUDIENCE_OMITTED,
+        ATTRIBUTE_IGNORED,
     )
     """Every code, in the order the guides list them."""
 

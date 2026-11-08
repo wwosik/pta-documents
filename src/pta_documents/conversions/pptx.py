@@ -11,7 +11,7 @@ from lxml import etree
 from pta_documents.conversions.openxml import OpenXmlPackage, guard, read_input
 from pta_documents.conversions.options import ConversionOptions, ResourceCollector
 from pta_documents.design.icons import raster as icon_raster
-from pta_documents.design.slides import CODE_FONT, ENGLISH_LOGO_NAME
+from pta_documents.design.slides import CODE_FONT, ENGLISH_LOGO_NAME, LAYOUTS, backup_start
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown import text as md
 from pta_documents.markdown import typography
@@ -28,6 +28,9 @@ PRESENTATION_PART: Final = "ppt/presentation.xml"
 RELATIONSHIPS: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 NOTES_SLIDE: Final = f"{RELATIONSHIPS}/notesSlide"
 NOTES_MASTER: Final = f"{RELATIONSHIPS}/notesMaster"
+SLIDE_LAYOUT: Final = f"{RELATIONSHIPS}/slideLayout"
+BACKUP_HEADING: Final = "# Backup {.backup}\n\n"
+"""Before the first backup slide when it is no divider slide of its own (E16-S04)."""
 DRAWING_GROUP: Final = "Drawing"
 """The name start of the shape groups ``generation.pptx.drawing`` writes (``GROUP_NAME``)."""
 HARVEY: Final = re.compile(r"harvey-([0-4])")
@@ -72,13 +75,22 @@ class PptxConverter:
             out: list[str] = []
             number = 0
             any_content = False
+            parts: list[str] = []
             for slide_id in presentation.iter(p("sldId")):
                 rel_id = slide_id.get(f"{{{R}}}id")
                 part = rels.get(rel_id) if rel_id else None
-                if part is None:
-                    continue
+                if part is not None:
+                    parts.append(part)
+            names = [_names(package, part) for part in parts]
+            backup = backup_start(names)
+            for index, part in enumerate(parts):
                 number += 1
-                any_content |= _render_slide(package, part, number, images, out)
+                heading = "##"
+                if index == backup and names[index][0] == LAYOUTS.chapter:
+                    heading = "#"
+                elif index == backup:
+                    out.append(BACKUP_HEADING)
+                any_content |= _render_slide(package, part, number, images, out, heading)
                 if options.notes:
                     any_content |= _render_notes(package, part, out)
             metadata = {MetadataKeys.SLIDE_COUNT: str(number)}
@@ -91,6 +103,19 @@ class PptxConverter:
             )
         finally:
             package.close()
+
+
+def _names(package: OpenXmlPackage, part: str) -> tuple[str, str]:
+    """The name of the slide's layout and the slide's own name (``p:cSld/@name``)."""
+    layout_part = package.related(part, SLIDE_LAYOUT)
+    layout = package.read_xml(layout_part) if layout_part else None
+    slide = package.read_xml(part)
+    layout_c_sld = layout.find(p("cSld")) if layout is not None else None
+    c_sld = slide.find(p("cSld")) if slide is not None else None
+    return (
+        layout_c_sld.get("name", "") if layout_c_sld is not None else "",
+        c_sld.get("name", "") if c_sld is not None else "",
+    )
 
 
 def _placeholder_type(shape: etree._Element) -> str | None:
@@ -184,8 +209,10 @@ def _render_slide(
     number: int,
     images: ResourceCollector | None,
     out: list[str],
+    heading: str = "##",
 ) -> bool:
-    """Returns whether the slide had any content beyond its heading."""
+    """Returns whether the slide had any content beyond its heading. ``heading`` ``#``: the
+    divider slide that opens the backup (``{.backup}``, E16-S04)."""
     slide = package.read_xml(part)
     c_sld = slide.find(p("cSld")) if slide is not None else None
     tree = c_sld.find(p("spTree")) if c_sld is not None else None
@@ -196,7 +223,8 @@ def _render_slide(
     if title_shape is not None:
         body = title_shape.find(p("txBody"))
         title = " ".join(_paragraphs(body)) if body is not None else ""
-    out.append("## " + (title or f"Slide {number}") + "\n\n")
+    suffix = " {.backup}" if heading == "#" else ""
+    out.append(f"{heading} " + (title or f"Slide {number}") + suffix + "\n\n")
     if tree is None:
         return bool(title)
 

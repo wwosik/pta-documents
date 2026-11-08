@@ -206,7 +206,8 @@ result.slides  # Zahl der erzeugten Folien
 | `uebergang` | `none` (Standard), `fade`, `push`, `wipe` (mit `-left`/`-right`/`-up`/`-down`), `split`, `cover`, `uncover`, `zoom`, `cut`, `morph` | Übergang jeder Folie, siehe [Folienübergänge](#folienübergänge-e09-s03) |
 
 Gliederung: erstes `#` = Titelfolie, weitere `#` = Trennfolie „01", „02" …,
-`# Text {.closing}` = Abschlussfolie, `##` = Folie. `## Titel {layout="Name"}` wählt ein
+`# Text {.closing}` = Abschlussfolie, `##` = Folie; `# Backup {.backup}` beginnt die
+Backup-Folien hinter der Abschlussfolie (siehe [Backup-Folien und Anhang](#backup-folien-und-anhang-e16-s04)). `## Titel {layout="Name"}` wählt ein
 PTA-Layout über seinen Namen; der Inhalt wird an `---` auf dessen Textplatzhalter verteilt.
 Absätze sind Textebene 2, `###` Ebene 1, Listen Ebenen 3–5. Eine Tabelle, ein Codeblock oder
 eine Bildreihe bekommt eine eigene Folie (Text davor oben, danach unten); ein Bild mit Text
@@ -293,7 +294,7 @@ Flow-Inhalt; `layout="…"` darf nur ein Layout derselben Art wählen.
 | Schreiben | Layout | Belegung |
 | --------- | ------ | -------- |
 | `## Agenda {.agenda}` mit genau einer Liste (je Punkt eine Zeile) | ≤ 4 Punkte `Agenda (kurz)`, 5–8 `Agenda (lang)`, mehr = Fehler | Nummern „01" … (idx 14, 16 …), Texte (15, 17 …); ungenutzte Paare und die Linien unter dem letzten Punkt entfallen |
-| `## Agenda {.agenda}` ohne Inhalt | wie oben | die Kapitel des Decks: alle `#` nach dem ersten, ohne `{.closing}` |
+| `## Agenda {.agenda}` ohne Inhalt | wie oben | die Kapitel des Decks: alle `#` nach dem ersten, ohne `{.closing}`, bis vor `{.backup}` |
 | `## Aussage {.interim}` (kein Inhalt) | `Zwischenfazit 01` (`02` über `layout`) | Überschrift im Titel |
 | `## Zitat {.quote}`, optional ein Absatz darunter | `Zitat 01` (`02`) | Überschrift im Titel; der Absatz ist die Quelle: zweiter Absatz im Titel, 24 pt Segoe UI Light, nicht kursiv |
 | `## Kontakt {.contact}`, je Person `###` Name, darunter ein Absatz: Foto (optional), Zeilen Funktion, E-Mail (mit `@`, wird `mailto:`-Link), Telefon (beginnt mit `+` oder Ziffer) in beliebiger Reihenfolge | n Personen (1–5) `Kontakt 0n`; eine Person mit weiterem Text (Absätze, Listen nach dem Kontaktabsatz) `Kontakt mit Text` | je Person Bild/Name/Funktion/E-Mail/Telefon (34/14/35/36/38, 39/40–43 …), Text 37; was fehlt (auch das Foto), entfällt |
@@ -606,7 +607,7 @@ Front Matter mitgezählt).
 
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
-| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`, `uebergang="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, `uebergang="…"` (siehe [Folienübergänge](#folienübergänge-e09-s03)), PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`); beide: `.internal` (siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01)) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
+| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`, `uebergang="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, `uebergang="…"` (siehe [Folienübergänge](#folienübergänge-e09-s03)), PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`); beide: `.internal` (siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01)); nur `#`: `.backup`, `.appendix` (siehe [Backup-Folien und Anhang](#backup-folien-und-anhang-e16-s04)) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
 | Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)); `scene` (siehe [Szenen](#szenen-e09-s04)); `internal`, `exercise`, `solution` (siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01)) | alle Formate: `internal`/`exercise`/`solution` werden je Fassung weggelassen oder ohne Rahmen gezeigt; PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); `scene` als benannte Formen auf `Nur Titel`; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle, `scene` entfällt; PDF wie Word, die Grafiken als Vektoren, `scene` als Standbild |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
@@ -642,7 +643,7 @@ Word zeigt die Folien-Syntax schlicht, über eigene Formatvorlagen statt Direktf
 | `[Wörter]{.success}` … | Zeichenvorlagen „Status Erfolg", „Status Warnung", „Status Gefahr", „Status Info", „Status Neutral" (fett in der Statusfarbe) |
 | Tabellenzelle nur `` `Erledigt` `` mit `status.success: Erledigt` | Zeichenvorlage der Kategorie (ohne Consolas); nicht zugeordnete Code-Zellen und Tags bleiben Code |
 | Absatz aus ≥ 2 Bildern | rahmenlose Tabelle „Bildreihe" über die Satzspiegelbreite, gleich breite Zellen, höchstens vier je Zeile, unter jedem Bild „Abbildung n: …"; Zeilen werden nicht getrennt |
-| `{.agenda}` | „Überschrift 2" mit der Liste; ohne Liste die folgenden `#`-Kapitel (ohne `{.closing}`) als nummerierte Liste |
+| `{.agenda}` | „Überschrift 2" mit der Liste; ohne Liste die folgenden `#`-Kapitel (ohne `{.closing}`, bis vor `{.appendix}`) als nummerierte Liste |
 | `{.interim}` | die Aussage als „Standard fett" |
 | `{.quote}` | Zitat und Quelle als „Zitat" |
 | `{.contact}` | „Überschrift 2", je Person `###` als „Standard fett", Foto höchstens 3 cm breit ohne Beschriftung, jede Zeile für sich |
@@ -1659,6 +1660,58 @@ für `kunde`, `<name>-intern.<format>` und `<name>-trainer.<format>` sonst (auch
 `--audience`, wenn `fassung:` es sagt; ebenso `generate-samples`); `alle` erzeugt jede Fassung,
 deren Token-Strom sich von den vorigen unterscheidet (`audience.versions`), mindestens `kunde`.
 
+## Backup-Folien und Anhang (E16-S04)
+
+Zwei Attribute an einer `#`-Überschrift machen sie und **jedes Kapitel danach** zu etwas anderem:
+
+| Attribut | PowerPoint, HTML-Deck | Word, PDF |
+| -------- | --------------------- | --------- |
+| `# Backup {.backup}` | Backup: eine Trennfolie ohne Nummer mit dem Titel, danach die Folien; Kapitel danach ohne Nummer, nicht in der Agenda (`{.agenda}` ohne Liste), Fußzeile „PTA – <Titel> · Backup" | ignoriert, Hinweis `attribute-ignored` |
+| `# Glossar {.appendix}` | ignoriert, Hinweis `attribute-ignored` | Anhänge A, B, C statt 1, 2, 3, darunter A.1, A.1.1; die Überschrift ist der erste Anhang (kein eigenes „Anhang"-Kapitel); nicht in der Agenda |
+
+```markdown
+# Vielen Dank! {.closing}
+
+# Backup {.backup}
+
+## Reservefolie: Details zur Migration
+```
+
+Regeln, in allen Formaten gleich geprüft (`backup.check`, aus `layout_syntax.check`), Fehler mit
+`Line N: `:
+
+- Jedes Attribut **höchstens einmal** (`{.backup} is on line 3 already. …`), nur an `#`, nicht an
+  Überschriften in Containern.
+- `{.closing}` steht **vor** `{.backup}`: Die Abschlussfolie hinter dem Backup ist ein Fehler
+  (`The closing slide {.closing} goes before the backup …`). Ein Deck ohne Abschlussfolie darf ein
+  Backup haben; es steht dann einfach am Ende.
+- Nicht zusammen mit `.closing` oder `.internal` an derselben Überschrift (ohne die interne
+  Überschrift wären die Kapitel danach in der Kundenfassung kein Backup bzw. Anhang mehr). Wer das
+  Backup nicht beim Kunden zeigen will, markiert dessen Folien bzw. Kapitel nach dem
+  `{.backup}`-Kapitel mit `{.internal}`; die Kundenfassung behält das Backup sonst.
+- `{.backup}` und `{.appendix}` dürfen an derselben Überschrift stehen (eine Quelle für Deck und
+  Bericht); jedes Format meldet dann das andere als `attribute-ignored`.
+
+PowerPoint: Die Trennfolie des Backups heißt `Backup` (`p:cSld/@name`, `design.slides.BACKUP_SLIDE_NAME`);
+daran und an „erste Folie hinter der Abschlussfolie" (`design.slides.backup_start`) erkennen das
+HTML-Deck, `check` und der PPTX-Konverter, wo das Backup beginnt. Das HTML-Deck zeigt Backup-Folien
+nicht in der Kapitelanzeige; die Fortschrittsanzeige ist auf der Abschlussfolie voll (`mainSlides`
+im `data-config`), Tastatur und `#n` erreichen die Folien dahinter. `check` zählt sie getrennt
+(`DeckStats.backup`, `…, 1 closing, 4 backup`); Wörter, Inhaltsfolien und Minuten zählen sie nicht.
+Die Kundenfassung (E16-S01) behält das Backup.
+
+Word: Ab `{.appendix}` hängen die Überschriften 1–3 über ihr eigenes `w:numPr` an eine neue
+Nummerierung — eine Kopie der Überschriften-Liste der Vorlage mit `upperLetter` auf Ebene 1, ohne
+Bindung an die Formatvorlagen, mit eigener `w:nsid`. Das Inhaltsverzeichnis (Feld `TOC`) zeigt die
+Anhänge mit ihren Buchstaben; ein in Word kopierter oder mit Enter fortgesetzter Anhang zählt
+weiter (B, C), eine neu mit „Überschrift 1" formatierte Überschrift dagegen in der Hauptzählung.
+Abbildungen und Tabellen zählen durch. Das PDF zählt genauso (`A`, `A.1`, Lesezeichen
+„A Glossar"; nach Z folgt wie in Word AA, BB).
+
+Rundreise: Der PPTX-Konverter schreibt `# <Titel> {.backup}` statt `## <Titel>` für die
+Trennfolie des Backups bzw. `# Backup {.backup}` vor die erste Folie hinter der Abschlussfolie;
+der DOCX-Konverter hängt `{.appendix}` an die erste „Überschrift 1" mit Buchstaben-Nummerierung.
+
 ## Hinweise (`GenerationResult`)
 
 `generate()` beider Generatoren gibt ein `GenerationResult` zurück (`pta_documents.GenerationResult`,
@@ -1690,6 +1743,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `image-scale-in-title` (`IMAGE_SCALE_IN_TITLE`) | PPTX, DOCX (E15-S04) | `scale=N` steht im Bildtitel; wirkt bis 2027-11, gehört aber als `{scale=N}` hinter das Bild |
 | `scene-dropped` (`SCENE_DROPPED`) | DOCX (E09-S04) | eine Szene (`::: scene`) fällt im Word-Dokument weg; PowerPoint zeigt sie als Formen, das PDF als Standbild |
 | `audience-omitted` (`AUDIENCE_OMITTED`) | PPTX, DOCX, PDF (E16-S01) | die Fassung hat interne Blöcke oder Lösungen weggelassen; **ein** Hinweis ohne Zeile mit den Zahlen („4 internal blocks and 1 solution were left out for the audience 'kunde'; …"), siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01) |
+| `attribute-ignored` (`ATTRIBUTE_IGNORED`) | PPTX, DOCX, PDF (E16-S04) | ein Überschriftenattribut des anderen Dokumenttyps: `{.backup}` in Word/PDF, `{.appendix}` auf Folien; die Kapitel bleiben gewöhnliche Kapitel, siehe [Backup-Folien und Anhang](#backup-folien-und-anhang-e16-s04) |
 
 Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate` zeigt die
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;
@@ -1734,7 +1788,8 @@ und ignorieren ihn.
 **Statistik** (`CheckResult.stats`, Faustregeln, als solche ausgewiesen):
 
 - PowerPoint (`DeckStats`, gezählt am Probe-Deck): Folien gesamt, Titel-, Kapitel-, Inhalts-
-  (davon „(Forts.)") und Abschlussfolien; Wörter gesamt (ohne Titel und Fußzeilen) und je
+  (davon „(Forts.)") und Abschlussfolien, Backup-Folien (E16-S04, nur gezählt, sonst
+  nirgends mitgerechnet); Wörter gesamt (ohne Titel und Fußzeilen) und je
   Inhaltsfolie min/median/max; Wörter der Sprechernotizen (ohne Absätze, die ganz Code sind —
   Codeblöcke werden nicht gesprochen); Dauer `minutes` = 2 Minuten je Inhaltsfolie plus Notizen
   bei 120 Wörtern je Minute.

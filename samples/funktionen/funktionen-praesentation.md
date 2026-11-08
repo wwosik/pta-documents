@@ -1656,3 +1656,27 @@ Nach Fragen fragen.
 # Vielen Dank! {.closing}
 ```
 ::::
+
+# Backup {.backup}
+
+:::: notes
+```markdown
+# Backup {.backup}
+```
+::::
+
+## Backup-Folien stehen hinter der Abschlussfolie
+
+- Ab `# Backup {.backup}` beginnt der Vorrat: eine Trennfolie ohne Nummer, dann die Folien
+- Sie zählen nicht als Kapitel und stehen nicht in der Agenda
+- Die Fußzeile endet auf „· Backup"
+
+:::: notes
+```markdown
+## Backup-Folien stehen hinter der Abschlussfolie
+
+- Ab `# Backup {.backup}` beginnt der Vorrat: eine Trennfolie ohne Nummer, dann die Folien
+- Sie zählen nicht als Kapitel und stehen nicht in der Agenda
+- Die Fußzeile endet auf „· Backup"
+```
+::::

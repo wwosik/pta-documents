@@ -145,7 +145,7 @@ class KindReader:
 
     def chapters(self) -> list[tuple[Run, ...]]:
         """The ``#`` headings of the deck after the first (the title slide), the closing slide
-        aside."""
+        aside, up to the backup (``{.backup}``, E16-S04)."""
         result: list[tuple[Run, ...]] = []
         tokens = self.tokens
         first = True
@@ -153,6 +153,8 @@ class KindReader:
             if token.type != "heading_open" or token.tag != "h1" or token.level != 0:
                 continue
             inline, attributes = layout_syntax.without_attributes(tokens[i + 1], 1, FORMAT)
+            if attributes is not None and attributes.backup:
+                break
             if attributes is not None and attributes.closing:
                 continue
             if first:

@@ -6,6 +6,7 @@ layouts (they have no ``type``, only names) and defines what the generator draws
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
@@ -201,6 +202,22 @@ TABLE: Final = TableStyle()
 
 FOOTER_PREFIX: Final = "PTA – "
 """The slide footer reads "PTA – <presentation title>"."""
+BACKUP_FOOTER_SUFFIX: Final = " · Backup"
+"""After the footer of a backup slide (E16-S04): "PTA – <presentation title> · Backup"."""
+BACKUP_SLIDE_NAME: Final = "Backup"
+"""The name (``p:cSld/@name``) of the divider slide that opens the backup (E16-S04), by which
+the HTML deck, ``check`` and the PPTX converter find it."""
+
+
+def backup_start(slides: Sequence[tuple[str, str]]) -> int | None:
+    """Where the backup of a deck begins (E16-S04), given each slide's layout name and its own
+    name: at the slide named ``BACKUP_SLIDE_NAME``, else at the first slide behind the closing
+    slide; None: the deck has no backup."""
+    for i, (_, name) in enumerate(slides):
+        if name == BACKUP_SLIDE_NAME or (i > 0 and slides[i - 1][0] == LAYOUTS.closing):
+            return i
+    return None
+
 
 ENGLISH_LOGO_AREA: Final = Area(cm(1.40), cm(1.30), cm(6.35), cm(3.59))
 """Where the English title slide template places the English logo (its sample slide)."""

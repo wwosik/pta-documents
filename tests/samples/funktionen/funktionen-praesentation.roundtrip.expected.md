@@ -1629,3 +1629,33 @@ Nach Fragen fragen.
 ```
 
 :::
+
+# Backup {.backup}
+
+::: notes
+
+```
+# Backup {.backup}
+```
+
+:::
+
+## Backup-Folien stehen hinter der Abschlussfolie
+
+Ab # Backup {.backup} beginnt der Vorrat: eine Trennfolie ohne Nummer, dann die Folien
+
+Sie zählen nicht als Kapitel und stehen nicht in der Agenda
+
+Die Fußzeile endet auf „· Backup“
+
+::: notes
+
+```
+## Backup-Folien stehen hinter der Abschlussfolie
+
+- Ab `# Backup {.backup}` beginnt der Vorrat: eine Trennfolie ohne Nummer, dann die Folien
+- Sie zählen nicht als Kapitel und stehen nicht in der Agenda
+- Die Fußzeile endet auf „· Backup"
+```
+
+:::

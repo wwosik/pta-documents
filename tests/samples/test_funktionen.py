@@ -332,11 +332,17 @@ def required(format: DocumentFormat) -> set[str]:
     if format is DOCX:
         # Word places drawings as pictures (E03-S04); every type and option is in the deck.
         result |= {f"```{FINANCIAL}", FIGURE_CAPTION}
+        # The appendix (E16-S04) is Word's and the PDF's; decks ignore it with a note.
+        result.add("{.appendix}")
     if format is PPTX:
         result |= {f"```{FINANCIAL} type: {name}" for name in CHART_TYPES}
         result |= {f"```{FINANCIAL} options: {key}" for key in financial_block.OPTION_KEYS}
         # Word drops the heading attributes; they are slide syntax.
-        result |= {"{" + entry + "}" for entry in heading_attributes.VALID.split(", ")}
+        result |= {
+            "{" + entry + "}"
+            for entry in heading_attributes.VALID.split(", ")
+            if entry != ".appendix"
+        }
         result |= {f"{Keys.TITLE_SLIDE}: {name}" for name in TITLE_SLIDES}
         # Builds (E09-S02): Word and PDF leave the markers out, decks show every one.
         result |= {BLOCK_MARKER.format(name=name) for name in block_markers.NAMES}

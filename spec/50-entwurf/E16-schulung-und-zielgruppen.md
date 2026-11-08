@@ -25,7 +25,7 @@ halten. Weder DocLibs noch vt-tools-libs kennen das; eigene Idee (Entscheidung 2
 | [E16-S01](../60-prüfung/E16-S01-zielgruppenfassungen.md) | `{.internal}` / `::: internal`, `::: exercise` / `::: solution`; `generate --audience kunde\|intern\|trainer`; Suffix `-intern`, automatische `kennzeichnung: intern` | in Prüfung |
 | [E16-S02](E16-S02-schulungs-zeitplan.md) | `{dauer=5}` auf Folien und Kapiteln, Pausen; Agenda mit Uhrzeiten, Trainer-Zeitplan, Abgleich mit `laenge:` | Entwurf |
 | [E16-S03](E16-S03-teilnehmerhandout.md) | `./run.sh handout`: Word-Handout mit Folienbildern (E10-S02) und Notizen oder Notizlinien, 2/3/6 Folien je Seite | Entwurf |
-| [E16-S04](../55-in-arbeit/docs-2/E16-S04-backup-folien-und-anhang.md) | `# Backup {.backup}` hinter der Abschlussfolie; `# Anhang {.appendix}` mit Nummerierung A, B, C in Word und PDF | in Bearbeitung (docs-2) |
+| [E16-S04](../60-prüfung/E16-S04-backup-folien-und-anhang.md) | `# Backup {.backup}` hinter der Abschlussfolie; `# Anhang {.appendix}` mit Nummerierung A, B, C in Word und PDF | in Prüfung |
 
 ## Bereichsweite Entscheidungen
 

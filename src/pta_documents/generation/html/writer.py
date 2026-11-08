@@ -121,10 +121,15 @@ class HtmlDeckWriter:
         chapters: list[str] = []
         chapter = -1
         slides = list(self.presentation.slides)
+        # The backup (E16-S04) lies behind the closing slide: no chapter, the progress full.
+        backup = design.backup_start([(s.slide_layout.name, s.name) for s in slides])
+        main = len(slides) if backup is None else backup
         for number_, slide in enumerate(slides, start=1):
             layout = slide.slide_layout
             title = _title(slide)
-            if layout.name == design.LAYOUTS.chapter:
+            if number_ > main:
+                chapter = -1
+            elif layout.name == design.LAYOUTS.chapter:
                 chapters.append(title)
                 chapter = len(chapters) - 1
             sections.append(self.slide(slide, number_, len(slides), title, chapter))
@@ -135,10 +140,12 @@ class HtmlDeckWriter:
             f"script-src 'sha256-{digest}'; base-uri 'none'; form-action 'none'"
         )
         texts = self.info.texts
-        config = {
+        config: dict[str, str | int] = {
             "notesTitle": texts.notes_title,
             "slideAnnouncement": texts.slide_announcement,
         }
+        if main < len(slides):
+            config["mainSlides"] = main
         chapter_bar = (
             '<nav id="chapters" aria-hidden="true">'
             + "".join(
