@@ -12,8 +12,8 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| [E05-S01](E05-S01-grundgeruest-pdf.md) | Grundgerüst PDF: reportlab, pikepdf, PDF/A-2b | Entwurf |
-| [E05-S02](E05-S02-layout-engine.md) | Layout-Engine portieren | Entwurf |
+| [E05-S01](../55-in-arbeit/docs-2/E05-S01-grundgeruest-pdf.md) | Grundgerüst PDF: reportlab, pikepdf, PDF/A-2b | in Bearbeitung (docs-2) |
+| [E05-S02](../55-in-arbeit/docs-2/E05-S02-layout-engine.md) | Layout-Engine portieren | in Bearbeitung (docs-2) |
 | [E05-S03](E05-S03-pta-seitenrahmen.md) | PTA-Seitenrahmen | Entwurf |
 | [E05-S04](E05-S04-zeichen-folien-syntax-grafiken.md) | Fehlende Zeichen, Folien-Syntax, Diagramme und Charts im PDF | Entwurf |
 | [E07-S04](E07-S04-pdf-nach-markdown.md) | PDF → Markdown | Entwurf |

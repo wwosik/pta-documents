@@ -1,8 +1,8 @@
 # E05-S01 Grundgerüst PDF: reportlab, pikepdf, PDF/A-2b
 
-> Status: Entwurf
-> Epic: [E05 PDF-Generator im PTA-Design](E05-pdf-generator.md)
-> Milestone: [M05 PDF](M05-pdf.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E05 PDF-Generator im PTA-Design](../../50-entwurf/E05-pdf-generator.md)
+> Milestone: [M05 PDF](../../50-entwurf/M05-pdf.md)
 
 ## Zusammenfassung
 
