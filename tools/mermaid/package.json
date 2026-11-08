@@ -1,0 +1,10 @@
+{
+  "name": "pta-documents-mermaid",
+  "private": true,
+  "description": "mermaid-cli for the mermaid code blocks of pta-documents (E06-S03), installed by ./run.sh setup.",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "12.2.0",
+    "puppeteer": "25.16.0"
+  }
+}

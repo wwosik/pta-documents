@@ -1,0 +1,29 @@
+drawing 784 x 196
+path fill=none stroke=BFBFBF w=1 : M 166.5 146 L 166.5 35
+text 166.5 159 middle size=10 color=666666 : "2026-01-11"
+path fill=none stroke=BFBFBF w=1 : M 271.5 146 L 271.5 35
+text 271.5 159 middle size=10 color=666666 : "2026-01-18"
+path fill=none stroke=BFBFBF w=1 : M 377.5 146 L 377.5 35
+text 377.5 159 middle size=10 color=666666 : "2026-01-25"
+path fill=none stroke=BFBFBF w=1 : M 483.5 146 L 483.5 35
+text 483.5 159 middle size=10 color=666666 : "2026-02-01"
+path fill=none stroke=BFBFBF w=1 : M 588.5 146 L 588.5 35
+text 588.5 159 middle size=10 color=666666 : "2026-02-08"
+path fill=none stroke=BFBFBF w=1 : M 694.5 146 L 694.5 35
+text 694.5 159 middle size=10 color=666666 : "2026-02-15"
+rect fill=FCFCFC stroke=none at 0 48 size 746.5 24
+rect fill=FCFCFC stroke=none at 0 72 size 746.5 24
+rect fill=FFFFFF stroke=none at 0 96 size 746.5 24
+rect fill=FFFFFF stroke=none at 0 120 size 746.5 24
+roundrect fill=006FB9 stroke=004676 w=2 at 75 50 size 151 20 r=3
+roundrect fill=006FB9 stroke=004676 w=2 at 226 74 size 302 20 r=3
+roundrect fill=006FB9 stroke=004676 w=2 at 543 98 size 106 20 r=3
+path fill=006FB9 stroke=004676 w=1.6 : M 710.7 122.38 L 718.62 130.3 C 719.55 131.24 719.55 132.76 718.62 133.7 L 710.7 141.62 C 709.76 142.55 708.24 142.55 707.3 141.62 L 699.38 133.7 C 698.45 132.76 698.45 131.24 699.38 130.3 L 707.3 122.38 C 708.24 121.45 709.76 121.45 710.7 122.38 Z
+text 150.5 63.5 middle size=11 color=FFFFFF : "Entwurf"
+text 377 87.5 middle size=11 color=FFFFFF : "Umsetzung"
+text 596 111.5 middle size=11 color=FFFFFF : "Prüfung"
+text 694 135.5 end size=11 color=404040 : "Release"
+text 10 77.85 start size=11 color=404040 : "Bauen"
+text 10 125.85 start size=11 color=404040 : "Ausliefern"
+path fill=none stroke=D91E18 w=2 : M 4717 25 L 4717 171
+text 392 25 middle size=18 color=404040 : "Releaseplan"

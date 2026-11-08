@@ -44,6 +44,7 @@ from pta_documents.markdown import DocumentResource, MarkdownDocument
 from pta_documents.markdown.front_matter import FrontMatter, Keys
 from pta_documents.markdown.parser import ALERT, CONTAINER_CLOSE, CONTAINER_OPEN, container, parse
 from tests.conftest import REVIEW_DIR
+from tests.diagrams.support import drawable
 from tests.expected import assert_matches_expected
 
 REPO: Final = Path(__file__).resolve().parents[2]
@@ -105,6 +106,8 @@ def test_every_expected_round_trip_belongs_to_a_sample() -> None:
 @pytest.mark.parametrize("source", sample_files(), ids=lambda p: p.name)
 def test_the_sample_generates_without_notes_and_round_trips(source: Path) -> None:
     format = format_of(source)
+    if not drawable(source.read_text(encoding="utf-8")):
+        pytest.skip("mermaid-cli is not set up or cannot start Chromium (./run.sh mermaid)")
     document = MarkdownDocument(source.read_text(encoding="utf-8"), images())
     output = io.BytesIO()
     generator = DocxGenerator() if format is DOCX else PptxGenerator()

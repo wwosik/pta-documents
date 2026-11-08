@@ -8,8 +8,11 @@ from pathlib import Path
 from PIL import Image
 
 from pta_documents import GenerationResult, NoteCodes
+from pta_documents.charts.renderer import ChartRenderer
 from pta_documents.generation.pptx.generator import PptxGenerator
+from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
+from tests.diagrams.support import drawable
 from tests.generation.pptx.conftest import open_pptx, texts
 
 REPO = Path(__file__).resolve().parents[3]
@@ -90,10 +93,13 @@ def test_inline_html_on_a_later_line_of_a_paragraph_has_that_line() -> None:
 
 
 def test_a_diagram_block_without_renderer_is_noted_other_code_is_not() -> None:
-    result = run(
+    markdown = (
         "---\ntitel: D\n---\n# Deck\n\n## Flow\n\n```mermaid\nflowchart LR\n  A --> B\n```\n\n"
         "```python\nx = 1\n```\n"
     )
+    # Only the chart renderer, so that the test does not depend on mermaid-cli being set up.
+    options = PptxOptions(code_block_renderers=(ChartRenderer(),))
+    result = PptxGenerator().generate(MarkdownDocument(markdown), io.BytesIO(), options)
     [note] = result.notes
     assert (note.code, note.line) == (NoteCodes.CODE_NOT_DRAWN, 8)
     assert "`mermaid`" in note.message
@@ -138,5 +144,7 @@ def test_the_samples_generate_without_notes() -> None:
             for p in sorted((root / "images").glob("*"))
         )
         for source in sorted(root.glob("*-praesentation.md")) + sorted(root.glob("*-folien.md")):
+            if not drawable(source.read_text(encoding="utf-8")):
+                continue  # Mermaid without mermaid-cli: tests/diagrams covers it
             result = run(source.read_text(encoding="utf-8"), images)
             assert result.notes == (), f"{source.name}:\n{result}"

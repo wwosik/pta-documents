@@ -18,6 +18,9 @@ cd pta-documents
 ./run.sh setup          # unter Windows: .\run.ps1 setup
 ```
 
+Für Mermaid-Diagramme (siehe Abschnitt 5) muss vorher Node.js (ab Version 22) installiert sein;
+`./run.sh setup` richtet dann mermaid-cli mit ein. Ohne Node.js geht alles andere genauso.
+
 Ob alles läuft, zeigt das Beispiel zum Hauptbeskidenweg:
 
 ```sh
@@ -379,6 +382,33 @@ kumuliert, Prognose gestrichelt), `growth-by-row` (Wachstum je Region o. Ä. geg
 - Ein Tippfehler im Schlüssel, ein Text statt einer Zahl oder kaputtes JSON bricht mit der
   Zeilennummer ab.
 
+### Diagramme mit Mermaid
+
+Abläufe, Abfolgen, Datenmodelle und Pläne schreibt man als Codeblock `mermaid`
+([Mermaid-Syntax](https://mermaid.js.org/intro/)); auf Folien wird daraus eine Gruppe
+bearbeitbarer Formen in den PTA-Farben:
+
+````markdown
+## Ablauf
+
+```mermaid
+flowchart LR
+  A[Antrag] --> B{Vollständig?}
+  B -->|ja| C[Bearbeiten]
+  B -->|nein| D[Zurück an den Kunden]
+```
+````
+
+- Gezeichnet werden `flowchart` (oder `graph`), `sequenceDiagram`, `classDiagram`,
+  `stateDiagram-v2`, `erDiagram`, `pie`, `gantt` und `mindmap`; jede Art zeigt
+  `samples/funktionen/mermaid-praesentation.md`. Andere Arten bleiben Code.
+- Klein halten: bis etwa zwölf Knoten, kurze Beschriftungen. Farben kommen aus dem Design.
+- Dafür braucht es **mermaid-cli**: Node.js (ab 22) installieren und `./run.sh setup`
+  ausführen; `./run.sh mermaid` sagt, ob es geht. Ohne bleibt der Block Code mit Hinweis.
+  Gezeichnet wird nur auf dem eigenen Rechner, nichts geht ins Internet.
+- **Word** setzt Mermaid-Diagramme noch nicht: dort bleibt der Block Code (mit Hinweis).
+- Ein Syntaxfehler bricht mit der Zeile des Blocks und der Meldung von Mermaid ab.
+
 ## 6. Aus Python aufrufen (optional)
 
 ```python
@@ -421,6 +451,8 @@ Fehler im Dokument melden sich als `DocumentConversionError` mit einem Satz, der
   `height` oder eine `viewBox` geben (im Grafikprogramm mit fester Größe exportieren).
 - `… SVG images need the extra 'svg'` → `./run.sh setup` ausführen.
 - `The PTA layout of a chapter slide has no place for content` → Inhalt unter ein `##`.
+- `The mermaid block cannot be drawn: Parse error …` → Mermaid-Code berichtigen (ausprobieren
+  z. B. mit `./run.sh mermaid datei.mmd`).
 
 Neben Fehlern gibt es **Hinweise**: das Dokument wurde geschrieben, aber der Generator musste
 etwas umgehen. `./run.sh generate` zeigt sie eingerückt unter der Datei, mit Zeilennummer im
@@ -434,7 +466,8 @@ wrote documents/kunde/kunde-praesentation.pptx
 
 Hinweise sind keine Fehler, aber fast immer ein Grund, das Markdown zu ändern: eine
 „(Forts.)"-Folie heißt meist zu viel Inhalt — besser selbst auf zwei Folien mit eigenen Titeln
-aufteilen. Rohes HTML wird weggelassen, `mermaid`-Blöcke erscheinen (noch) als Code, beschnittene oder stark vergrößerte Bilder besser in passender Größe und passenden
+aufteilen. Rohes HTML wird weggelassen, `mermaid`-Blöcke erscheinen ohne mermaid-cli und in Word als
+Code (der Hinweis sagt, was fehlt), beschnittene oder stark vergrößerte Bilder besser in passender Größe und passenden
 Proportionen ablegen. `--strict` lässt den Befehl bei Hinweisen wie bei Fehlern mit Code 1
 enden. Alle Codes: [verwendung.md](verwendung.md#hinweise-generationresult).
 

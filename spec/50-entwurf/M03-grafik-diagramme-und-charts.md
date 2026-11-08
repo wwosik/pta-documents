@@ -18,7 +18,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E06-S04](../60-prüfung/E06-S04-svg-bilder.md) | SVG → PNG und SVG-Bilder in Folien und Dokumenten | in Prüfung |
 | [E06-S01](../60-prüfung/E06-S01-chart-bloecke.md) | `chart`-Blöcke | in Prüfung |
 | [E06-S02](../60-prüfung/E06-S02-finanzdiagramme.md) | Finanzdiagramme | in Prüfung |
-| [E06-S03](../55-in-arbeit/docs-2/E06-S03-mermaid.md) | Mermaid über mermaid-cli | in Bearbeitung (docs-2) |
+| [E06-S03](../60-prüfung/E06-S03-mermaid.md) | Mermaid über mermaid-cli | in Prüfung |
 | [E03-S04](E03-S04-diagramme-und-charts-im-docx.md) | Diagramme und Charts im DOCX | Entwurf |
 | [E11-S04](E11-S04-qr-codes.md) | QR-Codes aus Links | Entwurf |
 | [E15-S01](E15-S01-zeitstrahl-und-gantt.md) | Zeitstrahl und Gantt | Entwurf |

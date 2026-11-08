@@ -35,7 +35,14 @@ setup() {
         python3 -m venv "$venv"
     fi
     "$py" -m pip install --quiet --upgrade pip
-    "$py" -m pip install --quiet -e "$repo_root[dev,pdf,svg]"
+    "$py" -m pip install --quiet -e "$repo_root[dev,pdf,svg,diagrams]"
+    # mermaid-cli for mermaid blocks (E06-S03), repo-local in a fixed version; only with Node.js.
+    if command -v npm >/dev/null 2>&1; then
+        (cd "$repo_root/tools/mermaid" && npm ci --no-audit --no-fund --silent) \
+            || echo "npm ci in tools/mermaid failed; mermaid blocks stay code." >&2
+    else
+        echo "Node.js not found: mermaid blocks stay code (see docs/verwendung.md, Mermaid)."
+    fi
 }
 
 ensure() {

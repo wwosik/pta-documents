@@ -61,6 +61,12 @@ class ChartGraphic:
 CodeBlockGraphic = DrawingGraphic | ImageGraphic | ChartGraphic
 
 
+class RendererUnavailableError(Exception):
+    """A renderer that takes the block cannot draw it here — its tool is not set up, or the
+    format has no place for its graphic yet. The block stays code, with a ``code-not-drawn``
+    note whose message is this error's (what to set up)."""
+
+
 class CodeBlockRenderer(Protocol):
     """Turns fenced code blocks of a language it knows into a graphic."""
 
@@ -77,11 +83,14 @@ class CodeBlockRenderer(Protocol):
 
 def default_renderers() -> tuple[CodeBlockRenderer, ...]:
     """The renderers the generators use unless their options say otherwise: every renderer of
-    the library that is available: the chart renderer (E06-S01, core); Mermaid (E06-S03) adds
-    its own."""
+    the library that is available: the chart renderer (E06-S01, core) and, when mermaid-cli is
+    found, the Mermaid renderer (E06-S03)."""
     from pta_documents.charts.renderer import ChartRenderer
+    from pta_documents.diagrams.mermaid import MermaidRenderer, find_command
 
-    return (ChartRenderer(),)
+    if find_command() is None:
+        return (ChartRenderer(),)
+    return (ChartRenderer(), MermaidRenderer())
 
 
 def render(
@@ -89,13 +98,14 @@ def render(
 ) -> CodeBlockGraphic | None:
     """The first graphic of ``renderers`` for ``request``; None when no renderer takes it.
 
-    A ``DocumentConversionError`` of a renderer passes unchanged; any other exception becomes a
+    A ``DocumentConversionError`` or ``RendererUnavailableError`` of a renderer passes
+    unchanged; any other exception becomes a
     ``DocumentConversionError`` in ``request.format`` with the original as ``__cause__``.
     """
     for renderer in renderers:
         try:
             graphic = renderer.render(request)
-        except DocumentConversionError:
+        except (DocumentConversionError, RendererUnavailableError):
             raise
         except Exception as error:
             raise DocumentConversionError(request.format, str(error)) from error

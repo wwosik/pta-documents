@@ -94,7 +94,7 @@ Sprache = Hinweis `code-language-unknown`.
 - Abbildung: Bild allein im Absatz, Unterschrift als Bildtitel:
   `![Alt-Text](images/a.jpg "Unterschrift (Foto: Name, CC BY 4.0)")` → „Abbildung n: …".
 - Kein HTML (wird weggelassen, Hinweis `raw-html`; nur `<br>` in Tabellenzellen ist ein
-  Zeilenumbruch), keine Mermaid-Diagramme (werden als Code gezeigt, Hinweis `code-not-drawn`).
+  Zeilenumbruch), keine Mermaid-Diagramme (Word zeigt sie als Code, Hinweis `code-not-drawn`).
   Diagramme aus Zahlen: `chart`-Blöcke, siehe unten (`financial-chart` nur in PowerPoint).
 - Folien-Syntax (`:::`-Container, Alerts `> [!NOTE]`, `==Markierung==`, `[Wörter]{.success}`)
   wird angenommen und schlicht gezeigt: Container-Inhalt nacheinander (`###` in Containern wird
@@ -237,6 +237,19 @@ Felder): `samples/funktionen/funktionen-praesentation.md`, Kapitel „Finanzdiag
   `width`.
 - Eine Folie je Diagramm, Text davor oder danach geht; nicht auf Flow-Folien (`.dark`, Container)
   und nicht in Word (Fehler).
+
+## Mermaid-Diagramme (`mermaid`, nur PowerPoint)
+
+Abläufe, Sequenzen, Klassen, Zustände, Datenmodelle, Tortendiagramme, Pläne und Mindmaps als
+Codeblock `mermaid`; auf der Folie eine Gruppe bearbeitbarer Formen in den PTA-Farben. Vorlage
+für jede Art: `samples/funktionen/mermaid-praesentation.md`.
+
+- Nur `flowchart`/`graph`, `sequenceDiagram`, `classDiagram`, `stateDiagram-v2`, `erDiagram`,
+  `pie`, `gantt`, `mindmap`; andere Arten bleiben Code. Keine `classDef`/`style`-Farben.
+- Klein halten (bis etwa zwölf Knoten, kurze Beschriftungen), eine Folie je Diagramm.
+- Braucht mermaid-cli (`./run.sh mermaid` prüft es). Ohne — und in Word — bleibt der Block Code
+  mit Hinweis `code-not-drawn`; dann den Menschen fragen, statt das Diagramm anders nachzubauen.
+- Ein Syntaxfehler bricht mit Zeilennummer und der Meldung von Mermaid ab.
 
 ## Aus Python statt per Befehl
 

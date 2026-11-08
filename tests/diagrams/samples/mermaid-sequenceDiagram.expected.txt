@@ -1,0 +1,40 @@
+drawing 487 x 449
+roundrect fill=E6E6E6 stroke=006FB9 w=1 at 50 373 size 150 65 r=3
+text 125 411.1 middle size=16 color=404040 : "App"
+path fill=none stroke=787878 w=2 : M 362 90 L 362 373
+path fill=none stroke=787878 w=2 : M 125 75 L 125 373
+roundrect fill=E6E6E6 stroke=006FB9 w=1 at 50 10 size 150 65 r=3
+text 125 48.1 middle size=16 color=404040 : "App"
+rect fill=E2F3FF stroke=9FD8FF w=1 at 100 173 size 287 37
+text 244 199.6 middle size=16 color=404040 : "Die Vorlage steht im Front Matter"
+path fill=none stroke=006FB9 w=2 dash=2,2 : M 114 220 L 373 220
+path fill=none stroke=006FB9 w=2 dash=2,2 : M 373 220 L 373 309
+path fill=none stroke=006FB9 w=2 dash=2,2 : M 114 309 L 373 309
+path fill=none stroke=006FB9 w=2 dash=2,2 : M 114 220 L 114 309
+path fill=E6E6E6 stroke=006FB9 w=1 : M 114 220 L 164 220 L 164 233 L 155.6 240 L 114 240 Z
+text 139 238.6 middle size=16 color=404040 : "loop"
+text 268.5 238 middle size=16 color=404040 : "[Jedes Kapitel]"
+path fill=none stroke=006FB9 w=2 : M 362 35 L 362 55
+path fill=none stroke=006FB9 w=2 : M 344 43 L 380 43
+path fill=none stroke=006FB9 w=2 : M 344 70 L 362 55
+path fill=none stroke=006FB9 w=2 : M 362 55 L 378 70
+ellipse fill=E6E6E6 stroke=006FB9 w=2 at 347 5 size 30 30
+text 362 83.1 middle size=16 color=404040 : "Nutzer"
+text 242 111.6 middle size=16 color=404040 : "Fragt nach dem Bericht"
+path fill=none stroke=404040 w=1.5 : M 126 119 L 358 119
+path fill=404040 stroke=404040 w=1 : M 349.1 114 L 360.1 119 L 350.1 124 Z
+text 245 155.6 middle size=16 color=404040 : "Schickt das Markdown"
+path fill=none stroke=404040 w=1.5 dash=3,3 : M 361 163 L 129 163
+path fill=404040 stroke=404040 w=1 : M 137.9 168 L 126.9 163 L 136.9 158 Z
+text 242 291.6 middle size=16 color=404040 : "Fortschritt"
+path fill=none stroke=404040 w=1.5 : M 126 299 L 358 299
+path fill=404040 stroke=none : M 361.75 299 L 348.25 308 L 355.75 299 L 348.25 290 Z
+text 242 345.6 middle size=16 color=404040 : "Fertig"
+path fill=none stroke=404040 w=1.5 : M 126 353 L 358 353
+path fill=404040 stroke=404040 w=2 : M 353.5 349.25 L 361 356.75 M 361 349.25 L 353.5 356.75
+path fill=none stroke=006FB9 w=2 : M 362 398 L 362 418
+path fill=none stroke=006FB9 w=2 : M 344 406 L 380 406
+path fill=none stroke=006FB9 w=2 : M 344 433 L 362 418
+path fill=none stroke=006FB9 w=2 : M 362 418 L 378 433
+ellipse fill=E6E6E6 stroke=006FB9 w=2 at 347 368 size 30 30
+text 362 446.1 middle size=16 color=404040 : "Nutzer"

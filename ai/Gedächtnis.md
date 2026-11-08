@@ -20,10 +20,11 @@ weil ihm vertraut wird.
 - **Stack:** Python ≥ 3.12, venv + pip (kein uv), hatchling, pytest, ruff, pyright strict.
   Kern: python-docx, python-pptx, lxml, markdown-it-py + mdit-py-plugins, Pillow. Extras:
   `pdf` (reportlab, pikepdf, pdfplumber, fontTools), `svg` (resvg-py, fontTools), `diagrams`
-  (mermaid-cli, extern).
+  (cssselect; mermaid-cli über Node.js in `tools/mermaid/`).
 - **Paketstruktur** (`src/pta_documents/`): `errors.py` (`DocumentConversionError`,
   `DocumentFormat`), `markdown/` (Dokumentmodell, Front Matter, Parser), `design/`
-  (Designmodell, eingebettete Vorlagen), `drawing/` (Zeichenmodell, SVG), `conversions/`
+  (Designmodell, eingebettete Vorlagen), `drawing/` (Zeichenmodell, SVG aus und nach
+  `Drawing`), `diagrams/` (Mermaid), `conversions/`
   (→ Markdown), `generation/` (`common/`, `docx/`, `pptx/`).
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
@@ -31,7 +32,8 @@ weil ihm vertraut wird.
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
   Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
   Diagrammlayouts (`chart`-Blöcke seit E06-S01, auch nativ in Word; Finanzdiagramme seit
-  E06-S02 als Formengruppe, nur PowerPoint); Word zeigt sie seit
+  E06-S02 als Formengruppe, nur PowerPoint; Mermaid seit E06-S03 über mermaid-cli, ebenso nur
+  PowerPoint); Word zeigt sie seit
   E03-S03 schlicht in eigenen Formatvorlagen. Bedienung:
   `docs/verwendung.md`.
 - **Zweite Referenz:** `~/mvv/vt-tools-libs` (Schwesterbibliothek von DocLibs für die MVV,
@@ -263,3 +265,26 @@ weil ihm vertraut wird.
   weiter „does not support yet" (E03-S04). Schnappschüsse
   `tests/charts/financial/samples/*.expected.svg` (Testdaten `figures.py`, deutsch);
   `test_funktionen.py` verlangt im Deck jeden Typ und jede Option.
+- **Mermaid** (E06-S03): `pta_documents.diagrams.mermaid` (`MermaidRenderer`, frozen
+  Dataclass; `find_command`: Argument → `PTA_DOCUMENTS_MMDC` → `mmdc` im `PATH` → repo-lokal
+  `tools/mermaid/node_modules/.bin/mmdc`, das `./run.sh setup` per `npm ci` installiert —
+  `package.json`/`package-lock.json` dort, mermaid-cli 12.2.0, puppeteer 25.16.0).
+  `default_renderers()` nimmt ihn nur, wenn `find_command()` etwas findet. Neu in
+  `renderers.py`: `RendererUnavailableError` — der Block bleibt Code, `code_blocks.render_graphic`
+  macht daraus `code-not-drawn` mit der Meldung (fehlendes mmdc/Chromium, Word). SVG → Drawing:
+  `drawing/svg.py` (`to_drawing`, `SvgDrawingError(ValueError)`), `svg_geometry.py`,
+  `svg_style.py` (`Cascade` mit `cssselect`, lazy importiert; Extra `diagrams`). Die SVG-Tags
+  werden vor dem Lesen vom Namensraum befreit (sonst greifen Typselektoren nicht). Farben in
+  `design/diagram_colors.py` (`theme_variables`, `theme_css`); **Attributselektoren im
+  `themeCSS` brechen Mermaids `%%{init}%%`** (dann fällt alles auf `htmlLabels: true` und
+  `foreignObject` zurück). `look: classic` ist Pflicht (Mermaid 12 nutzt sonst „neo" mit
+  animierten Strichmustern). **Auf dieser Maschine** startet Chromium nur mit
+  `PUPPETEER_EXECUTABLE_PATH` (z. B. Playwrights `chrome-headless-shell` unter
+  `~/.cache/ms-playwright/`, puppeteer konnte ohne `unzip` keins laden) und
+  `PTA_DOCUMENTS_PUPPETEER_CONFIG` auf eine Datei `{"args": ["--no-sandbox"]}`; ohne beide werden
+  die Tests mit echtem mmdc übersprungen (`tests/diagrams/support.mermaid_works`), ebenso
+  `samples/funktionen/mermaid-praesentation.md` in den Beispieltests (`drawable`). Aufgezeichnete
+  SVGs je Typ in `tests/diagrams/samples/` (laufen immer); neu aufzeichnen mit
+  `PTA_DOCUMENTS_UPDATE_EXPECTED=1` bei funktionierendem mmdc (Mermaids Ausgabe ändert sich
+  von Lauf zu Lauf leicht). Wer einen Test mit ```` ```mermaid ```` und Standardoptionen schreibt,
+  hängt vom Rechner ab — Renderer explizit setzen.

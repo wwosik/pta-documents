@@ -26,8 +26,17 @@ function Invoke-Setup {
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     & $py -m pip install --quiet --upgrade pip
-    & $py -m pip install --quiet -e "$repoRoot[dev,pdf,svg]"
+    & $py -m pip install --quiet -e "$repoRoot[dev,pdf,svg,diagrams]"
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    # mermaid-cli for mermaid blocks (E06-S03), repo-local in a fixed version; only with Node.js.
+    if (Get-Command npm -ErrorAction SilentlyContinue) {
+        Push-Location (Join-Path $repoRoot 'tools/mermaid')
+        & npm ci --no-audit --no-fund --silent
+        if ($LASTEXITCODE -ne 0) { Write-Warning 'npm ci in tools/mermaid failed; mermaid blocks stay code.' }
+        Pop-Location
+    } else {
+        Write-Host 'Node.js not found: mermaid blocks stay code (see docs/verwendung.md, Mermaid).'
+    }
 }
 
 function Confirm-Venv { if (-not (Test-Path $py)) { Invoke-Setup } }

@@ -34,7 +34,9 @@ einem Verweis auf ein anderes Repo oder ein lokales Laufwerk.
 ## Werkzeuge
 
 - **Python ≥ 3.12**, virtuelle Umgebung in `.venv/` (git-ignoriert), Abhängigkeiten in
-  `pyproject.toml` (Build-Backend hatchling). Kein uv, kein Lockfile: `pip install -e '.[dev,pdf,svg]'`.
+  `pyproject.toml` (Build-Backend hatchling). Kein uv, kein Lockfile: `pip install -e '.[dev,pdf,svg,diagrams]'`.
+  Ausnahme: mermaid-cli (Node.js) liegt mit `package-lock.json` in `tools/mermaid/`;
+  `setup` ruft dort `npm ci`, wenn Node.js da ist.
 - **Launcher** `run.sh` und `run.ps1` — beide im Gleichschritt, ohne Argumente listen sie Verben
   und Werkzeuge:
 

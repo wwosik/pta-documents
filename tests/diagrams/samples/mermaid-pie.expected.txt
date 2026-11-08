@@ -1,0 +1,19 @@
+drawing 550.69 x 450
+ellipse fill=none stroke=FFFFFF w=2 at 39 39 size 372 372
+path fill=006FB9 stroke=FFFFFF w=2 : M 225 40 C 300.07 40 367.7 85.37 396.18 154.84 C 424.65 224.3 408.32 304.08 354.85 356.78 L 225 225 Z
+path fill=004676 stroke=FFFFFF w=2 : M 354.85 356.78 C 312.98 398.03 254.01 416.93 195.97 407.71 C 137.93 398.49 87.72 362.23 60.71 310.04 L 225 225 Z
+path fill=9FD8FF stroke=FFFFFF w=2 : M 60.71 310.04 C 25.58 242.19 35.79 159.73 86.39 102.48 L 225 225 Z
+path fill=787878 stroke=FFFFFF w=2 : M 86.39 102.48 C 121.5 62.75 171.98 40 225 40 L 225 225 Z
+text 353.38 172.38 middle size=17 color=FFFFFF : "38%"
+text 203.23 362.03 middle size=17 color=FFFFFF : "30%"
+text 87.3 207.96 middle size=17 color=FFFFFF : "19%"
+text 167.98 98.51 middle size=17 color=FFFFFF : "13%"
+text 225 25 middle size=25 color=404040 : "Umsatz nach Region"
+rect fill=006FB9 stroke=006FB9 w=1 at 441 181 size 18 18
+text 463 195 start size=17 color=404040 : "Nord"
+rect fill=004676 stroke=004676 w=1 at 441 203 size 18 18
+text 463 217 start size=17 color=404040 : "Süd"
+rect fill=9FD8FF stroke=9FD8FF w=1 at 441 225 size 18 18
+text 463 239 start size=17 color=404040 : "Ost"
+rect fill=787878 stroke=787878 w=1 at 441 247 size 18 18
+text 463 261 start size=17 color=404040 : "West"

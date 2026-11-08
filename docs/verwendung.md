@@ -2,14 +2,17 @@
 
 Stand nach Meilenstein M01: Markdown → Word und PowerPoint auf den PTA-Vorlagen, Word und
 PowerPoint → Markdown; seit E06-S01 native Diagramme aus `chart`-Blöcken in beiden Formaten,
-seit E06-S02 Finanzdiagramme (`financial-chart`) als Formengruppe in PowerPoint und als SVG.
-PDF, Mermaid und Finanzdiagramme in Word folgen (E05, E06-S03, E03-S04).
+seit E06-S02 Finanzdiagramme (`financial-chart`) als Formengruppe in PowerPoint und als SVG,
+seit E06-S03 Mermaid-Diagramme (`mermaid`, über mermaid-cli) als Formengruppe in PowerPoint.
+PDF sowie Mermaid und Finanzdiagramme in Word folgen (E05, E03-S04).
 
 ## Einrichten
 
 ```sh
-./run.sh setup      # .venv anlegen, Paket editierbar mit allen Extras installieren
+./run.sh setup      # .venv anlegen, Paket editierbar mit allen Extras installieren,
+                    # mit Node.js auch mermaid-cli (tools/mermaid, npm ci)
 ./run.sh test       # Tests
+./run.sh mermaid    # prüfen, ob Mermaid-Blöcke hier gezeichnet werden
 ```
 
 In einem anderen Projekt wird das Paket aus dem Repo heraus installiert:
@@ -319,6 +322,10 @@ options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgN
   `Drawing` aus [`pta_documents.drawing`](#zeichenmodell-und-svg-e02-s03)): Charts setzen
   beide Generatoren nativ ([Charts](#charts-e06-s01)); Zeichnungen setzt PowerPoint als
   Formengruppe, Word ergibt noch einen Fehler „… does not support yet" (folgt mit E03-S04).
+- **Nicht verfügbar:** Kann ein Renderer den Block hier nicht zeichnen (sein Werkzeug fehlt,
+  oder das Format hat noch keinen Platz für seine Grafik), wirft er
+  `RendererUnavailableError(grund)`: der Block bleibt Code, der Hinweis `code-not-drawn` nennt
+  den Grund (so macht es der Mermaid-Renderer ohne Chromium und in Word).
 - **Konverter** (`generation/common/images.py`, `ImageConverter`) bekommen jedes Bild, dessen
   Format der Generator nicht setzt (alles außer PNG, JPEG, GIF, BMP, TIFF, z. B. SVG), mit
   `scale = 2`; der erste mit Ergebnis gewinnt. Word setzt das Ergebnis in der natürlichen Größe
@@ -328,14 +335,14 @@ options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgN
   Konverter das Bild, bleibt es ein Fehler (`… is a image/webp; …, and no image converter takes
   it`; für ein SVG ohne Extra `svg`: `…; SVG images need the extra 'svg' …`).
 - **Fehler:** wirft ein Renderer oder Konverter eine `DocumentConversionError`, geht sie
-  unverändert durch; jede andere Ausnahme wird zu `DocumentConversionError` im Format des
+  unverändert durch (ebenso `RendererUnavailableError`, siehe oben); jede andere Ausnahme wird zu `DocumentConversionError` im Format des
   Generators (Konverter: `The image '…' cannot be converted: …`), die ursprüngliche steht in
   `__cause__`.
 - **Standard:** ohne Angabe nehmen die Optionen alle Renderer und Konverter der Bibliothek, die
   verfügbar sind (`default_renderers()`, `default_converters()`); `()` schaltet sie ab.
   `default_converters()` enthält mit dem Extra `svg` den `SvgImageConverter` (E06-S04), sonst
-  nichts; `default_renderers()` enthält den `ChartRenderer` (E06-S01, Kern), Mermaid (E06-S03)
-  trägt sich dort ein.
+  nichts; `default_renderers()` enthält den `ChartRenderer` (E06-S01, Kern) und, wenn
+  `find_command()` ein mermaid-cli findet, den `MermaidRenderer` (E06-S03).
 
 ## Charts (E06-S01)
 
@@ -442,6 +449,84 @@ chart, options = financial.parse(block, line=12)  # FinancialChartError (ValueEr
   nichts dahinter) und liefert `DrawingGraphic`; seine `authoring_guide` hat dazu den Abschnitt
   `### Finanzdiagramme`. PowerPoint setzt es als Formengruppe (siehe
   [PTA-Folienarten](#pta-folienarten-und-diagramm-layouts-e04-s04)), Word noch nicht.
+
+## Mermaid (E06-S03)
+
+```` ```mermaid ````-Blöcke zeichnet mermaid-cli (`mmdc`, Node.js mit einem kopflosen Chromium)
+**lokal** zu SVG; `pta_documents.drawing.svg.to_drawing` macht daraus ein `Drawing`, das
+PowerPoint als Gruppe bearbeitbarer Formen setzt (Schreiber aus E06-S02, Text in Segoe UI,
+Rechteck, abgerundetes Rechteck und Ellipse als Vorlagenformen, alles andere als freie Form).
+Kein Aufruf verlässt den Rechner: der Code geht über stdin an `mmdc`, das SVG kommt über stdout
+zurück, mit `securityLevel: strict`.
+
+**Einrichten.** Node.js ab 22, dann `./run.sh setup`: es installiert mermaid-cli in der
+festgelegten Version aus `tools/mermaid/package.json` (`@mermaid-js/mermaid-cli` 12.2.0,
+puppeteer 25.16.0, beide MIT, mit `package-lock.json`) per `npm ci` nach
+`tools/mermaid/node_modules/`. puppeteer lädt dabei ein Chrome nach `~/.cache/puppeteer` (dafür
+braucht es `unzip`). `./run.sh mermaid` prüft die Einrichtung und zeichnet ein Testdiagramm;
+`./run.sh mermaid datei.mmd` schreibt die Zeichnung nach `.tmp/mermaid/` (SVG und PNG).
+
+| Variable | Wirkung |
+| -------- | ------- |
+| `PTA_DOCUMENTS_MMDC` | ein anderes `mmdc` (sonst `mmdc` im `PATH`, sonst das repo-lokale) |
+| `PUPPETEER_EXECUTABLE_PATH` | ein vorhandenes Chrome/Chromium statt des von puppeteer geladenen |
+| `PTA_DOCUMENTS_PUPPETEER_CONFIG` | Pfad zu einer puppeteer-Konfiguration für `mmdc -p`, z. B. `{"args": ["--no-sandbox"]}`, wo Chromium keine Sandbox starten darf (Ubuntu ab 23.10 ohne AppArmor-Profil, Container) |
+
+Ohne mermaid-cli bleibt jeder ```` ```mermaid ````-Block Code mit dem Hinweis `code-not-drawn`
+und der Einrichtungsanleitung; ebenso, wenn `mmdc` Chromium nicht starten kann (der Hinweis
+nennt die Variablen oben).
+
+```python
+from pta_documents.diagrams import MermaidErrorMode, MermaidRenderer
+from pta_documents.charts.renderer import ChartRenderer
+from pta_documents.generation.pptx.options import PptxOptions
+
+renderer = MermaidRenderer(
+    command=None,            # mmdc; None: PTA_DOCUMENTS_MMDC, PATH, tools/mermaid
+    chromium=None,           # None: PUPPETEER_EXECUTABLE_PATH oder puppeteers eigenes
+    puppeteer_config=None,   # None: PTA_DOCUMENTS_PUPPETEER_CONFIG
+    timeout_s=60,
+    on_error=MermaidErrorMode.KEEP_CODE,  # Standard THROW
+)
+options = PptxOptions(code_block_renderers=(ChartRenderer(), renderer))
+```
+
+- **Typen** (`diagrams.SUPPORTED`, erkannt am ersten Wort nach YAML-Kopf und `%%`-Zeilen):
+  `flowchart`/`graph`, `sequenceDiagram`, `classDiagram`, `stateDiagram-v2`, `erDiagram`,
+  `pie`, `gantt`, `mindmap`. Alle anderen (`journey`, `timeline`, …) bleiben Code — ohne
+  Hinweis, sie sind kein Fehler.
+- **Aussehen:** vor den Code kommt eine Zeile `%%{init: …}%%` (`mermaid.init_directive`):
+  Thema `base`, Aussehen `classic`, `htmlLabels: false` (Text als SVG-Text, auch im
+  Flussdiagramm), Umbruchbreite 300 px, Schrift `Segoe UI, Selawik, sans-serif` und die
+  Theme-Variablen aus `design/diagram_colors.py`: Flächen `GREY_LIGHT`, Rahmen `PTA_BLUE`,
+  Linien `GREY_DARK`, Text `TEXT_SLIDES` (Word: `TEXT_WORD`), Hintergrund weiß, Torten- und
+  Mindmap-Farben die Akzente der Reihe nach (weiße Schrift auf `PTA_BLUE`, `DARK_BLUE`,
+  `GREY_DARK`), dazu `themeCSS` für Gantt-Gitter und Sequenz-Pfeilspitzen.
+- **Fehler:** Ein Syntaxfehler (mmdc endet mit Code ≠ 0) ist mit `THROW` ein Fehler
+  `Line N: The mermaid block cannot be drawn: <Meldung von Mermaid>` (N = Zeile des Zauns; die
+  Zeilennummer in Mermaids Meldung zählt Mermaid selbst), mit `KEEP_CODE` bleibt der Block Code
+  (ohne Hinweis). Ebenso ein SVG, das `to_drawing` nicht kennt. Eine Zeitüberschreitung ist
+  immer ein Fehler. Fehlt `mmdc` oder startet Chromium nicht: `RendererUnavailableError`, der
+  Block bleibt Code mit Hinweis.
+- **Word:** zeichnet Mermaid noch nicht (E03-S04); der Block bleibt Code mit dem Hinweis
+  `code-not-drawn` („Word does not draw Mermaid diagrams yet"), mmdc wird gar nicht gestartet.
+- `MermaidRenderer.authoring_guide` ist der Abschnitt `## Diagramme` für die Authoring Guides.
+- Jeder Block startet ein Chromium (hier etwa 0,7 s).
+
+### SVG → `Drawing`
+
+`pta_documents.drawing.svg.to_drawing(svg)` (Port von DocLibs `SvgDrawing`, `SvgGeometry`,
+`SvgStyle`; Module `drawing/svg.py`, `svg_geometry.py`, `svg_style.py`) liest Grundformen,
+Pfade (alle Befehle, Bögen und Quadratische werden kubisch), Marker (auch mit `viewBox`),
+Text mit `tspan`-Zeilen und fetten Teilen (`em`, `dominant-baseline`), Gruppen mit
+Transformationen (auch die CSS-Eigenschaft `transform` mit `transform-origin`), Verläufe (die
+erste Farbe), Deckkraft (mit Weiß gemischt) und `fill-rule`. CSS: die Regeln aus `<style>`
+nach Wichtigkeit, Spezifität und Reihenfolge (Selektoren über `cssselect`, Extra `diagrams`),
+dann `style`-Attribut, dann Präsentationsattribute; Werte mit `var()`, `color-mix()`, Hex,
+`rgb()`/`rgba()`, `hsl()`/`hsla()`, Farbnamen, `currentColor`, `px`/`pt`/`em`/`rem`.
+Schatten (`filter`), `symbol` und `@keyframes` fallen weg. **Alles andere wirft
+`SvgDrawingError`** (ein `ValueError`) statt es wegzulassen: `foreignObject`, `<image>`,
+`<use>`, `clip-path`, `mask`, gedrehter Text, unbekannte Farben, Einheiten oder At-Regeln.
 
 ## Schriften für PDF und SVG (E01-S03)
 
@@ -652,7 +737,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `image-cropped` (`IMAGE_CROPPED`) | PPTX | ein Bildplatzhalter schneidet mehr als ein Viertel der Bildfläche ab |
 | `image-enlarged` (`IMAGE_ENLARGED`) | PPTX, DOCX | ein Bild wird mehr als doppelt so groß gezeigt wie seine Pixel bei 96 dpi und wirkt unscharf |
 | `raw-html` (`RAW_HTML`) | PPTX, DOCX | rohes HTML im Markdown; es wird **weggelassen**. HTML-Kommentare `<!-- … -->` fallen ohne Hinweis weg, `<br>` ist ein Zeilenumbruch |
-| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` zeichnet der `ChartRenderer`, wenn die Renderer nicht abgeschaltet sind; Mermaid und Finanzdiagramme folgen mit E06) |
+| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt; Word zeichnet Mermaid noch nicht) |
 | `character-missing` (`CHARACTER_MISSING`) | PDF (E05-S04) | ein Zeichen fehlt in den Schriften |
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01) | Sprechernotizen fallen im Word-Dokument weg |
 | `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02) | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |

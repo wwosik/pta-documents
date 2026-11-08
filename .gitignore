@@ -26,5 +26,8 @@ build/
 .ruff_cache/
 *.egg-info/
 
+# mermaid-cli, installed by ./run.sh setup (E06-S03)
+node_modules/
+
 # Own documents of users (see docs/anleitung.md)
 /documents/

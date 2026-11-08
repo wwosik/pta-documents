@@ -25,7 +25,9 @@ dependencies = [
 # fontTools: MIT; reads the font files of design.fonts (E01-S03).
 pdf = ["fonttools>=4.50", "pikepdf>=9.0", "pdfplumber>=0.11", "reportlab>=4.2"]
 svg = ["fonttools>=4.50", "resvg-py>=0.1"]
-diagrams = []
+# cssselect: BSD-3-Clause; the CSS of mermaid-cli's SVG (E06-S03). mermaid-cli itself is
+# Node.js (MIT), installed repo-locally by ./run.sh setup from tools/mermaid/package.json.
+diagrams = ["cssselect>=1.2"]
 dev = ["lxml-stubs>=0.5", "pyright>=1.1.380", "pytest>=8.0", "ruff>=0.6"]
 
 [tool.hatch.build.targets.wheel]

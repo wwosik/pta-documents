@@ -21,6 +21,7 @@ from pta_documents.generation.common.result import NoteCodes
 from pta_documents.generation.common.style_rules import StyleCodes
 from pta_documents.generation.pptx.generator import PptxGenerator
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
+from tests.diagrams.support import drawable
 
 REPO = Path(__file__).resolve().parents[3]
 PPTX = DocumentFormat.PPTX
@@ -119,6 +120,8 @@ def test_the_samples_pass_the_check_without_notes(folder: str) -> None:
     for source in sorted(root.glob("*.md")):
         if source.name in ("README.md", "QUELLEN.md"):
             continue
+        if not drawable(source.read_text(encoding="utf-8")):
+            continue  # Mermaid without mermaid-cli: tests/diagrams covers it
         format = PPTX if source.stem.endswith(("-praesentation", "-folien")) else DOCX
         result = check(
             MarkdownDocument(source.read_text(encoding="utf-8"), images),

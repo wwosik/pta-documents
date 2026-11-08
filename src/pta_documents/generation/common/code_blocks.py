@@ -18,6 +18,7 @@ from pta_documents.generation.common.renderers import (
     CodeBlockRenderer,
     CodeBlockRequest,
     ImageGraphic,
+    RendererUnavailableError,
 )
 from pta_documents.generation.common.result import NoteCodes, Notes
 
@@ -30,16 +31,24 @@ def fence_language(info: str) -> str:
     return words[0].lower() if words else ""
 
 
-def note_not_drawn(notes: Notes, info: str, line: int | None) -> None:
-    """Note a block in a graphic language that shows as code because nothing drew it."""
+def note_not_drawn(notes: Notes, info: str, line: int | None, reason: str | None = None) -> None:
+    """Note a block in a graphic language that shows as code because nothing drew it;
+    ``reason`` (from ``RendererUnavailableError``) says why, else the note guesses."""
     language = fence_language(info)
-    if language in KNOWN_GRAPHIC_LANGUAGES:
-        notes.add(
-            NoteCodes.CODE_NOT_DRAWN,
-            line,
-            f"The `{language}` block was not drawn and shows as code: no renderer for it is "
-            "set up, or it has an error. Check it, or leave it out.",
-        )
+    if language not in KNOWN_GRAPHIC_LANGUAGES:
+        return
+    if reason is None and language == "mermaid":
+        from pta_documents.diagrams.mermaid import find_command, setup_hint
+
+        if find_command() is None:
+            reason = setup_hint()
+    if reason is None:
+        reason = "no renderer for it is set up, or it has an error. Check it, or leave it out."
+    notes.add(
+        NoteCodes.CODE_NOT_DRAWN,
+        line,
+        f"The `{language}` block was not drawn and shows as code: {reason}",
+    )
 
 
 def draw(
@@ -78,11 +87,15 @@ def render_graphic(
     it is in a graphic language). For generators that place some drawings or charts themselves."""
     info = info.strip()
     graphic = None
+    reason = None
     if info:
         request = CodeBlockRequest(info, code, line, format, language, dark)
-        graphic = code_block_renderers.render(renderers, request)
+        try:
+            graphic = code_block_renderers.render(renderers, request)
+        except RendererUnavailableError as error:
+            reason = str(error)
     if graphic is None:
-        note_not_drawn(notes, info, line)
+        note_not_drawn(notes, info, line, reason)
     return graphic
 
 
