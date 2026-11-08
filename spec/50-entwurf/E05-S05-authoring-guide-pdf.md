@@ -88,3 +88,8 @@ nicht haben, und Fehler. Sie wird aus den Optionen erzeugt, damit sie nie vom Ge
   `generation/pdf/authoring_guide.md`. `characters_section(text, code, intro)` nimmt
   Code-Point-Funktionen (`lambda c: fonts.has_glyph(c, face)`); `SYMBOLS` ist portiert (`↑`/`↓`
   mit `hoch`/`runter` statt `up`/`down`).
+- (2026-11-08, E03-S05) Der gemeinsame Guide „Dokumente“ ist der Word-Guide
+  (`generation/docx/guide.py`, Vorlage `generation/docx/authoring_guide/docx.md`); er hat mit
+  allen Renderern rund 2 460 Wörter. Ein PDF-Abschnitt (Felder, fehlende Zeichen) passt nur, wenn
+  anderswo gekürzt wird — oder der PDF-Guide nimmt die Word-Vorlage mit eigenem Platzhalter und
+  lässt Word-Eigenes (Inhaltsverzeichnis „Word füllt es beim Öffnen“) weg.

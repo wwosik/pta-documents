@@ -13,8 +13,8 @@ scheme of generated images (``qr:``, E11-S04), Harvey balls ``[n/4]`` and the th
 E15-S03), the image attributes ``.round``, ``.grey`` and (report) ``scale=``, (deck) ``focus=`` and
 ``fit=contain`` (E15-S04), in the deck every block marker and entrance (E09-S02).
 Since E02-S05 the samples also show everything the shared sections of the authoring guides name
-(``authoring_guides.named_syntax``: guide, code and samples cannot drift apart); once a generator
-has its own guide (E03-S05, E04-S06), that test reads the whole guide instead.
+(``authoring_guides.named_syntax``: guide, code and samples cannot drift apart); for Word that
+test reads the whole guide of the generator (E03-S05) without its examples of mistakes.
 """
 
 from __future__ import annotations
@@ -40,6 +40,7 @@ from pta_documents.conversions.pptx import PptxConverter
 from pta_documents.design.colors import StatusCategory
 from pta_documents.design.slides import TITLE_SLIDES
 from pta_documents.design.variants import Language, SlidesVariant, WordVariant
+from pta_documents.diagrams.mermaid import MermaidRenderer
 from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common import (
     authoring_guides,
@@ -55,6 +56,7 @@ from pta_documents.generation.common.code_blocks import KNOWN_GRAPHIC_LANGUAGES,
 from pta_documents.generation.common.coloured_words import PATTERN
 from pta_documents.generation.docx import generator as docx_generator
 from pta_documents.generation.docx.generator import DocxGenerator
+from pta_documents.generation.docx.options import DocxOptions
 from pta_documents.generation.pptx import generator as pptx_generator
 from pta_documents.generation.pptx.generator import PptxGenerator
 from pta_documents.markdown import DocumentResource, MarkdownDocument, block_markers
@@ -367,10 +369,26 @@ def test_the_samples_show_every_syntax_key_and_variant(format: DocumentFormat) -
     )
 
 
+MISTAKES: Final = "## Wenn etwas falsch ist"
+"""The section of a guide with examples of mistakes, which the samples do not show."""
+
+
+def without_mistakes(guide: str) -> str:
+    """``guide`` without its section ``MISTAKES`` (up to the next ``##``)."""
+    before, found, after = guide.partition(f"\n{MISTAKES}\n")
+    if not found:
+        return guide
+    rest = re.search(r"^## ", after, re.MULTILINE)
+    return before + ("\n" + after[rest.start() :] if rest else "\n")
+
+
 def guide_syntax(format: DocumentFormat) -> str:
-    """What the authoring guide of ``format`` says about syntax: for now its shared sections
-    (E02-S05); E03-S05 and E04-S06 replace this with the generator's ``authoring_guide()``,
-    without the section of examples of mistakes."""
+    """What the authoring guide of ``format`` says about syntax: Word's whole guide (E03-S05,
+    with every renderer) without the section of mistakes; for the deck its shared sections
+    (E02-S05) until E04-S06 replaces them with ``PptxGenerator().authoring_guide()``."""
+    if format is DOCX:
+        options = DocxOptions(code_block_renderers=(ChartRenderer(), MermaidRenderer()))
+        return without_mistakes(DocxGenerator().authoring_guide(options))
     return authoring_guides.layout_syntax_section(format) + authoring_guides.renderers_section(
         (ChartRenderer(),)
     )
@@ -387,6 +405,14 @@ def test_the_samples_show_the_syntax_the_guide_names(format: DocumentFormat) -> 
     assert len(syntax) >= 20, syntax
     missing = [element for element in syntax if element not in samples]
     assert missing == [], f"samples/funktionen/ has no {format.value} example of: {missing}"
+
+
+def test_the_word_guide_counts_without_its_mistakes() -> None:
+    syntax = authoring_guides.named_syntax(guide_syntax(DOCX))
+    assert {"{.round", "{scale", "::: timeline", "```mermaid", "{.appendix"} <= set(syntax)
+    assert "::: karte" not in syntax and "{.backup" not in syntax
+    assert without_mistakes("## A\n\n## Wenn etwas falsch ist\n\nx\n\n## B\n") == "## A\n\n## B\n"
+    assert without_mistakes("## A\n") == "## A\n"
 
 
 def test_a_missing_example_is_named() -> None:

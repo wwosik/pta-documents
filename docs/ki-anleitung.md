@@ -100,6 +100,9 @@ Sprache = Hinweis `code-language-unknown`.
 
 ## Word-Bericht
 
+Die vollständige Syntax eines Word-Berichts samt Beispiel gibt `./run.sh authoring-guide docx`
+aus (aus dem Code erzeugt, also immer aktuell); die Punkte hier sind das Wichtigste.
+
 - `#` ist **Kapitel** (Überschrift 1, nummeriert), nie der Titel — der Titel steht nur im Front
   Matter. `##`, `###` = Überschrift 2/3; `####`+ = unnummerierte Zwischenüberschrift. Überschriften
   ohne eigene Nummern schreiben (Word nummeriert selbst).

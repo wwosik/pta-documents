@@ -122,6 +122,15 @@ class DocxGenerator:
         result.save(output)
         return GenerationResult(notes.to_tuple())
 
+    def authoring_guide(self, options: DocxOptions | None = None) -> str:
+        """How to write Markdown for a PTA Word document: a German guide from ``##`` for
+        people and AI agents (E03-S05), from the same options as ``generate`` — the default
+        template, the image converters and the code block renderers (their sections) come from
+        ``options``. Under 2 500 words; every example in it generates."""
+        from pta_documents.generation.docx import guide
+
+        return guide.authoring_guide(options or DocxOptions())
+
 
 def apply_front_matter(front: FrontMatter, options: DocxOptions) -> DocxOptions:
     if (value := front.get(Keys.TEMPLATE)) is not None:

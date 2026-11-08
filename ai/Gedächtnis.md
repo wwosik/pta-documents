@@ -619,3 +619,12 @@ weil ihm vertraut wird.
   Word-Guide stehen `.agenda`/`.interim`/`.quote`/`.contact` nur als bloße Namen, weil der
   Word-Bericht sie nicht zeigt. Die Icon-Liste steht weiter in `docs/ki-anleitung.md` (Test
   E15-S03), bis die Guides sie übernehmen.
+- **Word-Guide** (E03-S05): `DocxGenerator().authoring_guide(options)` → `generation/docx/guide.py`
+  (Vorlage `generation/docx/authoring_guide/docx.md`, Satz je Vorlage in `VARIANT_TEXTS`,
+  Front-Matter-Zeilen mit den Standardwerten der Optionen). `guide_syntax` in
+  `tests/samples/test_funktionen.py` liest für Word den ganzen Guide ohne „Wenn etwas falsch ist“
+  (darunter steht auch `### Hinweise`, weil `notes_section` `{.backup}` nennt). **Wortbudget:**
+  mit allen Renderern rund 2 460 von 2 500 Wörtern — wer Word-Syntax, Schlüssel oder einen
+  Renderer-Abschnitt ergänzt, muss anderswo kürzen (`test_the_guide_stays_under_the_word_limit`);
+  Erwartung `tests/generation/docx/samples/authoring-guide.expected.md` mit
+  `PTA_DOCUMENTS_UPDATE_EXPECTED=1` erneuern.

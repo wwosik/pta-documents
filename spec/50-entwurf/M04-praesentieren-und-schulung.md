@@ -24,7 +24,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E16-S03](../60-prüfung/E16-S03-teilnehmerhandout.md) | Teilnehmerhandout | in Prüfung |
 | [E16-S04](../60-prüfung/E16-S04-backup-folien-und-anhang.md) | Backup-Folien und Anhang | in Prüfung |
 | [E02-S05](../60-prüfung/E02-S05-authoring-guides.md) | Authoring Guides | in Prüfung |
-| [E03-S05](../55-in-arbeit/docs-2/E03-S05-authoring-guide-docx.md) | Authoring Guide DOCX | in Bearbeitung (docs-2) |
+| [E03-S05](../60-prüfung/E03-S05-authoring-guide-docx.md) | Authoring Guide DOCX | in Prüfung |
 | [E04-S06](../55-in-arbeit/docs-2/E04-S06-authoring-guide-pptx.md) | Authoring Guide PPTX | in Bearbeitung (docs-2) |
 
 ## Offene Fragen

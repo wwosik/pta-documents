@@ -67,6 +67,8 @@ im Absatz bekommt „Abbildung n: …" aus Titel oder Alt-Text (`![…](qr:…)`
 [QR-Codes](#qr-codes-e11-s04)); Codeblöcke → „Code", Zitate →
 „Zitat"; Fußnoten werden Word-Fußnoten; Diagramme und Charts aus Codeblöcken siehe
 [Grafiken in Word](#grafiken-in-word-e03-s04). Folien-Syntax: siehe *Folien-Syntax in Word* unten.
+Die Anleitung für Schreiber (Menschen und KI-Agenten) gibt `./run.sh authoring-guide docx` aus,
+siehe [Authoring Guides](#authoring-guides-e02-s05).
 
 ### Kennzeichnung in Word und PDF (E12-S03)
 
@@ -2111,8 +2113,8 @@ denselben Text als Ergebnis, die Präsentation hat den Quelltext jeder `##`-Foli
   Syntax, einen Schlüssel oder eine Variante einführt, ergänzt die Beispiele;
 - Bericht und Präsentation: jede `##`-Funktion hat ihren Quelltext, und jeder Quelltext steht
   außerhalb seines Zauns wortgleich als Ergebnis.
-- **Guide ↔ Beispiele** (E02-S05): was die gemeinsamen Abschnitte der Authoring Guides an Syntax
-  nennen (`authoring_guides.named_syntax`: `::: name`, `[!KIND]`, `{.attribut`, ```` ```chart ````
+- **Guide ↔ Beispiele** (E02-S05): was der Word-Guide (E03-S05, ohne „Wenn etwas falsch ist“)
+  bzw. die gemeinsamen Abschnitte des Deck-Guides an Syntax nennen (`authoring_guides.named_syntax`: `::: name`, `[!KIND]`, `{.attribut`, ```` ```chart ````
   …), muss wortgleich in den Beispielen des Formats stehen
   (`test_the_samples_show_the_syntax_the_guide_names`), siehe
   [Authoring Guides](#authoring-guides-e02-s05).
@@ -2122,7 +2124,7 @@ denselben Text als Ergebnis, die Präsentation hat den Quelltext jeder `##`-Foli
 Ein Authoring Guide ist die deutsche Anleitung für Schreiber (Menschen und KI-Agenten), wie man
 Markdown für einen Generator schreibt — Markdown ab `##`, damit ein Aufrufer ihn unter eine eigene
 Überschrift setzen kann, höchstens 2 500 Wörter. Jeder Generator erzeugt ihn aus seinen Optionen
-(Word E03-S05, PowerPoint E04-S06, PDF E05-S05; bis dahin bietet noch keiner einen an):
+(Word seit E03-S05, PowerPoint E04-S06, PDF E05-S05):
 
 ```bash
 ./run.sh authoring-guide docx      # bzw. pptx, pdf — schreibt den Guide auf die Standardausgabe
@@ -2131,6 +2133,19 @@ Markdown für einen Generator schreibt — Markdown ab `##`, damit ein Aufrufer 
 
 Ohne Guide endet das Werkzeug mit Code 1 und einer Meldung, bei falschen Argumenten mit Code 2;
 das PDF braucht das Extra `pdf`.
+
+**Word** (E03-S05): `DocxGenerator().authoring_guide(options)` (`generation/docx/guide.py`, Vorlage
+`generation/docx/authoring_guide/docx.md`) — Abschnitte *Ein PTA-Word-Dokument aus Markdown* (je
+Vorlage ein Satz aus `guide.VARIANT_TEXTS`), *Gliederung*, *Inhalte* (Markdown → Formatvorlage,
+Bilder, QR, Bildstile, Fußnoten; die Bildformate aus `image_converters`), *Folien-Syntax* mit der
+Word-Wirkung, *Icons*, *Typografie und Code*, die Abschnitte der `code_block_renderers` (Charts,
+Finanzdiagramme, Mermaid), *Front Matter* (aus `VALID_KEYS`, Standardwerte aus den Optionen:
+`vorlage`, `inhaltsverzeichnis`, `kennzeichnung`, `sprache`, `typografie`,
+`syntaxhervorhebung`, `fassung`), *Wenn etwas falsch ist* (Fehler, darunter *Hinweise*) und ein
+vollständiger *Beispiel*-Bericht. `tests/generation/docx/test_authoring_guide.py` erzeugt jedes
+Beispiel in allen vier Vorlagen ohne Hinweise, prüft die Fehlerbeispiele gegen die echten
+Meldungen, die Grenze von 2 500 Wörtern (mit allen Renderern knapp darunter) und vergleicht mit
+`tests/generation/docx/samples/authoring-guide.expected.md`.
 
 Die gemeinsamen Bausteine in `pta_documents.generation.common.authoring_guides` (kein Extra
 nötig) entstehen aus den Listen im Code, damit Guide, Prüfung und Code nicht auseinanderlaufen:
