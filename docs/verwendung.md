@@ -2212,3 +2212,122 @@ Testhilfen für die Guides der Generatoren in `tests/generation/guides.py`: `exa
 ein Überschriftenattribut, einen Blockmarker oder einen Hinweis-Code einführt, trägt seinen Text
 in `CONTAINER_TEXTS`, `ALERT_TEXTS`, `ATTRIBUTE_TEXTS`, `MARKER_TEXTS` bzw. `NOTE_TEXTS` ein —
 die Tests nennen, was fehlt.
+
+## Werkzeug `make_document` für KI-Hosts (E08-S04)
+
+`pta_documents.tool` bietet einer Anwendung, die die Bibliothek importiert und ein KI-Modell
+Werkzeuge aufrufen lässt (Chat-Assistent, Agent-Framework), die Generatoren als **ein**
+Werkzeug an — ohne Abhängigkeit zu einem KI-SDK. Für eine KI, die im Klon arbeitet, bleibt
+[docs/ki-anleitung.md](ki-anleitung.md) der Weg.
+
+```python
+import io
+
+from pta_documents import DocumentConversionError
+from pta_documents.generation.docx.options import DocxOptions
+from pta_documents.generation.pdf import PdfOptions          # Extra pdf
+from pta_documents.generation.pptx.options import PptxOptions
+from pta_documents.tool import ToolOptions, describe, reply, run
+
+tool = ToolOptions(docx=DocxOptions(), pptx=PptxOptions(), pdf=PdfOptions(),
+                   host_notes="Die Datei erscheint als Link im Chat.")
+description = describe(tool)   # name, description, parameters_schema, guide
+```
+
+| Teil | Inhalt |
+| ---- | ------ |
+| `ToolOptions(docx, pptx, pdf, name="make_document", host_notes=None)` | je Format die Optionen seines Generators; `None` = nicht angeboten, mindestens eins (sonst `ValueError`). `name` muss `^[A-Za-z0-9_-]{1,64}$` sein (Anthropic und OpenAI) |
+| `describe(options)` → `ToolDescription` | `name`; `description` (ein deutscher Absatz unter 1 000 Zeichen, nennt nur die angebotenen Formate); `parameters_schema` (JSON Schema 2020-12 als `dict`); `guide` (Markdown für den System-Prompt) |
+| `run(arguments, output, options, resources=())` → `ToolRun` | liest die Argumente (JSON-Text oder schon gelesenes `dict`), prüft sie, schreibt die Datei nach `output`; `ToolRun(format, file_name, content_type, result)` mit dem `GenerationResult` |
+| `reply(run, link)` / `reply(error)` | die Antwort an das Modell als JSON-Text, siehe unten |
+
+**Parameter** (`additionalProperties: false`): `markdown` (Pflicht), `format` (Enum der
+angebotenen Formate `docx`/`pptx`/`pdf`; Pflicht, wenn mehr als eins angeboten ist), `vorlage`
+(Enum der Vorlagen der angebotenen Formate: `hoch`, `hoch-ohne-deckblatt`, `quer`,
+`quer-ohne-deckblatt` für Word und PDF, `basis`, `schulung` für PowerPoint), `dateiname` (ohne
+Endung, Standard `dokument`). `vorlage` wirkt wie `vorlage:` im Front Matter und verliert gegen
+es — das Front Matter im Markdown gewinnt. Ein `null` oder leerer Wert eines freiwilligen
+Parameters gilt als nicht angegeben. Der Dateiname verliert `<>:"/\|?*`, Steuerzeichen, Punkte
+und Leerzeichen am Rand und eine schon angehängte Endung des Formats und ist höchstens 100
+Zeichen lang. Bilder, die das Markdown nennt, kommen aus `resources` (`DocumentResource`), nie
+aus dem Dateisystem.
+
+**Fehler:** Argumente, die das Schema nicht erlaubt, sind ein `ToolArgumentError` (ein
+`ValueError`) mit einem englischen Satz für das Modell (`The parameter 'format' is 'html';
+expected 'docx', 'pptx' or 'pdf'.`); Fehler im Markdown bleiben `DocumentConversionError`. Beide
+gehen mit `reply(error)` an das Modell zurück, damit es korrigiert und neu aufruft; jede andere
+Ausnahme ist ein Fehler des Hosts — `reply` wirft sie wieder.
+
+**Antworten** (fest, `tests/tool/test_tool.py` hält beide fest):
+
+```json
+{"file": "https://…/bericht.pdf", "format": "pdf", "slides": null, "pages": 3,
+ "notes": [{"code": "raw-html", "line": 12, "message": "Raw HTML is left out …"}]}
+{"error": "Line 3: Unknown container '::: karte'. Valid containers: …"}
+```
+
+Jeder Schlüssel steht immer da; `slides` ist nur bei `pptx`, `pages` nur bei `pdf` nicht `null`,
+`line` ist `null` bei einem Hinweis ohne Zeile. Die Codes der Hinweise stehen unter
+[Hinweise](#hinweise-generationresult).
+
+**Anleitung** (`tool/combined_guide.py`): bei einem Format der Guide seines Generators, bei
+mehreren einer, der jeden Abschnitt einmal nennt. Die Guides werden an ihren `##`-Überschriften
+(außerhalb von Codeblöcken) geteilt, gleichnamige Abschnitte zusammengeführt (zuerst Word und PDF,
+die einen Guide teilen, dann PowerPoint); darin werden Absätze, Listenpunkte, Tabellenzeilen und
+Codeblöcke verglichen (`difflib`). Was alle angebotenen Formate teilen, steht einmal und
+unmarkiert; was nur einige haben, ist markiert — ein ganzer Abschnitt in der Überschrift
+(`## Vorlagenlayouts (nur PowerPoint)`), eine Tabelle oder Liste in einer Zeile davor
+(`*Nur Word und PDF:*`), eine einzelne Zeile in sich. Tabellenzeilen mit derselben ersten Zelle
+sind eine Zeile, deren abweichende Zellen je Format den Wert nennen (`| vorlage | *Word und PDF:*
+… *PowerPoint:* … |` — so steht das Front Matter je Schlüssel); gleich gebaute Tabellenköpfe
+werden einer („In Word / Im PDF“). Ein `### Hinweise`, das in einem anderen Guide ein eigener
+Abschnitt ist, wird dafür einer. Vorne steht `## Formate` (was `format` wählt; Word und PDF:
+`#` ist ein Kapitel, PowerPoint: Titel- bzw. Trennfolie), am Ende `host_notes` unter
+`## In dieser Anwendung`, außer sie beginnen mit einer eigenen Überschrift. Mit allen drei
+Formaten hat die Anleitung rund 4 400 Wörter (Test: unter 4 500).
+
+**Anbindung, Anthropic** (Messages API): Schema unverändert als `input_schema`, Guide in den
+System-Prompt; `block.input` ist schon ein `dict`.
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+tools = [{"name": description.name, "description": description.description,
+          "input_schema": description.parameters_schema}]
+message = client.messages.create(model=MODEL, max_tokens=8000, system=description.guide,
+                                 tools=tools, messages=messages)
+for block in message.content:
+    if block.type == "tool_use" and block.name == description.name:
+        output = io.BytesIO()
+        try:
+            made = run(block.input, output, tool)
+            answer = reply(made, store(made.file_name, made.content_type, output.getvalue()))
+        except (DocumentConversionError, ValueError) as error:
+            answer = reply(error)
+        results.append({"type": "tool_result", "tool_use_id": block.id, "content": answer})
+```
+
+**Anbindung, OpenAI** (Chat Completions): Schema unverändert als `parameters`, Guide als
+System-Nachricht; `call.function.arguments` ist JSON-Text. Nicht `"strict": true` setzen —
+der Strict-Modus verlangt, dass jede Eigenschaft Pflicht ist; `vorlage` und `dateiname` sind
+freiwillig.
+
+```python
+tools = [{"type": "function", "function": {"name": description.name,
+          "description": description.description,
+          "parameters": description.parameters_schema}}]
+for call in response.choices[0].message.tool_calls or []:
+    output = io.BytesIO()
+    try:
+        made = run(call.function.arguments, output, tool)
+        answer = reply(made, store(made.file_name, made.content_type, output.getvalue()))
+    except (DocumentConversionError, ValueError) as error:
+        answer = reply(error)
+    messages.append({"role": "tool", "tool_call_id": call.id, "content": answer})
+```
+
+`store` steht für die Ablage des Hosts (Dateispeicher, Download-Link). Kein Modul von
+`pta_documents` importiert ein KI-SDK (Test `test_the_library_imports_no_ai_sdk`); `jsonschema`
+(MIT) ist nur Testabhängigkeit (Gruppe `dev`). `.tmp/review/make_document.md` zeigt
+Beschreibung, Schema und Anleitung für alle drei Formate.
