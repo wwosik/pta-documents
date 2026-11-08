@@ -1,8 +1,8 @@
 # E01-S04 Logos als SVG und PNG aus den EMF der Vorlagen
 
-> Status: Entwurf
-> Epic: [E01 PTA-Design als einziges Design](E01-pta-design.md)
-> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E01 PTA-Design als einziges Design](../../50-entwurf/E01-pta-design.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](../../50-entwurf/M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 
