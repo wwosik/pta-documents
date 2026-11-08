@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime as dt
 from dataclasses import dataclass, field
 
-from pta_documents.design.variants import DEFAULT_WORD_VARIANT, Language, WordVariant
+from pta_documents.design.variants import DEFAULT_WORD_VARIANT, Language, Marking, WordVariant
 from pta_documents.generation.common.images import ImageConverter, default_converters
 from pta_documents.generation.common.renderers import CodeBlockRenderer, default_renderers
 
@@ -22,6 +22,9 @@ class DocxOptions:
     """``firma:``: replaces the company line of the footer (template: "PTA IT-Beratung")."""
     toc: bool = False
     """``inhaltsverzeichnis: ja``: a table of contents after the cover."""
+    marking: Marking = Marking.NONE
+    """``kennzeichnung:``: „VERTRAULICH" (…) below the logo of every header and on the cover;
+    ``entwurf`` adds the watermark „ENTWURF" (E12-S03)."""
     typography: bool = True
     """``typografie:``: German (or English) typography on the text — „quotes“, dashes,
     non-breaking spaces (``markdown.typography``); code, links and front matter stay as written."""

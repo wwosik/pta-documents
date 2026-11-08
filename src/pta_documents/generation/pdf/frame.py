@@ -12,6 +12,10 @@ pages is known.
 - **Cover** (``hoch``, ``quer``): page 1 has only the logo and the rule of the template's first
   header and no footer; title, subtitle and „Autor, Ort, Datum" in the styles of the template
   start where Word starts them (below the first header), then a page break.
+- **Marking** (``kennzeichnung:``, E12-S03): the text of ``design.word.MARKING`` right-aligned
+  below the rule of every header (``word_frame.marking_area``), the cover included, and once more
+  below „Autor, Ort, Datum" on the cover; ``entwurf`` also draws the watermark „ENTWURF" behind
+  the content of every page (``Watermark``, as ``design.word.WATERMARK``).
 - **Table of contents** (``inhaltsverzeichnis: ja``): after the cover „Inhalt" and the headings of
   levels 1 and 2 (as ``TOC \\o "1-2"``) with number, text, page and a link to the heading, then a
   page break.
@@ -38,6 +42,7 @@ from reportlab.platypus import Flowable, PageBreak
 from pta_documents.design import logos, word, word_frame
 from pta_documents.design.fonts import FontFace
 from pta_documents.design.logos import Logo
+from pta_documents.design.variants import Marking
 from pta_documents.design.word_frame import (
     Alignment,
     Band,
@@ -52,6 +57,7 @@ from pta_documents.generation.common.result import Notes
 from pta_documents.generation.pdf.layout import LayoutSettings, build_story, prepare, render
 from pta_documents.generation.pdf.layout.document import RenderedPdf
 from pta_documents.generation.pdf.layout.flowables import Outline, PtaParagraph
+from pta_documents.generation.pdf.layout.fonts import PdfFonts
 from pta_documents.generation.pdf.layout.story import LayoutContext
 from pta_documents.generation.pdf.layout.styles import BlockStyle, color
 from pta_documents.generation.pdf.metadata import PdfInfo
@@ -91,6 +97,9 @@ class FrameInfo:
     company: str | None = None
     """``firma:`` in place of „PTA IT-Beratung"."""
     toc: bool = False
+    marking: Marking = Marking.NONE
+    """``kennzeichnung:``: the text below the rule of the header and on the cover; ``entwurf``
+    adds the watermark."""
 
 
 def format_date(date: dt.date) -> str:
@@ -121,7 +130,10 @@ def lay_out(
         front = front_matter(context, frame_info, story.outline, heading_pages)
         story = replace(story, flowables=[*front, *story.flowables])
         decorator = PageDecorator(frame, context, frame_info)
-        result = render(story, info, decorator, page_count, first_top)
+        underlay = None
+        if frame_info.marking is Marking.DRAFT:
+            underlay = Watermark(frame, context.fonts, context.texts.draft)
+        result = render(story, info, decorator, page_count, first_top, underlay)
         if result.pages == page_count and result.heading_pages == heading_pages:
             break
         page_count, heading_pages = result.pages, result.heading_pages
@@ -160,6 +172,13 @@ def cover(context: LayoutContext, frame_info: FrameInfo) -> list[Flowable]:
     byline = ", ".join(p for p in (frame_info.author, frame_info.location, date) if p)
     if byline:
         result.append(_plain(styles.block(s.author), byline))
+    if frame_info.marking is not Marking.NONE:
+        block = styles.block(s.author)
+        style = ParagraphStyle(
+            f"{block.style.name} marking", block.style, textColor=color(word.MARKING.color)
+        )
+        text = context.texts.marking(frame_info.marking)
+        result.append(PtaParagraph(escape(text.upper() if word.MARKING.caps else text), style))
     result.append(PageBreak())
     return result
 
@@ -300,6 +319,15 @@ class PageDecorator:
             FrameField.NONE: "",
         }
         self.page_label = texts.page
+        self.marking = texts.marking(frame_info.marking)
+        header = context.design.paragraph(word.STYLES.header)
+        self.marking_format = replace(
+            header,
+            size_pt=word.MARKING.size_pt,
+            color=word.MARKING.color,
+            space_before_pt=0.0,
+            space_after_pt=0.0,
+        )
 
     def __call__(self, canvas: Canvas, page: int, count: int) -> None:
         kind = self.frame.kind(page)
@@ -313,7 +341,26 @@ class PageDecorator:
         self._band(canvas, kind.header, word_frame.header_top(self.frame), page, count)
         footer_top = word_frame.footer_bottom(self.frame) - self._band_height(kind.footer)
         self._band(canvas, kind.footer, footer_top, page, count)
+        if self.marking:
+            self._marking(canvas)
         canvas.restoreState()
+
+    def _marking(self, canvas: Canvas) -> None:
+        """The marking right-aligned in ``word_frame.marking_area``, at the foot of its line
+        as Word sets the paragraph of its text box."""
+        area = word_frame.marking_area(self.frame)
+        fmt = self.marking_format
+        text = self.marking.upper() if word.MARKING.caps else self.marking
+        font = self.fonts.name(FontFace.REGULAR)
+        _, descent = pdfmetrics.getAscentDescent(font, fmt.size_pt)
+        baseline = area.y_pt + fmt.leading(self.natural) + descent
+        canvas.setFont(font, fmt.size_pt)
+        canvas.setFillColor(color(word.MARKING.color))
+        canvas.drawRightString(
+            area.x_pt + area.width_pt,
+            self.frame.page.height_pt - baseline,
+            fit(self.fonts.shown(text), font, fmt.size_pt, area.width_pt),
+        )
 
     # -------------------------------------------------------------------- drawings
 
@@ -428,6 +475,34 @@ class PageDecorator:
                 canvas.drawRightString(x + width, y, text)
             case Alignment.LEFT:
                 canvas.drawString(x, y, text)
+
+
+class Watermark:
+    """Draws the watermark of ``kennzeichnung: entwurf`` behind the content of a page: the text
+    turned by ``word.WATERMARK.angle`` over the middle of the type area, as large as its
+    diagonal allows (``word.watermark_size``), in Akzent 5 at half opacity — mixed with the white
+    page instead of a soft mask, which looks the same behind the content and keeps PDF/A free of
+    transparency."""
+
+    def __init__(self, frame: PageFrame, fonts: PdfFonts, text: str) -> None:
+        self.frame = frame
+        self.font = fonts.name(FontFace.REGULAR)
+        self.text = fonts.shown(text)
+
+    def __call__(self, canvas: Canvas, page: int, count: int) -> None:
+        style = word.WATERMARK
+        setup = self.frame.page
+        width_em = pdfmetrics.stringWidth(self.text, self.font, 1)
+        size = word.watermark_size(width_em, setup.text_width_pt, setup.text_height_pt)
+        x = setup.left_pt + setup.text_width_pt / 2
+        y = setup.height_pt - setup.top_pt - setup.text_height_pt / 2
+        canvas.saveState()
+        canvas.translate(x, y)
+        canvas.rotate(style.angle)
+        canvas.setFont(self.font, size)
+        canvas.setFillColor(_on_white(style.color, style.opacity))
+        canvas.drawCentredString(0, -style.cap_height_em * size / 2, self.text)
+        canvas.restoreState()
 
 
 def fit(text: str, font: str, size: float, width: float) -> str:

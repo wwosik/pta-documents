@@ -35,6 +35,8 @@ class WordStyles:
     footnote_reference: str = "footnote reference"
     table: str = "PTA"
     hyperlink: str = "Hyperlink"
+    header: str = "header"
+    """„Kopfzeile": the paragraphs of the header, and the marking (E12-S03)."""
     toc: tuple[str, str] = ("toc 1", "toc 2")
     code: str = "Code"
     """Added by the generator; the templates have no code style."""
@@ -151,3 +153,94 @@ ICON_BULLET_HANGING_CM: Final = 0.6
 at the indent of the list level."""
 ICON_PIXELS: Final = 96
 """The edge of the PNG of an icon in Word: sharp at more than 4× its size."""
+
+
+@dataclass(frozen=True)
+class MarkingStyle:
+    """The marking of ``kennzeichnung:`` in the header (E12-S03): „VERTRAULICH", „FÜR DEN
+    INTERNEN GEBRAUCH" or „ENTWURF" right-aligned on the type area just below the rule of the
+    header, under the logo — the same place on every page, the cover included.
+
+    In Word a text box without margins (``wp:anchor`` with ``wrapNone``, so the header keeps its
+    height) holds one paragraph in „Kopfzeile" with the run format below; the colour is the
+    theme colour ``accent1``. The PDF draws the same text at the same place
+    (``word_frame.marking_area``).
+    """
+
+    size_pt: float = 9
+    caps: bool = True
+    theme_color: str = "accent1"
+    color: str = colors.PTA_BLUE
+    """The value of ``accent1`` (PTA blue); Word reads ``theme_color``, ``w:val`` is required."""
+    gap_pt: float = 3
+    """Room between the rule of the header and the top of the box."""
+    height_pt: float = 14
+    """One line of „Kopfzeile" (at least 14 pt), the box ends above the type area."""
+    shape_name: str = "PTA-Kennzeichnung"
+
+
+MARKING: Final = MarkingStyle()
+
+
+@dataclass(frozen=True)
+class WatermarkStyle:
+    """The watermark „ENTWURF"/„DRAFT" of ``kennzeichnung: entwurf`` (E12-S03): a WordArt shape
+    as Word writes it (``WATERMARK_SHAPE``) diagonally over the middle of the type area, behind
+    the text, in Akzent 5 at half opacity; the PDF draws it alike (``watermark_size``)."""
+
+    font: str = "Segoe UI"
+    color: str = colors.GREY_MID
+    opacity: float = 0.5
+    angle: float = 45
+    """Degrees counterclockwise: the text rises from bottom left to top right."""
+    capital_em: float = 0.62
+    """The average advance of a capital of Segoe UI (Selawik: 0.60–0.64): Word sizes the box,
+    the core has no font metrics."""
+    cap_height_em: float = 0.7
+    shape_prefix: str = "PowerPlusWaterMarkObject"
+    """The id Word looks for under *Entwurf → Wasserzeichen entfernen*."""
+
+
+WATERMARK: Final = WatermarkStyle()
+
+
+def watermark_size(text_em: float, width_pt: float, height_pt: float) -> float:
+    """The font size of a watermark ``text_em`` font sizes wide whose box (the text wide, one
+    font size high) turned by 45° just fits into ``width_pt`` × ``height_pt``."""
+    return min(width_pt, height_pt) * 2**0.5 / (text_em + 1)
+
+
+WATERMARK_SHAPETYPE: Final = (
+    '<v:shapetype id="_x0000_t136" coordsize="21600,21600" o:spt="136" adj="10800" '
+    'path="m@7,l@8,m@5,21600l@6,21600e">'
+    "<v:formulas>"
+    '<v:f eqn="sum #0 0 10800"/><v:f eqn="prod #0 2 1"/><v:f eqn="sum 21600 0 @1"/>'
+    '<v:f eqn="sum 0 0 @2"/><v:f eqn="sum 21600 0 @3"/><v:f eqn="if @0 @3 0"/>'
+    '<v:f eqn="if @0 21600 @1"/><v:f eqn="if @0 0 @2"/><v:f eqn="if @0 @4 21600"/>'
+    '<v:f eqn="mid @5 @6"/><v:f eqn="mid @8 @5"/><v:f eqn="mid @7 @8"/>'
+    '<v:f eqn="mid @6 @7"/><v:f eqn="sum @6 0 @5"/>'
+    "</v:formulas>"
+    '<v:path textpathok="t" o:connecttype="custom" '
+    'o:connectlocs="@9,0;@10,10800;@11,21600;@12,10800" o:connectangles="270,180,90,0"/>'
+    '<v:textpath on="t" fitshape="t"/>'
+    '<v:handles><v:h position="#0,bottomRight" xrange="6629,14971"/></v:handles>'
+    '<o:lock v:ext="edit" text="t" shapetype="t"/>'
+    "</v:shapetype>"
+)
+"""The WordArt shape type „plain text" (136), as Word writes it for a watermark."""
+
+WATERMARK_SHAPE: Final = (
+    '<v:shape id="{id}" o:spid="{spid}" type="#_x0000_t136" '
+    'style="position:absolute;margin-left:0;margin-top:0;width:{width}pt;height:{height}pt;'
+    "rotation:{rotation};z-index:-251651072;mso-position-horizontal:center;"
+    "mso-position-horizontal-relative:margin;mso-position-vertical:center;"
+    'mso-position-vertical-relative:margin" o:allowincell="f" fillcolor="#{color}" '
+    'stroked="f">'
+    '<v:fill opacity="{opacity}"/>'
+    '<v:textpath style="font-family:&quot;{font}&quot;;font-size:1pt" string="{text}"/>'
+    '<w10:wrap anchorx="margin" anchory="margin"/>'
+    "</v:shape>"
+)
+"""A watermark (VML, as Word 365 writes it under *Entwurf → Wasserzeichen*): filled with
+``id``, ``spid``, the size, ``rotation`` (clockwise degrees), ``color``, ``opacity``, ``font``
+and the escaped ``text``."""

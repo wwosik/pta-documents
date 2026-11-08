@@ -15,7 +15,7 @@ from typing import BinaryIO, Final
 
 from pta_documents.design import fonts as design_fonts
 from pta_documents.design.fonts import FontFace
-from pta_documents.design.variants import Language, WordVariant
+from pta_documents.design.variants import Language, Marking, WordVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import generated_images, layout_syntax, schedule
 from pta_documents.generation.common.result import GenerationResult, Notes
@@ -44,6 +44,7 @@ VALID_KEYS: Final = (
     Keys.HIGHLIGHT,
     Keys.CHECK,
     Keys.TOC,
+    Keys.MARKING,
 )
 MISSING_EFFECT: Final = "shows as '?' in the PDF"
 
@@ -122,6 +123,7 @@ class PdfGenerator:
             as_of=options.date or (options.created.date() if options.created else dt.date.today()),
             company=options.company,
             toc=options.toc,
+            marking=options.marking,
         )
         pdf = lay_out(tokens, document, settings, frame_info, notes, info)
         output.write(to_pdfa(pdf.content, info))
@@ -147,4 +149,6 @@ def apply_front_matter(front: FrontMatter, options: PdfOptions) -> PdfOptions:
         options = replace(options, company=value)
     if (value := front.boolean(Keys.TOC)) is not None:
         options = replace(options, toc=value)
+    if (value := front.get(Keys.MARKING)) is not None:
+        options = replace(options, marking=Marking.parse(value, FORMAT))
     return options

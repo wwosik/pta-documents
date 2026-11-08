@@ -433,9 +433,22 @@ weil ihm vertraut wird.
   Master** (`generation/pptx/sticker.py`: `resolve` vor dem Laden der Vorlage, `apply` danach);
   Schulung behält „Rectangle 7" und setzt nur den Text, Basis bekommt eine Form aus
   `design.slides.STICKER` (Maße auf das EMU wie der Schulungs-Master, Vergleichstest). Standard
-  `basis` → `kein`, `schulung` → `intern`; `schulung` + `kein` ist ein Fehler. Word/PDF kennen den
-  Schlüssel erst mit E12-S03 (dort `Marking` wiederverwenden). Englisch: `package_file` liefert
+  `basis` → `kein`, `schulung` → `intern`; `schulung` + `kein` ist ein Fehler. Word/PDF: siehe
+  den Eintrag E12-S03 (dort Standard `kein`). Englisch: `package_file` liefert
   für `en` immer `slides-<variante>-en.pptx`; `slides-schulung-en.pptx` macht
   `prepare-templates` aus der Schulungsvorlage ohne die EMF-Logos der vier Titellayouts
   (`SLIDES_WITHOUT_TITLE_LOGO`, `remove_title_logos`). Das englische Logo heißt
   `PTA-Logo EN` (`design.slides.ENGLISH_LOGO_NAME`) und wird vom PPTX-Konverter übersprungen.
+- **Kennzeichnung in Word und PDF** (E12-S03): derselbe Schlüssel `kennzeichnung`
+  (`DocxOptions.marking`/`PdfOptions.marking`, Standard `Marking.NONE`). Ort:
+  `word_frame.marking_area(frame)` — 3 pt unter der Kopfzeilenlinie der *anderen* Seiten (auch auf
+  dem Deckblatt, dessen `quer`-Linie tiefer liegt), Maße in `design.word.MARKING`. Word
+  (`generation/docx/marking.py`): Textfeld (`wps`, `wrapNone`, Name `PTA-Kennzeichnung`) und bei
+  `entwurf` das VML-Wasserzeichen (`WATERMARK_SHAPE`, Id `PowerPlusWaterMarkObject<n>`) werden an
+  den **letzten Absatz** jedes Kopfzeilenteils gehängt — nie ein neuer Absatz, sonst wird die
+  Kopfzeile höher und schiebt den Text. `docPr`-Ids: höchste über **alle** Teile + 1 (die Fußzeile
+  hat eigene Ids; die Vorlagen selbst haben doppelte). Der Deckblatt-Absatz (Stil „Autor") kommt
+  in der DOCX-Rundreise als Text zurück. PDF: Text in `PageDecorator._marking`, Wasserzeichen
+  `frame.Watermark` über `render(…, underlay=…)` (`onPage`, vor dem Inhalt), Farbe gegen Weiß
+  gemischt statt Alpha (PDF/A ohne Soft-Mask). pdfplumber hält 45°-Text für `upright` — Tests
+  erkennen das Wasserzeichen an `matrix[1]`.

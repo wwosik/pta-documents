@@ -15,7 +15,7 @@ from docx.opc.part import Part
 from lxml import etree
 
 from pta_documents.design import templates, word
-from pta_documents.design.variants import TEXTS, GeneratedTexts, Language, WordVariant
+from pta_documents.design.variants import TEXTS, GeneratedTexts, Language, Marking, WordVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common.openxml import (
     field_paragraph_runs,
@@ -26,6 +26,7 @@ from pta_documents.generation.common.openxml import (
     w,
 )
 from pta_documents.generation.common.result import GenerationResult, Notes
+from pta_documents.generation.docx import marking
 from pta_documents.generation.docx.options import DocxOptions
 from pta_documents.generation.docx.writer import BodyWriter, declare_own_namespace
 from pta_documents.markdown.document import MarkdownDocument, MetadataKeys
@@ -45,6 +46,7 @@ VALID_KEYS: Final = (
     Keys.HIGHLIGHT,
     Keys.CHECK,
     Keys.TOC,
+    Keys.MARKING,
 )
 TEMPLATE_COMPANY: Final = word.COMPANY_PLACEHOLDER
 HEADER_CONTENT_TYPE: Final = (
@@ -104,11 +106,14 @@ class DocxGenerator:
         borrow_styles(result)
         if options.variant.has_cover:
             write_cover(result, info)
+            marking.cover_paragraph(result, options.marking, texts)
+            page_break(result)
         if options.toc:
             write_toc(result, texts)
         BodyWriter(result, document, front, options, texts, notes).write()
         declare_own_namespace(result)
         fill_headers_and_footers(result, info, options, texts)
+        marking.apply(result, header_parts(result), options.marking, texts, options.variant)
         set_properties(result, info)
         if options.toc:
             set_update_fields(result.settings.element)
@@ -131,6 +136,8 @@ def apply_front_matter(front: FrontMatter, options: DocxOptions) -> DocxOptions:
         options = replace(options, company=value)
     if (value := front.boolean(Keys.TOC)) is not None:
         options = replace(options, toc=value)
+    if (value := front.get(Keys.MARKING)) is not None:
+        options = replace(options, marking=Marking.parse(value, FORMAT))
     return options
 
 
@@ -170,7 +177,6 @@ def write_cover(document: Document, info: DocumentInfo) -> None:
     )
     if byline:
         document.add_paragraph(byline, style=s.author)
-    page_break(document)
 
 
 def write_toc(document: Document, texts: GeneratedTexts) -> None:
@@ -187,6 +193,10 @@ def header_and_footer_parts(document: Document) -> Iterator[Part]:
     for part in package.iter_parts():
         if part.content_type in (HEADER_CONTENT_TYPE, FOOTER_CONTENT_TYPE):
             yield part
+
+
+def header_parts(document: Document) -> list[Part]:
+    return [p for p in header_and_footer_parts(document) if p.content_type == HEADER_CONTENT_TYPE]
 
 
 def fill_headers_and_footers(

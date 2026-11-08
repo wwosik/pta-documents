@@ -4,9 +4,11 @@ Querformat mit Deckblatt
 
 PTA Documents, 08.11.2026
 
+VERTRAULICH
+
 # Querformat mit Deckblatt
 
-Das Querformat hat ein eigenes Deckblatt; breite Tabellen und Bilder haben mehr Platz.
+Das Querformat hat ein eigenes Deckblatt; breite Tabellen und Bilder haben mehr Platz. kennzeichnung: vertraulich setzt „VERTRAULICH“ unter das Logo jeder Seite und auf das Deckblatt unter „Autor, Ort, Datum“.
 
 | Variante | Deckblatt | Format |
 | --- | --- | --- |

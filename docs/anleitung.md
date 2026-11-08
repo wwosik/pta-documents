@@ -119,7 +119,7 @@ datum: 2026-11-06
 | `sprache` | ✓ | ✓ | `de` (Standard) oder `en` — z. B. „Page"/„Table"/„Figure", englisches Logo auf der Titelfolie (auch in der Schulungsvorlage) |
 | `fusszeile` | | ✓ | Text der Fußzeile „PTA – …" (sonst der Titel) |
 | `titelfolie` | | ✓ | `bild-02` (Standard), `bild-01`, `branchen`, `ohne-bild` |
-| `kennzeichnung` | | ✓ | Sticker oben rechts auf jeder Folie: `vertraulich` („VERTRAULICH"), `intern` („Für den internen Gebrauch"), `entwurf` („ENTWURF"), `kein`. Standard: `basis` ohne, `schulung` `intern` — dort ist `kein` nicht erlaubt |
+| `kennzeichnung` | ✓ | ✓ | `vertraulich` („VERTRAULICH"), `intern` („Für den internen Gebrauch"), `entwurf` („ENTWURF"), `kein`. Folien: Sticker oben rechts auf jeder Folie; Standard `basis` ohne, `schulung` `intern` — dort ist `kein` nicht erlaubt. Word und PDF: Text in Blau unter dem Logo jeder Seite und auf dem Deckblatt, `entwurf` zusätzlich ein Wasserzeichen „ENTWURF" quer über jede Seite; Standard `kein`. Ein Entwurf, der an den Kunden geht, trägt das sichtbar — vor dem Versand auf `kein` (oder `vertraulich`) stellen |
 | `typografie` | ✓ | ✓ | `ja` (Standard) oder `nein`: Anführungszeichen, Gedankenstriche, geschützte Leerzeichen (siehe unten) |
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) oder `nein`: Codeblöcke mit Sprache farbig |
 | `pruefung` | ✓ | ✓ | nur für `./run.sh check`: `aus` schaltet die Stilregeln ab, `style-words, style-title` nur diese |

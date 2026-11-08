@@ -221,6 +221,18 @@ def read(variant: WordVariant, design: WordDesign | None = None) -> PageFrame:
     return PageFrame(design.page, other, first)
 
 
+def marking_area(frame: PageFrame) -> Box:
+    """Where the marking of ``kennzeichnung:`` stands (E12-S03): on the type area's width,
+    ``word.MARKING.gap_pt`` below the rule of the header of the other pages (the cover of
+    ``quer`` has its rule lower; the marking stays under the logo), the text right-aligned."""
+    page = frame.page
+    rules = frame.other.header.rules
+    style = word.MARKING
+    rule = rules[0].y_pt if rules else page.top_pt - style.height_pt - style.gap_pt
+    top = rule + style.gap_pt
+    return Box(page.left_pt, top, page.text_width_pt, style.height_pt)
+
+
 def header_top(frame: PageFrame) -> float:
     """Where the header starts: the header distance of the section."""
     return frame.page.header_pt

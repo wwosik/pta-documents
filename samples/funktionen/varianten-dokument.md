@@ -1,14 +1,16 @@
 ---
 vorlage: quer-ohne-deckblatt
 titel: Varianten der Word-Vorlage
-untertitel: Querformat ohne Deckblatt, englische Texte
+untertitel: Querformat ohne Deckblatt, englische Texte, Entwurf
 firma: PTA GmbH
 sprache: en
+kennzeichnung: entwurf
 ---
 # Landscape without cover
 
 Title and subtitle are in the header, the footer reads "As of" and "Page", the company line is
-taken from `firma`.
+taken from `firma`. `kennzeichnung: entwurf` puts "DRAFT" below the logo of every page and the
+watermark "DRAFT" behind the text (`vertraulich` and `intern` only the text below the logo).
 
 | Variant | Cover | Format |
 | :------ | :---: | :----- |

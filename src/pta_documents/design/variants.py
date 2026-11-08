@@ -61,7 +61,7 @@ class GeneratedTexts:
     draft: str = ""
 
     def marking(self, marking: Marking) -> str:
-        """The text of the sticker (``kennzeichnung:``); empty for ``kein``."""
+        """The text of the sticker or the marking (``kennzeichnung:``); empty for ``kein``."""
         return {
             Marking.CONFIDENTIAL: self.confidential,
             Marking.INTERNAL: self.internal,

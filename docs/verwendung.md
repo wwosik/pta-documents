@@ -51,6 +51,7 @@ umgehen musste, ohne dass es ein Fehler ist, steht im Rückgabewert (siehe
 | `firma` | Text | ersetzt „PTA IT-Beratung" in der Fußzeile |
 | `sprache` | `de` (Standard), `en` | erzeugte Texte: Seite/Page, Stand/As of, Tabelle/Table, Abbildung/Figure, Inhalt/Contents |
 | `inhaltsverzeichnis` | `ja`, `nein` | Inhaltsverzeichnis nach dem Deckblatt (Word füllt es beim Öffnen) |
+| `kennzeichnung` | `vertraulich`, `intern`, `entwurf`, `kein` (Standard) | Text unter dem Logo jeder Seite und auf dem Deckblatt, bei `entwurf` zusätzlich Wasserzeichen, siehe [Kennzeichnung in Word und PDF](#kennzeichnung-in-word-und-pdf-e12-s03) |
 | `typografie` | `ja` (Standard), `nein` | deutsche (bzw. englische) Typografie, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
 | `syntaxhervorhebung` | `ja` (Standard), `nein` | Codeblöcke mit Sprache farbig |
 | `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | nur für `./run.sh check`: Stilregeln abschalten, siehe [Prüfen ohne Erzeugen](#prüfen-ohne-erzeugen-check) |
@@ -62,6 +63,40 @@ im Absatz bekommt „Abbildung n: …" aus Titel oder Alt-Text (`![…](qr:…)`
 [QR-Codes](#qr-codes-e11-s04)); Codeblöcke → „Code", Zitate →
 „Zitat"; Fußnoten werden Word-Fußnoten; Diagramme und Charts aus Codeblöcken siehe
 [Grafiken in Word](#grafiken-in-word-e03-s04). Folien-Syntax: siehe *Folien-Syntax in Word* unten.
+
+### Kennzeichnung in Word und PDF (E12-S03)
+
+`kennzeichnung:` (`DocxOptions.marking`, `PdfOptions.marking`, derselbe
+`design.variants.Marking` wie der Folien-Sticker) kennzeichnet ein Dokument; Standard ist `kein`.
+
+| Wert | Text (`sprache: de` / `en`) | Wasserzeichen |
+| ---- | --------------------------- | ------------- |
+| `vertraulich` | VERTRAULICH / CONFIDENTIAL | – |
+| `intern` | FÜR DEN INTERNEN GEBRAUCH / FOR INTERNAL USE ONLY | – |
+| `entwurf` | ENTWURF / DRAFT | ENTWURF / DRAFT |
+| `kein` | – | – |
+
+- **Kopfzeile:** der Text in 9 pt Versalien, PTA-Blau über die Theme-Farbe `accent1`,
+  rechtsbündig auf dem Satzspiegel, 3 pt unter der Verlaufslinie der Kopfzeile, also unter dem
+  Logo (`word_frame.marking_area`: Hoch 2,91 cm, Quer 3,51 cm von oben, eine Zeile
+  „Kopfzeile", endet über dem Satzspiegel) — auf jeder Seite, das Deckblatt eingeschlossen (auf
+  dem Deckblatt von `quer` liegt die Linie tiefer, die Kennzeichnung bleibt unter dem Logo).
+  Word: ein Textfeld ohne Ränder und ohne Textumbruch (`wp:anchor`, `wrapNone`, Name
+  `PTA-Kennzeichnung`) im Absatz der Vorlage, der Logo und Linie trägt — die Kopfzeile behält
+  ihre Höhe, der Text rückt nicht. Maße in `design.word.MARKING`.
+- **Deckblatt:** derselbe Text in „Autor" (14 pt), PTA-Blau, unter „Autor, Ort, Datum". Der
+  DOCX-Konverter liest ihn als Absatz zurück (er steht im Rumpf); die Kopfzeilen liest er nicht.
+- **Wasserzeichen** (`entwurf`): in Word ein WordArt-Shape, wie Word es unter *Entwurf →
+  Wasserzeichen* schreibt (VML `v:shape` mit `v:textpath`, Id `PowerPlusWaterMarkObject…`,
+  `design.word.WATERMARK_SHAPE`), in jeder Kopfzeile, Segoe UI, Akzent 5 (`AFAFAF`) mit 50 %
+  Deckkraft, um 45° gedreht über der Mitte des Satzspiegels, so groß, wie dessen kürzere Seite
+  es zulässt (`design.word.watermark_size`). Word zeigt es hinter dem Text jeder Seite und
+  entfernt es über *Wasserzeichen entfernen*. Im PDF dieselbe Lage und Größe (mit den echten
+  Schriftmaßen) als gedrehter Text, **vor** dem Inhalt gezeichnet (`render(…, underlay=…)`) und
+  ohne Transparenz: die Farbe ist Akzent 5 zu 50 % mit dem weißen Papier gemischt, was hinter
+  dem Inhalt gleich aussieht und PDF/A ohne Soft-Mask lässt.
+- **`kein`** ändert nichts: die Kopfzeilenteile sind byte-gleich zu einem Dokument ohne den
+  Schlüssel.
 
 ## Markdown → PDF (E05-S01, E05-S02)
 
@@ -144,7 +179,7 @@ result.slides  # Zahl der erzeugten Folien
 | `untertitel`, `autor`, `ort`, `datum` | Text | Titelfolie |
 | `fusszeile` | Text | Fußzeile „PTA – …" (sonst der Titel) |
 | `sprache` | `de`, `en` | `en`: englisches Logo auf der Titelfolie (in `basis` und `schulung`), „(cont.)" statt „(Forts.)" |
-| `kennzeichnung` | `vertraulich`, `intern`, `entwurf`, `kein` | Sticker oben rechts auf dem Master, siehe [Kennzeichnung](#kennzeichnung-e04-s05) |
+| `kennzeichnung` | `vertraulich`, `intern`, `entwurf`, `kein` | Sticker oben rechts auf dem Master, siehe [Kennzeichnung](#kennzeichnung-e04-s05); in Word und PDF siehe [dort](#kennzeichnung-in-word-und-pdf-e12-s03) |
 | `typografie`, `syntaxhervorhebung` | `ja` (Standard), `nein` | wie in Word, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
 | `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | wie in Word |
 
@@ -734,7 +769,8 @@ pdf.content, pdf.pages  # PDF-Bytes (noch kein PDF/A, das macht pdfa.to_pdfa), S
 `f(canvas, seite, seitenzahl)` am Ende jeder Seite (für Kopf- und Fußzeile, E05-S03). Wer
 eigene Flowables davor- oder dahintersetzen will, nimmt die beiden Hälften:
 `build_story(tokens, dokument, prepare(einstellungen), notes)` und `render(story, info, decorate,
-page_count)`.
+page_count)`. `render(…, underlay=g)` ruft `g(canvas, seite, seitenzahl)` am **Anfang** jeder
+Seite, also hinter dem Inhalt (Wasserzeichen, E12-S03).
 
 - **Werte aus der Vorlage:** `pta_documents.design.word_styles.read(variante)` liest Größe,
   fett, kursiv, Versalien, Farbe, Abstand vor/nach, Zeilenabstand, Einzug/hängend und „mit
@@ -824,7 +860,8 @@ Was in Word um den Text jeder Seite steht, zeichnet der PDF-Generator nach der g
   Deckblatt und Verzeichnis vor die Story der Engine und rendert, bis Seitenzahl und Seiten der
   Überschriften stabil sind (meist zwei Durchgänge, höchstens `MAX_PASSES`); `PageDecorator`
   zeichnet Kopf und Fuß jeder Seite (`decorate`). `FrameInfo` trägt Titel, Untertitel, Autor,
-  Ort, Datum, Stand, Firma und `toc`.
+  Ort, Datum, Stand, Firma, `toc` und `marking` ([Kennzeichnung](#kennzeichnung-in-word-und-pdf-e12-s03),
+  E12-S03: Text in `PageDecorator`, Wasserzeichen `Watermark` als `underlay`).
 
 ## Zeichenmodell und SVG (E02-S03)
 

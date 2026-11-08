@@ -7,7 +7,7 @@ from typing import Final
 
 import pytest
 
-from pta_documents.design import colors, word_frame, word_styles
+from pta_documents.design import colors, word, word_frame, word_styles
 from pta_documents.design.variants import WordVariant
 from pta_documents.design.word_frame import (
     Alignment,
@@ -160,3 +160,35 @@ def test_the_cover_header_moves_the_text_down_as_in_word(
     # The footer (19 pt) ends at the footer distance above the bottom of the page.
     assert word_frame.band_height(frame.other.footer, NATURAL) == pytest.approx(19.0)
     assert word_frame.footer_bottom(frame) == frame.page.height_pt - frame.page.footer_pt
+
+
+@pytest.mark.parametrize(
+    ("variant", "top"),
+    [
+        (WordVariant.PORTRAIT, 2.91),
+        (WordVariant.PORTRAIT_NO_COVER, 2.91),
+        (WordVariant.LANDSCAPE, 3.51),
+        (WordVariant.LANDSCAPE_NO_COVER, 3.51),
+    ],
+)
+def test_the_marking_sits_below_the_logo_and_the_rule(variant: WordVariant, top: float) -> None:
+    """E12-S03: under the logo, just below the rule of the header, on the type area's width and
+    above the text — on the cover too (where ``quer`` has its rule lower)."""
+    frame = word_frame.read(variant)
+    area = word_frame.marking_area(frame)
+    (logo,) = frame.other.header.pictures
+    rule = frame.other.header.rules[0]
+    assert cm(area.y_pt) == top
+    assert area.y_pt == pytest.approx(rule.y_pt + word.MARKING.gap_pt)
+    assert logo.y_pt + logo.height_pt < area.y_pt
+    assert area.y_pt + area.height_pt <= frame.page.top_pt
+    assert area.x_pt == frame.page.left_pt
+    assert area.x_pt + area.width_pt == pytest.approx(logo.x_pt + logo.width_pt, abs=0.5)
+    # One line of „Kopfzeile" fits the box.
+    header = word_styles.read(variant).paragraph(word.STYLES.header)
+    assert area.height_pt >= header.line_pt
+
+
+def test_the_watermark_box_fits_the_diagonal() -> None:
+    size = word.watermark_size(4.0, 400, 600)
+    assert (4.0 * size + size) / 2**0.5 == pytest.approx(400)

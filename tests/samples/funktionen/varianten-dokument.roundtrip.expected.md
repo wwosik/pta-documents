@@ -1,6 +1,6 @@
 # Landscape without cover
 
-Title and subtitle are in the header, the footer reads “As of” and “Page”, the company line is taken from firma.
+Title and subtitle are in the header, the footer reads “As of” and “Page”, the company line is taken from firma. kennzeichnung: entwurf puts “DRAFT” below the logo of every page and the watermark “DRAFT” behind the text (vertraulich and intern only the text below the logo).
 
 | Variant | Cover | Format |
 | --- | --- | --- |

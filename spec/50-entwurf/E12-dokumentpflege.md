@@ -24,7 +24,7 @@ landet, ist peinlich; die Folien bekommen ihren Sticker schon (E04-S05), Word un
 | ----- | ------ | ------ |
 | [E12-S01](E12-S01-aenderungshistorie.md) | Dokumentenhistorie als Tabelle nach dem Deckblatt, aus `::: historie` oder aus `git log` | Entwurf |
 | [E12-S02](E12-S02-dokumentvergleich.md) | Zwei Markdown-Fassungen → Word mit Änderungsverfolgung; `./run.sh vergleich` | Entwurf |
-| [E12-S03](../55-in-arbeit/docs-2/E12-S03-kennzeichnung-word-und-pdf.md) | `kennzeichnung:` in Word-Kopfzeile und PDF, Wasserzeichen „ENTWURF"; Abgleich mit dem PPTX-Sticker | in Bearbeitung (docs-2) |
+| [E12-S03](../60-prüfung/E12-S03-kennzeichnung-word-und-pdf.md) | `kennzeichnung:` in Word-Kopfzeile und PDF, Wasserzeichen „ENTWURF"; Abgleich mit dem PPTX-Sticker | in Prüfung |
 
 ## Bereichsweite Entscheidungen
 
