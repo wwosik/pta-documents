@@ -15,7 +15,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E05-S01](../60-prüfung/E05-S01-grundgeruest-pdf.md) | Grundgerüst PDF: reportlab, pikepdf, PDF/A-2b | in Prüfung |
 | [E05-S02](../60-prüfung/E05-S02-layout-engine.md) | Layout-Engine portieren | in Prüfung |
 | [E05-S03](../60-prüfung/E05-S03-pta-seitenrahmen.md) | PTA-Seitenrahmen | in Prüfung |
-| [E05-S04](E05-S04-zeichen-folien-syntax-grafiken.md) | Fehlende Zeichen, Folien-Syntax, Diagramme und Charts im PDF | Entwurf |
+| [E05-S04](../55-in-arbeit/docs-2/E05-S04-zeichen-folien-syntax-grafiken.md) | Fehlende Zeichen, Folien-Syntax, Diagramme und Charts im PDF | in Bearbeitung (docs-2) |
 | [E07-S04](E07-S04-pdf-nach-markdown.md) | PDF → Markdown | Entwurf |
 | [E05-S05](E05-S05-authoring-guide-pdf.md) | Authoring Guide PDF | Entwurf |
 
