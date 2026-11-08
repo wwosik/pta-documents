@@ -201,7 +201,8 @@ weil ihm vertraut wird.
   UFO-Quelle mit fontmake gebaut** (GitHub-Releases waren nicht erreichbar) — wird sie durch
   `selawkl.ttf` des Releases ersetzt, die SHA-256 in `tests/design/test_fonts.py` und im
   Modul-Docstring nachziehen. Selawik hat **kein U+00A0** (Typografie setzt es!): der
-  PDF-Generator (E05) muss für fehlende Glyphen ausweichen. Segoe UI wird nur mit allen fünf
+  PDF-Generator weicht aus (seit E05-S02 leiht U+00A0 beim Registrieren die Glyphe des
+  Leerzeichens, `truetype.with_aliases`; andere fehlende Zeichen: E05-S04). Segoe UI wird nur mit allen fünf
   Dateien (inkl. `segoeuil.ttf`) übernommen.
 - **Logos** (E01-S04): `pta_documents.design.logos` (Unterpaket; SVG/PNG als Paketdaten daneben)
   — `Logo` (`WORD`, `SLIDES`, `SLIDES_PLAIN`), `svg()`, `png()`, `size()`, `aspect_ratio()`,
@@ -305,3 +306,18 @@ weil ihm vertraut wird.
   braucht wie die Mermaid-Präsentation mmdc (Tests überspringen sie sonst über `drawable`, auch
   `tests/generation/docx/test_notes.py`). `test_funktionen.py` verlangt im Bericht einen
   `financial-chart` und eine `Abbildung: …`-Beschriftung nach einer Grafik.
+- **PDF-Layout-Engine** (E05-S02): `pta_documents.generation.pdf.layout` (Unterpaket; das Paket
+  `generation/pdf/` hat bis zur Zusammenführung mit E05-S01 kein `__init__.py`) auf reportlabs
+  **Platypus** statt eines eigenen Seitenmodells — `layout(tokens, document, LayoutSettings,
+  notes, PdfInfo, decorate)` bzw. `build_story` + `render`. Werte der Formatvorlagen liest
+  `design/word_styles.read(variant)` aus der Vorlage (kein Wert im PDF-Code doppeln). Fallen:
+  reportlab unterscheidet eingebettete Schriften am **PostScript-Namen** — die schräggestellte
+  Kursive (`truetype.slanted`) heißt deshalb `…-Slanted`, sonst landet sie nicht im PDF;
+  `Frame(overlapAttachedSpace=0)`, sonst verschluckt reportlab den kleineren von Abstand nach/vor
+  (Word addiert); Absätze mit `allowWidows=0`/`allowOrphans=0`; Seitenumbruch vor Überschriften
+  über `KeepWithStart` (eigener `CondPageBreak`, nie oben auf einer Seite), Fußnoten über
+  `FootnoteAnchor`, das `frame._y1p` hebt — `handle_frameBegin` setzt den Rahmen mit
+  `frame._geom()` zurück. Zeilenhöhe „einfach" = `FontInfo.line_height` (Windows-Ascent +
+  -Descent), nicht reportlabs `face.ascent`. Neue Blockarten im PDF in `layout/story.py`
+  (`StoryBuilder.block`) eintragen, gemeinsame Erkennungen mit dem DOCX in
+  `generation/common/block_shapes.py`.
