@@ -25,7 +25,7 @@ der letzten Folie führt die Teilnehmer einer Schulung ohne Abtippen zur Umfrage
 | [E11-S01](E11-S01-variablen.md) | Platzhalter `{{name}}` aus Front Matter `variablen.<name>`, Kommandozeile `--var` und eingebauten Werten | Entwurf |
 | [E11-S02](E11-S02-bausteine.md) | Bausteine aus `documents/_bausteine/` einbinden, mit Bildern; Personen-Bausteine für Kontaktfolien | Entwurf |
 | [E11-S03](E11-S03-tabellen-und-charts-aus-dateien.md) | Tabellen und `chart`-Blöcke aus CSV-/XLSX-Dateien des Dokumentordners | Entwurf |
-| [E11-S04](../55-in-arbeit/docs-2/E11-S04-qr-codes.md) | `![…](qr:https://…)` erzeugt einen QR-Code in PTA-Blau | in Bearbeitung (docs-2) |
+| [E11-S04](../60-prüfung/E11-S04-qr-codes.md) | `![…](qr:https://…)` erzeugt einen QR-Code in PTA-Blau | in Prüfung |
 
 ## Bereichsweite Entscheidungen
 

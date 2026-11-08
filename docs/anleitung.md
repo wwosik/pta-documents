@@ -148,6 +148,7 @@ der Generator als Hinweis `code-language-unknown`.
 | Tabelle mit `\|` | Tabellenformat „PTA" (blauer Kopf) |
 | `Tabelle: Text` direkt unter der Tabelle | Beschriftung „Tabelle 1: Text" |
 | Bild allein im Absatz | Bild in Satzspiegelbreite, darunter „Abbildung 1: …" aus dem Bildtitel (in `"…"`) oder dem Alt-Text |
+| `![Zur Umfrage](qr:https://… "https://…")` | QR-Code in PTA-Blau, 3 × 3 cm, mit „Abbildung n: …"; `scale=0.5` im Titel halbiert ihn (siehe [QR-Codes](#qr-codes)) |
 | ```` ``` ```` Codeblock | Formatvorlage Code (Consolas, grau hinterlegt) |
 | ```` ```chart ```` mit Einstellungen und CSV | echtes Word-Diagramm über die Textbreite, darunter „Abbildung n: …" aus `title` (siehe [Diagramme aus Daten](#diagramme-aus-daten)) |
 | ```` ```mermaid ```` oder ```` ```financial-chart ```` | scharfes Bild in natürlicher Größe, höchstens über die Textbreite (siehe [Diagramme mit Mermaid](#diagramme-mit-mermaid), [Finanzdiagramme](#finanzdiagramme)) |
@@ -183,7 +184,8 @@ Einleitender Satz.              ← Textebene „Einleitungstext"
   davor steht oben, Text danach unten. Ein fetter Absatz direkt vor der Tabelle wird ihre
   Titelzeile.
 - **Ein Bild mit Text** kommt auf das Layout „Titel, Text und Bild 01", ein Bild allein auf
-  „Titel und Bild 01" — das Bild wird auf den Rahmen zugeschnitten.
+  „Titel und Bild 01" — das Bild wird auf den Rahmen zugeschnitten. Ein QR-Code
+  (`![…](qr:https://…)`) wird dagegen eingepasst, nie beschnitten (siehe [QR-Codes](#qr-codes)).
 - **Bestimmtes Layout:** `## Folie {layout="Titel und Text (zweispaltig)"}`. Der Inhalt wird an
   Zeilen `---` auf die Textfelder verteilt (links, rechts). Der Name muss genau stimmen; bei einem
   Tippfehler listet die Meldung alle 35 Layouts.
@@ -416,6 +418,22 @@ flowchart LR
   (Beispiel: `samples/funktionen/mermaid-bericht.md`).
 - Ein Syntaxfehler bricht mit der Zeile des Blocks und der Meldung von Mermaid ab.
 
+### QR-Codes
+
+Ein Link mit `qr:` davor wird ein QR-Code in PTA-Blau — in Word und PowerPoint, ohne Bilddatei:
+
+```markdown
+![QR-Code zur Umfrage](qr:https://umfrage.example/abc "https://umfrage.example/abc")
+```
+
+Gut für die letzte Inhaltsfolie einer Schulung (Umfrage, Unterlagen) oder einen Bericht. Schreib
+den Link als Titel in `"…"`: in Word wird er die Beschriftung und ist so auch gedruckt lesbar.
+Außer Links gehen `mailto:…`, `tel:…`, ein WLAN-Zugang (`<qr:WIFI:T:WPA;S:Netz;P:Kennwort;;>`)
+oder kurzer Text, höchstens 1 000 Zeichen. In Word ist der Code 3 × 3 cm groß, auf Folien füllt
+er den Bildrahmen (eingepasst, nicht beschnitten); `scale=0.5` im Titel halbiert ihn,
+`scale=2` verdoppelt ihn in Word. Liest man das Dokument wieder nach Markdown ein, ist der
+QR-Code ein gewöhnliches Bild.
+
 ## 6. Aus Python aufrufen (optional)
 
 ```python
@@ -453,7 +471,9 @@ Fehler im Dokument melden sich als `DocumentConversionError` mit einem Satz, der
 - `The template 'hoch' has a cover page and needs a title: add 'titel: …'` → `titel` ergänzen
   oder `vorlage: hoch-ohne-deckblatt`.
 - `The image 'images/foto.png' … is not among the document's resources` → Datei fehlt in
-  `images/` oder der Pfad ist falsch geschrieben.
+  `images/` oder der Pfad ist falsch geschrieben (für einen QR-Code `qr:` davor schreiben).
+- `Line 12: The QR code has 1210 characters, more than 1000` → kürzeren Link nehmen;
+  `'scale=0' is no scale` → eine Zahl über 0 und höchstens 5 schreiben.
 - `The image 'images/plan.svg' cannot be converted: it has no size …` → dem SVG `width` und
   `height` oder eine `viewBox` geben (im Grafikprogramm mit fester Größe exportieren).
 - `… SVG images need the extra 'svg'` oder `… is a drawing, which Word places as an SVG image;

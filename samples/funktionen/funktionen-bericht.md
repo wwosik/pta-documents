@@ -373,6 +373,17 @@ scharf (ältere Word-Versionen zeigen ein Bild in doppelter Auflösung):
 
 ![Ablauf in drei Schritten](images/plan.svg "Eine SVG-Grafik, in Word scharf in jeder Größe")
 
+## QR-Code
+
+Ein Link mit `qr:` davor wird ein QR-Code in PTA-Blau, 3 cm breit (`scale=0.5` im Titel halbiert
+ihn); den Link als Beschriftung zu zeigen, macht ihn auch gedruckt lesbar:
+
+```markdown
+![QR-Code zur Website der PTA](qr:https://www.pta.de "https://www.pta.de")
+```
+
+![QR-Code zur Website der PTA](qr:https://www.pta.de "https://www.pta.de")
+
 ## Diagramme aus Daten
 
 Ein `chart`-Block wird ein echtes Word-Diagramm in den PTA-Farben, dessen Tabelle sich mit

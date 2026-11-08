@@ -289,6 +289,24 @@ Bis zu vier Bilder stehen nebeneinander; Text danach steht darunter.
 ```
 ::::
 
+## QR-Code
+
+Ein Link mit `qr:` davor wird ein QR-Code in PTA-Blau. Er wird in seinen Rahmen eingepasst,
+nie beschnitten.
+
+![QR-Code zur Website der PTA](qr:https://www.pta.de)
+
+:::: notes
+```markdown
+## QR-Code
+
+Ein Link mit `qr:` davor wird ein QR-Code in PTA-Blau. Er wird in seinen Rahmen eingepasst,
+nie beschnitten.
+
+![QR-Code zur Website der PTA](qr:https://www.pta.de)
+```
+::::
+
 # Layouts
 
 ## Zwei Spalten {layout="Titel und Text (zweispaltig)"}

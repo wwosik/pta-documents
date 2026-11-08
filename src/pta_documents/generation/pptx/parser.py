@@ -22,6 +22,7 @@ from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     code_blocks,
     code_highlight,
+    generated_images,
     heading_attributes,
     html,
     layout_syntax,
@@ -120,6 +121,9 @@ class DeckParser:
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
         layout_syntax.check(tokens, FORMAT, self.line_offset)
+        self.document = generated_images.add_generated(
+            self.document, tokens, FORMAT, self.line_offset
+        )
         if self.options.typography:
             typeset(tokens, self.options.language)
         end = next((i for i, t in enumerate(tokens) if t.type == "footnote_block_open"), None)
@@ -516,7 +520,7 @@ class DeckParser:
         """Text and images apart: images after the paragraph, as their own visual."""
         runs = self.runs(inline, Style(italic=italic), images_as_text=False)
         images = [
-            self._placeable(Image(self._resource(child, inline), child.content, line), inline)
+            self._placeable(self._image(child, inline, line), inline)
             for child, line in zip(
                 inline.children or [], child_lines(inline, self.line_offset), strict=True
             )
@@ -552,7 +556,19 @@ class DeckParser:
     def image(self, child: Token, inline: Token) -> Image:
         """The image of an ``image`` child of ``inline``, in a format slides take."""
         line = self.line(inline)
-        return self._placeable(Image(self._resource(child, inline), child.content, line), inline)
+        return self._placeable(self._image(child, inline, line), inline)
+
+    def _image(self, child: Token, inline: Token, line: int | None) -> Image:
+        """The ``image`` child of ``inline`` as it is written; a QR code is fitted, not
+        cropped, and has its ``scale``."""
+        generated = generated_images.is_generated(str(child.attrs.get("src", "")))
+        return Image(
+            self._resource(child, inline),
+            child.content,
+            line,
+            fit=generated,
+            scale=generated_images.scale_of(child),
+        )
 
     def _placeable(self, image: Image, token: Token) -> Image:
         """``image`` in a format slides take: other formats through the image converters."""
@@ -568,10 +584,9 @@ class DeckParser:
                 f"GIF, BMP and TIFF{hint}",
                 token,
             )
-        return Image(
-            conversion.image,
-            image.alt,
-            image.line,
+        return replace(
+            image,
+            resource=conversion.image,
             natural=(conversion.width, conversion.height),
             svg=conversion.svg,
         )

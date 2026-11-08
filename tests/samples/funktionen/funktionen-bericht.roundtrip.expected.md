@@ -359,6 +359,18 @@ Eine SVG-Grafik steht in ihrer natürlichen Größe da und bleibt in Word in jed
 
 Abbildung 6: Eine SVG-Grafik, in Word scharf in jeder Größe
 
+## QR-Code
+
+Ein Link mit qr: davor wird ein QR-Code in PTA-Blau, 3 cm breit (scale=0.5 im Titel halbiert ihn); den Link als Beschriftung zu zeigen, macht ihn auch gedruckt lesbar:
+
+```markdown
+![QR-Code zur Website der PTA](qr:https://www.pta.de "https://www.pta.de")
+```
+
+![QR-Code zur Website der PTA](images/image9.png)
+
+Abbildung 7: https://www.pta.de
+
 ## Diagramme aus Daten
 
 Ein chart-Block wird ein echtes Word-Diagramm in den PTA-Farben, dessen Tabelle sich mit „Daten bearbeiten“ ändern lässt; der Titel wird die Beschriftung, die Quelle steht darunter:
@@ -385,7 +397,7 @@ Q4, 13, 13.6
 | Q3 | 12.5 | 14 |
 | Q4 | 13 | 13.6 |
 
-Abbildung 7: Aufträge je Quartal
+Abbildung 8: Aufträge je Quartal
 
 Quelle: Vertrieb, Beispielzahlen
 
@@ -411,7 +423,7 @@ Mi; 42; 58,5
 | Di | 43 | 57 |
 | Mi | 42 | 58.5 |
 
-Abbildung 8: Fahrten je Tag
+Abbildung 9: Fahrten je Tag
 
 Linien (type: line) stapeln nie; ein leeres Feld lässt eine Lücke, ohne Titel gibt es keine Beschriftung:
 
@@ -453,7 +465,7 @@ Abbildung: Aufträge je Region
 | Nord | 41 |
 | Süd | 37 |
 
-Abbildung 9: Aufträge je Region
+Abbildung 10: Aufträge je Region
 
 ## Finanzdiagramme
 
@@ -481,9 +493,9 @@ Ein financial-chart-Block steht in Word als scharfes Bild (SVG, mit PNG für äl
 Abbildung: Wachstum der Aufträge gegenüber dem Vorjahr
 ````
 
-![financial-chart](images/image9.png)
+![financial-chart](images/image10.png)
 
-Abbildung 10: Wachstum der Aufträge gegenüber dem Vorjahr
+Abbildung 11: Wachstum der Aufträge gegenüber dem Vorjahr
 
 # Code, Zitat und Trennlinie
 

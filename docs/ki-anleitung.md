@@ -103,6 +103,9 @@ Sprache = Hinweis `code-language-unknown`.
   Markierung gelb, farbige Wörter und Status-Labels in der Statusfarbe. Mehrere Bilder in einem
   Absatz (`![a](x.png) ![b](y.png)`) stehen nebeneinander (max. vier je Zeile), je mit
   „Abbildung n".
+- QR-Code: `![QR-Code zur Umfrage](qr:https://… "https://…")` → QR-Code in PTA-Blau, 3 × 3 cm,
+  den Link als Titel (wird „Abbildung n: https://…", gedruckt lesbar). `scale=0.5` im Titel
+  halbiert ihn. Keine Bilddatei nötig, keine Quelle in `QUELLEN.md`.
 
 ## Präsentation
 
@@ -128,6 +131,9 @@ Gliederung:
   Verliert ein Bild mehr als ein Viertel seiner Fläche an den Rahmen (`image-cropped`) oder wird
   es mehr als doppelt vergrößert (`image-enlarged`), kommt ein Hinweis — dann ein Bild in
   passenden Proportionen bzw. höherer Auflösung ablegen.
+- QR-Code (Umfrage, Unterlagen) auf die letzte Inhaltsfolie, nicht auf die Abschlussfolie:
+  `![QR-Code zur Umfrage](qr:https://…)` mit einem Satz daneben; er wird in den Bildrahmen
+  eingepasst, nie beschnitten. Den Link zusätzlich als Text auf die Folie schreiben.
 - Ein bestimmtes PTA-Layout: `## Titel {layout="Titel und Text (zweispaltig)"}` und den Inhalt mit
   `---` in Spalten teilen. Nur exakte Layoutnamen; die Fehlermeldung listet alle.
 - Heading-Attribute: `#` kennt `.closing` und `layout="…"`, `##` kennt `.dark`, `kicker="…"`,

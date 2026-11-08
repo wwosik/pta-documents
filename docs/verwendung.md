@@ -55,7 +55,8 @@ umgehen musste, ohne dass es ein Fehler ist, steht im Rückgabewert (siehe
 Zuordnung: `#`–`###` → „Überschrift 1–3" (nummeriert), tiefere → „Zwischenüberschrift";
 Absätze → „Standard"; Listen → „Aufzählungszeichen" bzw. „Listenabsatz"; Tabellen →
 Tabellenformat „PTA", ein Absatz `Tabelle: …` direkt danach wird „Tabelle n: …"; ein Bild allein
-im Absatz bekommt „Abbildung n: …" aus Titel oder Alt-Text; Codeblöcke → „Code", Zitate →
+im Absatz bekommt „Abbildung n: …" aus Titel oder Alt-Text (`![…](qr:…)` ist ein QR-Code, siehe
+[QR-Codes](#qr-codes-e11-s04)); Codeblöcke → „Code", Zitate →
 „Zitat"; Fußnoten werden Word-Fußnoten; Diagramme und Charts aus Codeblöcken siehe
 [Grafiken in Word](#grafiken-in-word-e03-s04). Folien-Syntax: siehe *Folien-Syntax in Word* unten.
 
@@ -707,6 +708,53 @@ png = to_png(svg, PngOptions(width=600))  # Breite in Pixeln, Höhe folgt
   Ein Maßstab ≤ 0 oder ein Hintergrund, der nicht `RRGGBB` ist, wirft `ValueError`.
 - **PDF** (E05) wird das PNG in dreifacher Größe (≈ 288 dpi) setzen (Antwort in E06-S04); den
   PDF-Generator gibt es noch nicht.
+
+## QR-Codes (E11-S04)
+
+Eine Bildreferenz mit dem Schema `qr:` ist kein Pfad in den Ressourcen, sondern ein QR-Code, den
+der Generator selbst erzeugt — in Word und PowerPoint:
+
+```markdown
+![Zur Umfrage](qr:https://umfrage.example/abc "https://umfrage.example/abc")
+![WLAN](<qr:WIFI:T:WPA;S:Mein Netz;P:geheim;;> "Gäste-WLAN scale=0.5")
+```
+
+- **Inhalt:** alles nach `qr:` — URL, `mailto:`, `tel:`, WLAN-Zugang (`WIFI:T:WPA;S:…;P:…;;`)
+  oder Text; höchstens 1 000 Zeichen. Leerzeichen gehen nur in `<…>` oder als `%20`.
+  markdown-it schreibt Linkziele %-kodiert: `http:`, `https:` und `mailto:` bleiben so (gültige
+  URLs), alles andere wird dekodiert (`S:Mein%20Netz` → „Mein Netz").
+- **Bild:** PNG mit mindestens 1 000 Pixeln Kante, PTA-Blau auf Weiß, Ruhezone 4 Module,
+  Fehlerkorrektur mindestens M (segno hebt sie an, wo das nichts kostet), nie ein Micro-QR-Code.
+  Das PNG trägt die Auflösung, die es 3 cm breit macht.
+- **Word:** 3 × 3 cm, mit „Abbildung n" aus Titel oder Alt-Text wie jedes Bild. Den Link als
+  Titel zu schreiben, macht ihn auch gedruckt lesbar.
+- **PowerPoint:** wie jedes Bild (Platzhalter des Layouts, Bildreihe, Flow-Folie), aber in den
+  Bildplatzhalter **eingepasst und zentriert, nie beschnitten**.
+- **`scale=N`** im Titel (0 < N ≤ 5, Komma oder Punkt) ändert die Größe: in Word das N-Fache von
+  3 cm (höchstens Satzspiegelbreite), auf Folien das N-Fache der eingepassten Größe (höchstens
+  diese). `scale=` wird aus dem Titel genommen und erscheint nicht in der Beschriftung. Nur für
+  QR-Codes; in Titeln anderer Bilder bleibt `scale=…` Text (siehe E15-S04).
+- **Fehler mit Zeile:** `Line N: The QR code has 1001 characters, more than 1000. …`,
+  `Line N: The QR code has no content …`, `Line N: 'scale=0' is no scale …`. Andere Schemata
+  (`foto:…`) bleiben, was sie waren: ein Pfad, den die Ressourcen haben müssen.
+- **Prüfen:** `style-image-source` verlangt für QR-Codes keine Quelle.
+- **Rundreise:** die Konverter lesen ein gewöhnliches PNG zurück (`![Zur Umfrage](images/…png)`),
+  nicht `qr:…`.
+- **PDF** (E05) wird das PNG wie jedes Bild setzen; das gibt es noch nicht.
+
+```python
+from pta_documents.generation.common.generated_images import (
+    add_generated, is_generated, qr_png, resolve,
+)
+
+is_generated("qr:https://pta.de")  # True
+png = qr_png("https://pta.de")  # PNG-Bytes
+resource = resolve("qr:https://pta.de", DocumentFormat.DOCX)  # DocumentResource unter "qr:…"
+```
+
+Beide Generatoren rufen `add_generated(document, tokens, format, line_offset)` nach
+`layout_syntax.check` auf; es gibt das Dokument mit den erzeugten Bildern als zusätzliche
+Ressourcen zurück (eine eigene Ressource mit dem Pfad `qr:…` geht vor).
 
 ## Logos als SVG und PNG (E01-S04)
 

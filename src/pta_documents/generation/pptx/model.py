@@ -121,6 +121,11 @@ class Image:
     resource's pixels."""
     svg: bytes | None = field(default=None, kw_only=True)
     """The cleaned SVG of a converted SVG image, placed beside the PNG (``asvg:svgBlip``)."""
+    fit: bool = field(default=False, kw_only=True)
+    """Fitted into a picture placeholder, never cropped (a QR code, E11-S04)."""
+    scale: float = field(default=1.0, kw_only=True)
+    """``scale=N`` of a QR code: times the size it would be shown at, never larger than its
+    room."""
 
 
 @dataclass(frozen=True)

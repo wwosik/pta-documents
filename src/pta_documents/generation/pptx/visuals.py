@@ -316,6 +316,21 @@ EMU_PER_PIXEL: Final = 9525
 """A pixel at 96 dpi: the natural size of an image on a slide."""
 
 
+def fit_picture(picture: Any, image: Image) -> None:
+    """A picture a placeholder cropped to fill it, uncropped and fitted into the placeholder
+    instead (``image.scale`` times as large at most), centred in it."""
+    picture.crop_left = picture.crop_right = picture.crop_top = picture.crop_bottom = 0.0
+    left, top = int(picture.left), int(picture.top)
+    room_x, room_y = int(picture.width), int(picture.height)
+    pixels_x, pixels_y = picture_size(image)
+    factor = min(room_x / pixels_x, room_y / pixels_y) * min(image.scale, 1.0)
+    width, height = int(pixels_x * factor), int(pixels_y * factor)
+    picture.left = Emu(left + (room_x - width) // 2)
+    picture.top = Emu(top + (room_y - height) // 2)
+    picture.width = Emu(width)
+    picture.height = Emu(height)
+
+
 def draw_pictures(
     slide: PptxSlide | None, images: list[Image], left: int, top: int, width: int, height: int
 ) -> tuple[int, list[float]]:
@@ -331,7 +346,7 @@ def draw_pictures(
     factors: list[float] = []
     for image in images:
         pixels_x, pixels_y = picture_size(image)
-        scale = min(share / pixels_x, height / pixels_y)
+        scale = min(share / pixels_x, height / pixels_y) * min(image.scale, 1.0)
         factors.append(scale / EMU_PER_PIXEL)
         w, h = int(pixels_x * scale), int(pixels_y * scale)
         if slide is not None:

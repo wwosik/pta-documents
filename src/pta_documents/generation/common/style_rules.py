@@ -21,7 +21,7 @@ from typing import Final
 from markdown_it.token import Token
 
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import heading_attributes
+from pta_documents.generation.common import generated_images, heading_attributes
 from pta_documents.generation.common.layout_syntax import NOTES
 from pta_documents.generation.common.result import GenerationNote, Notes
 from pta_documents.markdown.document import MarkdownDocument
@@ -320,7 +320,7 @@ class _Rules:
         if any(t.type == "inline" and SOURCE_MARKER.search(inline_text(t)) for t in tokens):
             return  # the slide names them, e.g. "Foto: Jakub Hałun, CC BY-SA 4.0"
         for image, line in self.images(section.heading, section.end):
-            if not SOURCE_MARKER.search(str(image.attrs.get("title") or "")):
+            if needs_source(image):
                 notes.add(StyleCodes.IMAGE_SOURCE, line, self.source_message(image))
 
     # ------------------------------------------------------------------ documents
@@ -347,7 +347,7 @@ class _Rules:
             if any(SOURCE_MARKER.search(inline_text(t)) for t in nearby):
                 continue  # in the paragraph of the image or the one after it
             for image, line in self.images(i, i + 1):
-                if not SOURCE_MARKER.search(str(image.attrs.get("title") or "")):
+                if needs_source(image):
                     notes.add(StyleCodes.IMAGE_SOURCE, line, self.source_message(image))
 
     def source_message(self, image: Token) -> str:
@@ -445,3 +445,11 @@ def ending_of(text: str) -> str:
     if last in ".!?…":
         return "" if stripped.endswith(("...", "…")) else "."
     return last if last in ",;:" else ""
+
+
+def needs_source(image: Token) -> bool:
+    """Whether ``image`` lacks an author or source in its title; a generated image (a QR code,
+    E11-S04) has none to name."""
+    if generated_images.is_generated(str(image.attrs.get("src", ""))):
+        return False
+    return not SOURCE_MARKER.search(str(image.attrs.get("title") or ""))

@@ -427,13 +427,16 @@ class DeckWriter:
     def fill_picture(
         self, slide: PptxSlide, idx: int, image: Image, where: Slide, alone_hint: bool = True
     ) -> None:
-        """The image in a picture placeholder, which crops it to fill the placeholder; a note
-        about cropping suggests a slide of its own unless ``alone_hint`` is False."""
+        """The image in a picture placeholder, which crops it to fill the placeholder (a QR code
+        is fitted instead); a note about cropping suggests a slide of its own unless
+        ``alone_hint`` is False."""
         resource = image.resource
         placeholder = self.placeholder(slide, idx)
         picture = placeholder.insert_picture(io.BytesIO(resource.content))
         picture._element.nvPicPr.cNvPr.set("descr", image.alt)
         visuals.attach_svg(picture, image)
+        if image.fit:
+            visuals.fit_picture(picture, image)
         visible_x = 1.0 - float(picture.crop_left) - float(picture.crop_right)
         visible_y = 1.0 - float(picture.crop_top) - float(picture.crop_bottom)
         lost = 1.0 - visible_x * visible_y

@@ -7,7 +7,8 @@ round trip through the converter is committed as ``funktionen/<file>.roundtrip.e
 each generator, the template variants, the containers, alerts and heading attributes of the
 slide syntax, ``==mark==``, coloured words, status labels, the ``chart`` blocks (every kind,
 setting and separator), in the deck the ``financial-chart`` blocks (every type and option), in
-the report one of them and an ``Abbildung: …`` caption after a graphic (E03-S04).
+the report one of them and an ``Abbildung: …`` caption after a graphic (E03-S04), and every
+scheme of generated images (``qr:``, E11-S04).
 When the authoring guides exist (E02-S05), the list comes from their syntax instead.
 """
 
@@ -34,7 +35,7 @@ from pta_documents.design.colors import StatusCategory
 from pta_documents.design.slides import TITLE_SLIDES
 from pta_documents.design.variants import Language, SlidesVariant, WordVariant
 from pta_documents.errors import DocumentFormat
-from pta_documents.generation.common import heading_attributes, layout_syntax
+from pta_documents.generation.common import generated_images, heading_attributes, layout_syntax
 from pta_documents.generation.common.code_blocks import KNOWN_GRAPHIC_LANGUAGES, fence_language
 from pta_documents.generation.common.coloured_words import PATTERN
 from pta_documents.generation.docx import generator as docx_generator
@@ -57,6 +58,7 @@ FINANCIAL: Final = financial_block.LANGUAGE
 SOURCE: Final = "markdown"
 FIGURE_CAPTION: Final = "Abbildung: … after a graphic"
 FIGURE_CAPTIONS: Final = ("Abbildung:", "Figure:")
+GENERATED_IMAGE: Final = "![…]({scheme}…)"
 """The language of the fences that show the Markdown source of a feature."""
 DOCX: Final = DocumentFormat.DOCX
 PPTX: Final = DocumentFormat.PPTX
@@ -179,6 +181,11 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
         elif token.type == "inline":
             if any(child.type == "mark_open" for child in token.children or ()):
                 shown.add("==mark==")
+            for child in token.children or ():
+                source = str(child.attrs.get("src", "")) if child.type == "image" else ""
+                if generated_images.is_generated(source):
+                    scheme = source.strip().lower().partition(":")[0] + ":"
+                    shown.add(GENERATED_IMAGE.format(scheme=scheme))
             for span in PATTERN.finditer(inline_text(token)):
                 shown.add(f"[words]{{.{span.group('category').lower()}}}")
             cell = re.fullmatch(r"`([^`]+)`", token.content.strip())
@@ -247,6 +254,7 @@ def required(format: DocumentFormat) -> set[str]:
     result |= {f"::: {layout_syntax.PANEL} dark", f"::: {layout_syntax.COLUMNS} <widths>"}
     result |= {f"> [!{kind}]" for kind in layout_syntax.ALERT_KINDS}
     result.add("==mark==")
+    result |= {GENERATED_IMAGE.format(scheme=scheme) for scheme in generated_images.SCHEMES}
     result |= {f"```{CHART} type: {kind.value}" for kind in ChartKind}
     result |= {f"```{CHART} {key}:" for key in chart_parser.SETTINGS}
     result |= {f"```{CHART} separator ,", f"```{CHART} separator ;"}

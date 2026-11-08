@@ -39,6 +39,7 @@ from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     code_blocks,
     code_highlight,
+    generated_images,
     heading_attributes,
     html,
     layout_syntax,
@@ -169,6 +170,9 @@ class BodyWriter:
         env: dict[str, object] = {}
         tokens = create_parser().parse(self.front.body, env)
         layout_syntax.check(tokens, FORMAT, self.front.body_line)
+        self.source = generated_images.add_generated(
+            self.source, tokens, FORMAT, self.front.body_line
+        )
         if self.options.typography:
             typeset(tokens, self.options.language)
         end = next((i for i, t in enumerate(tokens) if t.type == "footnote_block_open"), None)
@@ -695,7 +699,8 @@ class BodyWriter:
                 FORMAT, f"The image '{source}'{where} is not among the document's resources."
             )
         title = str(image.attrs.get("title") or "")
-        self.place_picture(paragraph, resource, source, image.content, title, line, width)
+        scale = generated_images.scale_of(image)
+        self.place_picture(paragraph, resource, source, image.content, title, line, width, scale)
 
     def place_picture(
         self,
@@ -706,10 +711,11 @@ class BodyWriter:
         title: str,
         line: int | None,
         max_width: int | None = None,
+        scale: float = 1.0,
     ) -> None:
-        """``resource`` as a picture in ``paragraph``; a format DOCX does not take goes through
-        the image converters and is placed at its natural size (never wider than
-        ``max_width``, default the text width)."""
+        """``resource`` as a picture in ``paragraph``, ``scale`` times its size; a format DOCX
+        does not take goes through the image converters and is placed at its natural size
+        (never wider than ``max_width``, default the text width)."""
         where = f" (line {line})" if line else ""
         natural: tuple[float, float] | None = None
         svg: bytes | None = None
@@ -727,7 +733,16 @@ class BodyWriter:
             natural = (conversion.width, conversion.height)
             svg = conversion.svg
         self.insert_picture(
-            paragraph, resource, source, alt, title, line, max_width, natural=natural, svg=svg
+            paragraph,
+            resource,
+            source,
+            alt,
+            title,
+            line,
+            max_width,
+            natural=natural,
+            svg=svg,
+            scale=scale,
         )
 
     def insert_picture(
@@ -742,10 +757,11 @@ class BodyWriter:
         *,
         natural: tuple[float, float] | None = None,
         svg: bytes | None = None,
+        scale: float = 1.0,
     ) -> None:
         """``resource`` (PNG, JPEG …) as a picture in ``paragraph``, at its ``natural`` size in
-        pixels if given, with ``svg`` beside it (``asvg:svgBlip``) if given."""
-        width, height = self._image_size(resource.content, natural, max_width)
+        pixels if given (times ``scale``), with ``svg`` beside it (``asvg:svgBlip``) if given."""
+        width, height = self._image_size(resource.content, natural, max_width, scale)
         with Image.open(io.BytesIO(resource.content)) as opened:
             factor = width / (opened.size[0] * EMU_PER_PIXEL)
         if factor > MAX_ENLARGEMENT:
@@ -778,9 +794,11 @@ class BodyWriter:
         content: bytes,
         natural: tuple[float, float] | None = None,
         max_width: int | None = None,
+        factor: float = 1.0,
     ) -> tuple[int, int]:
         """The size of the picture in EMU: from its pixels and dpi, or its ``natural`` size in
-        pixels at 96 dpi; never wider than the text or higher than 80 % of the page."""
+        pixels at 96 dpi, times ``factor`` (``scale=N`` of a QR code); never wider than the text
+        or higher than 80 % of the page."""
         if natural is not None:
             width = natural[0] * EMU_PER_PIXEL
             height = natural[1] * EMU_PER_PIXEL
@@ -792,6 +810,8 @@ class BodyWriter:
             dpi_y = float(dpi[1]) or 96.0
             width = pixels_x / dpi_x * EMU_PER_INCH
             height = pixels_y / dpi_y * EMU_PER_INCH
+        width *= factor
+        height *= factor
         widest = min(self.text_width, max_width or self.text_width)
         scale = min(1.0, widest / width, self.text_height * word.FIGURE_HEIGHT_SHARE / height)
         return int(width * scale), int(height * scale)

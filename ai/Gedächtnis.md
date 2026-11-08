@@ -18,7 +18,7 @@ weil ihm vertraut wird.
 - Analysen in `spec/10-analysen/`, Pläne in `spec/50-entwurf/`, Reihenfolge in
   `M01-pta-dokumente-aus-markdown.md`.
 - **Stack:** Python ≥ 3.12, venv + pip (kein uv), hatchling, pytest, ruff, pyright strict.
-  Kern: python-docx, python-pptx, lxml, markdown-it-py + mdit-py-plugins, Pillow. Extras:
+  Kern: python-docx, python-pptx, lxml, markdown-it-py + mdit-py-plugins, Pillow, Pygments, segno. Extras:
   `pdf` (reportlab, pikepdf, pdfplumber, fontTools), `svg` (resvg-py, fontTools), `diagrams`
   (cssselect; mermaid-cli über Node.js in `tools/mermaid/`).
 - **Paketstruktur** (`src/pta_documents/`): `errors.py` (`DocumentConversionError`,
@@ -305,3 +305,14 @@ weil ihm vertraut wird.
   braucht wie die Mermaid-Präsentation mmdc (Tests überspringen sie sonst über `drawable`, auch
   `tests/generation/docx/test_notes.py`). `test_funktionen.py` verlangt im Bericht einen
   `financial-chart` und eine `Abbildung: …`-Beschriftung nach einer Grafik.
+- **QR-Codes** (E11-S04): `generation/common/generated_images.py` — Bildreferenzen mit Schema
+  `qr:` (`SCHEMES`, `is_generated`) erzeugt `add_generated(document, tokens, format,
+  line_offset)` als PNG-Ressource unter der Referenz selbst (segno, Kernabhängigkeit, BSD-3;
+  `micro=False`, sonst macht segno aus kurzem Text Micro-QR, den Handys kaum lesen). Beide
+  Generatoren rufen es direkt nach `layout_syntax.check` auf und arbeiten danach mit dem
+  zurückgegebenen Dokument (`BodyWriter.source`, `DeckParser.document`). `scale=N` im Titel
+  nimmt es aus dem Titel und legt es in `Token.meta[SCALE]` (`scale_of`); Word multipliziert die
+  Größe (PNG-dpi = 3 cm), PowerPoint über `Image.scale`. `Image.fit` lässt `fill_picture` das
+  Bild in den Platzhalter einpassen statt beschneiden (`visuals.fit_picture`). Ein neues Schema
+  in `SCHEMES` eintragen; `test_funktionen.py` verlangt jedes im Beispiel.
+  `style-image-source` überspringt erzeugte Bilder (`style_rules.needs_source`).
