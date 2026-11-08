@@ -17,7 +17,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E05-S03](../60-prüfung/E05-S03-pta-seitenrahmen.md) | PTA-Seitenrahmen | in Prüfung |
 | [E05-S04](../60-prüfung/E05-S04-zeichen-folien-syntax-grafiken.md) | Fehlende Zeichen, Folien-Syntax, Diagramme und Charts im PDF | in Prüfung |
 | [E07-S04](../60-prüfung/E07-S04-pdf-nach-markdown.md) | PDF → Markdown | in Prüfung |
-| [E05-S05](E05-S05-authoring-guide-pdf.md) | Authoring Guide PDF | Entwurf |
+| [E05-S05](../55-in-arbeit/docs-2/E05-S05-authoring-guide-pdf.md) | Authoring Guide PDF | in Bearbeitung (docs-2) |
 
 ## Offene Fragen
 
