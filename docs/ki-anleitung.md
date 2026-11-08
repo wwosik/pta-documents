@@ -72,6 +72,7 @@ YAML, keine Listen). Schlüssel und Werte sind **deutsch**; `ja`/`nein`; Datum `
 | `typografie` | ✓ | ✓ | `ja` (Standard) · `nein` — gerade Zeichen behalten |
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) · `nein` — Codeblöcke einfarbig |
 | `pruefung` | ✓ | ✓ | nur `check`: `aus` · Liste von `style-…`-Codes, die nicht geprüft werden |
+| `aufbau` | – | ✓ | `listen` (jede Liste Punkt für Punkt) · `nein` (Standard) |
 
 `firma`/`inhaltsverzeichnis` in einer Präsentation oder `fusszeile`/`titelfolie`/`kennzeichnung`
 in einem Word-Dokument sind Fehler.
@@ -174,6 +175,14 @@ Gliederung:
   (bei geteilten Folien auf jede), Word lässt sie weg (Hinweis `notes-dropped`, beim
   Word-Bericht also keine Notizen schreiben). Absätze, Listen, fett, kursiv, Code und Links
   bleiben; Tabellen und Bilder darin fallen weg. Nie vor dem ersten `#`.
+- **Builds (Klick für Klick):** eine Zeile `{.build}` direkt vor einer Liste, `::: cards`,
+  `::: rows`, `::: columns` oder einer Bildreihe lässt die Elemente einzeln erscheinen, vor jedem
+  anderen Block (Tabelle, Code, Chart, Container, Absatz) den Block als Ganzes; `{.frag}` immer
+  als Ganzes. Eingang wählbar: `{.build=appear}`, `=fly`, `=wipe` (Standard: einblenden).
+  `{.exit}` blendet einen Block beim Klick aus, `{.emphasize}` färbt Text (Absatz, Liste) beim
+  Klick PTA-blau. Sparsam einsetzen: eine Argumentationsliste oder eine Kartenreihe je Folie,
+  nicht jede Folie. Nur unter `##`-Folien — nie auf Titel-, Trenn-, Abschlussfolie oder
+  PTA-Folienarten, nie vor `#`/`##`, nie als letzte Zeile; Word und PDF ignorieren die Zeile.
 
 ## PTA-Folienarten (PowerPoint)
 

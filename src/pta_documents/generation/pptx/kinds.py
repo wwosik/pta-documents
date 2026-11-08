@@ -121,10 +121,11 @@ def write_chart_slide(deck: DeckWriter, slide: ChartSlide) -> None:
         slide.charts, (first, PH.second_chart), strict=False
     ):
         spec = item.graphic.chart
-        for ph, value in ((title, spec.title), (unit, spec.unit), (source, spec.source)):
-            if value:
-                deck.set_text(target, ph, value)
-        chart.insert_chart(deck.placeholder(target, idx), spec, show_title=False)
+        with deck.at(target, item.click):
+            for ph, value in ((title, spec.title), (unit, spec.unit), (source, spec.source)):
+                if value:
+                    deck.set_text(target, ph, value)
+            chart.insert_chart(deck.placeholder(target, idx), spec, show_title=False)
     if slide.text:
         _text(deck, target, PH.chart_text, list(slide.text), slide)
     deck.finish(target, footer=True)

@@ -1310,9 +1310,139 @@ Mit `"culture": "en"` stehen Zahlen und Beschriftungen auf Englisch.
 
 :::
 
-## PTA-Folienarten
+## Präsentieren
 
 10
+
+## Punkt für Punkt
+
+Eine Zeile {.build} vor einer Liste lässt die Punkte einzeln erscheinen.
+
+Erst das Problem
+
+dann die Lösung
+
+mit ihrem wichtigsten Vorteil
+
+zum Schluss der nächste Schritt
+
+Ein {.frag} zeigt den nächsten Block als Ganzes.
+
+::: notes
+
+Jeder Klick zeigt den nächsten Punkt, auch auf der zweiten Ebene; der letzte Absatz kommt mit einem eigenen Klick.
+
+```
+## Punkt für Punkt
+
+Eine Zeile `{.build}` vor einer Liste lässt die Punkte einzeln erscheinen.
+
+{.build}
+- Erst das Problem
+- dann die Lösung
+  - mit ihrem wichtigsten Vorteil
+- zum Schluss der nächste Schritt
+
+{.frag}
+Ein `{.frag}` zeigt den nächsten Block als Ganzes.
+```
+
+:::
+
+## Tabelle auf einen Klick
+
+Die Tabelle erscheint als Ganzes, wenn der Vortrag so weit ist.
+
+| Phase | Dauer |
+| --- | --- |
+| Analyse | 4 Wochen |
+| Umsetzung | 12 Wochen |
+
+::: notes
+
+```
+## Tabelle auf einen Klick
+
+Die Tabelle erscheint als Ganzes, wenn der Vortrag so weit ist.
+
+{.build=appear}
+| Phase | Dauer |
+| ----- | ----: |
+| Analyse | 4 Wochen |
+| Umsetzung | 12 Wochen |
+```
+
+:::
+
+## Karten nacheinander
+
+Builds
+
+Verstehen
+
+Was heute wehtut
+
+Entscheiden
+
+Was wir ändern
+
+Umsetzen
+
+Wer was bis wann tut
+
+{.build} vor Karten, Zeilen und Spalten baut sie Element für Element auf.
+
+:::: notes
+
+```
+## Karten nacheinander {kicker="Builds"}
+
+{.build=fly}
+::: cards
+### Verstehen
+Was heute wehtut
+
+### Entscheiden
+Was wir ändern
+
+### Umsetzen
+Wer was bis wann tut
+:::
+
+{.frag=wipe}
+> [!TIP]
+> `{.build}` vor Karten, Zeilen und Spalten baut sie Element für Element auf.
+```
+
+::::
+
+## Ausblenden und hervorheben
+
+Dieser Satz verschwindet beim ersten Klick.
+
+Dieser Punkt wird beim zweiten Klick PTA-blau.
+
+Was keinen Marker hat, steht von Anfang an da.
+
+::: notes
+
+```
+## Ausblenden und hervorheben
+
+{.exit}
+Dieser Satz verschwindet beim ersten Klick.
+
+{.emphasize}
+- Dieser Punkt wird beim zweiten Klick PTA-blau.
+
+Was keinen Marker hat, steht von Anfang an da.
+```
+
+:::
+
+## PTA-Folienarten
+
+11
 
 ## Agenda
 

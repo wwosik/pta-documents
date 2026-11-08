@@ -147,6 +147,7 @@ result.slides  # Zahl der erzeugten Folien
 | `kennzeichnung` | `vertraulich`, `intern`, `entwurf`, `kein` | Sticker oben rechts auf dem Master, siehe [Kennzeichnung](#kennzeichnung-e04-s05) |
 | `typografie`, `syntaxhervorhebung` | `ja` (Standard), `nein` | wie in Word, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
 | `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | wie in Word |
+| `aufbau` | `listen`, `nein` (Standard) | `listen`: jede äußere Liste Punkt für Punkt, siehe [Builds](#builds-e09-s02) |
 
 Gliederung: erstes `#` = Titelfolie, weitere `#` = Trennfolie „01", „02" …,
 `# Text {.closing}` = Abschlussfolie, `##` = Folie. `## Titel {layout="Name"}` wählt ein
@@ -288,6 +289,50 @@ Linien in Notizen entfallen ohne Fehler. Ein Deck ohne
 von `layout_syntax.check` (`Line 3: A '::: notes' belongs under a heading: …`). Word lässt
 Notizen weg und meldet `notes-dropped`.
 
+### Builds (E09-S02)
+
+Eine Zeile aus nur `{.build}`, `{.frag}`, `{.exit}` oder `{.emphasize}` markiert den Block
+danach (`markdown/block_markers.py`, Port von vt-tools-libs `BlockMarkers`): als eigener Absatz,
+als erste Zeile des Absatzes, den sie markiert, oder als letzte Zeile eines Absatzes direkt vor
+dem Block (so in einem Listenpunkt vor einer verschachtelten Liste). Eine Kernregel des
+gemeinsamen Parsers (`block_markers_rule`, nach `alerts`) nimmt die Zeile aus den Token und legt
+den `Marker` in `meta[MARKER]` des ersten Tokens des Blocks — **alle** Formate lesen so dasselbe
+Markdown; Word und PDF erzeugen ohne die Zeile genau dasselbe wie ohne Marker. Eine falsche
+Marker-Zeile bleibt als Absatz mit `meta[ERROR]` stehen und `layout_syntax.check` wirft sie mit
+Zeile: unbekannter Marker (`Line 7: Unknown block marker '{.wide}'. Valid markers: {.build},
+{.frag}, {.exit}, {.emphasize}; …`), mehrere Klassen, ein Marker ohne Block (am Ende, vor `---`,
+vor dem Ende eines Containers), vor einer Folienüberschrift (`#`/`##`), vor `::: notes`, zwei
+Marker vor einem Block, ein Marker mitten im Absatz, `{.emphasize}` vor etwas anderem als Text
+(Absatz, Liste, Überschrift). `{.build}` und `{.frag}` nehmen einen Eingang: `=fade` (Standard),
+`=appear`, `=fly`, `=wipe`. Front Matter `aufbau: listen` (`Keys.BUILD`, nur PowerPoint,
+`PptxOptions.build_lists`) wirkt wie `{.build}` vor jeder Liste, die nicht in einer anderen steckt
+(auch in Containern); `nein` ist der Standard.
+
+| Marker | vor | in PowerPoint |
+| ------ | --- | ------------- |
+| `{.build}` | Liste | jeder Absatz jeder Ebene ein Klick |
+| `{.build}` | `::: cards`, `::: rows`, `::: columns`, Absatz nur aus Bildern | jedes Element (Karte, Zeile, Spalte, Bild) ein Klick, mit allem darin |
+| `{.build}`, `{.frag}` | jedem anderen Block (Tabelle, Code, Grafik, Chart, Container, Alert, Absatz) | der Block auf einem Klick |
+| `{.exit}` | Block | der Block ist da und blendet beim Klick aus |
+| `{.emphasize}` | Absatz, Liste, Überschrift | der Text wird beim Klick PTA-blau |
+
+PowerPoint: `DeckParser` zählt Klicks (`model.Click(number, effect)`, Effekt `model.Effect`)
+über das Deck in Markdown-Reihenfolge (`marked`, `at`, `paragraph_click`, `take_each`); Absätze,
+Tabellen, Bilder, Code, Zeichnungen, Charts und Flow-Blöcke tragen `click` (kw-only), Karten,
+Zeilen und Spalten (`ColumnsBlock.clicks`) je Element; Absätze in einem Block erben dessen
+Klick. Marker auf Titel-, Trenn- und Abschlussfolien, auf PTA-Folienarten und auf Teilen eines
+Blocks, die nur als Ganzes gebaut werden (Kartenüberschrift, Punkt in `::: rows`), sind Fehler.
+`DeckWriter` sammelt beim Zeichnen in `animations.Builds`: `write_paragraphs` und
+`FlowWriter.text` jeden Absatz mit Klick (Ziel `pRg`), `DeckWriter.at(slide, click)` jede in der
+Zeit angelegte Form als Ganzes, `DeckWriter.each` je Bild einer Bildreihe; beim Anlegen der
+nächsten Folie (und am Ende) schreibt `Builds.write` `p:timing` (vor `p:extLst`) — nur für Formen,
+die `finish` stehen ließ. Eine geteilte Folie baut auf jedem Teil, mit den Klicks ihrer Teile.
+Effekte wie PowerPoint (500 ms): Fade (Preset 10), Erscheinen (1), Hereinfliegen von unten (2),
+Wischen von unten (22), Ausblenden (Exit 10), Schriftfarbe PTA-Blau (Emphasis 3). Build-Liste:
+`bldP build="p"` für absatzweise, `bldP animBg="1"` für ganze Formen, `bldGraphic`/`bldAsOne`
+für Tabellen und Charts; Bilder und Gruppen ohne Eintrag; eigene `grpId` je Form und
+Effektklasse. Der PPTX-Konverter liest keine Builds.
+
 ## Folien-Syntax (gemeinsam für Word und PowerPoint)
 
 Beide Generatoren lesen und prüfen dieselbe Folien-Syntax aus DocLibs, bevor sie schreiben
@@ -301,6 +346,7 @@ Front Matter mitgezählt).
 | Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
+| Zeile aus nur `{.build}`, `{.frag}`, `{.exit}`, `{.emphasize}` vor einem Block | `{.build}`/`{.frag}` mit `=fade`, `=appear`, `=fly`, `=wipe` (siehe [Builds](#builds-e09-s02)) | PowerPoint: der Block erscheint (verschwindet, wird blau) Klick für Klick; Word/PDF: die Zeile entfällt |
 | Bildattribute `{…}` direkt nach einem Bild | `focus=…`, `fit=cover\|contain`, `scale=N`, `.round`, `.grey` (siehe [Bildattribute](#bildattribute-e15-s04)) | PowerPoint: Ausschnitt im Bildplatzhalter, rund als Ellipse; Word/PDF: kein Beschnitt, rund/grau als PNG |
 | Icon `:icon-name:` | die gebündelten Namen (siehe [Icons](#icons-e15-s03)) | PowerPoint: am Anfang eines Kartentitels die Figur der Karte, vor jedem Punkt einer Liste das Aufzählungssymbol, sonst Fehler; Word: Bild im Text, vor jedem Punkt einer Liste statt des Aufzählungszeichens; PDF: entfällt mit `code-not-drawn` |
 | `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen; PowerPoint fett in der Signalfarbe, Word Zeichenvorlage „Status …" |

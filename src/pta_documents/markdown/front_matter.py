@@ -40,6 +40,10 @@ class Keys:
     CHECK: Final = "pruefung"
     """``./run.sh check``: ``aus`` turns the style rules off, a list of ``style-…`` codes only
     those (E08-S02); the generators accept and ignore it."""
+    BUILD: Final = "aufbau"
+    """``listen``: on slides every list not inside another appears item by item (E09-S02);
+    ``nein`` (the default): only what ``{.build}`` marks."""
+    BUILD_LISTS: Final = "listen"
     STATUS_PREFIX: Final = "status."
 
 

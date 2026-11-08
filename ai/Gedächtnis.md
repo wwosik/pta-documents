@@ -158,6 +158,18 @@ weil ihm vertraut wird.
   Überschrift; `DeckWriter.new_slide` schreibt sie (`generation/pptx/notes.py`). Wer neue
   Folienarten baut, muss dafür nichts tun, solange er `new_slide` nutzt. Word meldet
   `notes-dropped`.
+- **Builds** (E09-S02): Marker-Zeilen (`{.build}`, `{.frag}`, `{.exit}`, `{.emphasize}`) nimmt
+  eine Kernregel des gemeinsamen Parsers heraus (`markdown/block_markers.py`, `meta[MARKER]` am
+  ersten Token des Blocks; falsche bleiben als Absatz mit `meta[ERROR]`, `layout_syntax.check`
+  wirft) — Word/PDF brauchen dafür keinen Code. Neue Blockmarker (geplant `{.calc}` E14-S03,
+  Zielgruppen E16-S01) in `NAMES` eintragen; PPTX wirft für jeden Marker, den `DeckParser.marked`
+  nicht angewendet hat (`_check_markers`), also dort mit behandeln. Klicks: `model.Click` als
+  kw-only `click` an Absätzen, Visuals und Flow-Blöcken; wer einen Block neu baut, gibt
+  `deck.current` (Blöcke) bzw. `paragraph_click()` (Absätze) mit und zeichnet neue Formen in
+  `DeckWriter.at(slide, click)` (bzw. `each` für eine Form je Klick); Absätze werden über
+  `Builds.paragraphs` erfasst (in `write_paragraphs` und `FlowWriter.text` schon drin). `p:timing`
+  schreibt `DeckWriter.write_builds` beim nächsten `new_slide` — E09-S03 (Übergänge) muss
+  `p:transition` **vor** `p:timing` einfügen. Front Matter `aufbau: listen` nur PowerPoint.
 - **Formaterkennung und Registry** (E07-S01): `pta_documents.conversions` exportiert `detect`,
   `ConverterRegistry`, `DocumentConverter` (Protocol), `ConversionOptions`, `convert`. Neue
   Konverter der Bibliothek in `ConverterRegistry.default()` (`conversions/registry.py`)

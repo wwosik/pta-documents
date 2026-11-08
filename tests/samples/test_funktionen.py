@@ -11,7 +11,7 @@ the report one of them and an ``Abbildung: …`` caption after a graphic (E03-S0
 scheme of generated images (``qr:``, E11-S04), Harvey balls ``[n/4]`` and the thresholds of
 ``::: riskmatrix`` (E15-S02), icons as bullets, before a card title (deck) and in text (report,
 E15-S03), the image attributes ``.round``, ``.grey`` and (report) ``scale=``, (deck) ``focus=`` and
-``fit=contain`` (E15-S04).
+``fit=contain`` (E15-S04), in the deck every block marker and entrance (E09-S02).
 When the authoring guides exist (E02-S05), the list comes from their syntax instead.
 """
 
@@ -53,7 +53,7 @@ from pta_documents.generation.docx import generator as docx_generator
 from pta_documents.generation.docx.generator import DocxGenerator
 from pta_documents.generation.pptx import generator as pptx_generator
 from pta_documents.generation.pptx.generator import PptxGenerator
-from pta_documents.markdown import DocumentResource, MarkdownDocument
+from pta_documents.markdown import DocumentResource, MarkdownDocument, block_markers
 from pta_documents.markdown.front_matter import FrontMatter, Keys
 from pta_documents.markdown.parser import ALERT, CONTAINER_CLOSE, CONTAINER_OPEN, container, parse
 from tests.conftest import REVIEW_DIR
@@ -74,6 +74,8 @@ HARVEY_BALL: Final = "[n/4] in a table cell"
 ICON_BULLETS: Final = ":icon-name: before every item of a list"
 ICON_CARD: Final = ":icon-name: before a card title"
 ICON_IN_TEXT: Final = ":icon-name: in text"
+BLOCK_MARKER: Final = "{{.{name}}} before a block"
+ENTRANCE: Final = "{{.build={entrance}}} or {{.frag={entrance}}}"
 """The language of the fences that show the Markdown source of a feature."""
 DOCX: Final = DocumentFormat.DOCX
 PPTX: Final = DocumentFormat.PPTX
@@ -175,6 +177,11 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
             shown.add(f"{key.lower()}: {value.strip().lower()}")
     labels = front.status_labels()
     for i, token in enumerate(tokens):
+        marker = token.meta.get(block_markers.MARKER)
+        if isinstance(marker, block_markers.Marker):
+            shown.add(BLOCK_MARKER.format(name=marker.name))
+            if marker.entrance != block_markers.FADE:
+                shown.add(ENTRANCE.format(entrance=marker.entrance))
         if token.type == CONTAINER_OPEN:
             name, arguments = container(token)
             shown.add(f"::: {name}")
@@ -327,6 +334,10 @@ def required(format: DocumentFormat) -> set[str]:
         # Word drops the heading attributes; they are slide syntax.
         result |= {"{" + entry + "}" for entry in heading_attributes.VALID.split(", ")}
         result |= {f"{Keys.TITLE_SLIDE}: {name}" for name in TITLE_SLIDES}
+        # Builds (E09-S02): Word and PDF leave the markers out, decks show every one.
+        result |= {BLOCK_MARKER.format(name=name) for name in block_markers.NAMES}
+        entrances = block_markers.ENTRANCES[1:]
+        result |= {ENTRANCE.format(entrance=entrance) for entrance in entrances}
     return result
 
 

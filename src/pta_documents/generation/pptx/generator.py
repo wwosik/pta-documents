@@ -20,7 +20,7 @@ from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.generation.pptx.parser import DeckParser
 from pta_documents.generation.pptx.writer import DeckInfo, DeckWriter
 from pta_documents.markdown.document import MarkdownDocument, MetadataKeys
-from pta_documents.markdown.front_matter import FrontMatter, Keys
+from pta_documents.markdown.front_matter import NO, FrontMatter, Keys
 
 FORMAT: Final = DocumentFormat.PPTX
 VALID_KEYS: Final = (
@@ -37,6 +37,7 @@ VALID_KEYS: Final = (
     Keys.FOOTER,
     Keys.TITLE_SLIDE,
     Keys.MARKING,
+    Keys.BUILD,
 )
 
 
@@ -127,6 +128,9 @@ def apply_front_matter(front: FrontMatter, options: PptxOptions) -> PptxOptions:
         )
     if (value := front.get(Keys.MARKING)) is not None:
         options = replace(options, marking=Marking.parse(value, FORMAT))
+    if (value := front.get(Keys.BUILD)) is not None:
+        choices = ((Keys.BUILD_LISTS, True), (NO, False))
+        options = replace(options, build_lists=front.one_of(Keys.BUILD, value, choices))
     if (value := front.date()) is not None:
         options = replace(options, date=value)
     return options

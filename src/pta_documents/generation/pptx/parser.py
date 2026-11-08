@@ -10,7 +10,8 @@ block a renderer drew as one) goes on the PTA chart layouts.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Generator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from typing import Final
 
@@ -47,10 +48,12 @@ from pta_documents.generation.pptx.model import (
     ChapterSlide,
     Chart,
     ChartSlide,
+    Click,
     ClosingSlide,
     Code,
     ContentSlide,
     Diagram,
+    Effect,
     Image,
     Images,
     Item,
@@ -67,6 +70,7 @@ from pta_documents.generation.pptx.model import (
     trim,
 )
 from pta_documents.generation.pptx.options import PptxOptions
+from pta_documents.markdown import block_markers
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
 from pta_documents.markdown.parser import (
     ALERT,
@@ -84,6 +88,12 @@ INLINE_ICON: Final = (
     "Icons in slide text are not drawn. On a slide, an icon goes at the start of a card title "
     "('### :icon-check: Title' in '::: cards') or at the start of every item of a bullet list; "
     "Word also shows it within text."
+)
+LISTS: Final = ("bullet_list_open", "ordered_list_open")
+NOT_BUILT: Final = (
+    "Builds ({.build}, {.frag}, {.exit}, {.emphasize}) go on '##' slides of content; the "
+    "title, chapter and closing slides and the PTA slide kinds (.agenda, .interim, .quote, "
+    ".contact) show everything at once. Take the marker out"
 )
 
 
@@ -126,6 +136,16 @@ class DeckParser:
         """The current slide is dark (``## Title {.dark}``): for the code-block renderers."""
         self.speaker_notes: dict[int, tuple[Paragraph, ...]] = {}
         """The ``::: notes`` of each section: by the index of its heading in ``tokens``."""
+        self.clicks = 0
+        """The last click given out (E09-S02)."""
+        self.current: Click | None = None
+        """The click of what is read now; None: there from the start."""
+        self.each: Effect | None = None
+        """``{.build}`` on a list (or ``aufbau: listen``): every paragraph its own click; on
+        cards, rows, columns, the reader of the container takes it (``take_each``)."""
+        self.list_depth = 0
+        self.applied: set[int] = set()
+        """The tokens (``id``) whose block marker was read: any other one is an error."""
 
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
@@ -174,7 +194,7 @@ class DeckParser:
         spans = code_highlight.highlight_fence(
             info, lines, self.line(token), self.notes, self.options.highlight
         )
-        return Code(lines, spans or ())
+        return Code(lines, spans or (), click=self.current)
 
     def _error(self, reason: str, token: Token) -> DocumentConversionError:
         line = self.line(token)
@@ -186,6 +206,7 @@ class DeckParser:
             return
         first = len(self.slides)
         self._slides_of(heading, start, end)
+        self._check_markers(start, end)
         notes = self.speaker_notes.get(start - 3, ())
         if notes:
             # On every slide of the heading (decision 2026-11-07), split ones included.
@@ -196,6 +217,13 @@ class DeckParser:
         title, attributes = self._title(inline, int(open_token.tag[1]))
         line = self.line(open_token)
         layout = attributes.layout if attributes else None
+        if open_token.tag == "h1" or (attributes is not None and attributes.kind is not None):
+            for token in self.tokens[start:end]:
+                marker = token.meta.get(block_markers.MARKER)
+                if isinstance(marker, block_markers.Marker):
+                    raise DocumentConversionError(
+                        FORMAT, at_line(NOT_BUILT, self.marker_line(marker))
+                    )
         if open_token.tag == "h2" and attributes is not None and attributes.kind is not None:
             if self._uses_layouts(start, end, attributes):
                 raise self._error(
@@ -259,6 +287,82 @@ class DeckParser:
             self.slides.append(LayoutSlide(title, line, layout, tuple(segments)))
             return
         self._content(title, section, line)
+
+    # ------------------------------------------------------------------ builds (E09-S02)
+
+    def next_click(self, effect: Effect) -> Click:
+        self.clicks += 1
+        return Click(self.clicks, effect)
+
+    def paragraph_click(self) -> Click | None:
+        """The click of a paragraph read now: its own in a list built item by item."""
+        return self.next_click(self.each) if self.each is not None else self.current
+
+    def take_each(self) -> Effect | None:
+        """``{.build}`` on the container read now: its elements get a click each, not what is
+        inside them."""
+        each, self.each = self.each, None
+        return each
+
+    @contextmanager
+    def at(self, click: Click | None) -> Generator[None]:
+        """What is read within is on ``click`` (a card, row or column built one by one)."""
+        if click is None:
+            yield
+            return
+        saved = self.current, self.each
+        self.current, self.each = click, None
+        try:
+            yield
+        finally:
+            self.current, self.each = saved
+
+    @contextmanager
+    def marked(self, tokens: list[Token], i: int) -> Generator[None]:
+        """Read the block at ``tokens[i]`` within: on a click of its own (``{.frag}``, and
+        ``{.build}`` on any block but a list, cards, rows, columns or an image row), or with a
+        click for each of its elements (``{.build}`` on those, ``aufbau: listen`` on a list
+        that is not inside another)."""
+        token = tokens[i]
+        marker = token.meta.get(block_markers.MARKER)
+        saved = self.current, self.each
+        if isinstance(marker, block_markers.Marker):
+            self.applied.add(id(token))
+            effect = _effect(marker)
+            if marker.name == block_markers.BUILD and _builds_items(tokens, i):
+                self.each = effect
+            else:
+                self.current, self.each = self.next_click(effect), None
+        elif (
+            self.options.build_lists
+            and token.type in LISTS
+            and self.list_depth == 0
+            and self.each is None
+        ):
+            self.each = Effect.FADE
+        try:
+            yield
+        finally:
+            self.current, self.each = saved
+
+    def _check_markers(self, start: int, end: int) -> None:
+        """Raise for a block marker of the section that marks a part of a block slides read in
+        a way of their own (a card's heading, an item of '::: rows' …)."""
+        for token in self.tokens[start:end]:
+            marker = token.meta.get(block_markers.MARKER)
+            if isinstance(marker, block_markers.Marker) and id(token) not in self.applied:
+                raise DocumentConversionError(
+                    FORMAT,
+                    at_line(
+                        f"The block marker '{marker.text}' marks a part of a block that is built "
+                        "as a whole: put it before the whole block (cards, rows and columns are "
+                        "built one by one with {.build} before their container)",
+                        self.marker_line(marker),
+                    ),
+                )
+
+    def marker_line(self, marker: block_markers.Marker) -> int:
+        return marker.line + 1 + self.line_offset
 
     # ------------------------------------------------------------------ speaker notes
 
@@ -430,7 +534,7 @@ class DeckParser:
             if isinstance(item, Table) and above and above[-1].is_bold_only:
                 # A bold paragraph right before a table is its title row (PTA sample table).
                 title = tuple(r for r in above.pop().runs)
-                item = Table(item.rows, item.alignments, item.has_header, title)
+                item = replace(item, title=title)
             visual = item
         if visual is not None:
             flush()
@@ -440,11 +544,18 @@ class DeckParser:
     # ------------------------------------------------------------------ blocks
 
     def block(self, tokens: list[Token], i: int, out: list[Item], depth: int, italic: bool) -> int:
+        with self.marked(tokens, i):
+            return self.read_block(tokens, i, out, depth, italic)
+
+    def read_block(
+        self, tokens: list[Token], i: int, out: list[Item], depth: int, italic: bool
+    ) -> int:
+        """The block at ``tokens[i]`` into ``out``, its block marker already applied."""
         token = tokens[i]
         match token.type:
             case "heading_open":
                 runs = self.runs(tokens[i + 1], Style(italic=italic), images_as_text=True)
-                out.append(Paragraph(tuple(runs), Kind.SUBHEADLINE))
+                out.append(Paragraph(tuple(runs), Kind.SUBHEADLINE, click=self.paragraph_click()))
                 return i + 3
             case "paragraph_open":
                 self._paragraph(tokens[i + 1], out, Kind.INTRO, 0, 1, italic)
@@ -457,12 +568,14 @@ class DeckParser:
                 return self.table(tokens, i, out)
             case "fence" | "code_block":
                 graphic = self._draw(token) if token.type == "fence" else None
+                click = self.current
                 if isinstance(graphic, ChartGraphic):
-                    out.append(Chart(graphic, self.line(token)))
+                    out.append(Chart(graphic, self.line(token), click=click))
                 elif isinstance(graphic, DrawingGraphic):
-                    out.append(Diagram(graphic.drawing, token.info.strip(), self.line(token)))
+                    alt = token.info.strip()
+                    out.append(Diagram(graphic.drawing, alt, self.line(token), click=click))
                 elif graphic is not None:
-                    image = Image(graphic.image, token.info.strip(), self.line(token))
+                    image = Image(graphic.image, token.info.strip(), self.line(token), click=click)
                     out.append(Images((self._placeable(image, token),)))
                 else:
                     out.append(self.code(token))
@@ -478,7 +591,7 @@ class DeckParser:
                 return self._container(tokens, i, "dl_close", out, depth, italic)
             case "dt_open":
                 runs = self.runs(tokens[i + 1], Style(bold=True, italic=italic), True)
-                out.append(Paragraph(tuple(runs), Kind.INTRO))
+                out.append(Paragraph(tuple(runs), Kind.INTRO, click=self.paragraph_click()))
                 return i + 3
             case _:
                 return i + 1
@@ -507,6 +620,7 @@ class DeckParser:
         start = int(tokens[i].attrs.get("start", 1)) if ordered and tokens[i].attrs else 1
         bullets = icons.list_icons(tokens, i)
         item = 0
+        self.list_depth += 1
         j = i + 1
         while tokens[j].type != close:
             if tokens[j].type != "list_item_open":
@@ -520,14 +634,17 @@ class DeckParser:
                 t = tokens[j]
                 if t.type == "paragraph_open" and not marked:
                     inline = icons.without_leading(tokens[j + 1]) if icon else tokens[j + 1]
-                    self._paragraph(inline, out, kind, depth, start, italic, icon)
+                    with self.marked(tokens, j):
+                        self._paragraph(inline, out, kind, depth, start, italic, icon)
                     marked = True
                     j += 3
-                elif t.type in ("bullet_list_open", "ordered_list_open"):
-                    j = self._list(tokens, j, out, depth + 1, italic)
+                elif t.type in LISTS:
+                    with self.marked(tokens, j):
+                        j = self._list(tokens, j, out, depth + 1, italic)
                 else:
                     j = self.block(tokens, j, out, depth, italic)
             j += 1
+        self.list_depth -= 1
         return j + 1
 
     def _paragraph(
@@ -543,16 +660,19 @@ class DeckParser:
         """Text and images apart: images after the paragraph, as their own visual; ``icon``
         is the bullet of a list item (E15-S03)."""
         runs = self.runs(inline, Style(italic=italic), images_as_text=False)
+        text = trim(runs)
+        children = inline.children or []
+        if text or icon or not any(child.type == "image" for child in children):
+            click = self.paragraph_click()
+            out.append(Paragraph(tuple(text), kind, depth, start, icon=icon, click=click))
         images = [
-            self._placeable(self._image(child, inline, line), inline)
-            for child, line in zip(
-                inline.children or [], child_lines(inline, self.line_offset), strict=True
+            replace(
+                self._placeable(self._image(child, inline, line), inline),
+                click=self.paragraph_click(),
             )
+            for child, line in zip(children, child_lines(inline, self.line_offset), strict=True)
             if child.type == "image"
         ]
-        text = trim(runs)
-        if text or not images or icon:
-            out.append(Paragraph(tuple(text), kind, depth, start, icon=icon))
         if images:
             out.append(Images(tuple(images)))
 
@@ -664,7 +784,8 @@ class DeckParser:
                     )
                 current.append(tuple(trim(self.runs(tokens[j + 1], Style(), True))))
             j += 1
-        out.append(Table(tuple(rows), tuple(alignments), has_header, None, tuple(highlighted)))
+        table = Table(tuple(rows), tuple(alignments), has_header, None, tuple(highlighted))
+        out.append(replace(table, click=self.current))
         return j + 1
 
     # ------------------------------------------------------------------ inline
@@ -746,6 +867,32 @@ class DeckParser:
                 case _:
                     add(child.content)
         return runs
+
+
+def _effect(marker: block_markers.Marker) -> Effect:
+    if marker.name == block_markers.EXIT:
+        return Effect.EXIT
+    if marker.name == block_markers.EMPHASIZE:
+        return Effect.EMPHASIZE
+    return Effect(marker.entrance)
+
+
+def _builds_items(tokens: list[Token], i: int) -> bool:
+    """Whether ``{.build}`` builds the block at ``tokens[i]`` element by element: a list, cards,
+    rows, columns, a paragraph of nothing but images."""
+    token = tokens[i]
+    if token.type in LISTS:
+        return True
+    if token.type == CONTAINER_OPEN:
+        name = container(token)[0]
+        return name in (layout_syntax.CARDS, layout_syntax.ROWS, layout_syntax.COLUMNS)
+    if token.type == "paragraph_open":
+        kids = tokens[i + 1].children or []
+        return any(k.type == "image" for k in kids) and all(
+            k.type in ("image", "softbreak") or (k.type == "text" and not k.content.strip())
+            for k in kids
+        )
+    return False
 
 
 def at_line(reason: str, line: int | None) -> str:

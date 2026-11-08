@@ -177,7 +177,8 @@ class FlowWriter:
         for block in blocks:
             if isinstance(block, CommentBlock):
                 if previous is not None:
-                    self.comment(block, previous, box, look)
+                    with self.deck.at(self.slide, block.click):
+                        self.comment(block, previous, box, look)
                 continue
             if previous is not None:
                 y += look.gap
@@ -192,6 +193,18 @@ class FlowWriter:
         return y - box.y
 
     def place(self, block: FlowBlock, box: Box, look: Look) -> int:
+        """The block in ``box``; built on its click as a whole, if it has one (E09-S02)."""
+        match block:
+            case TextBlock() | ImageRowBlock():
+                click = None  # their paragraphs and pictures carry their clicks
+            case TableBlock():
+                click = block.table.click
+            case _:
+                click = block.click
+        with self.deck.at(self.slide, click):
+            return self.place_block(block, box, look)
+
+    def place_block(self, block: FlowBlock, box: Box, look: Look) -> int:
         match block:
             case TextBlock():
                 return self.text(block.paragraphs, box, look.pt(look.body_pt), look.text_color)
@@ -240,6 +253,7 @@ class FlowWriter:
             for n, paragraph in enumerate(paragraphs):
                 element = self.deck.paragraph_element(self.slide, paragraph, f, color, n == 0)
                 body.append(element)
+            self.deck.builds.paragraphs(body, paragraphs)
         return height
 
     def text_box(self, box: Box) -> etree._Element:
@@ -266,7 +280,8 @@ class FlowWriter:
     def pictures(self, block: ImageRowBlock, box: Box) -> int:
         room = max(box.h, FLOW.min_visual_height)
         images = list(block.images)
-        used, factors = visuals.draw_pictures(self.slide, images, box.x, box.y, box.w, room)
+        with self.deck.each(self.slide, [image.click for image in images]):
+            used, factors = visuals.draw_pictures(self.slide, images, box.x, box.y, box.w, room)
         if self.slide is not None:
             for image, enlarged in zip(images, factors, strict=True):
                 self.deck.note_enlarged(image, enlarged)
@@ -372,8 +387,11 @@ class FlowWriter:
 
     def columns(self, block: ColumnsBlock, box: Box, look: Look) -> int:
         height = 0
-        for column, blocks in zip(self.column_boxes(box, block.widths), block.columns, strict=True):
-            height = max(height, self.stack(blocks, column, look))
+        clicks = block.clicks or (None,) * len(block.columns)
+        boxes = self.column_boxes(box, block.widths)
+        for column, blocks, click in zip(boxes, block.columns, clicks, strict=True):
+            with self.deck.at(self.slide, click):
+                height = max(height, self.stack(blocks, column, look))
         return height
 
     def cards(self, block: CardsBlock, box: Box, look: Look) -> int:
@@ -393,8 +411,9 @@ class FlowWriter:
             if self.slide is not None:
                 for card, cell in zip(row, cells, strict=False):
                     frame = Box(cell.x, y, cell.w, height)
-                    self.shape(frame, None, FLOW.card_line, FLOW.card_line_pt)
-                    self.card(card, frame, inner)
+                    with self.deck.at(self.slide, card.click):
+                        self.shape(frame, None, FLOW.card_line, FLOW.card_line_pt)
+                        self.card(card, frame, inner)
             y += height + look.gap
         return y - look.gap - box.y
 
@@ -446,15 +465,16 @@ class FlowWriter:
             )
             height += 2 * FLOW.row_pad
             if self.slide is not None:
-                self.rule(box.x, box.right, y, FLOW.rule)
-                top = y + FLOW.row_pad
-                self.text([term], Box(box.x, top, term_width, 0), term_pt, look.heading_color)
-                self.text(
-                    row.description,
-                    Box(description_x, top, description_width, 0),
-                    text_pt,
-                    look.text_color,
-                )
+                with self.deck.at(self.slide, row.click):
+                    self.rule(box.x, box.right, y, FLOW.rule)
+                    top = y + FLOW.row_pad
+                    self.text([term], Box(box.x, top, term_width, 0), term_pt, look.heading_color)
+                    self.text(
+                        row.description,
+                        Box(description_x, top, description_width, 0),
+                        text_pt,
+                        look.text_color,
+                    )
             y += height
         if self.slide is not None:
             self.rule(box.x, box.right, y, colors.WHITE if look.dark else FLOW.closing_rule)
@@ -720,10 +740,10 @@ def units(blocks: Sequence[FlowBlock]) -> list[list[_Piece]]:
                     result.append([_Piece(TextBlock(tuple(group)), origin)])
             case RowsBlock():
                 for row in block.rows:
-                    result.append([_Piece(RowsBlock((row,)), origin)])
+                    result.append([_Piece(replace(block, rows=(row,)), origin)])
             case LabelledTagsBlock():
                 for item in block.items:
-                    result.append([_Piece(LabelledTagsBlock((item,)), origin)])
+                    result.append([_Piece(replace(block, items=(item,)), origin)])
             case TableBlock() if len(block.table.rows) - block.table.has_header >= 2:
                 table = block.table
                 for n, row in enumerate(range(1 if table.has_header else 0, len(table.rows))):
@@ -757,9 +777,9 @@ def _join(first: FlowBlock, second: FlowBlock) -> FlowBlock | None:
         case TextBlock(), TextBlock():
             return TextBlock(first.paragraphs + second.paragraphs)
         case RowsBlock(), RowsBlock():
-            return RowsBlock(first.rows + second.rows)
+            return replace(first, rows=first.rows + second.rows)
         case LabelledTagsBlock(), LabelledTagsBlock():
-            return LabelledTagsBlock(first.items + second.items)
+            return replace(first, items=first.items + second.items)
         case TableBlock(), TableBlock():
             a_table, b_table = first.table, second.table
             skip = 1 if b_table.has_header else 0
@@ -846,7 +866,8 @@ def write_flow_slide(deck: DeckWriter, slide: FlowSlide) -> None:
         target = _headed_slide(deck, slide, design.LAYOUTS.title_only, n)
         FlowWriter(deck, target).stack(blocks, area, Look(slide.dark, steps[part_step]))
         if slide.conclusion is not None and conclusion_pt is not None and n == len(parts) - 1:
-            FlowWriter(deck, target).conclusion(slide.conclusion, conclusion_pt)
+            with deck.at(target, slide.conclusion.click):
+                FlowWriter(deck, target).conclusion(slide.conclusion, conclusion_pt)
         deck.finish(target, footer=True, color=color)
 
 
