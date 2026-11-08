@@ -46,7 +46,7 @@ VALID_KEYS: Final = (
     Keys.CHECK,
     Keys.TOC,
 )
-TEMPLATE_COMPANY: Final = "PTA IT-Beratung"
+TEMPLATE_COMPANY: Final = word.COMPANY_PLACEHOLDER
 HEADER_CONTENT_TYPE: Final = (
     "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"
 )

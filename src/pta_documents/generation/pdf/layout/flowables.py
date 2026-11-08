@@ -61,6 +61,14 @@ class Outline:
 
     title: str
     level: int
+    heading: int = 0
+    """The heading level (1–3) of the numbered heading the entry stands for."""
+    number: str = ""
+    """The number of the heading (``1.2``), as in the table of contents."""
+    text: str = ""
+    """The text of the heading without its number."""
+    anchor: str | None = None
+    """The named destination of the heading (``#anchor`` links)."""
 
 
 class PtaParagraph(Paragraph):

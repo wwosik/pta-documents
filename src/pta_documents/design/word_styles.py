@@ -16,7 +16,7 @@ from __future__ import annotations
 import io
 import zipfile
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Final
 
@@ -175,6 +175,9 @@ class WordDesign:
     theme: Mapping[str, str]
     """The theme colours by slot (``dk1``, ``accent1`` …)."""
     default_tab_pt: float
+    paragraph_ids: Mapping[str, str] = field(default_factory=dict[str, str])
+    """The ``w:name`` of every paragraph style by its ``w:styleId`` (``Fuzeile`` → ``footer``),
+    for parts that refer to styles by id (header and footer, ``word_frame``)."""
 
     def paragraph(self, name: str) -> ParagraphFormat:
         return self.paragraphs[name]
@@ -239,6 +242,11 @@ def _design(parts: dict[str, etree._Element], borrowed: dict[str, etree._Element
         page=_page(parts["word/document.xml"]),
         theme=theme,
         default_tab_pt=_twips(tab, "val") or 0.0,
+        paragraph_ids={
+            style_id: str(name.get(_w("val")))
+            for style_id, style in styles.by_id.items()
+            if style.get(_w("type")) == "paragraph" and (name := style.find(_w("name"))) is not None
+        },
     )
 
 
@@ -255,6 +263,16 @@ def _theme(root: etree._Element) -> dict[str, str]:
         elif system is not None and system.get("lastClr"):
             result[etree.QName(slot).localname] = str(system.get("lastClr")).upper()
     return result
+
+
+def color_of(element: etree._Element | None, theme: Mapping[str, str]) -> str | None:
+    """The colour of a ``w:color`` in any part of the template (header, footer)."""
+    return _color(element, theme)
+
+
+def is_on(element: etree._Element | None) -> bool | None:
+    """A toggle property (``w:b``) in any part of the template: None when absent."""
+    return _on(element)
 
 
 def _color(element: etree._Element | None, theme: Mapping[str, str]) -> str | None:

@@ -25,6 +25,7 @@ from pta_documents.generation.pdf import generator as pdf_generator
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
 from tests.conftest import REPO_ROOT
 from tests.generation.common.visual_blocks import RATING, RISKS, STEPS
+from tests.generation.pdf.support import body_texts, type_area
 
 CREATED: Final = dt.datetime(2026, 11, 8, 9, 0, tzinfo=dt.UTC)
 OPTIONS: Final = PdfOptions(created=CREATED, system_fonts=False)
@@ -41,8 +42,8 @@ def generate(markdown: str, options: PdfOptions = OPTIONS, **metadata: str) -> t
 
 
 def pages_text(data: bytes) -> list[str]:
-    with pdfplumber.open(io.BytesIO(data)) as pdf:
-        return [page.extract_text() or "" for page in pdf.pages]
+    """The text of the type area of every page (header and footer: ``test_frame.py``)."""
+    return body_texts(data)
 
 
 def test_an_empty_document_gives_one_empty_page() -> None:
@@ -64,7 +65,8 @@ def test_the_text_of_the_document_comes_back() -> None:
         "| Spalte | Wert |\n| --- | --- |\n| a | 1 |\n"
     )
     data, _ = generate(markdown)
-    (text,) = pages_text(data)
+    cover, text = pages_text(data)
+    assert cover == "Bericht\nAnna Nowak"
     lines = text.split("\n")
     assert lines[:4] == ["1 Einleitung", "Ein Absatz mit fett und code.", "erstens", "zweitens"]
     assert "1. eins" in lines and "Zitat" in lines and "print('hallo')" in lines
@@ -141,7 +143,7 @@ def test_typography_and_highlighting_follow_the_front_matter() -> None:
 
 def colours_of(data: bytes, word: str) -> set[tuple[float, ...]]:
     with pdfplumber.open(io.BytesIO(data)) as pdf:
-        chars = pdf.pages[0].chars
+        chars = type_area(pdf.pages[0]).chars
     text = "".join(c["text"] for c in chars)
     start = text.index(word)
     return {tuple(c["non_stroking_color"]) for c in chars[start : start + len(word)]}
@@ -180,7 +182,7 @@ def test_harvey_balls_are_drawn_in_their_cells() -> None:
     text = pages_text(data)[0]
     assert "[3/4]" not in text and "Kosten" in text
     with pdfplumber.open(io.BytesIO(data)) as pdf:
-        curves = pdf.pages[0].curves
+        curves = type_area(pdf.pages[0]).curves
     # A rim per ball, a fill for three of four, a slice for two of them.
     assert len(curves) >= 4
     sizes = {round(float(c["width"]) / POINTS_PER_CM, 2) for c in curves}

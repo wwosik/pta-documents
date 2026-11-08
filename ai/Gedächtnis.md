@@ -29,7 +29,7 @@ weil ihm vertraut wird.
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
   eingebettete Vorlagen. Seit E05-S01/E05-S02 ein PDF-Generator (Rumpf im Word-Design, PDF/A-2b;
-  ohne Seitenrahmen und Grafiken), der PDF-Konverter ist nur geplant; die
+  seit E05-S03 mit Seitenrahmen, noch ohne Grafiken), der PDF-Konverter ist nur geplant; die
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
   Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
   Diagrammlayouts (`chart`-Blöcke seit E06-S01, auch nativ in Word; Finanzdiagramme seit
@@ -352,12 +352,14 @@ weil ihm vertraut wird.
   `PdfGenerator.generate`: Front Matter (`VALID_KEYS` = die von DOCX) → `create_parser().parse` +
   `layout_syntax.check(…, today)` → `generated_images.add_generated` → `typeset` (und die
   Status-Labels) → `design.fonts.resolve` → `Notes.characters` (`character-missing`) →
-  **`layout.layout(tokens, document, LayoutSettings, notes, PdfInfo)`** → `pdfa.to_pdfa`
+  **`frame.lay_out(tokens, document, LayoutSettings, FrameInfo, notes, PdfInfo)`** (seit
+  E05-S03; ohne Rahmen `layout.layout`) → `pdfa.to_pdfa`
   (pikepdf) auf `result.content`; `GenerationResult.pages` = `result.pages`. Es gibt **ein**
   `PdfInfo` (`metadata.py`) für reportlab und PDF/A und **eine** Schriftregistrierung
   (`layout/fonts.register`). Das Seitenmodell, der eigene Renderer und das Zwischenlayout von
   E05-S01 sind entfallen (Stand in Commit 175e572); E05-S03 zeichnet den Seitenrahmen über
-  `layout(…, decorate=…)`, E05-S04 Zeichnungen als eigene Flowables auf dem reportlab-Canvas.
+  `render(…, decorate, page_count, first_top_pt)`, E05-S04 Zeichnungen als eigene Flowables auf
+  dem reportlab-Canvas.
   Fehlende Zeichen werden in `InlineWriter.text` zu `?` (`PdfFonts.shown`; Text: Regular+Bold,
   Code: Mono; `ALIASES` zählen als vorhanden) — PDF/A verbietet `.notdef`. QR-Codes sind 3 cm
   (× `scale_of`) wie in Word (`StoryBuilder.picture`). Pillows sRGB-Profil trägt die aktuelle
@@ -369,6 +371,21 @@ weil ihm vertraut wird.
   PDF entstehen und darf nur `code-not-drawn` melden
   (`tests/generation/pdf/test_generator.py`); wer E05-S04 umsetzt, verschärft das auf „keine
   Hinweise".
+- **PDF-Seitenrahmen** (E05-S03): `design/word_frame.read(variant)` liest Kopf-/Fußzeilen der
+  Vorlage (`PageFrame` → `PageKind` → `Band` mit `FrameTable`/`FrameParagraph`, Logo-`Box`,
+  `FrameRule`), `generation/pdf/frame.py` zeichnet sie (`PageDecorator`) und setzt Deckblatt und
+  Verzeichnis vor die Story (`lay_out`, rendert bis Seitenzahl und `RenderedPdf.heading_pages`
+  stabil sind). Felder erkennt `word_frame` am Platzhaltertext (`word.TITLE_PLACEHOLDER`,
+  `COMPANY_PLACEHOLDER` …) — ändern die Vorlagen ihn, brechen `tests/design/test_word_frame.py`.
+  `WordDesign.paragraph_ids` bildet `w:styleId` auf `w:name` ab (Kopf-/Fußzeilen nennen Ids:
+  `Fuzeile`). Das Deckblatt beginnt bei `word_frame.body_top(…, 1, …)`: die erste Kopfzeile von
+  `hoch`/`quer` ist ein leerer Absatz mit 200/150 pt Abstand danach, Word schiebt den Text darunter
+  (8,50/6,79 cm) — dafür hat `render` eine eigene erste `PageTemplate`. `hoch-ohne-deckblatt` hat
+  keinen `w:titlePg`: seine „first"-Kopfzeile gilt nicht. Inhaltsverzeichnis aus
+  `Story.outline` (`Outline` trägt seit E05-S03 `heading`, `number`, `text`, `anchor`), Seiten aus
+  `_Template.afterFlowable`. Tests lesen den Rumpf mit `tests/generation/pdf/support.type_area`
+  (Seite auf den Satzspiegel beschnitten), sonst stehen Kopf- und Fußzeilentexte im Text.
+  reportlabs Stubs kennen `FILL_EVEN_ODD` nicht (eigene Konstanten in `frame.py`).
 - **PDF-Layout-Engine** (E05-S02): `pta_documents.generation.pdf.layout` (Unterpaket) auf
   reportlabs **Platypus** statt eines eigenen Seitenmodells — `layout(tokens, document,
   LayoutSettings, notes, PdfInfo, decorate)` bzw. `build_story` + `render`. Werte der

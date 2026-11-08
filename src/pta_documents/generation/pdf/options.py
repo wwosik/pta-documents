@@ -23,11 +23,12 @@ class PdfOptions:
     highlight: bool = True
     """``syntaxhervorhebung:``: code blocks with a known language in the PTA colours."""
     date: dt.date | None = None
-    """``datum:``: shown on the cover and in the footer (E05-S03)."""
+    """``datum:``: shown on the cover and in the footer; without it the footer shows the day of
+    ``created`` (or today)."""
     company: str | None = None
-    """``firma:``: the company line of the footer (E05-S03)."""
+    """``firma:``: the company of the footer in place of „PTA IT-Beratung"."""
     toc: bool = False
-    """``inhaltsverzeichnis: ja``: a table of contents after the cover (E05-S03)."""
+    """``inhaltsverzeichnis: ja``: a table of contents after the cover."""
     replace_unsupported: bool = True
     """Characters the fonts lack are replaced (E05-S04); PDF/A allows no ``.notdef``."""
     system_fonts: bool = True
