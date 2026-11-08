@@ -23,7 +23,7 @@ bevor der Anwender es tut.
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| [E10-S01](E10-S01-html-deck-generator.md) | `HtmlDeckGenerator`: eine HTML-Datei, PTA-Look aus dem Designmodell, gleiche Folien wie PPTX, Notizen/Builds/Übergänge aus E09, Druck | Entwurf |
+| [E10-S01](../55-in-arbeit/docs-2/E10-S01-html-deck-generator.md) | `HtmlDeckGenerator`: eine HTML-Datei, PTA-Look aus dem Designmodell, gleiche Folien wie PPTX, Notizen/Builds/Übergänge aus E09, Druck | in Bearbeitung (docs-2) |
 | [E10-S02](E10-S02-vorschau-als-bilder.md) | `./run.sh preview`: HTML-Deck mit Playwright zu PNG je Folie und Kontaktbogen; Empfehlung an die KI | Entwurf |
 
 ## Bereichsweite Entscheidungen

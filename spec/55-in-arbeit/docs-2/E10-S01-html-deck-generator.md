@@ -1,8 +1,8 @@
 # E10-S01 HTML-Deck-Generator
 
-> Status: Entwurf
-> Epic: [E10 HTML-Präsentation und Vorschau](E10-html-praesentation-und-vorschau.md)
-> Milestone: [M04 Präsentieren und Schulung](M04-praesentieren-und-schulung.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E10 HTML-Präsentation und Vorschau](../../50-entwurf/E10-html-praesentation-und-vorschau.md)
+> Milestone: [M04 Präsentieren und Schulung](../../50-entwurf/M04-praesentieren-und-schulung.md)
 
 ## Zusammenfassung
 
