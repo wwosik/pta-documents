@@ -1,13 +1,14 @@
 """Check Markdown files without writing documents: errors, notes, style notes, statistics.
 
-usage: ./run.sh check <file-or-folder> [...] [--docx | --pptx] [--strict] [--skip <code>,...]
-                      [--sources] [--json]
+usage: ./run.sh check <file-or-folder> [...] [--docx | --pptx | --pdf] [--strict]
+                      [--skip <code>,...] [--sources] [--json]
 
 Files and formats as with ``generate``: a folder means every ``*.md`` in it, ``…-bericht.md`` /
 ``…-dokument.md`` are Word, ``…-praesentation.md`` / ``…-folien.md`` PowerPoint, or
-``--docx`` / ``--pptx``. Nothing is written. Per file: ``OK <file>`` or ``ERROR <file>: …``,
-then the notes of the generator and the style notes (``  - line 12: …``), then two lines of
-statistics (slides, words, talking time; for Word words, tables, figures and rough pages).
+``--docx`` / ``--pptx`` / ``--pdf``. Nothing is written. Per file: ``OK <file>`` or
+``ERROR <file>: …``, then the notes of the generator and the style notes (``  - line 12: …``),
+then two lines of statistics (slides, words, talking time; for Word words, tables, figures and
+rough pages; for PDF the pages of the trial PDF).
 
 The style rule ``style-image-source`` runs when the file's folder has a ``QUELLEN.md`` or with
 ``--sources``. ``--skip style-words,style-title`` leaves rules out (also front matter
@@ -96,7 +97,7 @@ def main(argv: list[str]) -> int:
     paths: list[Path] = []
     args = iter(argv)
     for arg in args:
-        if arg in ("--docx", "--pptx"):
+        if arg in GENERATE.FORMAT_SWITCHES:
             forced = arg[2:]
         elif arg == "--strict":
             strict = True
@@ -124,7 +125,7 @@ def main(argv: list[str]) -> int:
                 if not as_machine:
                     print(
                         f"skipped {source}: name it …-bericht.md or …-praesentation.md, "
-                        "or pass --docx / --pptx"
+                        "or pass --docx / --pptx / --pdf"
                     )
                 continue
             ok &= result.ok and not (strict and result.notes)

@@ -25,7 +25,9 @@ dependencies = [
 
 [project.optional-dependencies]
 # fontTools: MIT; reads the font files of design.fonts (E01-S03).
-pdf = ["fonttools>=4.50", "pikepdf>=9.0", "pdfplumber>=0.11", "reportlab>=4.2"]
+# reportlab: BSD; draws the PDF (E05-S01). pikepdf: MPL-2.0, used unmodified as a library; makes
+# it PDF/A-2b (E05-S01). pdfplumber: MIT; tests and the PDF converter (E07-S04).
+pdf =["fonttools>=4.50", "pikepdf>=9.0", "pdfplumber>=0.11", "reportlab>=4.2"]
 svg = ["fonttools>=4.50", "resvg-py>=0.1"]
 # cssselect: BSD-3-Clause; the CSS of mermaid-cli's SVG (E06-S03). mermaid-cli itself is
 # Node.js (MIT), installed repo-locally by ./run.sh setup from tools/mermaid/package.json.

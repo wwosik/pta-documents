@@ -5,7 +5,9 @@ bekommst daraus ein Word-Dokument oder eine PowerPoint-Präsentation **auf den o
 PTA-Vorlagen** — mit Deckblatt, Logo, Kopf- und Fußzeile, PTA-Formatvorlagen und PTA-Layouts.
 Umgekehrt macht es aus vorhandenen Word- und PowerPoint-Dateien Markdown.
 
-Noch nicht möglich (geplant): PDF.
+PDF gibt es erst als Vorstufe: `./run.sh generate bericht.md --pdf` schreibt ein PDF/A mit dem
+Text des Berichts, aber noch ohne PTA-Layout (Deckblatt, Kopfzeile, Formatvorlagen, Bilder
+folgen).
 
 ## 1. Einmal einrichten
 
