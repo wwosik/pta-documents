@@ -37,6 +37,18 @@ function Invoke-Setup {
     } else {
         Write-Host 'Node.js not found: mermaid blocks stay code (see docs/verwendung.md, Mermaid).'
     }
+    # Playwright and its Chromium for ./run.ps1 preview (E10-S02); without them only preview stops.
+    & $py -m pip install --quiet -e "$repoRoot[preview]"
+    if ($LASTEXITCODE -eq 0) {
+        & $py (Join-Path $toolsDir 'preview/preview.py') --check-browser
+        if ($LASTEXITCODE -ne 0) {
+            & $py -m playwright install chromium
+            if ($LASTEXITCODE -ne 0) { Write-Warning 'Chromium for Playwright could not be installed; ./run.ps1 preview will not work.' }
+        }
+    } else {
+        Write-Warning 'Playwright could not be installed; ./run.ps1 preview will not work.'
+    }
+    $global:LASTEXITCODE = 0
 }
 
 function Confirm-Venv { if (-not (Test-Path $py)) { Invoke-Setup } }

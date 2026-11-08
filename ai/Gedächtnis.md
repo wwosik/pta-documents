@@ -528,5 +528,17 @@ weil ihm vertraut wird.
   durch die SVG-Logos (E01-S04). Eine CSP mit dem SHA-256 von `"\n" + deck.js` erlaubt nur die
   Laufzeit — wer `deck.js` oder das `<script>`-Gerüst im Writer ändert, ändert den Hash mit
   (Test). Schnappschuss `tests/generation/html/samples/deck.expected.html` ändert sich bei jeder
-  Änderung an PPTX-Layout oder Writer mit. Playwright ist Extra `preview` (nicht in
+  Änderung an PPTX-Layout oder Writer mit. Playwright ist Extra `preview` (seit E10-S02 auch in
   `./run.sh setup`); `test_browser.py` überspringt ohne. Zum Ansehen: `.tmp/review/*.html`.
+- **Vorschau als Bilder** (E10-S02): `pta_documents.preview` (`render_deck(html) →
+  [SlidePicture]`, `contact_sheet`, `PreviewUnavailableError`, `chromium_available`), Werkzeug
+  `./run.sh preview` → `<ordner>/vorschau/<name>/folie-NN.png` + `uebersicht.png`. Das Deck
+  kommt per `context.route` aus dem Speicher (`https://deck.preview/`), ein Vorschau-Stil vor
+  `</head>` setzt „Segoe UI"/„Consolas" per `@font-face` auf Selawik/Inconsolata und schaltet
+  Seite um die Bühne, Animationen und Übergänge ab; Builds im Endzustand. Seit E10-S02 installiert
+  `./run.sh setup` das Extra `preview` und — nur wenn `preview --check-browser` scheitert —
+  `playwright install chromium` (Fehler nur als Meldung). Playwright startet Chromium von sich
+  aus ohne Sandbox. **Referenzbilder** `tests/preview/expected/funktionen-praesentation/`
+  (halbe Größe, ~6 MB) ändern sich bei jeder sichtbaren Änderung an Folien der
+  Funktionsübersicht, an PPTX-Layout oder HTML-Writer: mit `PTA_DOCUMENTS_UPDATE_EXPECTED=1`
+  neu schreiben und `.tmp/review/preview/` ansehen. `samples/*/vorschau/` ist git-ignoriert.

@@ -15,7 +15,8 @@ seit E05-S04 mit allen Grafiken als Vektoren und Ersatz fehlender Zeichen
 
 ```sh
 ./run.sh setup      # .venv anlegen, Paket editierbar mit allen Extras installieren,
-                    # mit Node.js auch mermaid-cli (tools/mermaid, npm ci)
+                    # mit Node.js auch mermaid-cli (tools/mermaid, npm ci),
+                    # Playwright (Extra preview) und, falls keins startet, sein Chromium
 ./run.sh test       # Tests
 ./run.sh mermaid    # prüfen, ob Mermaid-Blöcke hier gezeichnet werden
 ```
@@ -544,6 +545,49 @@ Tests: `tests/generation/html/` (Schnappschuss `samples/deck.expected.html`, Dat
 Hash, Schriften und Laufzeit herausgenommen); `test_browser.py` braucht Playwright (Extra
 `preview`, `pip install -e '.[preview]'` und `python -m playwright install chromium`) und wird
 sonst übersprungen.
+
+## Vorschau als Bilder (E10-S02)
+
+```python
+from pta_documents.preview import contact_sheet, render_deck
+
+pictures = render_deck(html_bytes, scale=1, slides=None)  # [SlidePicture(number, png)]
+sheet = contact_sheet(pictures, columns=4)  # PNG-Bytes
+```
+
+`./run.sh preview <datei-oder-ordner> [--scale n] [--slides 3,7-9] [--html]`
+(`tools/preview/preview.py`) erzeugt für jede Präsentation (`…-praesentation.md`,
+`…-folien.md`; Word-Berichte: „there is no preview for Word documents") das HTML-Deck im
+Speicher, leert `<ordner>/vorschau/<name>/` und schreibt dort `folie-NN.png` und
+`uebersicht.png`, danach die Hinweise des Generators. Bilder unter `vorschau/` gehen nicht als
+Ressourcen ins Deck. `--check-browser` endet mit 0, wenn Playwright und Chromium starten (für
+`setup`). Exit-Code 1 bei Fehlern im Dokument oder fehlender Vorschau, 2 bei falschen Schaltern.
+
+**Ablauf** (`preview/deck.py`): Playwright (Extra `preview`, Apache-2.0, per `importlib`
+geladen) startet Chromium headless mit `--font-render-hinting=none`; der Kontext hat Viewport
+1600 × Bühnenhöhe, `device_scale_factor=scale`, `reduced_motion="reduce"`, Locale `de-DE`,
+Zeitzone Europe/Berlin. Das Deck wird über `context.route` aus dem Speicher unter
+`https://deck.preview/` ausgeliefert, jede andere Anfrage abgewiesen — keine Datei, kein Netz.
+Vor `</head>` kommt ein Vorschau-Stil: `@font-face` „Segoe UI" = Selawik und „Consolas" =
+Inconsolata (die eingebetteten Schriften aus `writer.FONT_FACES`; eine eigene `@font-face`
+verdeckt die installierte Schrift), die Bühne ohne Skalierung oben links, Kapitelleiste,
+Fortschritt, Tastenhinweis und Notizen ausgeblendet, Animationen und Übergänge aus. Je Folie:
+`location.hash = '#n'`, warten bis `#sN` aktiv ist, alle `[data-build]` der Folie auf `on`
+(Endzustand), `document.fonts.ready` und zwei Frames, Screenshot der Bühne. Zwei Läufe ergeben
+byte-gleiche PNGs. Fehlt Playwright oder startet Chromium nicht: `PreviewUnavailableError` mit
+`INSTALL_HINT`. `chromium_available()` prüft beides.
+
+`contact_sheet`: Kacheln 400 px breit in Zeilen zu `columns`, 16 px Abstand, darunter die
+Foliennummer (Selawik 18 px), Hintergrund `GREY_LIGHT`, Rahmen `GREY_DARK`; PNG optimiert.
+
+Tests: `tests/preview/` — ohne Browser Kontaktbogen, Vorschau-Stil, Meldung ohne Playwright,
+Schalter des Werkzeugs; mit Browser (sonst übersprungen) Anzahl und Maße, Auswahl mit
+`--scale 2`, Wiederholbarkeit, Aufbauten im Endzustand, Werkzeug am Ordner und der Vergleich
+von `samples/funktionen/funktionen-praesentation.md` (Diagramme nur mit `ChartRenderer`, ohne
+Mermaid) mit `tests/preview/expected/funktionen-praesentation/folie-NN.png`: Referenzen in halber
+Größe (800 × 450, ~6 MB statt 14), ein Pixel weicht ab, wenn ein Kanal um mehr als 16 abweicht;
+weniger als 0,5 % abweichende Pixel je Folie. Neu schreiben mit
+`PTA_DOCUMENTS_UPDATE_EXPECTED=1` und das Ergebnis in `.tmp/review/preview/` ansehen.
 
 ## Folien-Syntax (gemeinsam für Word und PowerPoint)
 

@@ -31,3 +31,6 @@ node_modules/
 
 # Own documents of users (see docs/anleitung.md)
 /documents/
+
+# Previews of the samples (./run.sh preview samples/<thema>, E10-S02)
+samples/*/vorschau/

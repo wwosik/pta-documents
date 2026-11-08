@@ -13,7 +13,9 @@ scharfe Vektorgrafik, Gantt als Tabelle, Icons wie Word. Ein Zeichen, das der Sc
 
 Eine Präsentation lässt sich auch **im Browser ansehen**: `./run.sh generate
 folien-praesentation.md --html` schreibt eine einzelne HTML-Datei mit denselben Folien wie die
-PowerPoint-Datei (siehe [Präsentation im Browser](#präsentation-im-browser-ansehen)).
+PowerPoint-Datei (siehe [Präsentation im Browser](#präsentation-im-browser-ansehen)), und
+`./run.sh preview folien-praesentation.md` macht daraus ein Bild je Folie (siehe
+[Vorschau ohne PowerPoint](#vorschau-ohne-powerpoint)).
 
 ## 1. Einmal einrichten
 
@@ -27,6 +29,8 @@ cd pta-documents
 
 Für Mermaid-Diagramme (siehe Abschnitt 5) muss vorher Node.js (ab Version 22) installiert sein;
 `./run.sh setup` richtet dann mermaid-cli mit ein. Ohne Node.js geht alles andere genauso.
+Für die Vorschau als Bilder installiert `setup` außerdem Playwright und dessen Chromium
+(rund 150 MB); klappt das nicht (etwa ohne Internet), meldet es das, und nur `preview` geht nicht.
 
 Ob alles läuft, zeigt das Beispiel zum Hauptbeskidenweg:
 
@@ -41,6 +45,8 @@ die Generatoren können, zeigt `samples/funktionen/`
 Nachschlagewerk: Der Word-Bericht `funktionen-bericht.docx` zeigt zu jeder Funktion den
 Markdown-Quelltext und darunter das Ergebnis, die Präsentation hat den Quelltext jeder Folie in
 deren Notizen. Nach `./run.sh test` liegen alle diese Dokumente auch in `.tmp/review/funktionen/`.
+Ohne PowerPoint zeigt `./run.sh preview samples/funktionen` die Präsentationen als Bilder in
+`samples/funktionen/vorschau/`.
 
 Später holst du Neuerungen mit `git pull` und danach einmal `./run.sh setup`.
 
@@ -682,6 +688,31 @@ Unterschiede zu PowerPoint: Ohne Segoe UI (also nicht auf Windows) steht der Tex
 das gleich breit ist; der Übergang `morph` blendet nur über; SVG-Bilder zeigen ihre Schrift in
 der Schrift des Browsers. Auf einem PTA-Rechner mit Segoe UI sieht die Folie aus wie in
 PowerPoint.
+
+### Vorschau ohne PowerPoint
+
+```sh
+./run.sh preview documents/statusbericht-q3
+```
+
+zeichnet jede Präsentation des Ordners (`…-praesentation.md`, `…-folien.md`) in einem
+unsichtbaren Browser und legt **ein Bild je Folie** und eine Übersicht aller Folien ab:
+`documents/statusbericht-q3/vorschau/statusbericht-praesentation/folie-01.png` … und
+`uebersicht.png`. Der Ordner wird bei jedem Lauf vorher geleert. Die Bilder zeigen die Folien
+des HTML-Decks — so, wie der Browser sie zeigt — und Folien mit Aufbauten im Endzustand (alles
+eingeblendet). So fallen überlange Titel, verkleinerter Text, abgeschnittene Bilder und leere
+Folien auf, ohne dass jemand PowerPoint öffnet. Die Vorschau ersetzt nicht den Blick in
+PowerPoint vor der Weitergabe.
+
+| Schalter | Wirkung |
+| -------- | ------- |
+| `--scale 2` | doppelt so viele Pixel (3200 × 1800), schärfer zum Hineinzoomen |
+| `--slides 3,7-9` | nur diese Folien |
+| `--html` | das HTML-Deck zusätzlich in den Vorschau-Ordner schreiben |
+
+Die Schrift ist in den Bildern immer Selawik (auch wo Segoe UI installiert ist), damit sie auf
+jedem Rechner gleich aussehen. Für Word-Berichte gibt es keine Vorschau. Fehlt Playwright oder
+Chromium, bricht nur `preview` mit dem Hinweis ab, was zu installieren ist (`./run.sh setup`).
 
 ## 6. Aus Python aufrufen (optional)
 

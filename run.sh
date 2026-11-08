@@ -43,6 +43,15 @@ setup() {
     else
         echo "Node.js not found: mermaid blocks stay code (see docs/verwendung.md, Mermaid)."
     fi
+    # Playwright and its Chromium for ./run.sh preview (E10-S02); without them only preview stops.
+    if "$py" -m pip install --quiet -e "$repo_root[preview]"; then
+        if ! "$py" "$tools_dir/preview/preview.py" --check-browser; then
+            "$py" -m playwright install chromium \
+                || echo "Chromium for Playwright could not be installed; ./run.sh preview will not work." >&2
+        fi
+    else
+        echo "Playwright could not be installed; ./run.sh preview will not work." >&2
+    fi
 }
 
 ensure() {

@@ -28,6 +28,15 @@ Dateien nach Markdown lesen. Wer **an** der Bibliothek entwickelt, folgt stattde
    kommen; `(Forts.)`-Folien (`slide-split`) sind fast immer ein Zeichen für zu viel Inhalt.
    Mit `--strict` endet der Befehl auch bei Hinweisen mit Code 1 — so lässt sich prüfen, ob
    alles sauber ist. Codes: [verwendung.md](verwendung.md#hinweise-generationresult).
+   **Dann die Folien ansehen:** `./run.sh preview documents/<thema>` legt je Präsentation ein
+   PNG je Folie und `uebersicht.png` in `documents/<thema>/vorschau/<name>/` ab. Zuerst
+   `uebersicht.png` ansehen (mit dem Werkzeug, das Bilder lesen kann, z. B. Read), dann die
+   auffälligen Folien einzeln. Folien korrigieren, deren Titel umbricht, deren Text verkleinert
+   wurde (kleiner als auf den Nachbarfolien), deren Bild Wichtiges abschneidet (`focus=`,
+   `fit=contain`) oder die leer oder überfüllt wirken; danach `generate` und `preview` erneut.
+   Erst dann den Anwender informieren. Endet `preview` mit „Playwright is not installed" oder
+   „Chromium does not start", einmal `./run.sh setup` versuchen; geht es dann nicht, dem
+   Anwender sagen, dass die Folien nicht angesehen wurden.
 4. **Einmalig einrichten**, falls `.venv/` fehlt: `./run.sh setup` (Windows `.\run.ps1 setup`).
 5. **Fakten nicht erfinden.** Inhalte kommen vom Anwender oder aus Quellen, die er nennt. Fremde
    Bilder nur mit passender Lizenz; Urheber und Lizenz in der Bildunterschrift bzw. auf der
@@ -408,10 +417,10 @@ nach den Regeln oben aufbereiten (Front Matter, `#`/`##`-Gliederung) und die Bil
 - [ ] Word: `titel` gesetzt (bei Deckblatt-Vorlagen), Kapitel mit `#`, keine Handnummern.
 - [ ] Präsentation: kein Inhalt unter Kapitel- und Abschluss-`#`, keine „(Forts.)"-Folien, die
       nicht gewollt sind.
-- [ ] Präsentation ansehen, ohne PowerPoint zu haben: `./run.sh generate <datei> --html`
-      schreibt `<name>.html` mit denselben Folien (Anzahl, Titel, Teilung) — im Browser oder
-      mit Playwright als Bild prüfen; die Datei nicht als Ergebnis ausliefern, sie ist nur
-      Vorschau (Weitergabe nur auf Wunsch des Anwenders).
+- [ ] Präsentation angesehen, ohne PowerPoint zu haben: `./run.sh preview documents/<thema>`
+      und die Bilder in `vorschau/<name>/` geprüft (Grundregel 3). Ein HTML-Deck
+      (`generate … --html`) und den Ordner `vorschau/` nicht als Ergebnis ausliefern, sie
+      sind nur Vorschau (Weitergabe nur auf Wunsch des Anwenders).
 - [ ] Fremde Bilder: Lizenz und Urheber genannt, `QUELLEN.md` geschrieben.
 - [ ] Dem Anwender die erzeugten Dateien nennen und sagen, dass Word beim Öffnen eines
       Inhaltsverzeichnisses fragt, ob Felder aktualisiert werden sollen („Ja").
