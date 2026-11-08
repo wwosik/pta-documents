@@ -1,8 +1,8 @@
 # E01-S03 Schriften für PDF und SVG
 
-> Status: Entwurf
-> Epic: [E01 PTA-Design als einziges Design](E01-pta-design.md)
-> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E01 PTA-Design als einziges Design](../../50-entwurf/E01-pta-design.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](../../50-entwurf/M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 
@@ -13,7 +13,7 @@ das gebündelte Selawik (OFL); dazu Ersatzschriften für Code und Zitate, Breite
 ## Kontext
 
 - Segoe UI ist die PTA-Hausschrift, proprietär und darf nicht mitgeliefert werden
-  ([Designanalyse](../10-analysen/2026-11-06%20pta-designstandards.md#schriften)); Entscheidung
+  ([Designanalyse](../../10-analysen/2026-11-06%20pta-designstandards.md#schriften)); Entscheidung
   2026-11-06: Selawik bündeln, Segoe UI aus dem System nehmen, wenn vorhanden.
 - DocLibs: `DocumentGeneration.Pdf/Fonts.cs` (147 Zeilen: `FontFace`, `IFontMetrics`, `FontSet`
   mit Liberation als Standard, Breiten je Zeichen) und `DocumentGeneration/TrueTypeInfo.cs`

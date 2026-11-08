@@ -12,7 +12,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| [E01-S03](E01-S03-schriften-fuer-pdf-und-svg.md) | Schriften für PDF und SVG | Entwurf |
+| [E01-S03](../55-in-arbeit/docs-2/E01-S03-schriften-fuer-pdf-und-svg.md) | Schriften für PDF und SVG | in Bearbeitung (docs-2) |
 | [E01-S04](E01-S04-logos-als-svg-und-png.md) | Logos als SVG und PNG aus den EMF der Vorlagen | Entwurf |
 | [E02-S03](E02-S03-zeichenmodell-und-svg.md) | Zeichenmodell `Drawing` und SVG-Ausgabe mit Tooltips | Entwurf |
 | [E06-S04](E06-S04-svg-bilder.md) | SVG → PNG und SVG-Bilder in Folien und Dokumenten | Entwurf |
