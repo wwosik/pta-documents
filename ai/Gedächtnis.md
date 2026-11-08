@@ -619,3 +619,16 @@ weil ihm vertraut wird.
   Word-Guide stehen `.agenda`/`.interim`/`.quote`/`.contact` nur als bloße Namen, weil der
   Word-Bericht sie nicht zeigt. Die Icon-Liste steht weiter in `docs/ki-anleitung.md` (Test
   E15-S03), bis die Guides sie übernehmen.
+- **Authoring Guide PowerPoint** (E04-S06): `PptxGenerator().authoring_guide(options)`, Vorlage
+  `generation/pptx/authoring_guide/pptx.md`, gefüllt in `generation/pptx/guide.py` (Name nicht
+  `authoring_guide.py`, sonst Verwechslung mit dem Datenordner). Listen kommen aus dem Code:
+  Layoutnamen aus der gewählten `.pptx`-Vorlage, Folienarten aus `design.slides.KIND_LAYOUTS`,
+  Szenen aus `scene`/`scene_colors`, Übergänge aus `SlideTransition`, Front-Matter-Zeilen genau
+  `VALID_KEYS`. Wer Folien-Syntax, einen Schlüssel oder ein Layout ergänzt, erweitert Vorlage
+  bzw. `front_matter_rows` — `tests/generation/pptx/test_authoring_guide.py` schlägt sonst fehl;
+  danach `PTA_DOCUMENTS_UPDATE_EXPECTED=1` für `authoring-guide-basis/-schulung.expected.md`.
+  Wortbudget des PPTX-Guides 3 500 (nicht 2 500). `guide_syntax` in `test_funktionen.py` liest für
+  Decks den ganzen Guide ohne die Abschnitte „Hinweise“ und „Wenn etwas falsch ist“ (dort steht
+  `{.appendix}`/`{scale=N}`, die kein Deck-Beispiel zeigen kann). Die Icon-Liste steht nur noch im
+  Guide (Test `test_the_authoring_guide_names_every_icon`); `docs/ki-anleitung.md` verweist auf
+  `./run.sh authoring-guide pptx`. Das HTML-Deck folgt dem PPTX-Guide.

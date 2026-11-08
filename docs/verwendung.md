@@ -190,6 +190,10 @@ with open("praesentation.pptx", "wb") as output:
 result.slides  # Zahl der erzeugten Folien
 ```
 
+Wie man das Markdown dafür schreibt, beschreibt der Authoring Guide
+`PptxGenerator().authoring_guide(options)` bzw. `./run.sh authoring-guide pptx` (siehe
+[Authoring Guides](#authoring-guides-e02-s05)); er gilt auch für das HTML-Deck.
+
 | Front Matter | Werte | Wirkung |
 | ------------ | ----- | ------- |
 | `vorlage` | `basis` (Standard), `schulung` | PTA-PowerPoint-Vorlage |
@@ -2122,7 +2126,7 @@ denselben Text als Ergebnis, die Präsentation hat den Quelltext jeder `##`-Foli
 Ein Authoring Guide ist die deutsche Anleitung für Schreiber (Menschen und KI-Agenten), wie man
 Markdown für einen Generator schreibt — Markdown ab `##`, damit ein Aufrufer ihn unter eine eigene
 Überschrift setzen kann, höchstens 2 500 Wörter. Jeder Generator erzeugt ihn aus seinen Optionen
-(Word E03-S05, PowerPoint E04-S06, PDF E05-S05; bis dahin bietet noch keiner einen an):
+(Word E03-S05, PowerPoint E04-S06, PDF E05-S05; PowerPoint bietet ihn seit E04-S06 an):
 
 ```bash
 ./run.sh authoring-guide docx      # bzw. pptx, pdf — schreibt den Guide auf die Standardausgabe
@@ -2153,3 +2157,25 @@ Testhilfen für die Guides der Generatoren in `tests/generation/guides.py`: `exa
 ein Überschriftenattribut, einen Blockmarker oder einen Hinweis-Code einführt, trägt seinen Text
 in `CONTAINER_TEXTS`, `ALERT_TEXTS`, `ATTRIBUTE_TEXTS`, `MARKER_TEXTS` bzw. `NOTE_TEXTS` ein —
 die Tests nennen, was fehlt.
+
+### Authoring Guide PowerPoint (E04-S06)
+
+`PptxGenerator().authoring_guide(options: PptxOptions | None = None) -> str` liefert den Guide
+für Präsentationen (Vorlage `pta_documents/generation/pptx/authoring_guide/pptx.md`, gefüllt in
+`generation/pptx/guide.py`): Gliederung, Inhalte, Bilder, die gemeinsame Folien-Syntax mit der
+Wirkung auf Folien, PTA-Folienarten, Builds, Übergänge und Szenen, Fassungen und Zeitplan, die
+Layoutnamen der gewählten Vorlage (für `layout="…"`), Icons, Typografie, die Abschnitte der
+Renderer (Charts, Mermaid), Front Matter, Hinweise, häufige Fehler und ein vollständiges
+Beispiel. Aus den Optionen kommen die Vorlage (`basis`/`schulung` mit dem Standard von
+`kennzeichnung`; in `schulung` ist `kein` nicht erlaubt), die Diagrammabschnitte der Renderer
+und die Bildformate der Konverter. Das HTML-Deck (E10-S01) folgt demselben Guide; seine eigenen
+Schlüssel `fortschritt` und `kapitelanzeige` nennt der Guide im ersten Absatz.
+
+Weil er alles nennt, was Folien können, darf der PowerPoint-Guide bis 3 500 Wörter haben (statt
+2 500). `tests/generation/pptx/test_authoring_guide.py` prüft, dass jeder Container, jedes Alert,
+Attribut, jeder Blockmarker, Schlüssel, Übergang, jede Szenenart, Titelfolie, jedes Icon und jedes
+der 35 Vorlagenlayouts genannt ist, dass jedes Beispiel als PPTX und als HTML-Deck erzeugt wird
+und dass die genannten Fehler Fehler sind; Erwartungsdateien
+`tests/generation/pptx/samples/authoring-guide-basis.expected.md` und `…-schulung.expected.md`.
+Die vollständige Icon-Liste steht seitdem nur noch im Guide, `docs/ki-anleitung.md` verweist
+darauf.

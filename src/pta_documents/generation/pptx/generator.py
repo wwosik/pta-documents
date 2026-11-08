@@ -16,7 +16,7 @@ from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common import audience, durations
 from pta_documents.generation.common.result import GenerationResult, Notes
 from pta_documents.generation.common.slide_transition import SlideTransition
-from pta_documents.generation.pptx import sticker
+from pta_documents.generation.pptx import guide, sticker
 from pta_documents.generation.pptx.model import Run, TitleSlide, plain_text
 from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.generation.pptx.parser import DeckParser
@@ -48,6 +48,12 @@ VALID_KEYS: Final = (
 
 
 class PptxGenerator:
+    def authoring_guide(self, options: PptxOptions | None = None) -> str:
+        """How to write Markdown for a PTA deck: German Markdown from ``##`` for writers
+        (people and AI agents), made from ``options`` — template, marking, the renderers'
+        diagrams and the image formats of the converters (E04-S06). The HTML deck follows it."""
+        return guide.authoring_guide(options or PptxOptions(), VALID_KEYS)
+
     def generate(
         self,
         document: MarkdownDocument,

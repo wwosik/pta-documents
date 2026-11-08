@@ -13,8 +13,9 @@ scheme of generated images (``qr:``, E11-S04), Harvey balls ``[n/4]`` and the th
 E15-S03), the image attributes ``.round``, ``.grey`` and (report) ``scale=``, (deck) ``focus=`` and
 ``fit=contain`` (E15-S04), in the deck every block marker and entrance (E09-S02).
 Since E02-S05 the samples also show everything the shared sections of the authoring guides name
-(``authoring_guides.named_syntax``: guide, code and samples cannot drift apart); once a generator
-has its own guide (E03-S05, E04-S06), that test reads the whole guide instead.
+(``authoring_guides.named_syntax``: guide, code and samples cannot drift apart); for decks that
+test reads the whole guide of the PPTX generator (E04-S06), for Word the shared sections until
+E03-S05.
 """
 
 from __future__ import annotations
@@ -57,6 +58,7 @@ from pta_documents.generation.docx import generator as docx_generator
 from pta_documents.generation.docx.generator import DocxGenerator
 from pta_documents.generation.pptx import generator as pptx_generator
 from pta_documents.generation.pptx.generator import PptxGenerator
+from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.markdown import DocumentResource, MarkdownDocument, block_markers
 from pta_documents.markdown.front_matter import FrontMatter, Keys
 from pta_documents.markdown.parser import ALERT, CONTAINER_CLOSE, CONTAINER_OPEN, container, parse
@@ -368,12 +370,30 @@ def test_the_samples_show_every_syntax_key_and_variant(format: DocumentFormat) -
 
 
 def guide_syntax(format: DocumentFormat) -> str:
-    """What the authoring guide of ``format`` says about syntax: for now its shared sections
-    (E02-S05); E03-S05 and E04-S06 replace this with the generator's ``authoring_guide()``,
-    without the section of examples of mistakes."""
+    """What the authoring guide of ``format`` says about syntax: for decks the whole guide of
+    the PPTX generator without notes and mistakes (E04-S06); for Word for now its shared
+    sections (E02-S05), until E03-S05 replaces them with ``DocxGenerator().authoring_guide()``."""
+    if format is PPTX:
+        return without_mistakes(
+            PptxGenerator().authoring_guide(PptxOptions(code_block_renderers=(ChartRenderer(),)))
+        )
     return authoring_guides.layout_syntax_section(format) + authoring_guides.renderers_section(
         (ChartRenderer(),)
     )
+
+
+MISTAKES: Final = ("## Hinweise\n", "## Wenn etwas falsch ist\n")
+"""The sections of a guide about what goes wrong (E04-S06): the notes and the mistakes, whose
+syntax is wrong on purpose or wrong on slides (``{.appendix}``), so no sample shows it."""
+
+
+def without_mistakes(guide: str) -> str:
+    """``guide`` without the sections of ``MISTAKES``."""
+    for heading in MISTAKES:
+        start = guide.index(heading)
+        end = guide.find("\n## ", start + len(heading))
+        guide = guide[:start] + (guide[end + 1 :] if end >= 0 else "")
+    return guide
 
 
 @pytest.mark.parametrize("format", [DOCX, PPTX], ids=lambda f: f.value)

@@ -7,6 +7,7 @@ from importlib import resources
 import pytest
 
 from pta_documents.design import icons
+from pta_documents.generation.pptx.generator import PptxGenerator
 from tests.conftest import REPO_ROOT
 
 
@@ -56,7 +57,12 @@ def test_the_svg_takes_the_colour_asked_for() -> None:
     assert b'stroke="#006FB9"' in data and b"currentColor" not in data
 
 
-def test_the_ai_guide_names_every_icon() -> None:
-    guide = (REPO_ROOT / "docs" / "ki-anleitung.md").read_text(encoding="utf-8")
+def test_the_authoring_guide_names_every_icon() -> None:
+    # The list moved from docs/ki-anleitung.md into the guide (E04-S06), which builds it from
+    # ICONS; ki-anleitung.md points to ``./run.sh authoring-guide pptx``.
+    guide = PptxGenerator().authoring_guide()
     missing = [name for name in icons.ICONS if f"`{name}`" not in guide]
-    assert missing == [], "add these icons to the list in docs/ki-anleitung.md"
+    assert missing == []
+    assert "./run.sh authoring-guide pptx" in (REPO_ROOT / "docs" / "ki-anleitung.md").read_text(
+        encoding="utf-8"
+    )

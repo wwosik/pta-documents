@@ -149,6 +149,9 @@ Sprache = Hinweis `code-language-unknown`.
 
 ## Präsentation
 
+Die vollständige Anleitung für Präsentationen (alle Syntax, Schlüssel, Layoutnamen und Icons, aus
+dem Code erzeugt) gibt `./run.sh authoring-guide pptx` aus; sie gilt auch für das HTML-Deck.
+
 Gliederung:
 
 ```markdown
@@ -282,28 +285,8 @@ Bilddatei, keine Quelle in `QUELLEN.md`.
   Aufzählungssymbol (Word, PowerPoint und PDF). Sonst steht es im Text.
 - **Im Text**: Word und PDF (so hoch wie die Schrift). Auf Folien ist ein Icon im Text, in
   Titeln, Tabellen oder Notizen ein Fehler — dort nur Karten und Listen.
-- Nur diese Namen; ein anderer ist ein Fehler mit den drei ähnlichsten:
-
-`access-point` `adjustments` `alert-circle` `alert-triangle` `api` `arrow-down` `arrow-left`
-`arrow-right` `arrow-up` `arrows-exchange` `award` `ban` `bell` `bolt` `book` `brain`
-`briefcase` `bug` `building` `building-community` `bulb` `calculator` `calendar`
-`calendar-event` `cash` `certificate` `chart-bar` `chart-dots` `chart-line` `chart-pie` `check`
-`checklist` `circle-check` `circle-x` `clipboard-check` `clipboard-list` `clock` `cloud`
-`cloud-download` `cloud-upload` `code` `coin` `compass` `components` `copyright` `cpu`
-`currency-euro` `database` `device-desktop` `device-laptop` `device-mobile` `download` `edit`
-`eye` `file` `file-check` `file-text` `files` `filter` `flag` `flame` `flask` `folder`
-`folder-open` `gavel` `git-branch` `git-merge` `globe` `hand-stop` `headset` `heart`
-`heart-handshake` `help-circle` `hierarchy` `hierarchy-2` `home` `hourglass` `id-badge-2`
-`infinity` `info-circle` `key` `layers-intersect` `layout-dashboard` `leaf` `license` `lifebuoy`
-`link` `list-check` `loader` `lock` `lock-open` `mail` `map` `map-pin` `message`
-`message-circle` `messages` `microscope` `minus` `mood-sad` `mood-smile` `network` `notebook`
-`package` `pencil` `percentage` `phone` `player-pause` `player-play` `plug` `plus`
-`presentation` `printer` `progress` `puzzle` `receipt` `recycle` `refresh` `repeat`
-`report-analytics` `report-money` `robot` `rocket` `rotate` `route` `scale` `school` `search`
-`server` `server-2` `settings` `share` `shield` `shield-check` `shopping-cart` `sitemap`
-`sort-ascending` `sparkles` `square-check` `star` `target` `target-arrow` `terminal-2`
-`test-pipe` `thumb-down` `thumb-up` `tool` `tools` `trash` `trending-down` `trending-up` `truck`
-`upload` `user` `user-check` `users` `users-group` `wifi` `world` `writing` `x` `zoom-check`
+- Nur die gebündelten Namen; ein anderer ist ein Fehler mit den drei ähnlichsten. Die
+  vollständige Liste steht im Authoring Guide: `./run.sh authoring-guide pptx`, Abschnitt *Icons*.
 
 ## Diagramme aus Daten (`chart`, Word und PowerPoint)
 
