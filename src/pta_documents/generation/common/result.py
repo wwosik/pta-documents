@@ -98,6 +98,10 @@ class NoteCodes:
     PDF, which have no closing slide, ``{.appendix}`` on slides, which number no appendices
     (PPTX, DOCX, PDF)."""
 
+    HANDOUT_WITHOUT_PICTURES: Final = "handout-without-pictures"
+    """The handout (``./run.sh handout``, E16-S03) shows the text of the slides instead of their
+    pictures: the preview (extra ``preview``, E10-S02) is not available (DOCX)."""
+
     ALL: Final = (
         SLIDE_SPLIT,
         SLIDE_OVERFULL,
@@ -115,6 +119,7 @@ class NoteCodes:
         SCHEDULE_LENGTH,
         SCHEDULE_ESTIMATE,
         ATTRIBUTE_IGNORED,
+        HANDOUT_WITHOUT_PICTURES,
     )
     """Every code, in the order the guides list them."""
 

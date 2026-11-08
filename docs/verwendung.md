@@ -560,11 +560,13 @@ pictures = render_deck(html_bytes, scale=1, slides=None)  # [SlidePicture(number
 sheet = contact_sheet(pictures, columns=4)  # PNG-Bytes
 ```
 
-`./run.sh preview <datei-oder-ordner> [--scale n] [--slides 3,7-9] [--html]`
+`./run.sh preview <datei-oder-ordner> [--scale n] [--slides 3,7-9] [--html] [--audience …]`
 (`tools/preview/preview.py`) erzeugt für jede Präsentation (`…-praesentation.md`,
 `…-folien.md`; Word-Berichte: „there is no preview for Word documents") das HTML-Deck im
 Speicher, leert `<ordner>/vorschau/<name>/` und schreibt dort `folie-NN.png` und
-`uebersicht.png`, danach die Hinweise des Generators. Bilder unter `vorschau/` gehen nicht als
+`uebersicht.png`, danach die Hinweise des Generators. `--audience kunde|intern|trainer` wählt die
+Fassung (E16-S01, sonst `fassung:`); andere als `kunde` landen in `vorschau/<name>-intern/` bzw.
+`…-trainer/`. Bilder unter `vorschau/` gehen nicht als
 Ressourcen ins Deck. `--check-browser` endet mit 0, wenn Playwright und Chromium starten (für
 `setup`). Exit-Code 1 bei Fehlern im Dokument oder fehlender Vorschau, 2 bei falschen Schaltern.
 
@@ -1791,6 +1793,84 @@ Rundreise: Der PPTX-Konverter schreibt `# <Titel> {.backup}` statt `## <Titel>` 
 Trennfolie des Backups bzw. `# Backup {.backup}` vor die erste Folie hinter der Abschlussfolie;
 der DOCX-Konverter hängt `{.appendix}` an die erste „Überschrift 1" mit Buchstaben-Nummerierung.
 
+## Teilnehmerhandout (E16-S03)
+
+```python
+from pta_documents.generation.common.audience import Audience
+from pta_documents.handout import (
+    HandoutLayout, HandoutOptions, build_handout, slide_pictures, write_handout,
+)
+from pta_documents.preview import PreviewUnavailableError
+
+try:
+    pictures = slide_pictures(deck, Audience.KUNDE)  # [SlidePicture], Extra 'preview'
+except PreviewUnavailableError:
+    pictures = None  # Text-Handout
+handout = build_handout(deck, pictures, HandoutOptions(HandoutLayout.THREE, Audience.KUNDE))
+with open("kurs-handout.docx", "wb") as output:
+    result = write_handout(handout, output)  # Hinweise des Decks, des Handouts und von Word
+```
+
+`./run.sh handout <praesentation.md|ordner> [--layout 2|3|6] [--audience kunde|intern|trainer]
+[--out <ordner>] [--markdown] [--strict]` (`tools/handout/handout.py`) schreibt
+`<name>-handout.docx` bzw. `<name>-handout-intern.docx`/`-trainer.docx` (Suffix der Fassung wie
+bei `generate`); Word-Berichte werden übersprungen. Fehlt die Vorschau, meldet es
+`no slide pictures for …` und schreibt das Text-Handout. `--markdown` legt das Markdown als
+`<name>-handout.md` und die Bilder in `<name>-handout/` daneben. Danach die Hinweise (Zeilen der
+Präsentation); Exit-Code 1 bei Fehlern, mit `--strict` auch bei Hinweisen, 2 bei falschen
+Schaltern.
+
+**Ablauf** (`handout/handout.py`): Kein zweiter Word-Writer — `build_handout` erzeugt das Deck
+mit `PptxGenerator` in der Fassung (`audience.resolve`: Schalter, sonst `fassung:`, sonst
+`kunde`) im Speicher, liest mit python-pptx je Folie Layout, Titel, Text und Notizen
+(`read_slides`; Titelfolie = erste Folie auf einem Titel-Layout, `Trennfolie`, `Abbschlussfolie`,
+Backup ab `design.slides.backup_start`) und schreibt daraus **Markdown** für den
+DOCX-Generator. `write_handout` erzeugt es mit `docx_options()`. Die Folienbilder
+(`slide_pictures`: HTML-Deck derselben Fassung → `render_deck`, Maßstab 1) gehören zur
+Foliennummer des Decks; das HTML-Deck entsteht aus der PPTX, die Nummern stimmen also überein.
+
+| Teil | Markdown |
+| ---- | -------- |
+| Front Matter | `vorlage: quer` (Layout 2) bzw. `hoch`; `titel` (Front Matter, sonst Titel der PPTX), `untertitel`, `autor`, `ort`, `datum`, `sprache`, `kennzeichnung` aus der Präsentation, sonst `kennzeichnung: intern` für `intern`/`trainer`; `inhaltsverzeichnis: ja` ohne Zeitplan; `typografie: nein` (der Text ist schon gesetzt) |
+| Titelfolie | Bild 6 cm breit nach dem Deckblatt (Trainer: Notizen darunter) |
+| Zeitplan | `**Zeitplan**` und `Schedule.to_markdown()` (E16-S02), wenn das Deck einen hat |
+| Trennfolie | `# Titel`, dann die Folie selbst wie jede andere |
+| Folie, Layout 2 | `::: columns L:R` — links `![Folie n: Titel](handout/folie-NN.png)`, `---`, rechts Notizen bzw. sechs Linien `***` |
+| Folie, Layout 3 | Bild, darunter Notizen bzw. zwei Linien |
+| Folie, Layout 6 | zwei Bilder in einem Absatz (Bildreihe, E03-S03), darunter `**Folie n:**` mit Notizen bzw. zwei Linien; vor jedem Kapitel und am Ende eine Folie auch allein |
+| Abschlussfolie | klein wie die Titelfolie, ohne Linien |
+| Backup | nur in der Trainerfassung |
+| ohne Bild | `**Folie n: Titel**`, Absätze und Listen der Folie (Agendapunkte als Liste, Subheadline fett), Notizen als Zitat bzw. Linien; Hinweis `handout-without-pictures` |
+
+Linien zum Schreiben sind `***`: in Word „Standard"-Absätze mit Rahmenlinie unten (wie jede
+horizontale Linie). Folientexte und Notizen werden escaped (`\[`, `\{`, `\=\=`), Formatierung
+der Folie (fett, kursiv) geht verloren.
+
+**Maße** (`geometry`): aus Seite und Formatvorlagen der Vorlage (`design.word_styles`): Höhe
+eines Absatzes = Abstand vor + Zeile (Segoe UI 1,33 × Größe, mindestens die Zeilenhöhe) +
+Abstand nach. Je Seite bleibt Platz für eine „Überschrift 1" und 18 pt Reserve; der Rest geteilt
+durch 2 (Layout 2) bzw. 3 Zeilen ergibt Bild + Beschriftung + Linien. Ergebnis: Layout 2 Bild
+7,7 cm und sechs Linien, Layout 3 Bild 7,1 cm und zwei Linien, Layout 6 Bilder 6,7 cm und zwei
+Linien je Reihe. `print_picture` verkleinert jedes Bild auf 300 dpi bei dieser Breite, zieht
+einen grauen Rahmen (`GREY_MID`, 1/400 der Breite) und setzt die dpi so, dass seine natürliche
+Größe genau die Breite ist (der DOCX-Generator nimmt sie).
+
+**Zwei DOCX-Optionen, nur über die API** (`DocxOptions`, kein Front-Matter-Schlüssel):
+
+| Option | Standard | Wirkung |
+| ------ | -------- | ------- |
+| `figure_numbers` | `True` | `False`: Bildbeschriftungen ohne „Abbildung n:" und ohne `SEQ`-Feld, nur der Text (Tabellen bleiben nummeriert) |
+| `side_by_side_columns` | `False` | `True`: `::: columns` wird eine einzeilige Tabelle im Stil „Bildreihe" (ohne Linien, Breiten nach den Gewichten, Zeile nicht trennbar); nur `---` direkt im Container trennt Spalten, `***`/`___` bleiben Linien; Blöcke einer Spalte (auch Tabellen, Bilder bis zur Zellbreite) stehen in ihrer Zelle |
+
+Rundreise: Der DOCX-Konverter liest eine Spalten-Tabelle wie eine Bildreihe (Bilder, dann die
+Absätze); Linien gehen verloren.
+
+Tests: `tests/handout/test_handout.py` (Text-Handout mit allen Titeln und der erwarteten Zahl
+Linien, Fassungen, Front Matter, Zeitplan/Inhaltsverzeichnis, Layout 2/3/6 mit Bildern ohne
+Browser, Beschriftungen, Rundreise `samples/handout.roundtrip.expected.md`, mit Browser die echte
+Vorschau, Werkzeug) und `tests/generation/docx/test_handout_options.py`; Handouts zum Ansehen in
+`.tmp/review/handout/`.
+
 ## Hinweise (`GenerationResult`)
 
 `generate()` beider Generatoren gibt ein `GenerationResult` zurück (`pta_documents.GenerationResult`,
@@ -1826,6 +1906,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `schedule-length` (`SCHEDULE_LENGTH`) | PPTX (E16-S02) | die Summe weicht von `laenge:` ab („Planned 240 min ('laenge:'), slides sum to 265 min."), oder die Folien eines Kapitels brauchen mehr als seine `dauer` (Zeile des `#`) |
 | `schedule-estimate` (`SCHEDULE_ESTIMATE`) | nur `check` (E16-S02) | die geplante Sprechzeit (ohne Pausen) weicht um mehr als die Hälfte von der Faustregel des Prüfbefehls ab (2 Minuten je Inhaltsfolie plus Notizen); nur, wenn mindestens eine Folie `dauer` hat |
 | `attribute-ignored` (`ATTRIBUTE_IGNORED`) | PPTX, DOCX, PDF (E16-S04) | ein Überschriftenattribut des anderen Dokumenttyps: `{.backup}` in Word/PDF, `{.appendix}` auf Folien; die Kapitel bleiben gewöhnliche Kapitel, siehe [Backup-Folien und Anhang](#backup-folien-und-anhang-e16-s04) |
+| `handout-without-pictures` (`HANDOUT_WITHOUT_PICTURES`) | DOCX (E16-S03) | das Handout zeigt den Text der Folien statt ihrer Bilder, weil die Vorschau (Extra `preview`) fehlt; siehe [Teilnehmerhandout](#teilnehmerhandout-e16-s03) |
 
 Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate` zeigt die
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;

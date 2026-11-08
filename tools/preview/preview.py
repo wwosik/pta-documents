@@ -1,6 +1,7 @@
 """Look at presentations without PowerPoint: one PNG per slide and a contact sheet (E10-S02).
 
 usage: ./run.sh preview <file-or-folder> [...] [--scale <n>] [--slides <list>] [--html]
+                         [--audience kunde|intern|trainer]
        ./run.sh preview --check-browser
 
 Every presentation (``…-praesentation.md`` / ``…-folien.md``; a folder means every ``*.md`` in
@@ -12,6 +13,8 @@ Word documents (``…-bericht.md`` / ``…-dokument.md``) have no preview.
   --scale <n>      n times the pixels (2: 3200 × 1800, sharper; default 1: 1600 × 900)
   --slides <list>  only these slides, e.g. 3,7-9 (numbers of the whole deck)
   --html           also write the HTML deck into the preview folder
+  --audience <a>   the version (E16-S01) instead of ``fassung:`` (else ``kunde``); the internal
+                   and the trainer's go to ``vorschau/<name>-intern/`` and ``…-trainer/``
   --check-browser  exit code 0 if Playwright and its Chromium start, 1 otherwise (for setup)
 
 Needs the extra ``preview`` (Playwright) and its Chromium; without them only this tool stops,
@@ -26,8 +29,11 @@ import sys
 from pathlib import Path
 from typing import Final
 
-from pta_documents.errors import DocumentConversionError
+from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.common import audience as audiences
+from pta_documents.generation.common.audience import Audience
 from pta_documents.generation.html.generator import HtmlDeckGenerator
+from pta_documents.generation.html.options import HtmlDeckOptions
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
 from pta_documents.preview import (
     PreviewUnavailableError,
@@ -42,6 +48,7 @@ WORD_SUFFIXES: Final = ("-bericht", "-dokument")
 NOT_DOCUMENTS: Final = ("readme.md", "quellen.md")
 PREVIEW_FOLDER: Final = "vorschau"
 SHEET_NAME: Final = "uebersicht.png"
+AUDIENCE_VALUES: Final = tuple(a.value for a in Audience)
 
 
 class UsageError(ValueError):
@@ -89,8 +96,15 @@ def picture_name(number: int) -> str:
     return f"folie-{number:02d}.png"
 
 
-def preview(source: Path, scale: int, slides: set[int] | None, write_html: bool) -> bool:
-    """Preview one file; False on an error. Raises ``PreviewUnavailableError``."""
+def preview(
+    source: Path,
+    scale: int,
+    slides: set[int] | None,
+    write_html: bool,
+    audience: Audience | None = None,
+) -> bool:
+    """Preview one file in the version ``audience`` (None: ``fassung:``); False on an error.
+    Raises ``PreviewUnavailableError``."""
     stem = source.stem
     if stem.endswith(WORD_SUFFIXES):
         print(f"skipped {source}: there is no preview for Word documents")
@@ -101,11 +115,13 @@ def preview(source: Path, scale: int, slides: set[int] | None, write_html: bool)
     document = MarkdownDocument(source.read_text(encoding="utf-8"), resources(source.parent))
     deck = io.BytesIO()
     try:
-        result = HtmlDeckGenerator().generate(document, deck)
+        chosen = audiences.of(document.text, DocumentFormat.HTML, audience)
+        result = HtmlDeckGenerator().generate(document, deck, HtmlDeckOptions(audience=chosen))
     except DocumentConversionError as error:
         print(f"ERROR {source}: {error.reason}", file=sys.stderr)
         return False
     pictures = render_deck(deck.getvalue(), scale=scale, slides=slides)
+    stem += chosen.suffix
     folder = source.parent / PREVIEW_FOLDER / stem
     if folder.exists():
         shutil.rmtree(folder)
@@ -131,6 +147,7 @@ def main(argv: list[str]) -> int:
     scale = 1
     slides: set[int] | None = None
     write_html = False
+    audience: Audience | None = None
     paths: list[Path] = []
     args = iter(argv)
     try:
@@ -146,6 +163,13 @@ def main(argv: list[str]) -> int:
                 slides = parse_slides(next(args, ""))
             elif arg == "--html":
                 write_html = True
+            elif arg == "--audience":
+                value = next(args, "").strip().lower()
+                if value not in AUDIENCE_VALUES:
+                    raise UsageError(
+                        f"--audience takes {', '.join(AUDIENCE_VALUES)}, not '{value}'"
+                    )
+                audience = Audience(value)
             elif arg.startswith("--"):
                 raise UsageError(f"unknown switch {arg}")
             else:
@@ -163,7 +187,7 @@ def main(argv: list[str]) -> int:
             for source in files:
                 if source.name.lower() in NOT_DOCUMENTS:
                     continue
-                ok &= preview(source, scale, slides, write_html)
+                ok &= preview(source, scale, slides, write_html, audience)
     except PreviewUnavailableError as error:
         print(f"ERROR {error}", file=sys.stderr)
         return 1

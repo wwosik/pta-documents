@@ -75,3 +75,19 @@ def test_a_mistake_in_the_deck_is_an_error(
     (tmp_path / "x-folien.md").write_text("---\nvorlage: bunt\n---\n# D\n", encoding="utf-8")
     assert TOOL.main([str(tmp_path)]) == 1
     assert "ERROR" in capsys.readouterr().err
+
+
+def test_a_wrong_audience_is_a_usage_error() -> None:
+    assert TOOL.main(["--audience", "chef", "x.md"]) == 2
+
+
+@pytest.mark.usefixtures("browser")
+def test_the_audience_chooses_the_version_and_its_folder(tmp_path: Path) -> None:
+    """E16-S03: ``--audience`` as in ``generate``; the internal slide only for PTA."""
+    deck = DECK + "\n## Intern {.internal}\n\nText\n"
+    (tmp_path / "thema-praesentation.md").write_text(deck, encoding="utf-8")
+    assert TOOL.main([str(tmp_path), "--audience", "trainer"]) == 0
+    assert TOOL.main([str(tmp_path)]) == 0
+    trainer = tmp_path / "vorschau" / "thema-praesentation-trainer"
+    customer = tmp_path / "vorschau" / "thema-praesentation"
+    assert len(list(trainer.glob("folie-*.png"))) == len(list(customer.glob("folie-*.png"))) + 1

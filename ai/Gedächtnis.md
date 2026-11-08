@@ -584,3 +584,17 @@ weil ihm vertraut wird.
   `training_schedule.build` endet an `{.closing}` **oder** `{.backup}`; `backup.check` weist `{.break}` und `dauer=…` ab
   der Abschlussfolie bzw. ab dem Backup ab (Entscheidung 2026-11-08, vorsichtig: Fehler statt
   stillschweigend ungeplant).
+- **Teilnehmerhandout** (E16-S03): `pta_documents/handout/handout.py` (`build_handout`,
+  `write_handout`, `slide_pictures`, `HandoutLayout` 2/3/6, Standard 3). Kein eigener
+  Word-Writer: das Handout ist Markdown, die Folien liest es aus der **im Speicher erzeugten
+  PPTX** (python-pptx: Layoutname, Titel, Text, Notizen — so stimmen Foliennummern, geteilte
+  Folien und die „Geplant"-Notiz der Trainerfassung mit Deck und Vorschau überein). Zwei
+  DOCX-Optionen nur über die API dafür: `DocxOptions.figure_numbers=False` (Beschriftung ohne
+  `SEQ`) und `side_by_side_columns=True` (`::: columns` als Tabelle im Stil „Bildreihe",
+  `BodyWriter.cell`/`blocks()` lenken Absätze und Tabellen in die Zelle; nur `---` trennt
+  Spalten, `***` bleibt Linie). Linien zum Schreiben sind `***`. Bildmaße in `geometry` aus
+  `design.word_styles` (Seite, Absatzhöhen); `print_picture` setzt die dpi so, dass die
+  natürliche Größe die gewünschte Breite ist (der DOCX-Generator nimmt sie). Backup-Folien nur
+  in der Trainerfassung. Ohne Playwright: Text-Handout und Hinweis `handout-without-pictures`.
+  Werkzeug `./run.sh handout`; `./run.sh preview` kennt seitdem `--audience`
+  (`vorschau/<name>-trainer/`).

@@ -27,7 +27,7 @@ from docx.opc.packuri import PackURI
 from docx.opc.part import Part
 from docx.shared import Cm, Emu, Pt, RGBColor
 from docx.styles.style import ParagraphStyle
-from docx.table import Table
+from docx.table import Table, _Cell
 from docx.text.paragraph import Paragraph
 from lxml import etree
 from markdown_it.token import Token
@@ -178,6 +178,9 @@ class BodyWriter:
         self.appendix_num: str | None = None
         """From ``# … {.appendix}`` on: the numbering that letters the headings A, A.1, A.1.1
         (E16-S04); None: the template's numbering of the headings."""
+        self.cell: _Cell | None = None
+        """The table cell blocks go into (a column of ``side_by_side_columns``); None: the
+        body."""
         section = document.sections[0]
         page_width = int(section.page_width or 0)
         margins = int(section.left_margin or 0) + int(section.right_margin or 0)
@@ -364,6 +367,9 @@ class BodyWriter:
             label = self.texts.conclusion if conclusion else self.texts.comment
             self.note_box(tokens, i + 1, end - 1, word.STYLES.note, label)
             return end
+        if name == layout_syntax.COLUMNS and self.options.side_by_side_columns and not self.cell:
+            self.columns_table(tokens, i, end)
+            return end
         self.container_depth += 1
         j = i + 1
         first = True
@@ -381,6 +387,49 @@ class BodyWriter:
             first = False
         self.container_depth -= 1
         return end
+
+    def columns_table(self, tokens: list[Token], i: int, end: int) -> None:
+        """A ``::: columns`` side by side (``DocxOptions.side_by_side_columns``, E16-S03): one
+        row of a table without rules, the cells as wide as the column weights; a line ``---``
+        right in the container separates the columns, ``***`` and ``___`` stay rules."""
+        _, arguments = container(tokens[i])
+        level = tokens[i].level + 1
+        parts: list[tuple[int, int]] = []
+        start = i + 1
+        for j in range(i + 1, end - 1):
+            token = tokens[j]
+            if token.type == "hr" and token.level == level and token.markup.startswith("-"):
+                parts.append((start, j))
+                start = j + 1
+        parts.append((start, end - 1))
+        weights = layout_syntax.columns(
+            len(parts), any(a == b for a, b in parts), arguments, FORMAT
+        )
+        table = self.blocks().add_table(rows=1, cols=len(parts))
+        table.style = self._ensure_picture_row_style()
+        table.autofit = False
+        widths = [self.text_width * weight // sum(weights) for weight in weights]
+        _set_table_width(table, widths)
+        etree.SubElement(table.rows[0]._tr.get_or_add_trPr(), w("cantSplit"))
+        text_width = self.text_width
+        self.container_depth += 1
+        for (start, stop), width, cell in zip(parts, widths, table.rows[0].cells, strict=True):
+            cell.width = Emu(width)
+            empty = cell.paragraphs[0]
+            self.cell = cell
+            self.text_width = width - int(Cm(word.PICTURE_GAP_CM))
+            j = start
+            while j < stop:
+                j = self.block(tokens, j)
+            self.cell = None
+            self.text_width = text_width
+            if len(cell.paragraphs) > 1 or cell.tables:
+                cell._tc.remove(empty._p)
+        self.container_depth -= 1
+
+    def blocks(self) -> Document | _Cell:
+        """Where blocks go: the cell of a column side by side, else the body."""
+        return self.cell if self.cell is not None else self.document
 
     def timeline(self, timeline: schedule.Timeline, token: Token) -> None:
         """A ``::: timeline`` as a picture as wide as the text (E15-S01), drawn like the
@@ -449,7 +498,7 @@ class BodyWriter:
         picture = risk_drawing.draw(matrix)
         self.drawing_picture(picture, layout_syntax.RISK_MATRIX, matrix.alt, token)
         legend = matrix.legend()
-        table = self.document.add_table(rows=len(legend), cols=len(legend[0]))
+        table = self.blocks().add_table(rows=len(legend), cols=len(legend[0]))
         table.style = word.STYLES.table
         table.autofit = False
         widths = text_metrics.column_widths(
@@ -475,7 +524,7 @@ class BodyWriter:
         owner = gantt.owner_heading is not None
         units = gantt.units
         columns = 1 + int(owner) + len(units)
-        table = self.document.add_table(rows=1 + len(gantt.rows), cols=columns)
+        table = self.blocks().add_table(rows=1 + len(gantt.rows), cols=columns)
         table.style = word.STYLES.table
         table.autofit = False
         name_width = int(self.text_width * word.GANTT_NAME_SHARE)
@@ -767,7 +816,7 @@ class BodyWriter:
                     header_rows += 1
             j += 1
         columns = max(len(r) for r in rows)
-        table = self.document.add_table(rows=len(rows), cols=columns)
+        table = self.blocks().add_table(rows=len(rows), cols=columns)
         table.style = word.STYLES.table
         table.autofit = False
         widths = text_metrics.column_widths(
@@ -816,7 +865,7 @@ class BodyWriter:
         per_row = word.PICTURES_PER_ROW
         columns = min(len(images), per_row)
         rows = math.ceil(len(images) / per_row)
-        table = self.document.add_table(rows=rows, cols=columns)
+        table = self.blocks().add_table(rows=rows, cols=columns)
         table.style = self._ensure_picture_row_style()
         table.autofit = False
         width = self.text_width // columns
@@ -844,8 +893,10 @@ class BodyWriter:
                         paragraph.paragraph_format.keep_with_next = True
 
     def _previous_is_table(self) -> bool:
-        body: etree._Element = self.document.element.body  # type: ignore[attr-defined]
-        last = [child for child in body if child.tag != w("sectPr")]
+        body: etree._Element = (
+            self.cell._tc if self.cell is not None else self.document.element.body  # type: ignore[attr-defined]
+        )
+        last = [child for child in body if child.tag not in (w("sectPr"), w("tcPr"))]
         return bool(last) and last[-1].tag == w("tbl")
 
     def _is_table_caption(self, inline: Token) -> bool:
@@ -928,10 +979,15 @@ class BodyWriter:
             self.figures += 1
             number = self.figures
         paragraph = paragraph or self.paragraph(word.STYLES.caption)
-        _append_text(paragraph._p, f"{label} ")
-        for run in field_paragraph_runs(f"SEQ {label} \\* ARABIC", str(number)):
-            paragraph._p.append(run)
-        _append_text(paragraph._p, ": ")
+        numbered = label != self.texts.figure or self.options.figure_numbers
+        if numbered:
+            _append_text(paragraph._p, f"{label} ")
+            for run in field_paragraph_runs(f"SEQ {label} \\* ARABIC", str(number)):
+                paragraph._p.append(run)
+            _append_text(paragraph._p, ": ")
+        else:
+            # The handout's captions (E16-S03): the text alone, no number.
+            self.figures -= 1
         if inline is not None:
             if strip_prefix:
                 inline = block_shapes.strip_caption_prefix(inline)
@@ -1114,7 +1170,8 @@ class BodyWriter:
             self._ensure_note_style(style, word.NOTE)
         elif style == word.STYLES.note_important:
             self._ensure_note_style(style, word.NOTE_IMPORTANT)
-        return self.document.add_paragraph(style=cast(ParagraphStyle, self.document.styles[style]))
+        style_object = cast(ParagraphStyle, self.document.styles[style])
+        return self.blocks().add_paragraph(style=style_object)
 
     def _ensure_code_style(self) -> str:
         name = word.STYLES.code

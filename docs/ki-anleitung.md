@@ -437,6 +437,21 @@ laenge: 4h
   Notizenzeile; `./run.sh schedule <praesentation.md>` erzeugt `<name>-zeitplan.docx` mit der
   Zeitplantabelle (`--markdown` zeigt sie als Markdown zum Prüfen).
 
+## Teilnehmerhandout
+
+`./run.sh handout documents/<thema>/<name>-praesentation.md` schreibt
+`<name>-praesentation-handout.docx` (Word, Deckblatt, Zeitplan, je Folie Bild und Linien für
+Notizen; `--layout 2|3|6` Folien je Seite, Standard 3). Für die Teilnehmer ist das die
+Kundenfassung — ohne `--audience` also nichts Internes, keine Lösungen, kein Backup.
+
+- **Zur Kontrolle der Sprechernotizen:** `./run.sh handout <praesentation.md> --audience trainer
+  --markdown` und in `<name>-praesentation-handout-trainer.md` prüfen, dass **jede** Folie
+  Notizen hat (wo keine sind, stehen Linien `***`). Fehlende `::: notes` ergänzen.
+- Meldet `handout` „no slide pictures", fehlt die Vorschau (Grundregel 3); das Handout zeigt
+  dann den Text der Folien. Dem Anwender sagen, dass `./run.sh setup` die Bilder ermöglicht.
+- Das Handout nicht von Hand nachbauen und das `--markdown`-Ergebnis nicht mit `generate`
+  erzeugen (dort stünden Bild und Notizen untereinander, die Beschriftungen nummeriert).
+
 ## Aus Python statt per Befehl
 
 ```python
@@ -505,6 +520,8 @@ nach den Regeln oben aufbereiten (Front Matter, `#`/`##`-Gliederung) und die Bil
 - [ ] Preise, interne Bemerkungen und Lösungen stehen in `::: internal`/`{.internal}` bzw.
       `::: solution`; was an den Kunden geht, ist die Fassung `kunde` (Datei ohne `-intern`/
       `-trainer`).
+- [ ] Schulung: `./run.sh handout … --audience trainer --markdown` zeigt zu jeder Folie
+      Notizen; das Handout für die Teilnehmer ist `…-handout.docx` (ohne `-trainer`).
 - [ ] Fremde Bilder: Lizenz und Urheber genannt, `QUELLEN.md` geschrieben.
 - [ ] Dem Anwender die erzeugten Dateien nennen und sagen, dass Word beim Öffnen eines
       Inhaltsverzeichnisses fragt, ob Felder aktualisiert werden sollen („Ja").

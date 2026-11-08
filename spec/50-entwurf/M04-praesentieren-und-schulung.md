@@ -21,7 +21,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E10-S02](../60-prüfung/E10-S02-vorschau-als-bilder.md) | Vorschau als Bilder | in Prüfung |
 | [E16-S01](../60-prüfung/E16-S01-zielgruppenfassungen.md) | Zielgruppenfassungen | in Prüfung |
 | [E16-S02](../60-prüfung/E16-S02-schulungs-zeitplan.md) | Schulungs-Zeitplan aus Foliendauern | in Prüfung |
-| [E16-S03](../55-in-arbeit/docs-2/E16-S03-teilnehmerhandout.md) | Teilnehmerhandout | in Bearbeitung (docs-2) |
+| [E16-S03](../60-prüfung/E16-S03-teilnehmerhandout.md) | Teilnehmerhandout | in Prüfung |
 | [E16-S04](../60-prüfung/E16-S04-backup-folien-und-anhang.md) | Backup-Folien und Anhang | in Prüfung |
 | [E02-S05](../55-in-arbeit/docs-2/E02-S05-authoring-guides.md) | Authoring Guides | in Bearbeitung (docs-2) |
 | [E03-S05](E03-S05-authoring-guide-docx.md) | Authoring Guide DOCX | Entwurf |

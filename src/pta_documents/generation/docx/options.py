@@ -40,3 +40,11 @@ class DocxOptions:
     image_converters: tuple[ImageConverter, ...] = field(default_factory=default_converters)
     """Asked in order (scale 2) for every image in a format the generator does not take.
     Defaults to every converter of the library that is available; ``()`` turns them off."""
+    figure_numbers: bool = True
+    """False: the caption of a picture is its title (or alt text) alone, without „Abbildung n:"
+    and its ``SEQ`` field — the handout's „Folie 3: Titel" (E16-S03). Only through the API."""
+    side_by_side_columns: bool = False
+    """True: a ``::: columns`` is a table without rules (style „Bildreihe") with its columns side
+    by side; only a line ``---`` separates them, ``***`` inside a column stays a horizontal rule
+    (the handout's slide beside its notes, E16-S03). False: the columns one after the other.
+    Only through the API."""

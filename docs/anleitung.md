@@ -516,6 +516,36 @@ laenge: 4h
   (leer, zum Ausfüllen), Pausen gelb markiert, unten die Summe. Ohne `beginn:` stehen dort
   relative Zeiten („+0:15").
 
+### Handout für die Teilnehmer
+
+```sh
+./run.sh handout documents/<thema>/kurs-praesentation.md
+```
+
+schreibt `kurs-praesentation-handout.docx`: ein Word-Dokument auf der PTA-Vorlage mit Deckblatt
+(Titel, Untertitel, Autor, Ort, Datum aus dem Kopf der Präsentation), der Titelfolie klein, dem
+[Zeitplan](#schulung-planen) (gibt es keine Dauern: einem Inhaltsverzeichnis), je Trennfolie
+einem Kapitel und je Folie ihrem Bild mit der Beschriftung „Folie 4: Begriffe" — und daneben
+oder darunter Linien für eigene Notizen. Die Abschlussfolie steht klein am Ende.
+
+| Schalter | Wirkung |
+| -------- | ------- |
+| `--layout 3` | drei Folien je Seite, Hochformat, Linien unter jeder Folie (Standard) |
+| `--layout 2` | zwei Folien je Seite, Querformat, Linien **neben** der Folie |
+| `--layout 6` | sechs Folien je Seite, Hochformat, zwei nebeneinander, Linien darunter |
+| `--audience trainer` | Trainerfassung `…-handout-trainer.docx`: statt der Linien die Sprechernotizen mit der geplanten Zeit („Geplant: 09:05–09:15"), dazu die Backup-Folien und die Kennzeichnung „intern" |
+| `--markdown` | zusätzlich das Markdown des Handouts (`…-handout.md`) und seine Bilder (`…-handout/`) zum Weiterbearbeiten |
+| `--out <ordner>` | woanders hinschreiben |
+
+- Ohne `--audience` gilt die Fassung aus `fassung:`, sonst `kunde`: das Handout für die
+  Teilnehmer enthält weder interne Folien noch Lösungen noch Backup-Folien.
+- Die Folienbilder kommen aus der [Vorschau](#vorschau-ohne-powerpoint) (Playwright und
+  Chromium). Fehlen sie, entsteht trotzdem ein Handout — mit dem Text jeder Folie statt ihres
+  Bildes — und `handout` sagt, was zu installieren ist (`./run.sh setup`).
+- Die Bildgrößen sind so gewählt, dass zwei, drei oder sechs Folien eine Seite füllen; Word
+  bricht die Seiten selbst um. Lange Sprechernotizen in der Trainerfassung machen eine Seite
+  länger. Vor dem Drucken einmal in Word durchblättern.
+
 ### Backup und Anhang
 
 Folien für Rückfragen stehen **hinter** der Abschlussfolie:
@@ -841,6 +871,7 @@ PowerPoint vor der Weitergabe.
 | `--scale 2` | doppelt so viele Pixel (3200 × 1800), schärfer zum Hineinzoomen |
 | `--slides 3,7-9` | nur diese Folien |
 | `--html` | das HTML-Deck zusätzlich in den Vorschau-Ordner schreiben |
+| `--audience trainer` | die Trainer- (bzw. `intern`-) Fassung, in `vorschau/<name>-trainer/` |
 
 Die Schrift ist in den Bildern immer Selawik (auch wo Segoe UI installiert ist), damit sie auf
 jedem Rechner gleich aussehen. Für Word-Berichte gibt es keine Vorschau. Fehlt Playwright oder
