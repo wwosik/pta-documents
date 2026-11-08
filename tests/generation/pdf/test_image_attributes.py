@@ -34,6 +34,7 @@ def test_round_has_a_soft_mask_and_grey_is_grey() -> None:
             (int(item.Width), int(item.Height), item.get("/SMask") is not None, item.ColorSpace)
             for page in pdf.pages
             for _, item in page.obj.Resources.XObject.items()
+            if item.get("/Subtype") == "/Image"  # the frame's logo is a form XObject (E05-S03)
         ]
     assert sorted(found) == [(150, 150, True, "/DeviceRGB"), (300, 150, False, "/DeviceGray")]
 
