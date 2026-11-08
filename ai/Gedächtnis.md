@@ -617,13 +617,13 @@ weil ihm vertraut wird.
   neuer Renderer sein `authoring_guide`. Was ein Guide an Syntax nennt (`named_syntax`, Regex
   `SYNTAX_PATTERN` wie vt-tools-libs), muss wortgleich in `samples/funktionen/` des Formats stehen
   (`test_the_samples_show_the_syntax_the_guide_names`; `guide_syntax` liest für Word den ganzen
-  Guide ohne die Fehlerbeispiele, für PowerPoint bis E04-S06 die gemeinsamen Abschnitte; das PDF
-  hat keine eigenen Beispiele — `tests/generation/pdf/test_authoring_guide.py` verlangt, dass
+  Guide ohne die Fehlerbeispiele, für PowerPoint seit E04-S06 den ganzen Guide ohne Hinweise und
+  Fehlerbeispiele; das PDF hat keine eigenen Beispiele — `tests/generation/pdf/test_authoring_guide.py` verlangt, dass
   der PDF-Guide außer `{uebergang` aus der Szenenzeile nichts nennt, was der Word-Guide nicht
   nennt). Im
   Word-Guide stehen `.agenda`/`.interim`/`.quote`/`.contact` nur als bloße Namen, weil der
-  Word-Bericht sie nicht zeigt. Die Icon-Liste steht weiter in `docs/ki-anleitung.md` (Test
-  E15-S03), bis die Guides sie übernehmen.
+  Word-Bericht sie nicht zeigt. Die Icon-Liste steht seit E04-S06 nur noch in den Guides
+  (`icons_section`, in Word, PDF und PowerPoint); `docs/ki-anleitung.md` verweist je Format darauf.
 - **Word-Guide** (E03-S05): `DocxGenerator().authoring_guide(options)` → `generation/docx/guide.py`
   (Word-Texte in `guide.TEXTS`; Aufbau, Satz je Vorlage `VARIANT_TEXTS` und Front-Matter-Zeilen
   mit den Standardwerten der Optionen seit E05-S05 in `generation/common/document_guide.py`, den
@@ -645,3 +645,16 @@ weil ihm vertraut wird.
   Wörtern (Word 2 464) — `characters_section` gruppiert die Symbole je Ersatz, weil Symbole
   keine Wörter zählen. Erwartung `tests/generation/pdf/samples/authoring-guide.expected.md`
   (mit `system_fonts=False`, Selawik/Inconsolata).
+- **Authoring Guide PowerPoint** (E04-S06): `PptxGenerator().authoring_guide(options)`, Vorlage
+  `generation/pptx/authoring_guide/pptx.md`, gefüllt in `generation/pptx/guide.py` (Name nicht
+  `authoring_guide.py`, sonst Verwechslung mit dem Datenordner). Listen kommen aus dem Code:
+  Layoutnamen aus der gewählten `.pptx`-Vorlage, Folienarten aus `design.slides.KIND_LAYOUTS`,
+  Szenen aus `scene`/`scene_colors`, Übergänge aus `SlideTransition`, Front-Matter-Zeilen genau
+  `VALID_KEYS`. Wer Folien-Syntax, einen Schlüssel oder ein Layout ergänzt, erweitert Vorlage
+  bzw. `front_matter_rows` — `tests/generation/pptx/test_authoring_guide.py` schlägt sonst fehl;
+  danach `PTA_DOCUMENTS_UPDATE_EXPECTED=1` für `authoring-guide-basis/-schulung.expected.md`.
+  Wortbudget des PPTX-Guides 3 500 (nicht 2 500). `guide_syntax` in `test_funktionen.py` liest für
+  Decks den ganzen Guide ohne die Abschnitte „Hinweise“ und „Wenn etwas falsch ist“ (dort steht
+  `{.appendix}`/`{scale=N}`, die kein Deck-Beispiel zeigen kann). Die Icon-Liste steht nur noch in
+  den Guides (Test `test_the_authoring_guide_names_every_icon` je Format); `docs/ki-anleitung.md`
+  verweist auf `./run.sh authoring-guide pptx|docx|pdf`. Das HTML-Deck folgt dem PPTX-Guide.
