@@ -1,8 +1,8 @@
 # E02-S03 Zeichenmodell `Drawing` und SVG-Ausgabe mit Tooltips
 
-> Status: Entwurf
-> Epic: [E02 Markdown-Grundlagen der Generatoren](E02-markdown-grundlagen.md)
-> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E02 Markdown-Grundlagen der Generatoren](../../50-entwurf/E02-markdown-grundlagen.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](../../50-entwurf/M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 
