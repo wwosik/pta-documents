@@ -1,7 +1,7 @@
 # E08-S04 Werkzeug `make_document` für KI-Hosts
 
-> Status: zurückgestellt (2026-11-07) — kein KI-Host geplant
-> Epic: [E08 Rückmeldung an den Schreiber und KI-Anbindung](E08-rueckmeldung-und-ki-anbindung.md)
+> Status: in Bearbeitung (docs-2) — reaktiviert 2026-11-08 auf Wunsch des Menschen
+> Epic: [E08 Rückmeldung an den Schreiber und KI-Anbindung](../../50-entwurf/E08-rueckmeldung-und-ki-anbindung.md)
 
 ## Zusammenfassung
 

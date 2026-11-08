@@ -1,7 +1,7 @@
 # E07-S06 Markdown-Hilfen
 
-> Status: gestrichen (2026-11-07) — Prüfpunkte wandern zu E07-S02
-> Epic: [E07 Konvertierung nach Markdown](E07-konvertierung-nach-markdown.md)
+> Status: in Bearbeitung (docs-2) — reaktiviert 2026-11-08 auf Wunsch des Menschen
+> Epic: [E07 Konvertierung nach Markdown](../../50-entwurf/E07-konvertierung-nach-markdown.md)
 
 ## Zusammenfassung
 
