@@ -1367,7 +1367,7 @@ Mit `"culture": "en"` stehen Zahlen und Beschriftungen auf Englisch.
 ````
 ::::
 
-# Präsentieren
+# Präsentieren {uebergang="fade"}
 
 ## Punkt für Punkt
 
@@ -1487,6 +1487,31 @@ Dieser Satz verschwindet beim ersten Klick.
 - Dieser Punkt wird beim zweiten Klick PTA-blau.
 
 Was keinen Marker hat, steht von Anfang an da.
+```
+::::
+
+## Folienübergang {uebergang="push-up"}
+
+Diese Folie schiebt die vorige nach oben weg. Die anderen Folien des Kapitels blenden über.
+
+- `uebergang: fade` im Kopf gilt für alle Folien
+- `{uebergang="fade"}` an einem `#` gilt für das Kapitel
+- an einem `##` nur für diese Folie
+- `morph` bewegt gleichnamige Formen, ältere Programme blenden über
+
+:::: notes
+Erlaubt sind none, fade, push, wipe, die Richtungen push-left bis wipe-down, split, cover,
+uncover, zoom, cut und morph.
+
+```markdown
+## Folienübergang {uebergang="push-up"}
+
+Diese Folie schiebt die vorige nach oben weg. Die anderen Folien des Kapitels blenden über.
+
+- `uebergang: fade` im Kopf gilt für alle Folien
+- `{uebergang="fade"}` an einem `#` gilt für das Kapitel
+- an einem `##` nur für diese Folie
+- `morph` bewegt gleichnamige Formen, ältere Programme blenden über
 ```
 ::::
 

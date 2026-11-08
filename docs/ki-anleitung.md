@@ -73,6 +73,7 @@ YAML, keine Listen). Schlüssel und Werte sind **deutsch**; `ja`/`nein`; Datum `
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) · `nein` — Codeblöcke einfarbig |
 | `pruefung` | ✓ | ✓ | nur `check`: `aus` · Liste von `style-…`-Codes, die nicht geprüft werden |
 | `aufbau` | – | ✓ | `listen` (jede Liste Punkt für Punkt) · `nein` (Standard) |
+| `uebergang` | – | ✓ | `none` (Standard) · `fade` · `push`/`wipe` (auch `-left`, `-right`, `-up`, `-down`) · `split` · `cover` · `uncover` · `zoom` · `cut` · `morph` |
 
 `firma`/`inhaltsverzeichnis` in einer Präsentation oder `fusszeile`/`titelfolie` in einem
 Word-Dokument sind Fehler.
@@ -166,8 +167,8 @@ Gliederung:
   eingepasst, nie beschnitten. Den Link zusätzlich als Text auf die Folie schreiben.
 - Ein bestimmtes PTA-Layout: `## Titel {layout="Titel und Text (zweispaltig)"}` und den Inhalt mit
   `---` in Spalten teilen. Nur exakte Layoutnamen; die Fehlermeldung listet alle.
-- Heading-Attribute: `#` kennt `.closing` und `layout="…"`, `##` kennt `.dark`, `kicker="…"`,
-  `layout="…"` und die PTA-Folienarten `.agenda`, `.interim`, `.quote`, `.contact` (siehe
+- Heading-Attribute: `#` kennt `.closing`, `layout="…"` und `uebergang="…"`, `##` kennt `.dark`,
+  `kicker="…"`, `layout="…"`, `uebergang="…"` und die PTA-Folienarten `.agenda`, `.interim`, `.quote`, `.contact` (siehe
   unten); alles andere ist ein Fehler. `kicker` ist eine kleine Zeile über dem Titel,
   `.dark` setzt die Folie auf den Verlauf der Titelfolie mit weißer Schrift (beides macht die
   Folie zur Flow-Folie, siehe unten).
@@ -186,6 +187,10 @@ Gliederung:
   Klick PTA-blau. Sparsam einsetzen: eine Argumentationsliste oder eine Kartenreihe je Folie,
   nicht jede Folie. Nur unter `##`-Folien — nie auf Titel-, Trenn-, Abschlussfolie oder
   PTA-Folienarten, nie vor `#`/`##`, nie als letzte Zeile; Word und PDF ignorieren die Zeile.
+- **Übergänge:** höchstens einer für das ganze Deck (`uebergang: fade` im Kopf) oder je Kapitel
+  (`# Kapitel {uebergang="fade"}`, gilt für alle Folien darunter); `{uebergang="…"}` an einem
+  `##` nur für eine Folie, die etwas Besonderes zeigt. `none` schaltet ihn ab. `morph` wirkt nur
+  in PowerPoint 2019/365 (sonst Überblenden). Ohne Bitte des Menschen keinen Übergang setzen.
 
 ## PTA-Folienarten (PowerPoint)
 

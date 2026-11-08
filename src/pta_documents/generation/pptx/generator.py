@@ -14,6 +14,7 @@ from pta_documents.design import templates
 from pta_documents.design.variants import TEXTS, Language, Marking, SlidesVariant
 from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common.result import GenerationResult, Notes
+from pta_documents.generation.common.slide_transition import SlideTransition
 from pta_documents.generation.pptx import sticker
 from pta_documents.generation.pptx.model import Run, TitleSlide, plain_text
 from pta_documents.generation.pptx.options import PptxOptions
@@ -38,6 +39,7 @@ VALID_KEYS: Final = (
     Keys.TITLE_SLIDE,
     Keys.MARKING,
     Keys.BUILD,
+    Keys.TRANSITION,
 )
 
 
@@ -131,6 +133,9 @@ def apply_front_matter(front: FrontMatter, options: PptxOptions) -> PptxOptions:
     if (value := front.get(Keys.BUILD)) is not None:
         choices = ((Keys.BUILD_LISTS, True), (NO, False))
         options = replace(options, build_lists=front.one_of(Keys.BUILD, value, choices))
+    if (value := front.get(Keys.TRANSITION)) is not None:
+        choices = ((t.value, t) for t in SlideTransition)
+        options = replace(options, transition=front.one_of(Keys.TRANSITION, value, choices))
     if (value := front.date()) is not None:
         options = replace(options, date=value)
     return options

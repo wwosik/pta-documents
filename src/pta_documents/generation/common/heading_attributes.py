@@ -4,7 +4,7 @@ Port of DocLibs ``HeadingAttributes``. Only a trailing ``{…}`` made of classes
 ``key="value"`` pairs counts; any other braces stay text (``## Sets {a, b}``). Which heading
 takes which attribute is ``check_level``'s business: ``.closing`` goes on ``#``, ``.dark``,
 ``kicker`` and the PTA slide kinds (``.agenda``, ``.interim``, ``.quote``, ``.contact``, E04-S04)
-on ``##``, ``layout`` on both.
+on ``##``, ``layout`` and ``uebergang`` (the slide transition, E09-S03) on both.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.common.slide_transition import SlideTransition
 
 AGENDA: Final = "agenda"
 """PTA: ``## Agenda {.agenda}``, the agenda slide (never made without it, E04-S04)."""
@@ -26,11 +27,15 @@ CONTACT: Final = "contact"
 SLIDE_KINDS: Final = (AGENDA, INTERIM, QUOTE, CONTACT)
 """The PTA slide kinds of a ``##`` heading: one at most, not with ``.dark`` or ``kicker``."""
 
-VALID: Final = '.closing, .dark, kicker="…", layout="…", .agenda, .interim, .quote, .contact'
+VALID: Final = (
+    '.closing, .dark, kicker="…", layout="…", uebergang="…", .agenda, .interim, .quote, .contact'
+)
 """Every heading attribute, as it is written, for error messages."""
-VALID_ON_SECTION: Final = '.closing, layout="…"'
+VALID_ON_SECTION: Final = '.closing, layout="…", uebergang="…"'
 """The attributes of a ``#`` heading."""
-VALID_ON_SLIDE: Final = '.dark, kicker="…", layout="…", .agenda, .interim, .quote, .contact'
+VALID_ON_SLIDE: Final = (
+    '.dark, kicker="…", layout="…", uebergang="…", .agenda, .interim, .quote, .contact'
+)
 """The attributes of a ``##`` heading."""
 
 _BLOCK: Final = re.compile(r'\s*\{((?:\s*(?:\.[A-Za-z][\w-]*|[A-Za-z][\w-]*="[^"]*"))+)\s*\}\s*$')
@@ -50,6 +55,9 @@ class HeadingAttributes:
     kind: str | None = None
     """On a ``##`` heading: the PTA slide kind (one of ``SLIDE_KINDS``); None: an ordinary
     slide."""
+    transition: SlideTransition | None = None
+    """``uebergang="…"`` (E09-S03): how the slide comes in; on a ``#`` heading for its slide and
+    every slide of the chapter. None: the chapter's, else the deck's."""
     block: str = ""
     """The attributes as written (``{.dark kicker="Why"}``), for error messages."""
 
@@ -68,6 +76,7 @@ def split(text: str, format: DocumentFormat) -> tuple[str, HeadingAttributes | N
     layout: str | None = None
     kicker: str | None = None
     kind: str | None = None
+    transition: SlideTransition | None = None
     for token in _TOKEN.finditer(match.group(1)):
         name = "." + token.group("cls") if token.group("cls") else token.group("key")
         if name in seen:
@@ -84,6 +93,8 @@ def split(text: str, format: DocumentFormat) -> tuple[str, HeadingAttributes | N
                 layout = token.group("value")
             case "kicker":
                 kicker = token.group("value")
+            case "uebergang":
+                transition = SlideTransition.parse(token.group("value"), format)
             case _ if name[1:] in SLIDE_KINDS and name.startswith("."):
                 if kind is not None:
                     raise DocumentConversionError(
@@ -98,7 +109,13 @@ def split(text: str, format: DocumentFormat) -> tuple[str, HeadingAttributes | N
                     f"Unknown heading attribute '{name}' in '{block}'. Valid attributes: {VALID}.",
                 )
     attributes = HeadingAttributes(
-        closing=closing, layout=layout, dark=dark, kicker=kicker, kind=kind, block=block
+        closing=closing,
+        layout=layout,
+        dark=dark,
+        kicker=kicker,
+        kind=kind,
+        transition=transition,
+        block=block,
     )
     return text[: match.start()].rstrip(), attributes
 

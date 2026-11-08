@@ -40,6 +40,7 @@ from pta_documents.generation.common.renderers import (
     DrawingGraphic,
 )
 from pta_documents.generation.common.result import Notes
+from pta_documents.generation.common.slide_transition import SlideTransition
 from pta_documents.generation.pptx import flow_parser, kind_parser
 from pta_documents.generation.pptx.model import (
     BREAK,
@@ -146,6 +147,9 @@ class DeckParser:
         self.list_depth = 0
         self.applied: set[int] = set()
         """The tokens (``id``) whose block marker was read: any other one is an error."""
+        self.chapter_transition: SlideTransition | None = None
+        """``{uebergang="…"}`` of the last ``#`` heading: for its slides and those of its
+        chapter (E09-S03)."""
 
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
@@ -211,6 +215,20 @@ class DeckParser:
         if notes:
             # On every slide of the heading (decision 2026-11-07), split ones included.
             self.slides[first:] = [replace(s, notes=notes) for s in self.slides[first:]]
+        transition = self._transition(heading)
+        if transition is not None:
+            self.slides[first:] = [replace(s, transition=transition) for s in self.slides[first:]]
+
+    def _transition(self, heading: tuple[Token, Token]) -> SlideTransition | None:
+        """The transition of the slides of ``heading``: its own, else its chapter's; a ``#``
+        sets the chapter's (E09-S03)."""
+        open_token, inline = heading
+        level = int(open_token.tag[1])
+        _, attributes = layout_syntax.without_attributes(inline, level, FORMAT)
+        own = attributes.transition if attributes is not None else None
+        if level == 1:
+            self.chapter_transition = own
+        return own if own is not None else self.chapter_transition
 
     def _slides_of(self, heading: tuple[Token, Token], start: int, end: int) -> None:
         open_token, inline = heading

@@ -9,6 +9,7 @@ from pta_documents.design.slides import DEFAULT_TITLE_SLIDE
 from pta_documents.design.variants import DEFAULT_SLIDES_VARIANT, Language, Marking, SlidesVariant
 from pta_documents.generation.common.images import ImageConverter, default_converters
 from pta_documents.generation.common.renderers import CodeBlockRenderer, default_renderers
+from pta_documents.generation.common.slide_transition import SlideTransition
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,9 @@ class PptxOptions:
     build_lists: bool = False
     """``aufbau: listen``: every list not inside another appears item by item, as if
     ``{.build}`` stood before it (E09-S02)."""
+    transition: SlideTransition = SlideTransition.NONE
+    """``uebergang:``: how every slide comes in, unless its heading or chapter says otherwise
+    (``{uebergang="…"}``, E09-S03)."""
     code_block_renderers: tuple[CodeBlockRenderer, ...] = field(default_factory=default_renderers)
     """Asked in order for every fenced code block with an info string; the first graphic wins.
     Defaults to every renderer of the library that is available; ``()`` turns them off."""

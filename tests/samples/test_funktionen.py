@@ -161,7 +161,8 @@ def attribute_used(attributes: heading_attributes.HeadingAttributes, entry: str)
             return attributes.kind == name
         return getattr(attributes, name, None) is True
     key = entry.partition("=")[0]
-    return getattr(attributes, key, None) is not None
+    field = {"uebergang": "transition"}.get(key, key)
+    return getattr(attributes, field, None) is not None
 
 
 def inline_text(inline: Token) -> str:

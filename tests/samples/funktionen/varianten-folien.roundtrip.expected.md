@@ -16,4 +16,6 @@ The training template carries the sticker “For internal use only” (kennzeich
 
 aufbau: listen makes this list appear item by item, one click each
 
+uebergang: fade fades in every slide
+
 ## Thank you

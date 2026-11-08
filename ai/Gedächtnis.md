@@ -169,8 +169,15 @@ weil ihm vertraut wird.
   `deck.current` (Blöcke) bzw. `paragraph_click()` (Absätze) mit und zeichnet neue Formen in
   `DeckWriter.at(slide, click)` (bzw. `each` für eine Form je Klick); Absätze werden über
   `Builds.paragraphs` erfasst (in `write_paragraphs` und `FlowWriter.text` schon drin). `p:timing`
-  schreibt `DeckWriter.write_builds` beim nächsten `new_slide` — E09-S03 (Übergänge) muss
-  `p:transition` **vor** `p:timing` einfügen. Front Matter `aufbau: listen` nur PowerPoint.
+  schreibt `DeckWriter.write_builds` beim nächsten `new_slide` (vor `p:extLst`, also nach
+  `p:transition`). Front Matter `aufbau: listen` nur PowerPoint.
+- **Übergänge** (E09-S03): `generation/common/slide_transition.SlideTransition` (Werte englisch,
+  Richtung = Bewegungsrichtung wie `dir` in PresentationML), Front Matter `uebergang` nur
+  PowerPoint (`PptxOptions.transition`), Heading-Attribut `uebergang="…"` auf `#` (Kapitel) und
+  `##` — geprüft in `heading_attributes.split`, also in allen Formaten. `DeckParser._transition`
+  setzt `Slide.transition` (kw-only, wie `notes`); `new_slide` schreibt es sofort nach
+  `p:clrMapOvr` (`animations.set_transition`). Morph ist `mc:AlternateContent` (p159, Fallback
+  Fade) — wer `p:transition` sucht, muss auch dort schauen.
 - **Formaterkennung und Registry** (E07-S01): `pta_documents.conversions` exportiert `detect`,
   `ConverterRegistry`, `DocumentConverter` (Protocol), `ConversionOptions`, `convert`. Neue
   Konverter der Bibliothek in `ConverterRegistry.default()` (`conversions/registry.py`)

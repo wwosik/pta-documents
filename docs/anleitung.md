@@ -125,6 +125,7 @@ datum: 2026-11-06
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) oder `nein`: Codeblöcke mit Sprache farbig |
 | `pruefung` | ✓ | ✓ | nur für `./run.sh check`: `aus` schaltet die Stilregeln ab, `style-words, style-title` nur diese |
 | `aufbau` | | ✓ | `listen`: jede Liste erscheint beim Vortragen Punkt für Punkt (siehe [Klick für Klick](#klick-für-klick)); `nein` (Standard) |
+| `uebergang` | | ✓ | Übergang jeder Folie: `none` (Standard), `fade`, `push`, `wipe`, `morph` … (siehe [Folienübergänge](#folienübergänge)) |
 
 Ein falscher Schlüssel oder Wert bricht mit einer Meldung ab, die die gültigen Werte nennt.
 
@@ -269,6 +270,34 @@ die Zeile.
   keine Builds.
 - Die Folie wird beim Klicken in der Reihenfolge des Markdowns aufgebaut; wird sie geteilt
   („Forts."), baut jeder Teil seine Inhalte.
+
+### Folienübergänge
+
+Ohne Angabe wechseln die Folien sofort. `uebergang: fade` im Kopf blendet jede Folie über;
+`{uebergang="…"}` am Ende einer Überschrift gilt an einem `#` für die Trennfolie und alle
+Folien des Kapitels, an einem `##` nur für diese Folie (auch für ihre „Forts."-Folien).
+
+```markdown
+# Ausgangslage {uebergang="fade"}
+
+## Was sich geändert hat {uebergang="push-up"}
+```
+
+| Wert | Wirkung |
+| ---- | ------- |
+| `none` | kein Übergang (Standard); so schaltet man ihn für eine Folie ab |
+| `fade` | Überblenden |
+| `push`, `push-left`, `push-right`, `push-up`, `push-down` | die neue Folie schiebt die alte in diese Richtung hinaus (`push` = nach links) |
+| `wipe`, `wipe-left`, `wipe-right`, `wipe-up`, `wipe-down` | die neue Folie wird in diese Richtung aufgedeckt (`wipe` = nach links) |
+| `split` | öffnet sich von der Mitte aus |
+| `cover`, `uncover` | schiebt sich über die alte bzw. die alte gleitet weg |
+| `zoom` | wächst aus der Mitte |
+| `cut` | harter Schnitt, wie ohne Übergang |
+| `morph` | PowerPoint 2019/365: gleichnamige Formen gleiten an ihren neuen Platz, der Rest blendet über; ältere Programme und LibreOffice blenden über |
+
+Ruhig bleiben: ein Übergang für das ganze Deck oder ein Kapitel, nicht auf jeder Folie ein
+anderer. Ein falscher Wert ist ein Fehler mit Zeilennummer, der die gültigen Werte nennt; Word
+und PDF ignorieren das Attribut, `uebergang` im Kopf eines Word-Berichts ist ein Fehler.
 
 ### Folien-Syntax
 

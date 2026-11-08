@@ -458,6 +458,8 @@ class DeckWriter:
         self.write_builds()
         target = self.presentation.slides.add_slide(layout)
         self.built = target
+        transition = slide.transition if slide.transition is not None else self.options.transition
+        animations.set_transition(target._element, transition)
         if slide.notes:
             speaker_notes.write_notes(self, target, slide.notes)
         return target
