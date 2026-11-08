@@ -15,7 +15,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E04-S05](../60-prüfung/E04-S05-schulungsvorlage-und-sticker.md) | Schulungsvorlage, englische Titelfolie, Sticker „VERTRAULICH" | in Prüfung |
 | [E12-S03](../60-prüfung/E12-S03-kennzeichnung-word-und-pdf.md) | Kennzeichnung „Vertraulich" und „Entwurf" in Word und PDF | in Prüfung |
 | [E09-S02](../60-prüfung/E09-S02-builds.md) | Builds: Inhalte erscheinen Klick für Klick | in Prüfung |
-| [E09-S03](E09-S03-uebergaenge.md) | Folienübergänge | Entwurf |
+| [E09-S03](../55-in-arbeit/docs-2/E09-S03-uebergaenge.md) | Folienübergänge | in Bearbeitung (docs-2) |
 | [E09-S04](E09-S04-szenen.md) | Szenen: benannte Formen, die Morph bewegt | Entwurf |
 | [E10-S01](E10-S01-html-deck-generator.md) | HTML-Deck-Generator | Entwurf |
 | [E10-S02](E10-S02-vorschau-als-bilder.md) | Vorschau als Bilder | Entwurf |
