@@ -530,7 +530,7 @@ class DeckParser:
 
     def _draw(self, fence: Token) -> ImageGraphic | ChartGraphic | None:
         """The image or chart the code-block renderers make of ``fence``; None: it stays code.
-        Drawings raise until slides place them (E02-S03, E06-S02, E06-S03)."""
+        Drawings raise until slides place them (E06-S02, E06-S03)."""
         graphic = code_blocks.render_graphic(
             self.options.code_block_renderers,
             self.notes,

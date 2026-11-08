@@ -16,6 +16,8 @@ from PIL import Image
 from pta_documents.design import colors, logos
 from pta_documents.design.logos import Logo
 from pta_documents.design.variants import WordVariant
+from pta_documents.drawing import DrawingShape, to_svg
+from pta_documents.drawing.svg_output import path_data
 from tests.conftest import SOURCE_TEMPLATES
 
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -136,6 +138,42 @@ def test_shapes_read_back_the_svg_paths(logo: Logo) -> None:
     assert read == written
     first = logos.shapes(logo)[0].segments
     assert first[0][0] == "M" and first[-1] == ("Z", ())
+
+
+@pytest.mark.parametrize("logo", list(Logo))
+def test_drawing_has_the_vector_paths_of_the_svg(logo: Logo) -> None:
+    """E01-S04 acceptance criterion 3, closed with E02-S03."""
+    drawing = logos.drawing(logo)
+    assert (drawing.width, drawing.height) == logos.size(logo)
+    shapes = logos.shapes(logo)
+    assert len(drawing.items) == len(shapes)
+    for item, shape in zip(drawing.items, shapes, strict=True):
+        assert isinstance(item, DrawingShape)
+        assert (item.fill, item.stroke, item.even_odd) == (shape.fill, None, shape.even_odd)
+        assert [type(s).__name__ for s in item.path.segments] == [
+            SEGMENT_TYPES[command] for command, _ in shape.segments
+        ]
+        assert [c for s in item.path.segments for p in s.points for c in p] == [
+            v for _, values in shape.segments for v in values
+        ]
+    root = etree.fromstring(to_svg(drawing).encode())
+    written = [path.get("d") for path in root]
+    assert written == [
+        path_data(item.path) for item in drawing.items if isinstance(item, DrawingShape)
+    ]
+
+
+def test_drawing_scales_to_a_width() -> None:
+    plain, scaled = logos.drawing(Logo.WORD), logos.drawing(Logo.WORD, width=100)
+    assert scaled.width == pytest.approx(100)
+    assert scaled.height == pytest.approx(100 / logos.aspect_ratio(Logo.WORD))
+    first, second = plain.items[0], scaled.items[0]
+    assert isinstance(first, DrawingShape) and isinstance(second, DrawingShape)
+    factor = 100 / plain.width
+    assert second.path.bounds == pytest.approx(tuple(v * factor for v in first.path.bounds))
+
+
+SEGMENT_TYPES = {"M": "MoveTo", "L": "LineTo", "C": "CubicTo", "Z": "ClosePath"}
 
 
 @pytest.mark.parametrize("logo", list(Logo))

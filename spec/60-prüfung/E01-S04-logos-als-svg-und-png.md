@@ -154,3 +154,12 @@ Anleitungen für Schreiber bleiben unverändert — keine neue Syntax, kein neue
 - E02-S03: `logos.drawing()` aus `shapes()` bauen (`even_odd` → `DrawingShape.even_odd`,
   Maßstab viewBox → CSS-Pixel nach Bedarf) und das dritte Akzeptanzkriterium hier abhaken.
 - E05-S03 nimmt das Logo für die PDF-Kopfzeile aus diesem Modul.
+
+### Nachtrag (E02-S03, 2026-11-08)
+
+- `design.logos.drawing(logo, width=None) -> Drawing` ist mit E02-S03 umgesetzt: je Pfad eine
+  gefüllte `DrawingShape` ohne Linie, `even_odd` aus `fill-rule`, Koordinaten in
+  viewBox-Einheiten oder auf `width` CSS-Pixel skaliert. Test
+  `test_drawing_has_the_vector_paths_of_the_svg` in `tests/design/test_logos.py`. Damit ist das
+  dritte Akzeptanzkriterium und der erste Offene Punkt oben erledigt; die Warnung unter
+  *Abweichungen* gilt nicht mehr.

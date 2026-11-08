@@ -228,6 +228,7 @@ def test_the_core_imports_neither_fonttools_nor_this_module() -> None:
         "import sys\n"
         "import pta_documents, pta_documents.conversions, pta_documents.design\n"
         "import pta_documents.generation.docx, pta_documents.generation.pptx\n"
+        "import pta_documents.drawing, pta_documents.design.logos\n"
         "from pta_documents.generation.common import check\n"
         "own = ('fontTools', 'pta_documents.design.fonts')\n"
         "bad = [m for m in sys.modules if m.startswith(own)]\n"

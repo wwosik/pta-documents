@@ -13,6 +13,7 @@ from typing import Protocol
 
 from pta_documents.charts.spec import ChartSpec
 from pta_documents.design.variants import Language
+from pta_documents.drawing.model import Drawing
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown.document import DocumentResource
 
@@ -37,9 +38,9 @@ class CodeBlockRequest:
 
 @dataclass(frozen=True, slots=True)
 class DrawingGraphic:
-    """A vector drawing. ``drawing`` is a ``Drawing`` of the drawing model (E02-S03)."""
+    """A vector drawing of the drawing model (``pta_documents.drawing``)."""
 
-    drawing: object
+    drawing: Drawing
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,10 +52,10 @@ class ImageGraphic:
 
 @dataclass(frozen=True, slots=True)
 class ChartGraphic:
-    """A chart: native and editable where the format has charts, else ``drawing`` (E02-S03)."""
+    """A chart: native and editable where the format has charts, else ``drawing``."""
 
     chart: ChartSpec
-    drawing: object
+    drawing: Drawing
 
 
 CodeBlockGraphic = DrawingGraphic | ImageGraphic | ChartGraphic

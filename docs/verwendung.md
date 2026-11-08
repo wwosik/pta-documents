@@ -152,7 +152,7 @@ Quellenangabe (leere entfallen), der Titel nicht zusätzlich im Diagramm. Ein Ch
 Tabelle oder einem Bild bekommt eine eigene Folie; auf einer Flow-Folie ist er ein Fehler. Mit
 `layout="…"` geht ein Chart in den nächsten Diagrammplatzhalter des Layouts. Den
 `chart`-Renderer und den PTA-Diagrammstil liefert E06-S01; Word wirft für Charts bis dahin
-„does not support yet", Zeichnungen (`DrawingGraphic`) in beiden Formaten bis E02-S03/E06.
+„does not support yet", Zeichnungen (`DrawingGraphic`) in beiden Formaten bis E06-S02/E03-S04.
 
 ### Sprechernotizen (E09-S01)
 
@@ -303,7 +303,8 @@ options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgN
 - Ergebnis `ImageGraphic(resource)`: das Bild steht an der Stelle des Codeblocks wie ein
   Markdown-Bild, mit dem Info-String als Alt-Text — in Word ohne „Abbildung n"-Beschriftung, in
   PowerPoint wie ein Bild allein auf einer Folie. `DrawingGraphic(drawing)` und
-  `ChartGraphic(chart, drawing)` (Daten in `pta_documents.charts.ChartSpec`) sind vorgesehen,
+  `ChartGraphic(chart, drawing)` (Daten in `pta_documents.charts.ChartSpec`, `drawing` ist ein
+  `Drawing` aus [`pta_documents.drawing`](#zeichenmodell-und-svg-e02-s03)) sind vorgesehen,
   werden aber noch nicht gezeichnet: sie ergeben einen Fehler „… does not support yet"
   (Zeichnen folgt mit E03-S04, E04-S04 und E06).
 - **Konverter** (`generation/common/images.py`, `ImageConverter`) bekommen jedes Bild, dessen
@@ -359,6 +360,70 @@ schriften.has_glyph(0x20AC, FontFace.LIGHT)  # nur BMP; U+00A0 fehlt in Selawik
 - Fehlt fontTools, nennt der `ImportError` die Extras; `bundled()` und `fonts.read(name)`
   (Bytes einer mitgelieferten Datei) gehen auch ohne.
 
+## Zeichenmodell und SVG (E02-S03)
+
+Diagramme, Charts, Logos und später die visuellen Bausteine liegen als **`Drawing`** vor, bevor
+ein Generator sie als Formen, Vektoren oder Bild ausgibt (`pta_documents.drawing`, reines
+Python, kein Extra). Koordinaten sind CSS-Pixel (1 px = 0,75 pt) ab der linken oberen Ecke,
+Farben `RRGGBB` ohne `#` aus `design.colors`:
+
+```python
+from pta_documents.design import colors
+from pta_documents.drawing import (
+    Drawing,
+    DrawingHotspot,
+    DrawingHover,
+    DrawingPath,
+    DrawingShape,
+    DrawingText,
+    ShapeKind,
+    SvgOptions,
+    TextAnchor,
+    to_svg,
+)
+
+balken = DrawingShape(
+    DrawingPath.rectangle(10, 20, 40, 60),
+    colors.PTA_BLUE,
+    None,
+    0,
+    kind=ShapeKind.RECTANGLE,
+    hover=DrawingHover("Q1: 60", 30, 20),
+)
+beschriftung = DrawingText.line(30, 95, "Q1", 12, colors.TEXT_SLIDES, anchor=TextAnchor.MIDDLE)
+punkt = DrawingHotspot(30, 20, 8, dot=colors.SIGNAL_RED, hover=DrawingHover("Ziel", 30, 20))
+svg = to_svg(Drawing(120, 100, (balken, beschriftung, punkt)), SvgOptions(background=colors.WHITE))
+```
+
+- **Elemente:** `DrawingShape(path, fill, stroke, stroke_width, *, dash, kind, corner_radius,
+  round_joins, even_odd, hover)` — `path` enthält immer den Umriss, `kind` (`PATH`,
+  `RECTANGLE`, `ROUNDED_RECTANGLE`, `ELLIPSE`) erlaubt eigene Formen; `even_odd` setzt die
+  Füllregel `evenodd` (PTA-Ergänzung für Logos und Mermaid). `DrawingPath(segments)` aus
+  `MoveTo`, `LineTo`, `CubicTo`, `ClosePath`, mit `bounds` (Kontrollpunkte eingeschlossen) und
+  `DrawingPath.rectangle(...)`. `DrawingText(x, baseline, spans, size, color, *, anchor,
+  max_width, mono, hover)` ist eine Zeile aus `DrawingSpan(text, bold, color)`;
+  `DrawingText.line(...)` für eine Zeile in einem Schnitt. `DrawingHotspot(x, y, radius, *,
+  dot, dot_radius, hover)` ist eine unsichtbare Trefferfläche nur für einen Tooltip.
+- Alle Typen sind unveränderliche Dataclasses mit Tupeln: Zeichnungen sind nach Inhalt gleich
+  und hashbar.
+- **`to_svg(drawing, options)`** schreibt ein eigenständiges SVG (`width`/`height` in Pixeln,
+  passende `viewBox`). Jedes Element mit `hover` wird `<g class="chart-hoverable">` mit einem
+  vorplatzierten `<g class="chart-tooltip">` (zentriert über dem Punkt, waagrecht auf der Fläche
+  gehalten); ein Inline-`<style>` zeigt ihn bei `:hover` — **kein Skript**. Die Klassennamen
+  (`chart-hoverable`, `chart-tooltip`, `chart-tooltip-bg`, `chart-tooltip-text`,
+  `chart-hover-dot`) bleiben wie in DocLibs, eine Seite kann sie umgestalten.
+- `SvgOptions(font_family, mono_family, background, tooltip_fill, tooltip_text)`: Schriften
+  standardmäßig `fonts.CSS_FAMILY`/`CSS_MONO_FAMILY` — nur Familiennamen, nichts eingebettet
+  (Entscheidung 2026-11-07); Tooltip `TEXT_SLIDES` mit weißer Schrift, ohne Hintergrund
+  transparent.
+- Text wird nicht gemessen: eine Zeile, die nach `estimate_width()` (0,58 × Größe je Zeichen)
+  breiter als `max_width` ist, wird kleiner gesetzt, höchstens auf 70 %. Zahlen haben höchstens
+  zwei Nachkommastellen (nie `-0`); Texte werden XML-sicher (Steuerzeichen außer Tab/LF/CR
+  entfallen). Eine Farbe, die nicht `RRGGBB` ist, oder eine nicht endliche Zahl wirft
+  `ValueError` (Programmierfehler des Renderers).
+- Ausgabe als PowerPoint-Formen folgt mit E06-S02, als PDF-Vektor mit E05-S04, als PNG mit
+  E06-S04, in Word mit E03-S04, SVG → `Drawing` (Mermaid) mit E06-S03.
+
 ## Logos als SVG und PNG (E01-S04)
 
 Die Vorlagen tragen das PTA-Logo nur als EMF. `./run.sh prepare-templates` wandelt es einmal in
@@ -375,6 +440,8 @@ logos.png(Logo.SLIDES)  # 2000 px breit, transparenter Grund
 logos.aspect_ratio(Logo.WORD)  # Breite / Höhe, ≈ 1,75
 logos.size(Logo.WORD)  # Breite und Höhe der viewBox
 logos.shapes(Logo.WORD)  # Vektorpfade (LogoShape: segments, fill, even_odd)
+logos.drawing(Logo.WORD)  # als Drawing in viewBox-Einheiten
+logos.drawing(Logo.WORD, width=120)  # auf 120 CSS-Pixel Breite skaliert
 ```
 
 | `Logo` | Datei | Quelle | Farbe |
@@ -391,7 +458,8 @@ logos.shapes(Logo.WORD)  # Vektorpfade (LogoShape: segments, fill, even_odd)
 - Das Word-Logo ist im EMF `026FB9` gefüllt und wird auf das PTA-Blau gesetzt
   (Entscheidung 2026-11-07); jede Füllfarbe muss in `design.colors` stehen.
 - Die SVGs enthalten nur `<path>` mit `d` (absolutes `M`/`L`/`C`/`Z`), `fill` und `fill-rule`;
-  `shapes()` liest genau diese Teilmenge zurück. Ein `Drawing` daraus kommt mit E02-S03.
+  `shapes()` liest genau diese Teilmenge zurück; `drawing()` macht daraus ein `Drawing` (je
+  Pfad eine gefüllte Form ohne Linie, `even_odd` aus `fill-rule`).
 - Das englische Logo gibt es weiter nur als PNG (`templates.ENGLISH_LOGO`).
 - Die PNGs rastert resvg (Extra `svg`) beim Vorbereiten; `--check` vergleicht PNGs nach Pixeln.
 

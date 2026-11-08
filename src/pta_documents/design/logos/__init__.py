@@ -14,9 +14,10 @@ Logo                 Source (found through the relationships)                   
 ==================== ================================================================ =========
 
 The SVGs contain only ``<path>`` elements with ``d`` (``M``/``L``/``C``/``Z``, absolute),
-``fill`` and ``fill-rule``; ``shapes()`` reads that subset back so other outputs (PDF) can draw
-the logo as vectors. The PNGs are 2000 px wide with a transparent background. The EMF colour of
-the Word logo (``026FB9``) is written as PTA blue (decision 2026-11-07).
+``fill`` and ``fill-rule``; ``shapes()`` reads that subset back and ``drawing()`` turns it into a
+``Drawing`` (E02-S03), so other outputs (PDF) can draw the logo as vectors. The PNGs are
+2000 px wide with a transparent background. The EMF colour of the Word logo (``026FB9``) is
+written as PTA blue (decision 2026-11-07).
 """
 
 from __future__ import annotations
@@ -27,6 +28,17 @@ from dataclasses import dataclass
 from enum import StrEnum
 from importlib import resources
 from typing import Final
+
+from pta_documents.drawing import (
+    ClosePath,
+    CubicTo,
+    Drawing,
+    DrawingPath,
+    DrawingShape,
+    LineTo,
+    MoveTo,
+    PathSegment,
+)
 
 SVG_NS: Final = "http://www.w3.org/2000/svg"
 
@@ -100,6 +112,41 @@ def shapes(logo: Logo) -> tuple[LogoShape, ...]:
             raise ValueError(f"{logo.stem}.svg: unexpected fill-rule {rule!r}")
         result.append(LogoShape(parse_path(element.get("d", "")), fill[1:], rule == "evenodd"))
     return tuple(result)
+
+
+def drawing(logo: Logo, width: float | None = None) -> Drawing:
+    """The logo as a ``Drawing``: one filled shape without stroke per path of the SVG.
+
+    Without ``width`` the coordinates are the units of the ``viewBox``; with it the logo is
+    scaled to that width in CSS pixels, the height in proportion.
+    """
+    view_width, view_height = size(logo)
+    scale = 1.0 if width is None else width / view_width
+    items = tuple(
+        DrawingShape(
+            DrawingPath(tuple(_segment(segment, scale) for segment in shape.segments)),
+            shape.fill,
+            None,
+            0,
+            even_odd=shape.even_odd,
+        )
+        for shape in shapes(logo)
+    )
+    return Drawing(view_width * scale, view_height * scale, items)
+
+
+def _segment(segment: Segment, scale: float) -> PathSegment:
+    command, numbers = segment
+    x = tuple(n * scale for n in numbers)
+    match command:
+        case "M":
+            return MoveTo(x[0], x[1])
+        case "L":
+            return LineTo(x[0], x[1])
+        case "C":
+            return CubicTo(x[0], x[1], x[2], x[3], x[4], x[5])
+        case _:
+            return ClosePath()
 
 
 _ARITY: Final = {"M": 2, "L": 2, "C": 6, "Z": 0}

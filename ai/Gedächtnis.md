@@ -23,8 +23,8 @@ weil ihm vertraut wird.
   (mermaid-cli, extern).
 - **Paketstruktur** (`src/pta_documents/`): `errors.py` (`DocumentConversionError`,
   `DocumentFormat`), `markdown/` (Dokumentmodell, Front Matter, Parser), `design/`
-  (Designmodell, eingebettete Vorlagen), `conversions/` (→ Markdown), `generation/`
-  (`common/`, `docx/`, `pptx/`).
+  (Designmodell, eingebettete Vorlagen), `drawing/` (Zeichenmodell, SVG), `conversions/`
+  (→ Markdown), `generation/` (`common/`, `docx/`, `pptx/`).
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
   eingebettete Vorlagen. PDF, Diagramme/Charts und PDF-Konverter sind nur geplant; die
@@ -199,12 +199,23 @@ eigenen Formatvorlagen. Bedienung:
   Dateien (inkl. `segoeuil.ttf`) übernommen.
 - **Logos** (E01-S04): `pta_documents.design.logos` (Unterpaket; SVG/PNG als Paketdaten daneben)
   — `Logo` (`WORD`, `SLIDES`, `SLIDES_PLAIN`), `svg()`, `png()`, `size()`, `aspect_ratio()`,
-  `shapes()` (liest die eigene SVG-Teilmenge: nur `<path>` mit absolutem `M`/`L`/`C`/`Z`).
-  **`drawing()` fehlt noch** — E02-S03 baut es aus `shapes()` (Koordinaten = viewBox-Einheiten,
-  Ursprung oben links, `even_odd` → Füllregel). Erzeugt werden die Dateien von
+  `shapes()` (liest die eigene SVG-Teilmenge: nur `<path>` mit absolutem `M`/`L`/`C`/`Z`) und
+  seit E02-S03 `drawing(logo, width=None)` (viewBox-Einheiten oder auf `width` CSS-Pixel
+  skaliert). Erzeugt werden die Dateien von
   `prepare-templates` mit dem EMF-Leser `tools/prepare-templates/emf.py` (unbekannte Datensätze
   brechen ab); EMF-Farben werden über `LOGO_COLORS` im Werkzeug auf `design.colors` abgebildet
   (`026FB9` → PTA-Blau). Das Werkzeug braucht resvg (Extra `svg`) — auch für `--check`, das
   `test_embedded_templates_are_up_to_date` aufruft; PNGs werden nach Pixeln verglichen.
   `pyproject.toml`: pyright `extraPaths = ["src", "tools/prepare-templates"]` (ohne `src` verliert
   pyright die automatische Suche dort) und pytest `pythonpath`, damit `import emf` geht.
+- **Zeichenmodell** (E02-S03): `pta_documents.drawing` (`model.py`, `svg_output.py` — der Name
+  `svg.py` ist dem SVG-Leser von E06-S03 vorbehalten). Frozen-slots-Dataclasses mit Tupeln
+  (`__post_init__` wandelt Listen), optionale Felder keyword-only; Segmente und Elemente sind
+  Unions (`PathSegment`, `DrawingItem`) — Ausgaben verzweigen per `match`, eine neue Art
+  (E15-S02: `ShapeKind.CHEVRON`/`PIE`) muss in jedem `match` ergänzt werden (pyright meldet
+  fehlende Fälle über den Rückgabetyp). `to_svg` validiert Farben (`RRGGBB`) und Zahlen
+  (endlich) mit `ValueError`. `SvgOptions` holt die CSS-Familien **lazy** aus `design.fonts`,
+  damit Kern-Importe `design.fonts` nicht laden (`test_the_core_imports_neither_fonttools_nor…`
+  importiert auch `drawing` und `design.logos`). `DrawingGraphic.drawing`/`ChartGraphic.drawing`
+  sind jetzt `Drawing`. Im Paket `drawing/` darf keine Hex-Farbe stehen, auch nicht in
+  Kommentaren (eigener, strengerer Test). Zum Ansehen: `.tmp/review/drawing.html` (Tooltips).

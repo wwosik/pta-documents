@@ -16,6 +16,7 @@ from pta_documents import NoteCodes
 from pta_documents.charts import ChartKind, ChartSeries, ChartSpec
 from pta_documents.conversions.pptx import PptxConverter
 from pta_documents.design import slides as design
+from pta_documents.drawing import Drawing
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common.renderers import (
     ChartGraphic,
@@ -351,7 +352,7 @@ class ChartRenderer:
             unit=unit or None,
             source=source or None,
         )
-        return ChartGraphic(spec, object())
+        return ChartGraphic(spec, Drawing(1, 1, ()))
 
 
 def chart_deck(body: str) -> bytes:
