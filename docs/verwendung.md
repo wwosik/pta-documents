@@ -1495,7 +1495,7 @@ registry.convert(daten, options=ConversionOptions(include_images=False))
 `convert(data, file_name=None, options=None)` liest die Eingabe (Bytes oder Stream, auch nicht
 suchbar) einmal, erkennt das Format am Inhalt und gibt sie an den ersten Konverter, der es
 annimmt; der Dateiname landet in `options.file_name`. `ConverterRegistry.default()` enthält PDF
-(sobald der PDF-Konverter aus E07-S04 da ist und das Extra `pdf` installiert ist), DOCX und
+(nur mit dem Extra `pdf`, siehe [PDF → Markdown](#pdf--markdown-e07-s04)), DOCX und
 PPTX, danach die übergebenen Konverter. Ein eigener Konverter braucht nur
 `can_convert(format) -> bool` und `convert(data, options=None) -> MarkdownDocument`
 (Protocol `DocumentConverter`).
@@ -1542,6 +1542,65 @@ Beide Konverter geben den Text so zurück, wie er im Dokument steht — nach der
 `"`, `‚‘’` → `'`, `–` → `-`, `…` → `...` und geschützte Leerzeichen → Leerzeichen zurück, damit
 eine Rundreise den geschriebenen Text wiederfindet. Codeblöcke des DOCX-Generators (Vorlage
 „Code") kommen als Zaun mit ihrer Sprache zurück.
+
+## PDF → Markdown (E07-S04)
+
+Braucht das Extra `pdf` (pdfplumber und pikepdf); ohne lehnt `convert` PDFs mit der Meldung zum
+Extra ab. Das Modul `pta_documents.conversions.pdf` importiert pdfplumber gleich beim Import.
+
+```python
+from pta_documents.conversions.pdf import PdfConverter
+
+document = PdfConverter().convert(open("bericht.pdf", "rb"))  # auch bytes, auch nicht suchbar
+document.metadata  # pageCount, title/author aus dem Info-Dictionary, skippedImages (> 0)
+```
+
+Port des DocLibs-Konverters auf pdfplumber: Gelesen wird nur die Textschicht — gescannte Seiten
+ohne Text bleiben leer, OCR gibt es nicht. Jede Seite beginnt mit `## Page n` (englisch wie
+`## Slide n` des PPTX-Konverters).
+
+- **Zeilen und Absätze:** Wörter auf derselben Grundlinie (Toleranz halbe Worthöhe) oder mit
+  überwiegend gleicher Höhe (hochgestellte Fußnotenzeichen) sind eine Zeile. Ein neuer Absatz
+  beginnt bei einem Aufzählungszeichen, einem nummerierten Anfang (`1.`, `2.3 `), am oberen oder
+  unteren Rand (8 % der Seitenhöhe), bei einem Abstand über dem üblichen plus 0,35 × Grundgröße,
+  nach einer früh endenden Zeile, bei einer Ausrückung und bei einem Größenwechsel über 15 %.
+  Gedreht gesetzter Text (das Wasserzeichen „ENTWURF") wird nicht gelesen.
+- **Überschriften** werden `###`: kurz (unter 100 Zeichen), keine Verzeichniszeile (`....  3`),
+  nicht mit `.`/`:` endend (außer nummeriert) und mindestens 1,15 × Grundgröße groß oder fett und
+  nummeriert. Die Ebene lässt sich aus dem PDF nicht sicher lesen.
+- **Listen:** Aufzählungszeichen `•▪■◦·●‣⁃➢→` und Wingdings (`U+F000`–`U+F0FF`), mit Leerzeichen
+  dahinter auch `-`, `–`, `*`, `o`; dazu als Form gezeichnete Zeichen vor der Zeile, wie sie der
+  PDF-Generator setzt (kleines gefülltes Quadrat, kurzer Strich) und Aufgabenkästchen
+  (`- [ ] `, mit Haken `- [x] `). Aufeinanderfolgende Punkte bilden eine enge Liste, ohne Ebenen.
+  Nummerierte Punkte bleiben Absätze (`1\. Schritt`).
+- **Silbentrennung:** „Netz-|nutzung" wird „Netznutzung", „GELI-|Anmeldung" behält den Strich.
+- **Kopf- und Fußzeilen:** einer der ersten oder letzten zwei Absätze einer Seite, der ohne
+  Ziffern auf mindestens drei Seiten wiederkehrt, entfällt — außer sein Text kommt auf einer
+  Seite mehrfach vor (Punkte einer langen Liste unterscheiden sich nur in der Nummer). Der Titel
+  auf dem Deckblatt eines PTA-PDFs steht auch in der Kopfzeile und entfällt daher; er steht in
+  `metadata["title"]`.
+- **Tabellen** werden Pipe-Tabellen: Gitter mit Linien in beiden Richtungen (pdfplumber
+  `find_tables`) und Tabellen im PTA-Stil — eine gefüllte Kopfzeile mit einer Linie gleicher
+  Breite an ihrer Unterkante, dann je Zeile eine waagerechte Linie, solange der Text der Zeile so
+  dicht unter der Linie beginnt wie der Kopftext unter der Füllung; Spalten dort, wo in keiner
+  Zeile ein Wort steht. Ausrichtung, Fett und verbundene Zellen gehen verloren.
+- **Code:** Zeilen überwiegend in einer Festbreitenschrift (Name mit `Mono`, `Courier`,
+  `Consol`, `Inconsolata`, `Cousine`, `Menlo`, `Code`) werden ein Zaun ohne Sprache — eine
+  gefüllte Fläche dahinter (der Codeblock des Generators) hält ihn zusammen, Einrückung und
+  Leerzeilen kommen aus den Abständen. Eine einzelne solche Zeile ohne Fläche bleibt Text.
+- **Bilder** werden Ressourcen `page{n}-image{i}.png` bzw. `.jpg` (JPEG-Daten unverändert,
+  sonst PNG über pikepdf) und stehen an ihrer Stelle im Text; ein Bild, das auf jeder Seite
+  vorkommt (Logo), entfällt. Nicht dekodierbare Bilder (auch eingebettete Inline-Bilder) zählt
+  `skippedImages`. Gezeichnete Logos und Grafiken (Vektoren) erscheinen nicht.
+- **Fehler:** ein beschädigtes PDF wirft `DocumentConversionError(pdf, "The PDF could not be read:
+  …")`, ein PDF mit Kennwort eine eigene Meldung. Scheitert die Analyse einer Seite, kommt deren
+  Text zeilenweise (`extract_text`).
+- Kein Rückweg für Fett, Kursiv, Links, Fußnoten (das Zeichen bleibt als Ziffer am Wort), Bild-
+  und Tabellenbeschriftungen (bleiben Text), Grafiken und Folien-Syntax.
+  `ConversionOptions(plain_quotes=True)` setzt die Typografie zurück wie bei Word.
+- **Rundreise:** `tests/generation/pdf/layout/test_samples.py` erzeugt `report.md` und
+  `long.md` als PDF mit Deckblatt und Seitenrahmen und vergleicht das Markdown mit
+  `report.roundtrip.expected.md`/`long.roundtrip.expected.md` daneben.
 
 ## Beispiele
 

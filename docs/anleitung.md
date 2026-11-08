@@ -598,8 +598,10 @@ with open("bericht.docx", "wb") as output:
 ```
 
 Für PowerPoint `PptxGenerator` statt `DocxGenerator`. Python aufrufen geht mit
-`.venv/bin/python mein-skript.py` (Windows: `.venv\Scripts\python mein-skript.py`). Word und PowerPoint nach Markdown:
-siehe [verwendung.md](verwendung.md).
+`.venv/bin/python mein-skript.py` (Windows: `.venv\Scripts\python mein-skript.py`). Word,
+PowerPoint und PDF nach Markdown: siehe [verwendung.md](verwendung.md). Aus einem PDF kommt nur
+der Text zurück (je Seite ein Abschnitt `## Page n`, ohne Kopf- und Fußzeile); gescannte PDFs
+ohne Textschicht ergeben nichts.
 
 ## 7. Mit einer KI arbeiten
 

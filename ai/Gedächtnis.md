@@ -29,8 +29,8 @@ weil ihm vertraut wird.
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
   eingebettete Vorlagen. Seit E05-S01/E05-S02 ein PDF-Generator (Rumpf im Word-Design, PDF/A-2b;
-  seit E05-S03 mit Seitenrahmen, seit E05-S04 mit allen Grafiken), der PDF-Konverter ist nur
-  geplant; die
+  seit E05-S03 mit Seitenrahmen, seit E05-S04 mit allen Grafiken), seit E07-S04 ein
+  PDF-Konverter; die
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
   Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
   Diagrammlayouts (`chart`-Blöcke seit E06-S01, auch nativ in Word; Finanzdiagramme seit
@@ -486,3 +486,18 @@ weil ihm vertraut wird.
   (`Outline.text` ist schon ersetzt), Anker bleiben aus dem Original. `layouts.md` und die
   Fehlerfälle der Folien-Syntax laufen in `tests/generation/common/test_layout_syntax.py` auch
   für PDF (`GENERATORS`; die farbigen Wörter nur `OFFICE`).
+- **PDF-Konverter** (E07-S04): `conversions/pdf.py` (`PdfConverter`, Port von DocLibs auf
+  pdfplumber, Bilder über pikepdf; importiert pdfplumber auf Modulebene — die Registry lädt ihn
+  weiter lazy über `PDF_CONVERTER_MODULE`). pdfplumber misst von oben, PdfPig von unten: die
+  Vergleiche sind gedreht, die Schwellen gleich. Über DocLibs hinaus (für die Rundreise der
+  PTA-PDFs): Tabellen (`find_tables`-Gitter und `ruled_tables` für den Stil `PTA`: gefüllte
+  Kopfzeile + Linie an deren Unterkante + Zeilenlinien, Abbruch, wenn der Text weiter unter der
+  Linie beginnt als im Kopf), gezeichnete Aufzählungszeichen/Aufgabenkästchen (`_markers`,
+  `mark_items`), Codezäune aus Festbreitenschrift (`MONOSPACED`; die Füllfläche dahinter hält
+  den Block zusammen, `code_areas`), Bilder an ihrer Stelle statt am Seitenende, gedrehte Zeichen
+  (Wasserzeichen) gefiltert (`_not_rotated`), Kopf-/Fußzeilen nur, wenn der Schlüssel auf keiner
+  Seite doppelt vorkommt. `sample.pdf.expected.md` ist die Datei aus DocLibs, unverändert — wer
+  die Heuristik ändert, muss sie byte-gleich halten. Rundreisen von `report.md`/`long.md` mit
+  Seitenrahmen in `tests/generation/pdf/layout/samples/*.roundtrip.expected.md` (Front Matter mit
+  festem `datum`, `code_block_renderers=()`, sonst hängt das Ergebnis von Tag und mmdc ab).
+  Ändert der PDF-Generator Layout oder Seitenrahmen, ändern sich diese Rundreisen mit.

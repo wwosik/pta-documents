@@ -137,7 +137,7 @@ def _pdf_converter() -> DocumentConverter | None:
     except ModuleNotFoundError as error:
         if error.name != PDF_CONVERTER_MODULE:
             raise
-        return None  # The PDF converter follows with E07-S04.
+        return None  # a package without the PDF converter module
     return cast(DocumentConverter, module.PdfConverter())
 
 

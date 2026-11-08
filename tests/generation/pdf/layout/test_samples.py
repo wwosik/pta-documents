@@ -1,23 +1,35 @@
 """E05-S02: ``report.md`` and ``long.md`` of DocLibs (``report.md`` with PTA cases added) as PDF.
 
-The round trip through the PDF converter (``*.roundtrip.expected.md``) needs E07-S04; until then
-the PDFs go to ``.tmp/review/`` and the text, pages and bookmarks are checked here.
+The PDFs go to ``.tmp/review/``; text, pages and bookmarks are checked here, and the round trip
+through the PDF converter (E07-S04) with the PTA page frame is ``*.roundtrip.expected.md``.
 """
 
 from __future__ import annotations
 
+import datetime as dt
 import io
 from pathlib import Path
+from typing import Final
 
 import pikepdf
+import pytest
 
+from pta_documents.conversions.pdf import PdfConverter
 from pta_documents.generation.common.result import NoteCodes, Notes
+from pta_documents.generation.pdf import PdfGenerator, PdfOptions
 from pta_documents.generation.pdf.layout import LayoutSettings, PdfInfo, layout
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
 from pta_documents.markdown.parser import create_parser
+from tests.expected import assert_matches_expected, assert_resources_match_references
 from tests.generation.pdf.layout.support import Pdf
 
 SAMPLES = Path(__file__).parent / "samples"
+FRONT_MATTER: Final = "---\ntitel: Quartalsbericht\nautor: PTA Documents\ndatum: 08.11.2026\n---\n"
+ROUND_TRIP: Final = PdfOptions(
+    created=dt.datetime(2026, 11, 8, 9, 0, tzinfo=dt.UTC),
+    system_fonts=False,
+    code_block_renderers=(),  # the same on every machine: Mermaid stays code
+)
 
 
 def generate(name: str, review_dir: Path, notes: Notes | None = None) -> Pdf:
@@ -84,3 +96,20 @@ def test_long(review_dir: Path) -> None:
     assert len(rows) >= 2  # the header on every page of the long table
     items = [line.text for line in pdf.lines if " Item number " in line.text]
     assert [item.split(".")[0] for item in items] == [str(n) for n in range(1, 61)]
+
+
+@pytest.mark.parametrize("name", ["report.md", "long.md"])
+def test_the_round_trip_through_the_pdf_converter(name: str, review_dir: Path) -> None:
+    """With cover, header and footer of the PTA template: the converter leaves the running
+    header and footer out (E07-S04)."""
+    text = FRONT_MATTER + (SAMPLES / name).read_text(encoding="utf-8")
+    diagram = DocumentResource("diagram.png", "image/png", (SAMPLES / "diagram.png").read_bytes())
+    output = io.BytesIO()
+    PdfGenerator().generate(MarkdownDocument(text, (diagram,)), output, ROUND_TRIP)
+    (review_dir / f"pdf-roundtrip-{Path(name).stem}.pdf").write_bytes(output.getvalue())
+    document = PdfConverter().convert(output.getvalue())
+    stem = Path(name).stem
+    assert_matches_expected(SAMPLES / f"{stem}.roundtrip.expected.md", document.text)
+    assert_resources_match_references(document)
+    for frame in ("Seite", "Stand:", "PTA IT-Beratung", "Quartalsbericht"):
+        assert frame not in document.text

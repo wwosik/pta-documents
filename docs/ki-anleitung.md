@@ -362,7 +362,7 @@ Matter hat aber Vorrang — im Zweifel nur Front Matter verwenden.
 Um eine Word- oder PowerPoint-Datei des Anwenders zu verstehen oder zu überarbeiten:
 
 ```python
-from pta_documents.conversions import convert  # erkennt Word/PowerPoint am Inhalt
+from pta_documents.conversions import convert  # erkennt Word/PowerPoint/PDF am Inhalt
 
 with open("documents/x/alt.docx", "rb") as datei:
     document = convert(datei, "alt.docx")
@@ -373,6 +373,12 @@ document.resources  # Bilder: .path (images/image1.png), .content (bytes)
 Alte Binärformate (`.doc`, `.xls`, `.ppt`, `.msg`), RTF und Excel lehnt `convert` mit einer
 Meldung ab (`DocumentConversionError`): den Anwender bitten, die Datei als `.docx` bzw. `.pptx`
 zu speichern. Markdown- und Textdateien direkt lesen, nicht konvertieren.
+
+PDFs liest `convert` nur aus der Textschicht (gescannte Seiten bleiben leer): je Seite
+`## Page n`, Überschriften alle als `###`, Kopf- und Fußzeilen und das Logo fallen weg,
+Tabellen mit Linien werden Pipe-Tabellen. Gliederungsebenen, Fett, Links und Beschriftungen
+kommen nicht zurück — vor dem Neu-Erzeugen die Überschriften (`#`/`##`) neu setzen und die
+`## Page n`-Zeilen entfernen.
 
 Sprechernotizen einer Folie kommen als `::: notes` … `:::` nach ihrem Inhalt
 (`ConversionOptions(notes=False)` lässt sie weg). Das Ergebnis ist ein Lesestand, kein verlustfreies Abbild: Folien verlieren Ebenen und

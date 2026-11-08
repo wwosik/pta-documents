@@ -60,7 +60,7 @@ def test_unsupported_formats_are_rejected_by_the_registry() -> None:
         ConverterRegistry.default().convert(stream, "sample.zip")
     assert error.value.format is DocumentFormat.ZIP
     assert error.value.reason.startswith("No converter is registered for this format.")
-    assert "Supported formats: docx, pptx" in error.value.reason
+    assert "Supported formats: pdf, docx, pptx" in error.value.reason
 
 
 def test_the_registry_passes_the_file_name_on() -> None:
@@ -132,7 +132,7 @@ def test_rtf_and_xlsx_name_what_to_save_instead(sample: str, format: DocumentFor
         convert((SAMPLES / sample).read_bytes())
     assert error.value.format is format
     assert "as .docx and convert that" in error.value.reason
-    assert "Supported formats: docx, pptx" in error.value.reason
+    assert "Supported formats: pdf, docx, pptx" in error.value.reason
 
 
 @pytest.mark.parametrize("content", [b"# Markdown\n", bytes([1, 2, 0, 3])])

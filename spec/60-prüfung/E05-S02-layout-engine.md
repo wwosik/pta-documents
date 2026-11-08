@@ -308,3 +308,11 @@ zu `test_pdfa.py`: dieselben Prüfungen (PDF/A-Metadaten, OutputIntent, eingebet
 jetzt über den Generator mit Markdown; der Naht-Test entfiel. Neu: Tests für Typografie,
 Hervorhebung, QR-Größe, Zeitstrahl-Hinweis, fehlende Zeichen im Code und alle Word-Beispiele in
 `samples/` als PDF (nur `code-not-drawn` erlaubt).
+
+- (E07-S04, docs-2) Die Rundreise-Tests für `report.md` und `long.md` gibt es jetzt:
+  `tests/generation/pdf/layout/test_samples.py::test_the_round_trip_through_the_pdf_converter`
+  mit Deckblatt und Seitenrahmen, Erwartungen `report.roundtrip.expected.md` und
+  `long.roundtrip.expected.md` in `tests/generation/pdf/layout/samples/`. Dabei fiel auf: das PDF
+  nummeriert `3. Third item`/`4. Fourth item` als „1."/„2." und setzt vor den verschachtelten
+  nummerierten Punkt ein Quadrat; in Tabellen mit rechtsbündiger erster Spalte stößt deren Text
+  ohne Zellenrand an die nächste Spalte („1Row 1" in der Rundreise von `long.md`).
