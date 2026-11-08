@@ -1,8 +1,8 @@
 # E09-S04 Szenen: benannte Formen, die Morph bewegt
 
-> Status: Entwurf
-> Epic: [E09 Präsentieren](E09-praesentieren.md)
-> Milestone: [M04 Präsentieren und Schulung](M04-praesentieren-und-schulung.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E09 Präsentieren](../../50-entwurf/E09-praesentieren.md)
+> Milestone: [M04 Präsentieren und Schulung](../../50-entwurf/M04-praesentieren-und-schulung.md)
 
 ## Zusammenfassung
 

@@ -25,7 +25,7 @@ zu jeder Folie sagt.
 | [E09-S01](../60-prüfung/E09-S01-sprechernotizen.md) | `::: notes` → Notizenseite der Folie auf dem Notizenmaster der PTA-Vorlage; Rückweg im PPTX-Konverter | in Prüfung |
 | [E09-S02](../60-prüfung/E09-S02-builds.md) | `{.build}` / `{.frag}` als Fade-Eingänge in PPTX; Front Matter für „alle Listen" | in Prüfung |
 | [E09-S03](../60-prüfung/E09-S03-uebergaenge.md) | Folienübergänge per Front Matter und Heading-Attribut; Morph mit Fade-Rückfall | in Prüfung |
-| [E09-S04](E09-S04-szenen.md) | `::: scene`: benannte Formen auf dem Raster, Morph zwischen Szenenfolien | Entwurf |
+| [E09-S04](../55-in-arbeit/docs-2/E09-S04-szenen.md) | `::: scene`: benannte Formen auf dem Raster, Morph zwischen Szenenfolien | in Bearbeitung (docs-2) |
 
 ## Bereichsweite Entscheidungen
 
