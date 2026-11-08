@@ -9,6 +9,7 @@ from typing import Final
 from pta_documents.design.colors import StatusCategory
 from pta_documents.drawing.model import Drawing
 from pta_documents.generation.common.code_highlight import CodeLine
+from pta_documents.generation.common.image_attributes import CENTER, Focus
 from pta_documents.generation.common.renderers import ChartGraphic
 from pta_documents.generation.common.risks import RiskMatrix
 from pta_documents.generation.common.schedule import Schedule
@@ -130,10 +131,19 @@ class Image:
     svg: bytes | None = field(default=None, kw_only=True)
     """The cleaned SVG of a converted SVG image, placed beside the PNG (``asvg:svgBlip``)."""
     fit: bool = field(default=False, kw_only=True)
-    """Fitted into a picture placeholder, never cropped (a QR code, E11-S04)."""
+    """Fitted into a picture placeholder, never cropped (a QR code, E11-S04; ``{fit=contain}``,
+    E15-S04)."""
     scale: float = field(default=1.0, kw_only=True)
-    """``scale=N`` of a QR code: times the size it would be shown at, never larger than its
-    room."""
+    """``scale=N``: times the size it would be shown at, never larger than its room."""
+    focus: Focus | None = field(default=None, kw_only=True)
+    """``{focus=…}``: the point a placeholder's crop keeps in view; None: not written, the
+    centre (E15-S04)."""
+    round: bool = field(default=False, kw_only=True)
+    """``{.round}``: a square around the focus in an ellipse geometry (E15-S04)."""
+
+    @property
+    def point(self) -> Focus:
+        return self.focus or CENTER
 
 
 @dataclass(frozen=True)

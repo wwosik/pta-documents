@@ -5,15 +5,14 @@ An image reference ``![Zur Umfrage](qr:https://umfrage.example/abc "Feedback")``
 as a resource under the reference itself, so the writers find it like any other image. Other
 schemes stay what they were: a reference the resources must have.
 
-``scale=N`` in the title of a QR code scales it (Word: from 3 cm; slides: from the room of the
-layout); ``add_generated`` takes it out of the title and keeps it in ``Token.meta[SCALE]``.
+``{scale=N}`` after a QR code scales it (Word: from 3 cm; slides: from the room of the layout),
+like any image (``image_attributes``, E15-S04; ``scale=N`` in the title still works for a year).
 """
 
 from __future__ import annotations
 
 import io
 import math
-import re
 from collections.abc import Iterable
 from dataclasses import replace
 from typing import Final
@@ -24,6 +23,8 @@ from markdown_it.token import Token
 
 from pta_documents.design import colors
 from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.common import image_attributes, image_styles
+from pta_documents.generation.common.result import Notes
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
 from pta_documents.markdown.parser import child_lines
 
@@ -40,12 +41,8 @@ QUIET_ZONE: Final = 4
 """The white border around the code, in modules (the standard's minimum)."""
 ERROR_LEVEL: Final = "m"
 """Error correction at least M (15 %); segno raises it where that costs no size."""
-MAX_SCALE: Final = 5.0
-SCALE: Final = "pta_documents.scale"
-"""``Token.meta`` key of an image token: the ``scale=N`` taken out of its title."""
 URL_SCHEMES: Final = ("http:", "https:", "mailto:")
 """Contents that are URLs and stay %-encoded as markdown-it wrote them."""
-SCALE_PATTERN: Final = re.compile(r"(?<!\S)scale=(\S*)")
 CONTENT_TYPE: Final = "image/png"
 CM_PER_INCH: Final = 2.54
 
@@ -105,63 +102,53 @@ def resolve(reference: str, format: DocumentFormat, line: int | None = None) -> 
 
 
 def add_generated(
-    document: MarkdownDocument, tokens: Iterable[Token], format: DocumentFormat, line_offset: int
+    document: MarkdownDocument,
+    tokens: Iterable[Token],
+    format: DocumentFormat,
+    line_offset: int,
+    notes: Notes | None = None,
 ) -> MarkdownDocument:
-    """``document`` with a resource for every generated image of ``tokens``, which it does not
-    have yet; ``scale=N`` moves from their titles into ``Token.meta[SCALE]``.
+    """``document`` ready for the writers: the attributes of every image read
+    (``image_attributes.take``, ``scale=N`` out of the titles, with ``notes`` the note
+    ``image-scale-in-title``), a resource for every generated image of ``tokens`` it does not
+    have yet, and the styled resources of ``.grey``/``.round`` (``image_styles.apply``).
 
-    Raises ``DocumentConversionError`` with the line for a broken QR code or ``scale``.
+    Raises ``DocumentConversionError`` with the line for a broken QR code, ``scale`` or image
+    attribute.
     """
-    added: list[DocumentResource] = []
-    seen: set[str] = set()
+    images: list[tuple[Token, int | None]] = []
     for token in tokens:
         if token.type != "inline":
             continue
         for child, line in zip(token.children or [], child_lines(token, line_offset), strict=True):
-            if child.type != "image":
-                continue
-            reference = str(child.attrs.get("src", ""))
-            if not is_generated(reference):
-                continue
-            _take_scale(child, format, line)
-            if reference in seen or document.find_resource(reference) is not None:
-                continue
-            seen.add(reference)
-            added.append(resolve(reference, format, line))
-    if not added:
-        return document
-    return replace(document, resources=(*document.resources, *added))
+            if child.type == "image":
+                images.append((child, line))
+    added: list[DocumentResource] = []
+    seen: set[str] = set()
+    for child, line in images:
+        attributes = image_attributes.take(child, format, line, notes)
+        reference = str(child.attrs.get("src", ""))
+        if not is_generated(reference):
+            continue
+        if attributes.styled:
+            raise _error(
+                format,
+                line,
+                f"A QR code takes no .round or .grey ('{attributes.written}'): it would not "
+                "scan. Leave the style out.",
+            )
+        if reference in seen or document.find_resource(reference) is not None:
+            continue
+        seen.add(reference)
+        added.append(resolve(reference, format, line))
+    if added:
+        document = replace(document, resources=(*document.resources, *added))
+    return image_styles.apply(document, images, format)
 
 
 def scale_of(image: Token) -> float:
-    """The ``scale=N`` of a generated image (``add_generated``); 1 without."""
-    value = image.meta.get(SCALE) if image.meta else None
-    return value if isinstance(value, float) else 1.0
-
-
-def _take_scale(image: Token, format: DocumentFormat, line: int | None) -> None:
-    title = str(image.attrs.get("title") or "")
-    match = SCALE_PATTERN.search(title)
-    if match is None:
-        return
-    written = match.group(1)
-    try:
-        scale = float(written.replace(",", "."))
-    except ValueError:
-        scale = math.nan
-    if not 0 < scale <= MAX_SCALE:
-        raise _error(
-            format,
-            line,
-            f"'scale={written}' is no scale: write a number above 0 and at most "
-            f"{MAX_SCALE:g}, e.g. scale=0.5.",
-        )
-    rest = " ".join((title[: match.start()] + title[match.end() :]).split())
-    if rest:
-        image.attrs["title"] = rest
-    else:
-        image.attrs.pop("title", None)
-    image.meta = {**(image.meta or {}), SCALE: scale}
+    """The ``scale=N`` of an image (``image_attributes.take``); 1 without."""
+    return image_attributes.of(image).factor
 
 
 def _error(format: DocumentFormat, line: int | None, reason: str) -> DocumentConversionError:

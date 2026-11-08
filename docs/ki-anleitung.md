@@ -104,8 +104,12 @@ Sprache = Hinweis `code-language-unknown`.
   Absatz (`![a](x.png) ![b](y.png)`) stehen nebeneinander (max. vier je Zeile), je mit
   „Abbildung n".
 - QR-Code: `![QR-Code zur Umfrage](qr:https://… "https://…")` → QR-Code in PTA-Blau, 3 × 3 cm,
-  den Link als Titel (wird „Abbildung n: https://…", gedruckt lesbar). `scale=0.5` im Titel
-  halbiert ihn. Keine Bilddatei nötig, keine Quelle in `QUELLEN.md`.
+  den Link als Titel (wird „Abbildung n: https://…", gedruckt lesbar). `{scale=0.5}` direkt
+  nach dem Bild halbiert ihn (nicht mehr im Titel: Hinweis `image-scale-in-title`). Keine
+  Bilddatei nötig, keine Quelle in `QUELLEN.md`.
+- Bildattribute direkt nach dem Bild, ohne Leerzeichen: `{.round}` (rund, Kontaktfotos),
+  `{.grey}` (Graustufen), `{scale=0.5}` (Größe, 0 < N ≤ 5) — in Word, PowerPoint und PDF;
+  mehrere in einer Klammer: `![Erika Mustermann](images/erika.jpg){.round focus=50%,30%}`.
 - Zeitstrahl und Projektplan (Word und Präsentation gleich): `::: timeline` mit 2–8 Einträgen
   `- 2026-Q2: Text` (aufsteigend; Termin = `2026`, `2026-03`, `2026-Q2`, `2026-03-15`,
   `15.03.2026` oder `heute`; `{.done}` am Ende = erledigt, grau) und `::: gantt` (Argument
@@ -145,6 +149,13 @@ Gliederung:
   Verliert ein Bild mehr als ein Viertel seiner Fläche an den Rahmen (`image-cropped`) oder wird
   es mehr als doppelt vergrößert (`image-enlarged`), kommt ein Hinweis — dann ein Bild in
   passenden Proportionen bzw. höherer Auflösung ablegen.
+- **Bildausschnitt:** Bei Fotos mit Personen immer `{focus=…}` setzen, damit der Rahmen die
+  Köpfe nicht abschneidet: `![Team](images/team.jpg){focus=top}` oder ein Punkt
+  `{focus=50%,30%}` (von links, von oben); Werte `center` (Standard), `top`, `bottom`, `left`,
+  `right`, `x%,y%`. Grafiken und Screenshots mit `{fit=contain}` ganz zeigen statt beschneiden.
+  `{.round}` macht ein rundes Bild um den Fokus (Kontaktfotos nur auf Wunsch rund), `{.grey}`
+  ein Graustufenbild. Unbekannte Angaben (`{.shadow}`) sind Fehler. Word schneidet nie zu:
+  `focus`/`fit` wirken nur auf Folien.
 - QR-Code (Umfrage, Unterlagen) auf die letzte Inhaltsfolie, nicht auf die Abschlussfolie:
   `![QR-Code zur Umfrage](qr:https://…)` mit einem Satz daneben; er wird in den Bildrahmen
   eingepasst, nie beschnitten. Den Link zusätzlich als Text auf die Folie schreiben.

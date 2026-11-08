@@ -375,14 +375,26 @@ scharf (ältere Word-Versionen zeigen ein Bild in doppelter Auflösung):
 
 ## QR-Code
 
-Ein Link mit `qr:` davor wird ein QR-Code in PTA-Blau, 3 cm breit (`scale=0.5` im Titel halbiert
-ihn); den Link als Beschriftung zu zeigen, macht ihn auch gedruckt lesbar:
+Ein Link mit `qr:` davor wird ein QR-Code in PTA-Blau, 3 cm breit (`{scale=0.5}` nach dem Bild
+halbiert ihn); den Link als Beschriftung zu zeigen, macht ihn auch gedruckt lesbar:
 
 ```markdown
 ![QR-Code zur Website der PTA](qr:https://www.pta.de "https://www.pta.de")
 ```
 
 ![QR-Code zur Website der PTA](qr:https://www.pta.de "https://www.pta.de")
+
+## Bildstile
+
+Attribute in geschweiften Klammern direkt nach dem Bild: `.round` macht ein rundes Bild um den
+Fokus, `.grey` ein Graustufenbild, `scale=0.3` verkleinert es. `focus=…` und `fit=contain`
+steuern den Beschnitt in PowerPoint; Word beschneidet nicht und lässt sie wirkungslos.
+
+```markdown
+![Rundes Porträt](images/portraet.png "Rund um den Kopf"){.round focus=50%,40% scale=0.3} ![Graues Porträt](images/portraet.png "In Graustufen"){.grey scale=0.3}
+```
+
+![Rundes Porträt](images/portraet.png "Rund um den Kopf"){.round focus=50%,40% scale=0.3} ![Graues Porträt](images/portraet.png "In Graustufen"){.grey scale=0.3}
 
 ## Diagramme aus Daten
 

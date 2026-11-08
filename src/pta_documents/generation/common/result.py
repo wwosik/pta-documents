@@ -69,6 +69,10 @@ class NoteCodes:
     """A code block whose language (```` ```sprache ````) the highlighter does not know: it shows
     in one colour (PPTX, DOCX, PDF)."""
 
+    IMAGE_SCALE_IN_TITLE: Final = "image-scale-in-title"
+    """``scale=N`` in the title of an image (E11-S04); it still works until 2027-11 but belongs in
+    the braces after the image: ``![…](a.png){scale=0.5}`` (E15-S04) (PPTX, DOCX)."""
+
     ALL: Final = (
         SLIDE_SPLIT,
         SLIDE_OVERFULL,
@@ -79,6 +83,7 @@ class NoteCodes:
         CHARACTER_MISSING,
         NOTES_DROPPED,
         CODE_LANGUAGE_UNKNOWN,
+        IMAGE_SCALE_IN_TITLE,
     )
     """Every code, in the order the guides list them."""
 

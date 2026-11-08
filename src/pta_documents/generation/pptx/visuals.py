@@ -20,7 +20,7 @@ from pptx.util import Emu
 from pta_documents.design import colors
 from pta_documents.design import slides as design
 from pta_documents.drawing import harvey
-from pta_documents.generation.common import svg_blip
+from pta_documents.generation.common import image_attributes, svg_blip
 from pta_documents.generation.common.code_highlight import CodeLine, CodeSpan
 from pta_documents.generation.pptx import drawing, fitting
 from pta_documents.generation.pptx.model import Align, Code, Image, Run, Table
@@ -358,6 +358,31 @@ def fit_picture(picture: Any, image: Image) -> None:
     picture.height = Emu(height)
 
 
+def crop_picture(picture: Any, image: Image) -> None:
+    """A picture a placeholder crops to fill it, cropped around ``image.focus`` instead of the
+    centre (E15-S04)."""
+    ratio = int(picture.width) / int(picture.height)
+    _crop(picture, image_attributes.visible_window(picture_size(image), ratio, image.point))
+
+
+def round_picture(picture: Any, image: Image) -> None:
+    """A picture a placeholder crops to fill it as a circle instead (``.round``, E15-S04): a
+    square around the focus, as large as the placeholder's shorter side, centred in it, in an
+    ellipse geometry (``prst="ellipse"``, which the PPTX converter reads back as ``.round``)."""
+    left, top = int(picture.left), int(picture.top)
+    room_x, room_y = int(picture.width), int(picture.height)
+    edge = min(room_x, room_y)
+    _crop(picture, image_attributes.visible_window(picture_size(image), 1.0, image.point))
+    picture.left = Emu(left + (room_x - edge) // 2)
+    picture.top = Emu(top + (room_y - edge) // 2)
+    picture.width = picture.height = Emu(edge)
+    picture.auto_shape_type = MSO_SHAPE.OVAL
+
+
+def _crop(picture: Any, window: tuple[float, float, float, float]) -> None:
+    picture.crop_left, picture.crop_top, picture.crop_right, picture.crop_bottom = window
+
+
 def draw_pictures(
     slide: PptxSlide | None, images: list[Image], left: int, top: int, width: int, height: int
 ) -> tuple[int, list[float]]:
@@ -373,6 +398,8 @@ def draw_pictures(
     factors: list[float] = []
     for image in images:
         pixels_x, pixels_y = picture_size(image)
+        if image.round:
+            pixels_x = pixels_y = min(pixels_x, pixels_y)
         scale = min(share / pixels_x, height / pixels_y) * min(image.scale, 1.0)
         factors.append(scale / EMU_PER_PIXEL)
         w, h = int(pixels_x * scale), int(pixels_y * scale)
@@ -382,6 +409,10 @@ def draw_pictures(
             )
             picture._element.nvPicPr.cNvPr.set("descr", image.alt)
             attach_svg(picture, image)
+            if image.round:
+                window = image_attributes.visible_window(picture_size(image), 1.0, image.point)
+                _crop(picture, window)
+                picture.auto_shape_type = MSO_SHAPE.OVAL
         x += share + design.PICTURE_GAP
         used = max(used, h)
     return used, factors

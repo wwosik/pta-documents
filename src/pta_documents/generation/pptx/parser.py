@@ -26,10 +26,12 @@ from pta_documents.generation.common import (
     heading_attributes,
     html,
     icons,
+    image_attributes,
     layout_syntax,
     layout_tokens,
     schedule,
 )
+from pta_documents.generation.common.image_attributes import Fit
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
 from pta_documents.generation.common.renderers import (
     ChartGraphic,
@@ -131,7 +133,7 @@ class DeckParser:
             tokens, FORMAT, self.line_offset, schedule.reference_day(self.options.date)
         )
         self.document = generated_images.add_generated(
-            self.document, tokens, FORMAT, self.line_offset
+            self.document, tokens, FORMAT, self.line_offset, self.notes
         )
         if self.options.typography:
             typeset(tokens, self.options.language)
@@ -581,15 +583,18 @@ class DeckParser:
         return self._placeable(self._image(child, inline, line), inline)
 
     def _image(self, child: Token, inline: Token, line: int | None) -> Image:
-        """The ``image`` child of ``inline`` as it is written; a QR code is fitted, not
-        cropped, and has its ``scale``."""
+        """The ``image`` child of ``inline`` as it is written, with its attributes (E15-S04);
+        a QR code is fitted, never cropped."""
         generated = generated_images.is_generated(str(child.attrs.get("src", "")))
+        attributes = image_attributes.of(child)
         return Image(
             self._resource(child, inline),
             child.content,
             line,
-            fit=generated,
-            scale=generated_images.scale_of(child),
+            fit=generated or attributes.fit is Fit.CONTAIN,
+            scale=attributes.factor,
+            focus=attributes.focus,
+            round=attributes.round,
         )
 
     def _placeable(self, image: Image, token: Token) -> Image:

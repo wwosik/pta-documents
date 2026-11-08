@@ -333,6 +333,101 @@ nie beschnitten.
 
 :::
 
+## Bildausschnitt oben
+
+![Porträt](images/image18.png)
+
+Der Bildrahmen beschneidet ein Bild, das nicht seine Proportionen hat. {focus=top} nach dem Bild behält den oberen Teil.
+
+::: notes
+
+```
+## Bildausschnitt oben
+
+Der Bildrahmen beschneidet ein Bild, das nicht seine Proportionen hat.
+`{focus=top}` nach dem Bild behält den oberen Teil.
+
+![Porträt](images/portraet.png){focus=top}
+```
+
+:::
+
+## Bildausschnitt Mitte
+
+![Porträt](images/image18.png)
+
+Ohne Angabe oder mit {focus=center} bleibt die Mitte; {focus=30%,20%} hält einen beliebigen Punkt im Ausschnitt.
+
+::: notes
+
+```
+## Bildausschnitt Mitte
+
+Ohne Angabe oder mit `{focus=center}` bleibt die Mitte; `{focus=30%,20%}`
+hält einen beliebigen Punkt im Ausschnitt.
+
+![Porträt](images/portraet.png){focus=center}
+```
+
+:::
+
+## Bildausschnitt unten
+
+![Porträt](images/image18.png)
+
+{focus=bottom} behält den unteren Teil, left und right die Seiten.
+
+::: notes
+
+```
+## Bildausschnitt unten
+
+`{focus=bottom}` behält den unteren Teil, `left` und `right` die Seiten.
+
+![Porträt](images/portraet.png){focus=bottom}
+```
+
+:::
+
+## Bild eingepasst
+
+![Porträt](images/image18.png)
+
+{fit=contain} passt das ganze Bild in den Rahmen ein, statt es zu beschneiden.
+
+::: notes
+
+```
+## Bild eingepasst
+
+`{fit=contain}` passt das ganze Bild in den Rahmen ein, statt es zu beschneiden.
+
+![Porträt](images/portraet.png){fit=contain}
+```
+
+:::
+
+## Rund und grau
+
+![Rundes Porträt](images/image18.png){.round}
+
+![Graues Porträt](images/image19.png)
+
+.round macht ein rundes Bild um den Fokus (bearbeitbar als Ellipse), .grey ein Graustufenbild.
+
+::: notes
+
+```
+## Rund und grau
+
+![Rundes Porträt](images/portraet.png){.round focus=50%,40%} ![Graues Porträt](images/portraet.png){.grey}
+
+`.round` macht ein rundes Bild um den Fokus (bearbeitbar als Ellipse), `.grey` ein
+Graustufenbild.
+```
+
+:::
+
 ## Layouts
 
 04
@@ -1269,6 +1364,8 @@ Umsetzung
 
 ## Ihre Ansprechpartner
 
+![Erika Mustermann](images/image18.png){.round}
+
 Erika Mustermann
 
 Projektleiterin
@@ -1289,6 +1386,8 @@ max.mustermann@example.org
 ## Ihre Ansprechpartner {.contact}
 
 ### Erika Mustermann
+
+![Erika Mustermann](images/portraet.png){.round focus=50%,40%}
 
 Projektleiterin
 erika.mustermann@example.org

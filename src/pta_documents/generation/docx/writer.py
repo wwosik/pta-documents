@@ -189,7 +189,7 @@ class BodyWriter:
         tokens = create_parser().parse(self.front.body, env)
         layout_syntax.check(tokens, FORMAT, self.front.body_line, self.today)
         self.source = generated_images.add_generated(
-            self.source, tokens, FORMAT, self.front.body_line
+            self.source, tokens, FORMAT, self.front.body_line, self.notes
         )
         if self.options.typography:
             typeset(tokens, self.options.language)

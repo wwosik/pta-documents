@@ -10,7 +10,8 @@ setting and separator), in the deck the ``financial-chart`` blocks (every type a
 the report one of them and an ``Abbildung: …`` caption after a graphic (E03-S04), and every
 scheme of generated images (``qr:``, E11-S04), Harvey balls ``[n/4]`` and the thresholds of
 ``::: riskmatrix`` (E15-S02), icons as bullets, before a card title (deck) and in text (report,
-E15-S03).
+E15-S03), the image attributes ``.round``, ``.grey`` and (report) ``scale=``, (deck) ``focus=`` and
+``fit=contain`` (E15-S04).
 When the authoring guides exist (E02-S05), the list comes from their syntax instead.
 """
 
@@ -41,6 +42,7 @@ from pta_documents.generation.common import (
     generated_images,
     heading_attributes,
     icons,
+    image_attributes,
     layout_syntax,
     layout_tokens,
     schedule,
@@ -207,6 +209,8 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
                 shown.add(ICON_IN_TEXT)
             for child in token.children or ():
                 source = str(child.attrs.get("src", "")) if child.type == "image" else ""
+                if child.type == "image":
+                    shown |= image_attributes_shown(child, format)
                 if generated_images.is_generated(source):
                     scheme = source.strip().lower().partition(":")[0] + ":"
                     shown.add(GENERATED_IMAGE.format(scheme=scheme))
@@ -219,6 +223,24 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
                 shown.add(f"status label: status.{labels[cell.group(1)].value}")
         if figure_caption_after(tokens, i):
             shown.add(FIGURE_CAPTION)
+
+
+def image_attributes_shown(image: Token, format: DocumentFormat) -> set[str]:
+    """The image attributes (E15-S04) ``image`` shows, as ``IMAGE_ATTRIBUTES`` names them."""
+    attributes = image_attributes.ImageAttributes.parse(image, format)
+    shown: set[str] = set()
+    focus = attributes.focus
+    if focus is not None:
+        named = [n for n, f in image_attributes.NAMED_FOCUS.items() if f == focus]
+        shown.add(f"focus={named[0]}" if named else "focus=x%,y%")
+    if attributes.fit is image_attributes.Fit.CONTAIN:
+        shown.add("fit=contain")
+    if attributes.scale is not None and not attributes.scale_in_title:
+        shown.add("scale=N")
+    shown |= {
+        name for name, used in ((".round", attributes.round), (".grey", attributes.grey)) if used
+    }
+    return {"{" + name + "} after an image" for name in shown if name}
 
 
 def figure_caption_after(tokens: list[Token], i: int) -> bool:
@@ -286,6 +308,13 @@ def required(format: DocumentFormat) -> set[str]:
     result |= {f"> [!{kind}]" for kind in layout_syntax.ALERT_KINDS}
     result.add("==mark==")
     result |= {GENERATED_IMAGE.format(scheme=scheme) for scheme in generated_images.SCHEMES}
+    # Image attributes (E15-S04): the crop only on slides; Word and PDF do not crop.
+    attributes = [".round", ".grey"]
+    if format is DOCX:
+        attributes.append("scale=N")
+    else:
+        attributes += ["focus=top", "focus=center", "focus=bottom", "focus=x%,y%", "fit=contain"]
+    result |= {"{" + name + "} after an image" for name in attributes}
     result |= {f"```{CHART} type: {kind.value}" for kind in ChartKind}
     result |= {f"```{CHART} {key}:" for key in chart_parser.SETTINGS}
     result |= {f"```{CHART} separator ,", f"```{CHART} separator ;"}

@@ -307,6 +307,92 @@ nie beschnitten.
 ```
 ::::
 
+## Bildausschnitt oben
+
+Der Bildrahmen beschneidet ein Bild, das nicht seine Proportionen hat.
+`{focus=top}` nach dem Bild behält den oberen Teil.
+
+![Porträt](images/portraet.png){focus=top}
+
+:::: notes
+```markdown
+## Bildausschnitt oben
+
+Der Bildrahmen beschneidet ein Bild, das nicht seine Proportionen hat.
+`{focus=top}` nach dem Bild behält den oberen Teil.
+
+![Porträt](images/portraet.png){focus=top}
+```
+::::
+
+## Bildausschnitt Mitte
+
+Ohne Angabe oder mit `{focus=center}` bleibt die Mitte; `{focus=30%,20%}`
+hält einen beliebigen Punkt im Ausschnitt.
+
+![Porträt](images/portraet.png){focus=center}
+
+:::: notes
+```markdown
+## Bildausschnitt Mitte
+
+Ohne Angabe oder mit `{focus=center}` bleibt die Mitte; `{focus=30%,20%}`
+hält einen beliebigen Punkt im Ausschnitt.
+
+![Porträt](images/portraet.png){focus=center}
+```
+::::
+
+## Bildausschnitt unten
+
+`{focus=bottom}` behält den unteren Teil, `left` und `right` die Seiten.
+
+![Porträt](images/portraet.png){focus=bottom}
+
+:::: notes
+```markdown
+## Bildausschnitt unten
+
+`{focus=bottom}` behält den unteren Teil, `left` und `right` die Seiten.
+
+![Porträt](images/portraet.png){focus=bottom}
+```
+::::
+
+## Bild eingepasst
+
+`{fit=contain}` passt das ganze Bild in den Rahmen ein, statt es zu beschneiden.
+
+![Porträt](images/portraet.png){fit=contain}
+
+:::: notes
+```markdown
+## Bild eingepasst
+
+`{fit=contain}` passt das ganze Bild in den Rahmen ein, statt es zu beschneiden.
+
+![Porträt](images/portraet.png){fit=contain}
+```
+::::
+
+## Rund und grau
+
+![Rundes Porträt](images/portraet.png){.round focus=50%,40%} ![Graues Porträt](images/portraet.png){.grey}
+
+`.round` macht ein rundes Bild um den Fokus (bearbeitbar als Ellipse), `.grey` ein
+Graustufenbild.
+
+:::: notes
+```markdown
+## Rund und grau
+
+![Rundes Porträt](images/portraet.png){.round focus=50%,40%} ![Graues Porträt](images/portraet.png){.grey}
+
+`.round` macht ein rundes Bild um den Fokus (bearbeitbar als Ellipse), `.grey` ein
+Graustufenbild.
+```
+::::
+
 # Layouts
 
 ## Zwei Spalten {layout="Titel und Text (zweispaltig)"}
@@ -1323,6 +1409,8 @@ Mit `"culture": "en"` stehen Zahlen und Beschriftungen auf Englisch.
 
 ### Erika Mustermann
 
+![Erika Mustermann](images/portraet.png){.round focus=50%,40%}
+
 Projektleiterin
 erika.mustermann@example.org
 +49 621 12345-0
@@ -1337,6 +1425,8 @@ max.mustermann@example.org
 ## Ihre Ansprechpartner {.contact}
 
 ### Erika Mustermann
+
+![Erika Mustermann](images/portraet.png){.round focus=50%,40%}
 
 Projektleiterin
 erika.mustermann@example.org

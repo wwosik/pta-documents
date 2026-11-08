@@ -15,17 +15,17 @@ from pta_documents.conversions.docx import DocxConverter
 from pta_documents.conversions.pptx import PptxConverter
 from pta_documents.design import colors
 from pta_documents.errors import DocumentFormat
-from pta_documents.generation.common import generated_images
+from pta_documents.generation.common import generated_images, image_attributes
 from pta_documents.generation.common.generated_images import (
     EDGE_PIXELS,
     MAX_CHARACTERS,
-    SCALE,
     add_generated,
     is_generated,
     qr_content,
     qr_png,
     resolve,
 )
+from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.common.style_rules import StyleCodes, style_notes
 from pta_documents.generation.pptx.generator import PptxGenerator
 from pta_documents.markdown import DocumentResource, MarkdownDocument
@@ -159,7 +159,7 @@ def test_scale_moves_from_the_title_into_the_meta() -> None:
     add_generated(MarkdownDocument(""), tokens, DOCX, 0)
     first, second = (t.children[0] for t in tokens if t.type == "inline" and t.children)
     assert first.attrs["title"] == "Umfrage heute"
-    assert first.meta[SCALE] == 0.5
+    assert image_attributes.of(first).scale == 0.5
     assert "title" not in second.attrs
     assert generated_images.scale_of(second) == 2.0
 
@@ -172,11 +172,23 @@ def test_a_broken_scale_is_an_error_with_its_line(scale: str) -> None:
     assert error.value.reason.startswith(f"Line 5: 'scale={scale}' is no scale")
 
 
-def test_scale_in_the_title_of_an_ordinary_image_stays_text() -> None:
+def test_scale_in_the_title_of_an_ordinary_image_works_too_with_a_note() -> None:
+    """E15-S04: ``scale=`` in the title is for every image now, for a year with a note."""
     tokens = parse('![a](images/a.png "Foto scale=0.5")\n')
-    add_generated(MarkdownDocument(""), tokens, DOCX, 0)
+    notes = Notes()
+    add_generated(MarkdownDocument(""), tokens, DOCX, 0, notes)
     image = tokens[1].children[0] if tokens[1].children else None
-    assert image is not None and image.attrs["title"] == "Foto scale=0.5"
+    assert image is not None and image.attrs["title"] == "Foto"
+    assert generated_images.scale_of(image) == 0.5
+    assert [n.code for n in notes.to_tuple()] == [NoteCodes.IMAGE_SCALE_IN_TITLE]
+    assert "{scale=0.5}" in notes.to_tuple()[0].message
+
+
+def test_a_qr_code_takes_no_style() -> None:
+    text = "![a](qr:x){.round}\n"
+    with pytest.raises(DocumentConversionError) as error:
+        add_generated(MarkdownDocument(text), parse(text), DOCX, 0)
+    assert error.value.reason.startswith("Line 1: A QR code takes no .round or .grey")
 
 
 # ---------------------------------------------------------------------- Word
@@ -198,7 +210,7 @@ def test_word_shows_a_qr_code_3_cm_wide_with_its_caption() -> None:
 
 def test_word_scales_a_qr_code_and_leaves_scale_out_of_the_caption() -> None:
     data = generate_docx(
-        f'{REPORT}\n![Zur Umfrage](qr:{URL} "{URL} scale=0.5")\n\n![Groß](qr:{URL} "scale=2")\n'
+        f'{REPORT}\n![Zur Umfrage](qr:{URL} "{URL}"){{scale=0.5}}\n\n![Groß](qr:{URL}){{scale=2}}\n'
     )
     [(small, _), (large, _)] = extents(data)
     assert small == pytest.approx(1.5 * EMU_PER_CM, rel=0.01)
@@ -285,7 +297,7 @@ def box(shape: Any) -> tuple[int, int, int, int]:
 
 def test_scale_shrinks_the_qr_code_on_a_slide() -> None:
     full = box(pictures(generate_pptx(f"# D\n\n## F\n\nText.\n\n![U](qr:{URL})\n"))[0])
-    half = box(pictures(generate_pptx(f'# D\n\n## F\n\nText.\n\n![U](qr:{URL} "scale=0.5")\n'))[0])
+    half = box(pictures(generate_pptx(f"# D\n\n## F\n\nText.\n\n![U](qr:{URL}){{scale=0.5}}\n"))[0])
     assert half[2] == pytest.approx(full[2] / 2, abs=2)
     assert half[0] + half[2] // 2 == pytest.approx(full[0] + full[2] // 2, abs=2)
 

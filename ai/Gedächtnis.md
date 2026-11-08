@@ -313,8 +313,8 @@ weil ihm vertraut wird.
   line_offset)` als PNG-Ressource unter der Referenz selbst (segno, Kernabhängigkeit, BSD-3;
   `micro=False`, sonst macht segno aus kurzem Text Micro-QR, den Handys kaum lesen). Beide
   Generatoren rufen es direkt nach `layout_syntax.check` auf und arbeiten danach mit dem
-  zurückgegebenen Dokument (`BodyWriter.source`, `DeckParser.document`). `scale=N` im Titel
-  nimmt es aus dem Titel und legt es in `Token.meta[SCALE]` (`scale_of`); Word multipliziert die
+  zurückgegebenen Dokument (`BodyWriter.source`, `DeckParser.document`). `scale=N` gilt seit
+  E15-S04 für alle Bilder (`scale_of` liest `image_attributes.of`); Word multipliziert die
   Größe (PNG-dpi = 3 cm), PowerPoint über `Image.scale`. `Image.fit` lässt `fill_picture` das
   Bild in den Platzhalter einpassen statt beschneiden (`visuals.fit_picture`). Ein neues Schema
   in `SCHEMES` eintragen; `test_funktionen.py` verlangt jedes im Beispiel.
@@ -397,3 +397,17 @@ weil ihm vertraut wird.
   `code-not-drawn` weg (bis E05-S04). Konverter: DOCX über `docPr/@descr`, PPTX über Gruppenname
   und PNG-Textfeld. `docs/ki-anleitung.md` muss jeden Namen nennen (Test
   `tests/design/icons/test_icons.py`).
+- **Bildattribute** (E15-S04): `{…}` direkt nach einem Bild ist eine eigene Inline-Regel
+  (`markdown/image_attributes.py`, Rohtext in `Token.meta[ATTRIBUTES]`) — **nicht**
+  `mdit_py_plugins.attrs` (dort beginnt `%` einen Kommentar, `{focus=30%,20%}` bliebe Text).
+  Gelesen und geprüft (Fehler `Line N: …`) wird in `generation/common/image_attributes.take`,
+  aufgerufen aus `generated_images.add_generated` für **alle** Bilder (auch PDF, ohne `notes`);
+  Ergebnis in `Token.meta[KEY]`, Abruf mit `of(token)`. `scale=` im Titel: noch bis 2027-11, mit
+  Hinweis `image-scale-in-title`. `.grey`/`.round` macht `image_styles.apply` als neue
+  PNG-Ressource (`<name>-grey.png`, `-round.png`) und **schreibt `src` des Tokens um** —
+  PowerPoint behält `.round` (Ellipse über `picture.auto_shape_type`, Quadrat-Ausschnitt per
+  `srcRect`, `visuals.round_picture`/`draw_pictures`). Ausschnitt um den Fokus:
+  `image_attributes.visible_window` (`visuals.crop_picture` in `fill_picture`). Word/PDF
+  schneiden nie; `focus`/`fit` sind dort wirkungslos. Der PPTX-Konverter liest `prst="ellipse"`
+  als `{.round}` zurück. Beispielbild `samples/funktionen/images/portraet.png` (selbst gezeichnet,
+  880 × 1000, verliert im Rahmen „Titel, Text und Bild 01" knapp unter 25 %).

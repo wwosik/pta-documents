@@ -691,6 +691,7 @@ class StoryBuilder:
         "Abbildung n: …" below from its title or alt text; image and caption stay together."""
         title = str(image.attrs.get("title") or "")
         scale, caption_title = _scale(title)
+        scale *= generated_images.scale_of(image)  # {scale=N} (E15-S04)
         text = caption_title or image.content
         caption_height = 0.0
         if text:
@@ -720,6 +721,7 @@ class StoryBuilder:
             r, c = divmod(n, per_row)
             title = str(image.attrs.get("title") or "")
             scale, caption_title = _scale(title)
+            scale *= generated_images.scale_of(image)
             picture = self.picture(
                 image, at.get(id(image)), room, self.context.frame_height * 0.5, scale
             )
@@ -761,9 +763,9 @@ class StoryBuilder:
         size: tuple[float, float] | None = None
         if generated_images.is_generated(source):
             # A QR code (``generated_images.add_generated``) is 3 cm wide, as in Word.
-            edge = generated_images.SIZE_CM * word_styles.POINTS_PER_CM
-            edge *= generated_images.scale_of(image)
+            edge = generated_images.SIZE_CM * word_styles.POINTS_PER_CM * scale
             size = (edge, edge)
+            scale = 1.0
         return self.place(resource, source, line, max_width, max_height, scale, size_pt=size)
 
     def place(

@@ -17,6 +17,7 @@ from pta_documents.markdown import text as md
 from pta_documents.markdown import typography
 from pta_documents.markdown.document import MarkdownDocument, MetadataKeys
 from pta_documents.markdown.icon import markdown as icon_markdown
+from pta_documents.markdown.image_attributes import markdown as image_attributes_markdown
 
 P: Final = "http://schemas.openxmlformats.org/presentationml/2006/main"
 A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -333,6 +334,10 @@ def _is_code(paragraph: etree._Element) -> bool:
     return bool(runs)
 
 
+ROUND_GEOMETRY: Final = "ellipse"
+"""The preset geometry of a round picture (``generation.pptx.visuals.round_picture``)."""
+
+
 def _picture(
     picture: etree._Element,
     package: OpenXmlPackage,
@@ -348,7 +353,11 @@ def _picture(
     properties = picture.find(f"{p('nvPicPr')}/{p('cNvPr')}")
     alt = (properties.get("descr") if properties is not None else None) or ""
     path = images.add(part[part.rfind("/") + 1 :], content)
-    return f"![{md.escape(alt).replace(chr(10), ' ')}]({md.destination(path)})"
+    geometry = picture.find(f"{p('spPr')}/{a('prstGeom')}")
+    # A picture in an ellipse is a round image (``{.round}``, E15-S04).
+    is_round = geometry is not None and geometry.get("prst") == ROUND_GEOMETRY
+    attributes = image_attributes_markdown(".round" if is_round else "")
+    return f"![{md.escape(alt).replace(chr(10), ' ')}]({md.destination(path)}){attributes}"
 
 
 def _paragraphs(container: etree._Element, bullets: dict[str, str] | None = None) -> list[str]:

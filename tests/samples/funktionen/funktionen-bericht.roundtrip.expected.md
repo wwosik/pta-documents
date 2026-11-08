@@ -361,7 +361,7 @@ Abbildung 6: Eine SVG-Grafik, in Word scharf in jeder Größe
 
 ## QR-Code
 
-Ein Link mit qr: davor wird ein QR-Code in PTA-Blau, 3 cm breit (scale=0.5 im Titel halbiert ihn); den Link als Beschriftung zu zeigen, macht ihn auch gedruckt lesbar:
+Ein Link mit qr: davor wird ein QR-Code in PTA-Blau, 3 cm breit ({scale=0.5} nach dem Bild halbiert ihn); den Link als Beschriftung zu zeigen, macht ihn auch gedruckt lesbar:
 
 ```markdown
 ![QR-Code zur Website der PTA](qr:https://www.pta.de "https://www.pta.de")
@@ -370,6 +370,20 @@ Ein Link mit qr: davor wird ein QR-Code in PTA-Blau, 3 cm breit (scale=0.5 im T
 ![QR-Code zur Website der PTA](images/image9.png)
 
 Abbildung 7: https://www.pta.de
+
+## Bildstile
+
+Attribute in geschweiften Klammern direkt nach dem Bild: .round macht ein rundes Bild um den Fokus, .grey ein Graustufenbild, scale=0.3 verkleinert es. focus=… und fit=contain steuern den Beschnitt in PowerPoint; Word beschneidet nicht und lässt sie wirkungslos.
+
+```markdown
+![Rundes Porträt](images/portraet.png "Rund um den Kopf"){.round focus=50%,40% scale=0.3} ![Graues Porträt](images/portraet.png "In Graustufen"){.grey scale=0.3}
+```
+
+![Rundes Porträt](images/image10.png) ![Graues Porträt](images/image11.png)
+
+Abbildung 8: Rund um den Kopf
+
+Abbildung 9: In Graustufen
 
 ## Diagramme aus Daten
 
@@ -397,7 +411,7 @@ Q4, 13, 13.6
 | Q3 | 12.5 | 14 |
 | Q4 | 13 | 13.6 |
 
-Abbildung 8: Aufträge je Quartal
+Abbildung 10: Aufträge je Quartal
 
 Quelle: Vertrieb, Beispielzahlen
 
@@ -423,7 +437,7 @@ Mi; 42; 58,5
 | Di | 43 | 57 |
 | Mi | 42 | 58.5 |
 
-Abbildung 9: Fahrten je Tag
+Abbildung 11: Fahrten je Tag
 
 Linien (type: line) stapeln nie; ein leeres Feld lässt eine Lücke, ohne Titel gibt es keine Beschriftung:
 
@@ -465,7 +479,7 @@ Abbildung: Aufträge je Region
 | Nord | 41 |
 | Süd | 37 |
 
-Abbildung 10: Aufträge je Region
+Abbildung 12: Aufträge je Region
 
 ## Finanzdiagramme
 
@@ -493,9 +507,9 @@ Ein financial-chart-Block steht in Word als scharfes Bild (SVG, mit PNG für äl
 Abbildung: Wachstum der Aufträge gegenüber dem Vorjahr
 ````
 
-![financial-chart](images/image10.png)
+![financial-chart](images/image12.png)
 
-Abbildung 11: Wachstum der Aufträge gegenüber dem Vorjahr
+Abbildung 13: Wachstum der Aufträge gegenüber dem Vorjahr
 
 # Code, Zitat und Trennlinie
 
@@ -714,7 +728,7 @@ Zeilen in der Hervorhebungsfarbe brauchen einen Menschen. Stand heute: im Plan, 
 :::
 ```
 
-![2026-01: Kick-off; 2026-Q2: Analyse abgeschlossen; 15.09.2026: Go-live; 2027: Betrieb](images/image11.png)
+![2026-01: Kick-off; 2026-Q2: Analyse abgeschlossen; 15.09.2026: Go-live; 2027: Betrieb](images/image13.png)
 
 ## Projektplan
 
@@ -756,7 +770,7 @@ Test mit dem Fachbereich
 :::
 ```
 
-![1. Analyse: Interviews und Ist-Aufnahme; 2. Konzept: Soll-Bild und Varianten; 3. Umsetzung: In Sprints; 4. Abnahme: Test mit dem Fachbereich; 5. Betrieb](images/image12.png)
+![1. Analyse: Interviews und Ist-Aufnahme; 2. Konzept: Soll-Bild und Varianten; 3. Umsetzung: In Sprints; 4. Abnahme: Test mit dem Fachbereich; 5. Betrieb](images/image14.png)
 
 ## Bewertungsmatrix
 
@@ -791,7 +805,7 @@ Eine Tabellenzelle, die genau \[n/4] enthält (n von 0 bis 4), wird ein Harvey B
 :::
 ```
 
-![1 Schlüsselperson fällt aus: Wahrscheinlichkeit 2, Auswirkung 4; 2 Daten unvollständig: Wahrscheinlichkeit 4, Auswirkung 4; 3 Schnittstelle verspätet: Wahrscheinlichkeit 4, Auswirkung 4; 4 Geringe Akzeptanz: Wahrscheinlichkeit 3, Auswirkung 2](images/image13.png)
+![1 Schlüsselperson fällt aus: Wahrscheinlichkeit 2, Auswirkung 4; 2 Daten unvollständig: Wahrscheinlichkeit 4, Auswirkung 4; 3 Schnittstelle verspätet: Wahrscheinlichkeit 4, Auswirkung 4; 4 Geringe Akzeptanz: Wahrscheinlichkeit 3, Auswirkung 2](images/image15.png)
 
 | Nr | Risiko | Maßnahme |
 | --- | --- | --- |

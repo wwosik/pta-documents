@@ -266,6 +266,7 @@ Front Matter mitgezählt).
 | Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
+| Bildattribute `{…}` direkt nach einem Bild | `focus=…`, `fit=cover\|contain`, `scale=N`, `.round`, `.grey` (siehe [Bildattribute](#bildattribute-e15-s04)) | PowerPoint: Ausschnitt im Bildplatzhalter, rund als Ellipse; Word/PDF: kein Beschnitt, rund/grau als PNG |
 | Icon `:icon-name:` | die gebündelten Namen (siehe [Icons](#icons-e15-s03)) | PowerPoint: am Anfang eines Kartentitels die Figur der Karte, vor jedem Punkt einer Liste das Aufzählungssymbol, sonst Fehler; Word: Bild im Text, vor jedem Punkt einer Liste statt des Aufzählungszeichens; PDF: entfällt mit `code-not-drawn` |
 | `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen; PowerPoint fett in der Signalfarbe, Word Zeichenvorlage „Status …" |
 | Front Matter `status.<kategorie>: Text; Text` | dieselben fünf Kategorien, jeder Text nur einmal | geprüft; PowerPoint: Status-Labels in Tabellen auf Flow-Folien; Word: Label-Zellen in der Zeichenvorlage „Status …" |
@@ -719,7 +720,7 @@ page_count)`.
   Kein Absatz lässt eine einzelne Zeile oben oder unten auf einer Seite. Listenzeichen gehen mit
   der ersten Zeile. Tabellen wiederholen ihren Kopf und teilen zu hohe Zeilen. Abstand nach und
   Abstand vor addieren sich wie in Word.
-- **Bilder:** 96 dpi (ein Pixel = 0,75 pt), `"scale=0.5"` im Titel skaliert, sonst werden sie
+- **Bilder:** 96 dpi (ein Pixel = 0,75 pt), `{scale=0.5}` nach dem Bild (oder noch im Titel) skaliert, sonst werden sie
   nur verkleinert (ein QR-Code ist wie in Word 3 cm breit, mal `scale`): auf die Satzspiegelbreite, auf 80 % der Satzspiegelhöhe und so weit, dass sie
   mit der Überschrift davor auf eine Seite passen. PNG und JPEG direkt, GIF/BMP/TIFF/WebP über
   Pillow, alles andere über die Bildkonverter. Mehrere Bilder in einem Absatz stehen
@@ -859,7 +860,7 @@ der Generator selbst erzeugt — in Word und PowerPoint:
 
 ```markdown
 ![Zur Umfrage](qr:https://umfrage.example/abc "https://umfrage.example/abc")
-![WLAN](<qr:WIFI:T:WPA;S:Mein Netz;P:geheim;;> "Gäste-WLAN scale=0.5")
+![WLAN](<qr:WIFI:T:WPA;S:Mein Netz;P:geheim;;> "Gäste-WLAN"){scale=0.5}
 ```
 
 - **Inhalt:** alles nach `qr:` — URL, `mailto:`, `tel:`, WLAN-Zugang (`WIFI:T:WPA;S:…;P:…;;`)
@@ -873,10 +874,12 @@ der Generator selbst erzeugt — in Word und PowerPoint:
   Titel zu schreiben, macht ihn auch gedruckt lesbar.
 - **PowerPoint:** wie jedes Bild (Platzhalter des Layouts, Bildreihe, Flow-Folie), aber in den
   Bildplatzhalter **eingepasst und zentriert, nie beschnitten**.
-- **`scale=N`** im Titel (0 < N ≤ 5, Komma oder Punkt) ändert die Größe: in Word das N-Fache von
-  3 cm (höchstens Satzspiegelbreite), auf Folien das N-Fache der eingepassten Größe (höchstens
-  diese). `scale=` wird aus dem Titel genommen und erscheint nicht in der Beschriftung. Nur für
-  QR-Codes; in Titeln anderer Bilder bleibt `scale=…` Text (siehe E15-S04).
+- **`{scale=N}`** nach dem Bild (0 < N ≤ 5, Komma oder Punkt) ändert die Größe: in Word das
+  N-Fache von 3 cm (höchstens Satzspiegelbreite), auf Folien das N-Fache der eingepassten Größe
+  (höchstens diese). Seit E15-S04 gilt das für jedes Bild (siehe
+  [Bildattribute](#bildattribute-e15-s04)); `scale=N` im Titel wirkt noch bis 2027-11, mit
+  Hinweis `image-scale-in-title`, und erscheint nicht in der Beschriftung. QR-Codes nehmen weder
+  `.round` noch `.grey` (Fehler) und werden immer eingepasst.
 - **Fehler mit Zeile:** `Line N: The QR code has 1001 characters, more than 1000. …`,
   `Line N: The QR code has no content …`, `Line N: 'scale=0' is no scale …`. Andere Schemata
   (`foto:…`) bleiben, was sie waren: ein Pfad, den die Ressourcen haben müssen.
@@ -895,9 +898,49 @@ png = qr_png("https://pta.de")  # PNG-Bytes
 resource = resolve("qr:https://pta.de", DocumentFormat.DOCX)  # DocumentResource unter "qr:…"
 ```
 
-Beide Generatoren rufen `add_generated(document, tokens, format, line_offset)` nach
-`layout_syntax.check` auf; es gibt das Dokument mit den erzeugten Bildern als zusätzliche
-Ressourcen zurück (eine eigene Ressource mit dem Pfad `qr:…` geht vor).
+Alle Generatoren rufen `add_generated(document, tokens, format, line_offset, notes)` nach
+`layout_syntax.check` auf; es liest die Bildattribute, gibt das Dokument mit den erzeugten
+Bildern als zusätzliche Ressourcen zurück (eine eigene Ressource mit dem Pfad `qr:…` geht vor)
+und legt die Bildstile an (siehe [Bildattribute](#bildattribute-e15-s04)). Der PDF-Generator
+übergibt noch keine `notes`.
+
+## Bildattribute (E15-S04)
+
+Geschweifte Klammern **direkt** nach einem Bild (ohne Leerzeichen) steuern den Ausschnitt, die
+Größe und den Stil — eine Quelle für alle Formate:
+
+```markdown
+![Porträt](images/foto.jpg){focus=top}
+![Porträt](images/foto.jpg){focus=30%,20%}
+![Plan](images/plan.png){fit=contain}
+![Erika Mustermann](images/erika.jpg){.round focus=50%,40%}
+![Archivbild](images/alt.jpg){.grey scale=0.5}
+```
+
+| Attribut | Werte | Wirkung |
+| -------- | ----- | ------- |
+| `focus=` | `center` (Standard), `top`, `bottom`, `left`, `right`, `x%,y%` (Punkt von links/oben, auch in `"…"`) | PowerPoint: der Bildplatzhalter beschneidet so, dass der Punkt im Ausschnitt bleibt (am Rand geklemmt); `.round`: Mitte des Kreises. Word/PDF: kein Beschnitt, wirkungslos (kein Fehler) |
+| `fit=` | `cover` (Standard, füllen und beschneiden), `contain` | PowerPoint: `contain` passt das ganze Bild zentriert in den Platzhalter ein (der Rest zeigt den weißen Folienhintergrund); Word/PDF wirkungslos |
+| `scale=` | 0 < N ≤ 5 | Word/PDF: N-fache Größe (höchstens Satzspiegel); Folien: N-fache eingepasste Größe, nie größer (in Bildreihen, Flow-Folien, eingepasst); ein Platzhalter, der beschneidet, bleibt gefüllt |
+| `.round` | – | rund um den Fokus: PowerPoint als Ellipsengeometrie am Bild (quadratischer Ausschnitt über `a:srcRect`, bearbeitbar, kein `image-cropped`); Word/PDF als PNG mit Kreismaske im Alphakanal (`<name>-round.png`) |
+| `.grey` | – | Graustufen-PNG (`<name>-grey.png`), in allen Formaten |
+
+Unbekannte Attribute und Werte sind Fehler mit Zeile und den gültigen Werten (`Line 7: Unknown
+image attribute '.shadow' in '{.shadow}'. Valid attributes: focus=…, fit=cover|contain, scale=N,
+.round, .grey.`); ebenso `scale` im Titel und in den Klammern zugleich, ein Stil an einem
+QR-Code und ein Stil an einem Bild, das Pillow nicht liest (SVG: `… .grey takes PNG, JPEG, GIF,
+BMP, TIFF and WebP …`). `image-cropped` schlägt `{focus=…}` und `{fit=contain}` nur vor, wenn
+kein Fokus gesetzt ist.
+
+- **Bausteine:** `markdown/image_attributes.py` (Inline-Regel nach dem Bild, Text der Klammern in
+  `Token.meta[ATTRIBUTES]`; eigene Regel statt `mdit_py_plugins.attrs`, weil dort `%` einen
+  Kommentar beginnt und `.`/`,` Anführungszeichen brauchen),
+  `generation/common/image_attributes.py` (`ImageAttributes.parse`, `take`, `of`,
+  `visible_window` für den Ausschnitt), `generation/common/image_styles.py` (`grey`,
+  `round_png`, `apply`: neue `DocumentResource` neben dem Original, der Bild-Token zeigt darauf).
+- **Rundreise:** die Konverter lesen das eingebettete Bild, wie es ist (grau bzw. in Word rund);
+  Attribute kommen nicht zurück — außer `.round` aus PowerPoint (Bild mit `prst="ellipse"` →
+  `![…](images/…){.round}`). PowerPoint bettet das ganze Bild ein; der Ausschnitt geht verloren.
 
 ## Zeitstrahl und Gantt (E15-S01)
 
@@ -1164,6 +1207,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `character-missing` (`CHARACTER_MISSING`) | PDF | ein Zeichen fehlt in den Schriften; es erscheint als `?` (bis E05-S04 Ersatz vorschlägt) |
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01), PDF | Sprechernotizen fallen im Word-Dokument bzw. PDF weg |
 | `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02), PDF | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |
+| `image-scale-in-title` (`IMAGE_SCALE_IN_TITLE`) | PPTX, DOCX (E15-S04) | `scale=N` steht im Bildtitel; wirkt bis 2027-11, gehört aber als `{scale=N}` hinter das Bild |
 
 Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate` zeigt die
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;

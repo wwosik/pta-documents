@@ -150,7 +150,8 @@ der Generator als Hinweis `code-language-unknown`.
 | Tabelle mit `\|` | Tabellenformat „PTA" (blauer Kopf) |
 | `Tabelle: Text` direkt unter der Tabelle | Beschriftung „Tabelle 1: Text" |
 | Bild allein im Absatz | Bild in Satzspiegelbreite, darunter „Abbildung 1: …" aus dem Bildtitel (in `"…"`) oder dem Alt-Text |
-| `![Zur Umfrage](qr:https://… "https://…")` | QR-Code in PTA-Blau, 3 × 3 cm, mit „Abbildung n: …"; `scale=0.5` im Titel halbiert ihn (siehe [QR-Codes](#qr-codes)) |
+| `![Zur Umfrage](qr:https://… "https://…")` | QR-Code in PTA-Blau, 3 × 3 cm, mit „Abbildung n: …"; `{scale=0.5}` nach dem Bild halbiert ihn (siehe [QR-Codes](#qr-codes)) |
+| `![Porträt](images/foto.jpg){.round}`, `{.grey}`, `{scale=0.5}` | rundes Bild, Graustufenbild, halbe Größe (siehe [Bildausschnitt und Bildstile](#bildausschnitt-und-bildstile)) |
 | `::: timeline` mit `- 2026-03: Text` | Zeitstrahl als Bild in Satzspiegelbreite (siehe [Zeitstrahl und Projektplan](#zeitstrahl-und-projektplan)) |
 | `::: gantt` mit Tabelle Vorgang, Start, Ende (, Wer) | Projektplan als Tabelle mit schattierten Monats-/Wochenspalten |
 | `::: steps` mit einem `###` je Schritt | Schrittfolge als Pfeile, Bild in Satzspiegelbreite (siehe [Schrittfolge, Bewertung und Risiken](#schrittfolge-bewertung-und-risiken)) |
@@ -192,7 +193,8 @@ Einleitender Satz.              ← Textebene „Einleitungstext"
   davor steht oben, Text danach unten. Ein fetter Absatz direkt vor der Tabelle wird ihre
   Titelzeile.
 - **Ein Bild mit Text** kommt auf das Layout „Titel, Text und Bild 01", ein Bild allein auf
-  „Titel und Bild 01" — das Bild wird auf den Rahmen zugeschnitten. Ein QR-Code
+  „Titel und Bild 01" — das Bild wird auf den Rahmen zugeschnitten, um die Mitte oder den
+  Punkt aus `{focus=…}` (siehe [Bildausschnitt und Bildstile](#bildausschnitt-und-bildstile)). Ein QR-Code
   (`![…](qr:https://…)`) wird dagegen eingepasst, nie beschnitten (siehe [QR-Codes](#qr-codes)).
 - **Bestimmtes Layout:** `## Folie {layout="Titel und Text (zweispaltig)"}`. Der Inhalt wird an
   Zeilen `---` auf die Textfelder verteilt (links, rechts). Der Name muss genau stimmen; bei einem
@@ -438,8 +440,8 @@ Gut für die letzte Inhaltsfolie einer Schulung (Umfrage, Unterlagen) oder einen
 den Link als Titel in `"…"`: in Word wird er die Beschriftung und ist so auch gedruckt lesbar.
 Außer Links gehen `mailto:…`, `tel:…`, ein WLAN-Zugang (`<qr:WIFI:T:WPA;S:Netz;P:Kennwort;;>`)
 oder kurzer Text, höchstens 1 000 Zeichen. In Word ist der Code 3 × 3 cm groß, auf Folien füllt
-er den Bildrahmen (eingepasst, nicht beschnitten); `scale=0.5` im Titel halbiert ihn,
-`scale=2` verdoppelt ihn in Word. Liest man das Dokument wieder nach Markdown ein, ist der
+er den Bildrahmen (eingepasst, nicht beschnitten); `{scale=0.5}` direkt nach dem Bild halbiert
+ihn, `{scale=2}` verdoppelt ihn in Word (`scale=0.5` im Titel geht noch bis 2027-11, mit Hinweis). Liest man das Dokument wieder nach Markdown ein, ist der
 QR-Code ein gewöhnliches Bild.
 
 ### Zeitstrahl und Projektplan
@@ -568,6 +570,34 @@ Eine KI (z. B. Claude Code im geklonten Repo) kann die Markdown-Dateien für dic
 die Dokumente erzeugen. Sag ihr, sie soll zuerst [ki-anleitung.md](ki-anleitung.md) lesen —
 `AGENTS.md` verweist sie ohnehin dorthin.
 
+### Bildausschnitt und Bildstile
+
+Geschweifte Klammern **direkt** nach einem Bild (ohne Leerzeichen) sagen, welcher Teil im
+Bildrahmen einer Folie bleibt und wie das Bild aussieht — statt es vorher in einem Bildprogramm
+zuzuschneiden:
+
+```markdown
+![Team beim Workshop](images/workshop.jpg){focus=top}
+![Erika Mustermann](images/erika.jpg){.round focus=50%,30%}
+![Architekturbild](images/architektur.png){fit=contain}
+![Archivfoto](images/alt.jpg){.grey scale=0.5}
+```
+
+- **`focus=`** `top`, `bottom`, `left`, `right`, `center` (Standard) oder ein Punkt `x%,y%`
+  (von links, von oben): der Bildrahmen der Folie schneidet so ab, dass dieser Teil sichtbar
+  bleibt. Bei Fotos mit Personen den Kopf in den Fokus nehmen (`focus=top` oder z. B.
+  `focus=50%,30%`).
+- **`fit=contain`** zeigt das ganze Bild im Rahmen, ohne Beschnitt (der Rest bleibt weiß) — gut
+  für Grafiken und Screenshots.
+- **`.round`** macht ein rundes Bild um den Fokus (Kontaktfotos), **`.grey`** ein Graustufenbild,
+  **`scale=0.5`** die halbe Größe. Mehrere Angaben stehen in einer Klammer, durch Leerzeichen
+  getrennt.
+- **Word und PDF** schneiden nie: `focus` und `fit` bleiben dort wirkungslos, `.round`, `.grey`
+  und `scale` wirken in allen Formaten.
+- Ein Tippfehler (`{.shadow}`, `{focus=oben}`) ist ein Fehler mit Zeile und den gültigen Werten.
+  Liest man das Dokument wieder nach Markdown ein, kommen die Angaben nicht zurück (das Bild ist
+  dann schon grau bzw. rund) — nur `.round` aus PowerPoint.
+
 ## 8. Wenn etwas schiefgeht
 
 Fehler im Dokument melden sich als `DocumentConversionError` mit einem Satz, der sagt, was zu
@@ -579,6 +609,8 @@ Fehler im Dokument melden sich als `DocumentConversionError` mit einem Satz, der
   `images/` oder der Pfad ist falsch geschrieben (für einen QR-Code `qr:` davor schreiben).
 - `Line 12: The QR code has 1210 characters, more than 1000` → kürzeren Link nehmen;
   `'scale=0' is no scale` → eine Zahl über 0 und höchstens 5 schreiben.
+- `Line 12: Unknown image attribute '.shadow' in '{.shadow}'. Valid attributes: …` bzw.
+  `'focus=oben' … is no focus` → einen der genannten Werte schreiben (`focus=top`).
 - `Line 12: 'Mai 2026' is no date. Write a date as …` → Termin wie `2026-05` schreiben;
   `… has 1 to 12 tasks, not 14; split …` → Plan auf zwei `::: gantt` aufteilen;
   `… has 53 columns (woche), 24 at most …` → `raster=monat` nehmen.
@@ -606,7 +638,8 @@ Hinweise sind keine Fehler, aber fast immer ein Grund, das Markdown zu ändern: 
 „(Forts.)"-Folie heißt meist zu viel Inhalt — besser selbst auf zwei Folien mit eigenen Titeln
 aufteilen. Rohes HTML wird weggelassen, `mermaid`-Blöcke erscheinen ohne mermaid-cli und in Word als
 Code (der Hinweis sagt, was fehlt), beschnittene oder stark vergrößerte Bilder besser in passender Größe und passenden
-Proportionen ablegen. `--strict` lässt den Befehl bei Hinweisen wie bei Fehlern mit Code 1
+Proportionen ablegen oder mit `{focus=…}` den sichtbaren Teil wählen. `scale=0.5` im Bildtitel
+meldet `image-scale-in-title`: als `{scale=0.5}` hinter das Bild schreiben. `--strict` lässt den Befehl bei Hinweisen wie bei Fehlern mit Code 1
 enden. Alle Codes: [verwendung.md](verwendung.md#hinweise-generationresult).
 
 Word fragt beim Öffnen eines Dokuments mit Inhaltsverzeichnis, ob Felder aktualisiert werden

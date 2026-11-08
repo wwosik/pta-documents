@@ -429,20 +429,26 @@ class DeckWriter:
     def fill_picture(
         self, slide: PptxSlide, idx: int, image: Image, where: Slide, alone_hint: bool = True
     ) -> None:
-        """The image in a picture placeholder, which crops it to fill the placeholder (a QR code
-        is fitted instead); a note about cropping suggests a slide of its own unless
+        """The image in a picture placeholder, which crops it around its focus to fill the
+        placeholder (``{fit=contain}`` and a QR code are fitted instead, ``{.round}`` is a
+        circle, E15-S04); a note about cropping suggests a slide of its own unless
         ``alone_hint`` is False."""
         resource = image.resource
         placeholder = self.placeholder(slide, idx)
         picture = placeholder.insert_picture(io.BytesIO(resource.content))
         picture._element.nvPicPr.cNvPr.set("descr", image.alt)
         visuals.attach_svg(picture, image)
-        if image.fit:
+        if image.round:
+            visuals.round_picture(picture, image)
+        elif image.fit:
             visuals.fit_picture(picture, image)
+        else:
+            visuals.crop_picture(picture, image)
         visible_x = 1.0 - float(picture.crop_left) - float(picture.crop_right)
         visible_y = 1.0 - float(picture.crop_top) - float(picture.crop_bottom)
         lost = 1.0 - visible_x * visible_y
-        if lost > MAX_CROPPED:
+        # A round picture is cropped to a square on purpose.
+        if lost > MAX_CROPPED and not image.round:
             ratio = int(picture.width) / int(picture.height)
             other = (
                 ""
@@ -450,12 +456,18 @@ class DeckWriter:
                 else f", or put it alone on a slide, which gets the layout "
                 f"'{design.LAYOUTS.title_image}'"
             )
+            focus = (
+                " Choose the part that stays with {focus=top} (or bottom, left, right, x%,y%) "
+                "after the image, or show all of it with {fit=contain}."
+                if image.focus is None
+                else ""
+            )
             self.notes.add(
                 NoteCodes.IMAGE_CROPPED,
                 image.line,
                 f"The image '{resource.path}' is cropped to its placeholder and loses "
                 f"{round(lost * 100)} % of its area. Crop it yourself to the placeholder's "
-                f"proportions (width : height = {ratio:.2f} : 1){other}.",
+                f"proportions (width : height = {ratio:.2f} : 1){other}.{focus}",
             )
         pixels_x, _ = visuals.picture_size(image)
         if visible_x > 0:
