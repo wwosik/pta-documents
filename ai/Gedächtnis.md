@@ -168,3 +168,10 @@ eigenen Formatvorlagen. Bedienung:
   `<pta:codeLanguage pta:val="…"/>` im `w:pPr` (Namensraum `urn:pta-documents:wordprocessingml`,
   `declare_own_namespace` deklariert ihn am Wurzelelement und trägt ihn in `mc:Ignorable` ein —
   Word öffnet sonst nicht); der DOCX-Konverter macht aus „Code"-Absätzen wieder Zäune.
+- **Prüfbefehl und Stilregeln** (E08-S02): `generation/common/check.check(document, format,
+  CheckOptions)` erzeugt probeweise in einen `BytesIO` (Fehler/Hinweise = die von `generate`) und
+  hängt die Stilhinweise aus `style_rules.style_notes` an (Codes `StyleCodes`, `style-…`, nicht in
+  `NoteCodes`). Neue Stilregeln dort eintragen, in `StyleCodes.ALL` und in `docs/verwendung.md`
+  (Test prüft das). Front-Matter-Schlüssel `pruefung` (`Keys.CHECK`) steht in `VALID_KEYS` beider
+  Generatoren, die ihn ignorieren — ein neuer Generator (PDF) muss ihn auch annehmen. `samples/`
+  muss `check --strict` bestehen (`test_the_samples_pass_the_check_without_notes`).

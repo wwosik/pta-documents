@@ -43,6 +43,7 @@ VALID_KEYS: Final = (
     Keys.LANGUAGE,
     Keys.TYPOGRAPHY,
     Keys.HIGHLIGHT,
+    Keys.CHECK,
     Keys.TOC,
 )
 TEMPLATE_COMPANY: Final = "PTA IT-Beratung"

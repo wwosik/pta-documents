@@ -55,6 +55,31 @@ Markdown-Datei angegeben: `![Beschreibung](images/foto.jpg "Bildunterschrift")`.
 
 Ein Fehler in einer Datei wird gemeldet, die anderen Dateien werden trotzdem erzeugt.
 
+### Prüfen, bevor man erzeugt
+
+```sh
+./run.sh check documents/statusbericht-q3
+```
+
+schreibt nichts, meldet aber dieselben Fehler und Hinweise wie `generate` und dazu
+**Stilhinweise** nach den Regeln der PTA-Musterfolien — zu viele Punkte oder Wörter auf einer
+Folie, Fließtext in Aufzählungen, gemischte Satzzeichen am Ende der Punkte, zu lange Folientitel,
+Bilder ohne Alt-Text, in Word Überschriften mit eigener Nummer; liegt eine `QUELLEN.md` im
+Ordner, auch Bilder ohne Urheber. Darunter steht eine kurze Statistik:
+
+```
+OK documents/statusbericht-q3/statusbericht-praesentation.md
+  - line 14: The slide "Kosten" has 95 words, more than 80. Shorten it, split it, or move details into the speaker notes (::: notes). [style-words]
+  12 slides: 1 title, 3 chapters, 7 content (0 continued), 1 closing
+  480 words, per content slide 20/45/95 (min/median/max), 0 in notes; about 14 minutes (…)
+```
+
+Die Dauer ist bewusst grob (2 Minuten je Inhaltsfolie) — sie soll 60 Folien für 30 Minuten
+auffallen lassen. Für Word gibt es Wörter, Tabellen, Abbildungen und eine grobe Seitenzahl.
+Eine Regel, die für eine Datei nicht passt, schaltet `pruefung: style-words` im Kopf ab
+(`pruefung: aus` alle) oder `--skip style-words` für einen Lauf. Alle Codes und Grenzen:
+[verwendung.md](verwendung.md#prüfen-ohne-erzeugen-check).
+
 ## 3. Der Kopf des Dokuments (Front Matter)
 
 Ganz oben, zwischen zwei Zeilen `---`, stehen Angaben zum Dokument — je Zeile `schlüssel: wert`.
@@ -84,6 +109,7 @@ datum: 2026-11-06
 | `titelfolie` | | ✓ | `bild-02` (Standard), `bild-01`, `branchen`, `ohne-bild` |
 | `typografie` | ✓ | ✓ | `ja` (Standard) oder `nein`: Anführungszeichen, Gedankenstriche, geschützte Leerzeichen (siehe unten) |
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) oder `nein`: Codeblöcke mit Sprache farbig |
+| `pruefung` | ✓ | ✓ | nur für `./run.sh check`: `aus` schaltet die Stilregeln ab, `style-words, style-title` nur diese |
 
 Ein falscher Schlüssel oder Wert bricht mit einer Meldung ab, die die gültigen Werte nennt.
 

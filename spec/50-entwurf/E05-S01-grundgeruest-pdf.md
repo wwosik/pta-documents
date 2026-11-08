@@ -101,3 +101,6 @@ reportlab zeichnen und das Ergebnis mit pikepdf zu PDF/A-2b machen. Noch ohne Ma
 - (2026-11-07, E02-S04) `PdfOptions.code_block_renderers`/`image_converters` wie in
   `DocxOptions`: `field(default_factory=default_renderers)` bzw. `default_converters`; Fences
   über `generation/common/code_blocks.draw`, Bilder über `images.convert_image(…, 2 * scale, …)`.
+- (2026-11-08, E08-S02) `VALID_KEYS` des PDF-Generators braucht `Keys.CHECK` (`pruefung`), wie
+  DOCX und PPTX; `generation/common/check.check` nimmt bisher nur DOCX/PPTX — PDF dort ergänzen
+  (Probelauf, `GenerationResult.pages` als Seitenzahl statt der Schätzung).

@@ -7,6 +7,7 @@ ort: Hamburg
 datum: 2026-11-06
 fusszeile: Funktionsübersicht
 sprache: de
+pruefung: style-bullets, style-words
 ---
 Text vor der ersten Überschrift wird ignoriert.
 

@@ -14,7 +14,10 @@ Zeigt alles, was die Generatoren heute können — jede Datei deckt einen Bereic
 ./run.sh generate samples/funktionen --out documents/funktionen
 ```
 
-Alle Dateien erzeugen ohne Hinweise (`./run.sh generate-samples funktionen` endet mit Code 0).
+Alle Dateien erzeugen ohne Hinweise (`./run.sh generate-samples funktionen` endet mit Code 0)
+und bestehen `./run.sh check samples/funktionen --strict`; die Folie „Viel Text wird
+verkleinert" ist absichtlich zu voll, darum schaltet `funktionen-praesentation.md` dafür
+`pruefung: style-bullets, style-words` ab.
 Geteilte „(Forts.)"-Folien zeigt die Funktionsübersicht deshalb nicht; was dabei gemeldet wird,
 steht in [docs/anleitung.md](../../docs/anleitung.md), Abschnitt 8.
 

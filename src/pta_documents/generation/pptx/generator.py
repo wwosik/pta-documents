@@ -32,6 +32,7 @@ VALID_KEYS: Final = (
     Keys.LANGUAGE,
     Keys.TYPOGRAPHY,
     Keys.HIGHLIGHT,
+    Keys.CHECK,
     Keys.FOOTER,
     Keys.TITLE_SLIDE,
 )

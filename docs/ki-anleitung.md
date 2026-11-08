@@ -14,7 +14,13 @@ Dateien nach Markdown lesen. Wer **an** der Bibliothek entwickelt, folgt stattde
 2. **Das Design kommt von den Vorlagen.** Keine Farben, Schriften, Größen oder eigenen Layouts
    ins Markdown schreiben — es gibt dafür keine Syntax, und das ist Absicht. Das Ergebnis ist
    immer im PTA-Design.
-3. **Erzeugen und prüfen:** `./run.sh generate documents/<thema>`; der Befehl endet mit
+3. **Erst prüfen, dann erzeugen:** `./run.sh check documents/<thema>` schreibt nichts und meldet
+   dieselben Fehler und Hinweise wie `generate`, dazu Stilhinweise (`style-…`: zu volle Folien,
+   Fließtext in Punkten, gemischte Satzzeichen, lange Titel, Bilder ohne Alt-Text oder Urheber,
+   Handnummern in Word-Überschriften) und eine Statistik (Folien, Wörter je Folie, Dauer);
+   `--strict` endet bei Hinweisen mit Code 1. Stilhinweise beheben; passt eine Regel bewusst
+   nicht, im Front Matter `pruefung: <code>, …` setzen und das dem Anwender sagen.
+   Dann `./run.sh generate documents/<thema>`; der Befehl endet mit
    Code ≠ 0, wenn eine Datei einen Fehler hat. Fehlermeldungen (`ERROR <datei>: <grund>`) sind für
    den Schreiber formuliert — den Grund lesen, das Markdown korrigieren, neu erzeugen.
    **Hinweise lesen:** unter `wrote <datei>` stehen eingerückt die Hinweise
@@ -61,6 +67,7 @@ YAML, keine Listen). Schlüssel und Werte sind **deutsch**; `ja`/`nein`; Datum `
 | `titelfolie` | – | ✓ | `bild-02` (Standard) · `bild-01` · `branchen` · `ohne-bild` |
 | `typografie` | ✓ | ✓ | `ja` (Standard) · `nein` — gerade Zeichen behalten |
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) · `nein` — Codeblöcke einfarbig |
+| `pruefung` | ✓ | ✓ | nur `check`: `aus` · Liste von `style-…`-Codes, die nicht geprüft werden |
 
 `firma`/`inhaltsverzeichnis` in einer Präsentation oder `fusszeile`/`titelfolie` in einem
 Word-Dokument sind Fehler.
@@ -229,6 +236,8 @@ nach den Regeln oben aufbereiten (Front Matter, `#`/`##`-Gliederung) und die Bil
 
 ## Checkliste vor der Übergabe
 
+- [ ] `./run.sh check documents/<thema> --strict` endet mit Code 0 (oder verbleibende Hinweise
+      sind begründet und dem Anwender genannt).
 - [ ] `./run.sh generate documents/<thema>` läuft ohne `ERROR` und möglichst ohne Hinweise
       (`--strict` endet dann mit Code 0); verbleibende Hinweise dem Anwender nennen.
 - [ ] Word: `titel` gesetzt (bei Deckblatt-Vorlagen), Kapitel mit `#`, keine Handnummern.

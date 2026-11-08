@@ -45,6 +45,7 @@ umgehen musste, ohne dass es ein Fehler ist, steht im Rückgabewert (siehe
 | `inhaltsverzeichnis` | `ja`, `nein` | Inhaltsverzeichnis nach dem Deckblatt (Word füllt es beim Öffnen) |
 | `typografie` | `ja` (Standard), `nein` | deutsche (bzw. englische) Typografie, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
 | `syntaxhervorhebung` | `ja` (Standard), `nein` | Codeblöcke mit Sprache farbig |
+| `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | nur für `./run.sh check`: Stilregeln abschalten, siehe [Prüfen ohne Erzeugen](#prüfen-ohne-erzeugen-check) |
 
 Zuordnung: `#`–`###` → „Überschrift 1–3" (nummeriert), tiefere → „Zwischenüberschrift";
 Absätze → „Standard"; Listen → „Aufzählungszeichen" bzw. „Listenabsatz"; Tabellen →
@@ -71,6 +72,7 @@ result.slides  # Zahl der erzeugten Folien
 | `fusszeile` | Text | Fußzeile „PTA – …" (sonst der Titel) |
 | `sprache` | `de`, `en` | `en`: englische Titelfolie mit englischem Logo, „(cont.)" statt „(Forts.)" |
 | `typografie`, `syntaxhervorhebung` | `ja` (Standard), `nein` | wie in Word, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
+| `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | wie in Word |
 
 Gliederung: erstes `#` = Titelfolie, weitere `#` = Trennfolie „01", „02" …,
 `# Text {.closing}` = Abschlussfolie, `##` = Folie. `## Titel {layout="Name"}` wählt ein
@@ -347,6 +349,48 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate` zeigt die
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;
 `./run.sh generate-samples` endet mit Code 1, sobald ein Beispiel Hinweise hat.
+
+## Prüfen ohne Erzeugen (`check`)
+
+```sh
+./run.sh check <datei-oder-ordner> [...] [--docx | --pptx] [--strict] [--skip <code>,…] [--sources] [--json]
+```
+
+prüft Markdown-Dateien, **ohne eine Datei zu schreiben**. Dateiauswahl und Formatwahl wie bei
+`generate`. Je Datei: `OK <datei>` bzw. `ERROR <datei>: <grund>`, dann die Hinweise
+(`  - line 12: … [code]`), dann zwei Zeilen Statistik. Exit-Code 1 bei Fehlern, mit `--strict`
+auch bei Hinweisen; `--json` gibt dasselbe als ein JSON-Objekt aus
+(`{"ok": …, "files": [{"file", "ok", "errors", "notes": [{"code", "line", "message"}], "stats"}]}`).
+
+Aus Python: `pta_documents.generation.common.check.check(document, format, CheckOptions(...))`
+→ `CheckResult(errors, notes, stats)`. Fehler und Hinweise stammen aus einem Probelauf des
+Generators in den Speicher — es sind also genau die von `generate`. Dazu kommen die
+**Stilhinweise** (`generation/common/style_rules.py`, Grenzen in `StyleLimits`), Code `style-…`:
+
+| `code` (`StyleCodes`) | Format | Wann |
+| --------------------- | ------ | ---- |
+| `style-bullets` (`BULLETS`) | PPTX | mehr als 7 Aufzählungspunkte auf einer `##`-Folie (alle Ebenen; die Agenda darf 8) oder ein Punkt mit mehr als 20 Wörtern („Fließtext in Aufzählungen") |
+| `style-words` (`WORDS`) | PPTX | mehr als 80 Wörter auf einer `##`-Folie (ohne Titel, Sprechernotizen und Codeblöcke) |
+| `style-punctuation` (`PUNCTUATION`) | PPTX, DOCX | die Punkte einer Liste enden mit verschiedenen Satzzeichen (`.`/`!`/`?` zählen gleich; eine Aufzählung `…;` `…;` `….` und ein Punkt mit `:` vor Unterpunkten sind erlaubt) |
+| `style-title` (`TITLE`) | PPTX | Folientitel über 60 Zeichen oder mit Punkt am Ende (nicht die Titelfolie, `{.quote}`, `{.interim}`) |
+| `style-image-source` (`IMAGE_SOURCE`) | PPTX, DOCX | Bild ohne Urheber/Quelle (`Foto:`, `Bild:`, `Quelle:`, `CC …`, `©`, `gemeinfrei` …) im Bildtitel; in PowerPoint auch irgendwo auf der Folie, in Word auch im Absatz des Bildes oder dem danach. Nur, wenn der Ordner der Datei eine `QUELLEN.md` hat oder mit `--sources` (`CheckOptions(sources=True)`); Kontaktfolien nie |
+| `style-alt-text` (`ALT_TEXT`) | PPTX, DOCX | Bild ohne Alt-Text (`![](…)`); E13-S03 erweitert die Barrierefreiheitsprüfung |
+| `style-heading-numbers` (`HEADING_NUMBERS`) | DOCX | `#`–`###` beginnt mit eigener Nummer (`1. Einleitung`, `2.3 Ziele`), obwohl Word nummeriert |
+
+Abschalten: `--skip style-words,style-title` (`CheckOptions(skip=…)`) oder im Front Matter
+`pruefung: aus` (alle Stilregeln) bzw. `pruefung: style-bullets, style-words` (nur diese). Ein
+unbekannter Code ist ein Fehler mit der Liste der Codes. Die Generatoren nehmen den Schlüssel an
+und ignorieren ihn.
+
+**Statistik** (`CheckResult.stats`, Faustregeln, als solche ausgewiesen):
+
+- PowerPoint (`DeckStats`, gezählt am Probe-Deck): Folien gesamt, Titel-, Kapitel-, Inhalts-
+  (davon „(Forts.)") und Abschlussfolien; Wörter gesamt (ohne Titel und Fußzeilen) und je
+  Inhaltsfolie min/median/max; Wörter der Sprechernotizen; Dauer `minutes` = 2 Minuten je
+  Inhaltsfolie plus Notizen bei 120 Wörtern je Minute.
+- Word (`ReportStats`, gezählt am Markdown): Wörter (ohne Code und Notizen), Überschriften,
+  Tabellen, Abbildungen; `pages` = Wörter / 350 plus eine halbe Seite je Tabelle und Abbildung —
+  die echte Seitenzahl kennt erst Word beim Öffnen.
 
 ## Beliebiges Dokument → Markdown
 
