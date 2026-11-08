@@ -178,6 +178,13 @@ weil ihm vertraut wird.
   setzt `Slide.transition` (kw-only, wie `notes`); `new_slide` schreibt es sofort nach
   `p:clrMapOvr` (`animations.set_transition`). Morph ist `mc:AlternateContent` (p159, Fallback
   Fade) — wer `p:transition` sucht, muss auch dort schauen.
+- **Szenen** (E09-S04): `::: scene` wird **roh** gelesen — eine Kernregel des gemeinsamen Parsers
+  hängt jedem Container seine Quellzeilen an (`markdown.parser.SOURCE_LINES` in `meta`).
+  Modell/Leser `generation/common/scene.py` (Raster 160 × 67 über `CONTENT_AREA`, `UNIT_EMU`
+  70 200), Farben `scene_colors.py` (nur `design.colors`), `layout_syntax.check` prüft Platz und
+  Grammatik in allen Formaten. PPTX: `SceneSlide` → `scene_writer` (Formen `!!name`, Morph über
+  E09-S03, `step` = `Click(n)`); PDF: `drawing/scene.draw` → `SceneFlowable` (Bilder zwischen den
+  Items); Word: weg mit `scene-dropped`. Ein `p:sp` ohne `txBody` ist für Builds `Target.OTHER`.
 - **Formaterkennung und Registry** (E07-S01): `pta_documents.conversions` exportiert `detect`,
   `ConverterRegistry`, `DocumentConverter` (Protocol), `ConversionOptions`, `convert`. Neue
   Konverter der Bibliothek in `ConverterRegistry.default()` (`conversions/registry.py`)

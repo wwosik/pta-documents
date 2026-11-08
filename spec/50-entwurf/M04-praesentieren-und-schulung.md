@@ -16,7 +16,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E12-S03](../60-prüfung/E12-S03-kennzeichnung-word-und-pdf.md) | Kennzeichnung „Vertraulich" und „Entwurf" in Word und PDF | in Prüfung |
 | [E09-S02](../60-prüfung/E09-S02-builds.md) | Builds: Inhalte erscheinen Klick für Klick | in Prüfung |
 | [E09-S03](../60-prüfung/E09-S03-uebergaenge.md) | Folienübergänge | in Prüfung |
-| [E09-S04](../55-in-arbeit/docs-2/E09-S04-szenen.md) | Szenen: benannte Formen, die Morph bewegt | in Bearbeitung (docs-2) |
+| [E09-S04](../60-prüfung/E09-S04-szenen.md) | Szenen: benannte Formen, die Morph bewegt | in Prüfung |
 | [E10-S01](E10-S01-html-deck-generator.md) | HTML-Deck-Generator | Entwurf |
 | [E10-S02](E10-S02-vorschau-als-bilder.md) | Vorschau als Bilder | Entwurf |
 | [E16-S01](E16-S01-zielgruppenfassungen.md) | Zielgruppenfassungen | Entwurf |

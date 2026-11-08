@@ -73,6 +73,10 @@ class NoteCodes:
     """``scale=N`` in the title of an image (E11-S04); it still works until 2027-11 but belongs in
     the braces after the image: ``![…](a.png){scale=0.5}`` (E15-S04) (PPTX, DOCX)."""
 
+    SCENE_DROPPED: Final = "scene-dropped"
+    """A scene (``::: scene``, E09-S04) left out of Word, which has no slides to move shapes
+    on; the PDF shows it as a still picture (DOCX)."""
+
     ALL: Final = (
         SLIDE_SPLIT,
         SLIDE_OVERFULL,
@@ -84,6 +88,7 @@ class NoteCodes:
         NOTES_DROPPED,
         CODE_LANGUAGE_UNKNOWN,
         IMAGE_SCALE_IN_TITLE,
+        SCENE_DROPPED,
     )
     """Every code, in the order the guides list them."""
 

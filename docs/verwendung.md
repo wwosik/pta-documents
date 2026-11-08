@@ -412,6 +412,72 @@ also vor `p:timing` (Schemareihenfolge, sonst Reparatur).
 
 `none` schreibt nichts. Der PPTX-Konverter liest keine Übergänge.
 
+### Szenen (E09-S04)
+
+Ein `::: scene` unter einem `##` legt benannte Formen an feste Stellen der Folie; trägt die
+nächste Szenenfolie `{uebergang="morph"}`, bewegt PowerPoint die gleichnamigen Formen von der
+einen Lage in die andere (verschieben, vergrößern, drehen, umfärben, ein- und ausblenden):
+
+```markdown
+## Drei Orte {uebergang="morph"}
+
+::: scene
+- sp: box   10,20  36x14  "SharePoint"
+- od: round 62,30  36x14  "OneDrive"              rotate=-3
+- q:  pill  45,52  70x9   "Welche Version gilt?"  fill=warning step=1
+:::
+
+## Ein Ort {uebergang="morph"}
+
+::: scene
+- sp: box   50,20  60x18  "Ein Ablageort"  fill=primary text=background bold
+- od: round 50,20  60x18                   opacity=0
+- a:  arrow 80,40  0x14                    step=1
+:::
+```
+
+- **Eine Form je Zeile:** `name: art x,y bxh "Text" schlüssel=wert …`, wahlweise als
+  Listenpunkt (`- `), damit das Markdown anderswo als Liste lesbar bleibt. Leerzeilen und
+  `<!-- Kommentare -->` zählen nicht. Die Zeilen werden roh gelesen
+  (`markdown.parser.SOURCE_LINES` am Container-Token), nicht als Markdown.
+- **Raster:** 160 × 67 quadratische Einheiten über die Inhaltsfläche von `Nur Titel`
+  (`design.slides.CONTENT_AREA`, eine Einheit 0,195 cm = `scene.UNIT_EMU` 70 200 EMU), von ihrer
+  oberen linken Ecke. Zahlen dürfen Nachkommastellen haben; eine Form, deren Kasten über das
+  Raster hinausreicht, ist ein Fehler (`… reaches outside the grid of 160 × 67 units …`).
+  Der Titel steht darüber, wo das Layout ihn hinsetzt.
+- **Arten:** `box`, `round` (runde Ecken), `pill`, `circle`, `text` (ohne Kasten, linksbündig),
+  `line` und `arrow` (von `x,y` nach `x+b,y+h`; `b` und `h` dürfen negativ oder 0 sein), `image`
+  (`image=<pfad>` aus den Ressourcen des Dokuments, in den Kasten **eingepasst**, nie
+  beschnitten; der Text ist der Alternativtext). Text steht in Kästen waagerecht und
+  senkrecht mittig, in Segoe UI Light (fett: Segoe UI), Standardgröße 16 pt.
+- **Attribute:** `fill`, `line`, `text` (Farben), `rotate` (Grad, im Uhrzeigersinn), `opacity`
+  (0–1), `size` (Schriftgröße in pt), `bold`, `solid` (Kästen: Farbfüllung voll statt weich),
+  `step` (der Klick, auf dem die Form erscheint; 0 = mit der Folie — ein Fade wie die Builds).
+- **Farben** (`generation/common/scene_colors.py`) nur aus der PTA-Palette: `primary` (PTA-Blau),
+  `text` (Folientext), `muted` und `line` (dunkles Grau), `border` (mittleres Grau), `surface`
+  (helles Grau der PTA-Flächen), `background` (Weiß), `accent1`–`accent6` (Theme-Akzente),
+  `success`, `info`, `warning`, `danger`, `neutral` (Signalfarben) — dazu `#RRGGBB` aus dem
+  Markdown oder `none`. Kästen sind standardmäßig `surface` mit `border`-Linie, Linien und
+  Pfeile `line`, Text `text` (auf `.dark`-Folien freier Text Weiß). Eine Füllung in einer Farbe
+  außer PTA-Blau ist **weich**: die Farbe zu 12 % auf Weiß, mit der Farbe als Linie und Text in
+  `text`; `solid` hält sie voll.
+- **Eine Szenenfolie** ist ein `##` mit genau einem `::: scene` und sonst nur `::: notes` (und
+  HTML-Kommentaren); das `##` nimmt `.dark`, `kicker="…"`, `uebergang="…"` und höchstens
+  `layout="Nur Titel"`. Eine Szene unter `#`, vor der ersten Überschrift, in einem anderen
+  Container, eine zweite Szene, weiterer Inhalt, eine PTA-Folienart, ein anderes Layout oder ein
+  Blockmarker vor der Szene sind Fehler. `layout_syntax.check` prüft das und liest jede Szene
+  (`scene.check_place`, `scene.read_scene`), in **allen** Formaten mit Zeile:
+  `Line 14: Scene shape '- b: blob 0,0 1x1': unknown kind 'blob'. Valid kinds: box, round, …`.
+- **PowerPoint** (`generation/pptx/scene_writer.py`): Folie auf `Nur Titel` (Titel, Kicker,
+  dunkler Hintergrund wie Flow-Folien), je Form ein `p:sp` (`rect`, `roundRect` mit `adj`,
+  `ellipse`, `line` mit `tailEnd` für Pfeile) bzw. ein `p:pic`, benannt `!!name` — so paart Morph
+  die Formen. Deckkraft ist `a:alpha` (Bilder `a:alphaModFix`), Drehung `rot`.
+- **PDF** (`drawing/scene.py`, `StoryBuilder.scene`): die Szene als Standbild in Textbreite,
+  alle Schritte sichtbar, auf Weiß bzw. PTA-Dunkelblau mit dünnem Rahmen; Deckkraft wird auf
+  den Grund gemischt (PDF/A), unsichtbare Formen (`opacity=0`) fehlen, Text steht ungedreht in
+  einer Zeile. **Word** lässt die Szene weg und meldet `scene-dropped`.
+- Der PPTX-Konverter liest die Texte der Formen als Absätze zurück.
+
 ## Folien-Syntax (gemeinsam für Word und PowerPoint)
 
 Beide Generatoren lesen und prüfen dieselbe Folien-Syntax aus DocLibs, bevor sie schreiben
@@ -422,7 +488,7 @@ Front Matter mitgezählt).
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
 | Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`, `uebergang="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, `uebergang="…"` (siehe [Folienübergänge](#folienübergänge-e09-s03)), PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
-| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle; PDF wie Word, die Grafiken als Vektoren |
+| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)); `scene` (siehe [Szenen](#szenen-e09-s04)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); `scene` als benannte Formen auf `Nur Titel`; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle, `scene` entfällt; PDF wie Word, die Grafiken als Vektoren, `scene` als Standbild |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
 | Zeile aus nur `{.build}`, `{.frag}`, `{.exit}`, `{.emphasize}` vor einem Block | `{.build}`/`{.frag}` mit `=fade`, `=appear`, `=fly`, `=wipe` (siehe [Builds](#builds-e09-s02)) | PowerPoint: der Block erscheint (verschwindet, wird blau) Klick für Klick; Word/PDF: die Zeile entfällt |
@@ -1457,6 +1523,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01), PDF | Sprechernotizen fallen im Word-Dokument bzw. PDF weg |
 | `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02), PDF | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |
 | `image-scale-in-title` (`IMAGE_SCALE_IN_TITLE`) | PPTX, DOCX (E15-S04) | `scale=N` steht im Bildtitel; wirkt bis 2027-11, gehört aber als `{scale=N}` hinter das Bild |
+| `scene-dropped` (`SCENE_DROPPED`) | DOCX (E09-S04) | eine Szene (`::: scene`) fällt im Word-Dokument weg; PowerPoint zeigt sie als Formen, das PDF als Standbild |
 
 Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate` zeigt die
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;

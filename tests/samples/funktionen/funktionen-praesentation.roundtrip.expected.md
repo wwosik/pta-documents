@@ -1469,6 +1469,64 @@ Diese Folie schiebt die vorige nach oben weg. Die anderen Folien des Kapitels bl
 
 :::
 
+## Drei Ablageorte
+
+SharePoint
+
+OneDrive
+
+E-Mail
+
+Welche Version gilt?
+
+Szenen: benannte Formen auf dem Raster
+
+:::: notes
+
+Eine Szene legt benannte Formen auf ein Raster von 160 × 67 Einheiten über der Inhaltsfläche. Die Pille erscheint beim ersten Klick.
+
+```
+## Drei Ablageorte {uebergang="morph"}
+
+::: scene
+- sp: box    6,8    40x14  "SharePoint"
+- od: round  60,18  40x14  "OneDrive"  rotate=-3
+- mail: circle 116,6  24x24  "E-Mail"  fill=accent3
+- q: pill   35,46  90x10  "Welche Version gilt?"  fill=warning step=1
+- hint: text 4,60  80x6  "Szenen: benannte Formen auf dem Raster"  text=muted size=12
+:::
+```
+
+::::
+
+## Ein Ablageort
+
+Ein Ablageort
+
+![Symbol](images/image23.png)
+
+Gilt immer
+
+:::: notes
+
+Mit uebergang="morph" bewegt PowerPoint die gleichnamigen Formen von der vorigen Folie hierher; opacity=0 lässt eine Form verschwinden.
+
+```
+## Ein Ablageort {uebergang="morph"}
+
+::: scene
+- sp: box    50,10  60x18  "Ein Ablageort"  fill=primary text=background bold
+- od: round  50,10  60x18  opacity=0
+- mail: circle 68,12  24x24  opacity=0
+- logo: image 124,4  30x30  "Symbol"  image=images/symbol.png
+- a: arrow  80,30  0x14  step=1
+- ok: pill   55,46  50x10  "Gilt immer"  fill=success solid text=background step=1
+- l: line   10,62  140x0  line=border
+:::
+```
+
+::::
+
 ## PTA-Folienarten
 
 11

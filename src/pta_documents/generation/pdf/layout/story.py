@@ -39,6 +39,7 @@ from pta_documents.design.variants import (
     WordVariant,
 )
 from pta_documents.drawing import riskmatrix as risk_drawing
+from pta_documents.drawing import scene as scene_drawing
 from pta_documents.drawing import schedule as schedule_drawing
 from pta_documents.drawing import steps as steps_drawing
 from pta_documents.drawing.model import (
@@ -62,6 +63,7 @@ from pta_documents.generation.common import (
     risks,
     schedule,
 )
+from pta_documents.generation.common import scene as scene_model
 from pta_documents.generation.common import steps as steps_model
 from pta_documents.generation.common.images import (
     ImageConverter,
@@ -76,7 +78,11 @@ from pta_documents.generation.common.renderers import (
 )
 from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.pdf.layout import flowables as fl
-from pta_documents.generation.pdf.layout.drawings import DrawingFlowable
+from pta_documents.generation.pdf.layout.drawings import (
+    DrawingFlowable,
+    SceneFlowable,
+    SceneImage,
+)
 from pta_documents.generation.pdf.layout.fonts import (
     PdfFonts,
     Replacement,
@@ -431,6 +437,9 @@ class StoryBuilder:
             return end
         if name == layout_syntax.RISK_MATRIX:
             self.risk_matrix(risks.read_risk_matrix(tokens, i, FORMAT, offset))
+            return end
+        if name == layout_syntax.SCENE:
+            self.scene(tokens, i)
             return end
         if name in (layout_syntax.CONCLUSION, layout_syntax.COMMENT):
             label = (
@@ -861,6 +870,34 @@ class StoryBuilder:
         """``resource`` at its natural size (pixels at 96 dpi, or ``size_pt``) times ``scale``,
         shrunk to ``max_width`` and to the share of the page Word gives figures, never
         enlarged."""
+        content, (width_px, height_px) = self.readable(resource, source, line)
+        width = width_px * POINTS_PER_PIXEL * scale
+        height = height_px * POINTS_PER_PIXEL * scale
+        if size_pt is not None:
+            width, height = size_pt[0] * scale, size_pt[1] * scale
+        highest = min(max_height, self.context.frame_height * word.FIGURE_HEIGHT_SHARE)
+        shrink = min(1.0, max_width / width, highest / height) if width and height else 1.0
+        if scale * shrink > MAX_ENLARGEMENT:
+            self.notes.add(
+                NoteCodes.IMAGE_ENLARGED,
+                line,
+                f"The image '{source}' is shown at {scale * shrink:.1f} times its size and may "
+                "look blurred. Use a larger image.",
+            )
+        normal = self.styles.normal.style
+        return fl.picture(
+            io.BytesIO(content),
+            width * shrink,
+            height * shrink,
+            float(normal.spaceBefore),
+            float(normal.spaceAfter),
+        )
+
+    def readable(
+        self, resource: DocumentResource, source: str, line: int | None
+    ) -> tuple[bytes, tuple[float, float]]:
+        """The image as PNG or JPEG the PDF takes, and its natural size in pixels (of the
+        original for a converted image)."""
         where = f" (line {line})" if line else ""
         natural: tuple[float, float] | None = None
         content = resource.content
@@ -885,28 +922,7 @@ class StoryBuilder:
             raise DocumentConversionError(
                 FORMAT, f"The image '{source}'{where} cannot be read: {error}"
             ) from error
-        width_px, height_px = natural or (float(pixels_x), float(pixels_y))
-        width = width_px * POINTS_PER_PIXEL * scale
-        height = height_px * POINTS_PER_PIXEL * scale
-        if size_pt is not None:
-            width, height = size_pt[0] * scale, size_pt[1] * scale
-        highest = min(max_height, self.context.frame_height * word.FIGURE_HEIGHT_SHARE)
-        shrink = min(1.0, max_width / width, highest / height) if width and height else 1.0
-        if scale * shrink > MAX_ENLARGEMENT:
-            self.notes.add(
-                NoteCodes.IMAGE_ENLARGED,
-                line,
-                f"The image '{source}' is shown at {scale * shrink:.1f} times its size and may "
-                "look blurred. Use a larger image.",
-            )
-        normal = self.styles.normal.style
-        return fl.picture(
-            io.BytesIO(content),
-            width * shrink,
-            height * shrink,
-            float(normal.spaceBefore),
-            float(normal.spaceAfter),
-        )
+        return content, natural or (float(pixels_x), float(pixels_y))
 
     def _keep_height(self) -> float:
         """The height of the headings right before the block being laid out, which it has to
@@ -991,6 +1007,35 @@ class StoryBuilder:
             space_before=float(normal.spaceBefore),
             space_after=float(normal.spaceAfter),
             name=name,
+        )
+
+    def scene(self, tokens: list[Token], i: int) -> None:
+        """A ``::: scene`` (E09-S04) as a still picture of its slide, every step shown, as wide
+        as the text; on ``.dark`` slides on the dark ground."""
+        offset = self.settings.line_offset
+        find = self.document.find_resource
+        read = scene_model.read_scene(tokens, i, FORMAT, offset, find)
+        drawing, placed = scene_drawing.draw(read, scene_model.is_dark(tokens, i, FORMAT))
+        images: list[SceneImage] = []
+        for image in placed:
+            resource = image.shape.resource
+            if resource is None or image.shape.opacity == 0:
+                continue
+            content, natural = self.readable(resource, resource.path, image.shape.line)
+            box = (image.x, image.y, image.width, image.height)
+            images.append(SceneImage(image.index, content, natural, box, image.rotation))
+        room = self.context.frame_height - self._keep_height()
+        sized = self.drawing_flowable(drawing, layout_syntax.SCENE, room)
+        self.add(
+            SceneFlowable(
+                drawing,
+                images,
+                self.styles.fonts,
+                sized.factor / POINTS_PER_PIXEL,
+                space_before=sized.spaceBefore,
+                space_after=sized.spaceAfter,
+                name=layout_syntax.SCENE,
+            )
         )
 
     def drawing(self, drawing: Drawing, name: str) -> None:

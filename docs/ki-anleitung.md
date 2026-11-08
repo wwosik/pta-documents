@@ -191,6 +191,13 @@ Gliederung:
   (`# Kapitel {uebergang="fade"}`, gilt für alle Folien darunter); `{uebergang="…"}` an einem
   `##` nur für eine Folie, die etwas Besonderes zeigt. `none` schaltet ihn ab. `morph` wirkt nur
   in PowerPoint 2019/365 (sonst Überblenden). Ohne Bitte des Menschen keinen Übergang setzen.
+- **Szenen:** `::: scene` allein unter einem `##` (nur `::: notes` daneben), eine Form je Zeile
+  `- name: art x,y bxh "Text" attr=wert` (Arten `box`, `round`, `pill`, `circle`, `text`, `line`,
+  `arrow`, `image`; Raster 160 × 67 über der Inhaltsfläche, nichts darüber hinaus; Farben nur
+  die Rollen `primary`, `text`, `muted`, `surface`, `border`, `line`, `background`,
+  `accent1`–`accent6`, `success`, `info`, `warning`, `danger`, `neutral`). Für eine Veränderung
+  zwei Szenenfolien mit denselben Namen, die zweite `{uebergang="morph"}`. Nur, wenn ein Bild
+  sich wirklich von Folie zu Folie verändert; Word lässt Szenen weg.
 
 ## PTA-Folienarten (PowerPoint)
 

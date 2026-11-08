@@ -299,6 +299,43 @@ Ruhig bleiben: ein Übergang für das ganze Deck oder ein Kapitel, nicht auf jed
 anderer. Ein falscher Wert ist ein Fehler mit Zeilennummer, der die gültigen Werte nennt; Word
 und PDF ignorieren das Attribut, `uebergang` im Kopf eines Word-Berichts ist ein Fehler.
 
+### Szenen: Formen, die Morph bewegt
+
+Eine Szene legt benannte Formen auf die Folie. Zwei Szenenfolien hintereinander, die zweite mit
+`{uebergang="morph"}`: PowerPoint bewegt jede Form zu ihrem Namensvetter auf der nächsten Folie.
+
+```markdown
+## Drei Orte {uebergang="morph"}
+
+::: scene
+- sp: box   10,20  36x14  "SharePoint"
+- od: round 62,30  36x14  "OneDrive"              rotate=-3
+- q:  pill  45,52  70x9   "Welche Version gilt?"  fill=warning step=1
+:::
+
+## Ein Ort {uebergang="morph"}
+
+::: scene
+- sp: box   50,20  60x18  "Ein Ablageort"  fill=primary text=background bold
+- od: round 50,20  60x18                   opacity=0
+- a:  arrow 80,40  0x14                    step=1
+:::
+```
+
+- Jede Zeile: `name: art x,y Breite x Höhe "Text"` und Attribute. Der Name verbindet die Form
+  über die Folien; `opacity=0` lässt sie verschwinden, eine neue Form erscheint.
+- Das Raster hat 160 × 67 Einheiten über der Inhaltsfläche unter dem Titel (0,0 oben links);
+  eine Einheit ist waagerecht wie senkrecht gleich groß, `20x20` ist also ein Quadrat. Was
+  darüber hinausreicht, ist ein Fehler.
+- Arten: `box`, `round`, `pill`, `circle`, `text`, `line`, `arrow`, `image` (`image=bild.png`,
+  eingepasst). Attribute: `fill`, `line`, `text` (Farben), `rotate`, `opacity`, `size` (pt),
+  `bold`, `solid`, `step` (erscheint beim n-ten Klick).
+- Farben: `primary`, `text`, `muted`, `background`, `accent1`–`accent6`, `surface`, `border`,
+  `line`, `success`, `info`, `warning`, `danger`, `neutral`, `#RRGGBB` oder `none`. Farbige
+  Kästen erscheinen hell getönt mit farbigem Rand; `solid` füllt sie voll.
+- Unter dem `##` steht nur die Szene (und `::: notes`); `.dark`, `kicker` und `uebergang`
+  gehen. Das PDF zeigt die Szene als Bild, Word lässt sie weg (Hinweis `scene-dropped`).
+
 ### Folien-Syntax
 
 Mit einer eigenen Syntax werden aus einer `##`-Folie **Flow-Folien** im PTA-Stil. PowerPoint

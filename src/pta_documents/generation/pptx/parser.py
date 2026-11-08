@@ -30,6 +30,7 @@ from pta_documents.generation.common import (
     image_attributes,
     layout_syntax,
     layout_tokens,
+    scene,
     schedule,
 )
 from pta_documents.generation.common.image_attributes import Fit
@@ -62,6 +63,7 @@ from pta_documents.generation.pptx.model import (
     LayoutSlide,
     Paragraph,
     Run,
+    SceneSlide,
     Separator,
     Slide,
     Table,
@@ -242,6 +244,10 @@ class DeckParser:
                     raise DocumentConversionError(
                         FORMAT, at_line(NOT_BUILT, self.marker_line(marker))
                     )
+        scene_at = self._scene_at(start, end) if open_token.tag == "h2" else None
+        if scene_at is not None:
+            self.slides.append(self._scene_slide(title, line, attributes, scene_at))
+            return
         if open_token.tag == "h2" and attributes is not None and attributes.kind is not None:
             if self._uses_layouts(start, end, attributes):
                 raise self._error(
@@ -305,6 +311,52 @@ class DeckParser:
             self.slides.append(LayoutSlide(title, line, layout, tuple(segments)))
             return
         self._content(title, section, line)
+
+    # ------------------------------------------------------------------ scenes (E09-S04)
+
+    def _scene_at(self, start: int, end: int) -> int | None:
+        """Where the ``::: scene`` of a ``##`` section is; ``layout_syntax.check`` made sure it
+        is alone there."""
+        return next(
+            (
+                i
+                for i in range(start, end)
+                if self.tokens[i].type == CONTAINER_OPEN
+                and container(self.tokens[i])[0] == layout_syntax.SCENE
+            ),
+            None,
+        )
+
+    def _scene_slide(
+        self,
+        title: tuple[Run, ...],
+        line: int | None,
+        attributes: heading_attributes.HeadingAttributes | None,
+        i: int,
+    ) -> SceneSlide:
+        """The scene slide of the ``::: scene`` at ``tokens[i]``: its shapes (texts typeset
+        like any text) and its images in a format slides take, fitted into their boxes."""
+        token = self.tokens[i]
+        read = scene.read_scene(
+            self.tokens, i, FORMAT, self.line_offset, self.document.find_resource
+        )
+        if self.options.typography:
+            language = self.options.language
+            shapes = tuple(replace(s, text=typeset_text(s.text, language)) for s in read.shapes)
+            read = replace(read, shapes=shapes)
+        images: list[tuple[int, Image]] = []
+        for n, shape in enumerate(read.shapes):
+            if shape.resource is not None:
+                image = Image(shape.resource, shape.text, shape.line, fit=True)
+                images.append((n, self._placeable(image, token)))
+        return SceneSlide(
+            title,
+            line,
+            kicker=attributes.kicker if attributes is not None else None,
+            dark=attributes is not None and attributes.dark,
+            scene=read,
+            images=tuple(images),
+        )
 
     # ------------------------------------------------------------------ builds (E09-S02)
 
