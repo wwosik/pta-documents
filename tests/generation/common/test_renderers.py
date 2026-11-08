@@ -137,7 +137,7 @@ def test_an_image_graphic_takes_the_place_of_the_code_block(
     if format is DocumentFormat.DOCX:
         text = "\n".join(p.text for p in docx.Document(io.BytesIO(data)).paragraphs)
         assert "Zeile 1" not in text
-        assert "Abbildung" not in text  # no caption: it comes with E03-S04 from the title
+        assert "Abbildung" not in text  # no caption without an "Abbildung: …" paragraph
 
 
 @GENERATORS
@@ -195,15 +195,14 @@ def test_a_document_conversion_error_passes_unchanged(
     assert error.value is original
 
 
-def test_word_does_not_place_drawings_yet() -> None:
-    """Placing drawings in Word follows with E03-S04; PowerPoint sets them as shapes since
-    E06-S02 (``tests/generation/pptx/test_drawing.py``), charts are native in both."""
-    graphic = DrawingGraphic(Drawing(1, 1, ()))
-    with pytest.raises(DocumentConversionError) as error:
-        generate_docx(DECK, (Recorder(graphic=graphic),))
-    assert error.value.format is DocumentFormat.DOCX
-    assert error.value.reason.startswith("Line 6: The `testbild` block was rendered as a ")
-    assert "does not support yet" in error.value.reason
+def test_word_places_a_drawing_as_a_picture() -> None:
+    """Since E03-S04 Word places drawings as SVG pictures (``tests/generation/docx/
+    test_drawings.py``); PowerPoint sets them as shapes since E06-S02."""
+    pytest.importorskip("resvg_py")
+    graphic = DrawingGraphic(Drawing(10, 10, ()))
+    data, result = generate_docx(DECK, (Recorder(graphic=graphic),))
+    assert pictures_docx(data) == ["testbild groß"]
+    assert result.notes == ()
 
 
 def test_a_dark_slide_asks_for_a_dark_graphic() -> None:

@@ -110,11 +110,6 @@ def test_a_missing_mmdc_is_unavailable_with_a_setup_hint() -> None:
         MermaidRenderer(command="/does/not/exist/mmdc").render(request())
 
 
-def test_word_does_not_draw_diagrams_yet() -> None:
-    with pytest.raises(RendererUnavailableError, match="Word does not draw"):
-        MermaidRenderer(command="/does/not/exist").render(request(format=DocumentFormat.DOCX))
-
-
 def test_find_command_prefers_the_argument_then_the_environment(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -273,15 +268,27 @@ def test_in_a_deck_the_diagram_is_a_group_of_shapes(tmp_path: Path) -> None:
 
 
 @posix_only
-def test_in_word_the_block_stays_code_with_a_note(tmp_path: Path) -> None:
+def test_in_word_the_diagram_is_an_svg_picture_with_its_caption(tmp_path: Path) -> None:
+    """E03-S04: Word places the drawing as a PNG with the SVG beside it, text in Word's colour."""
+    pytest.importorskip("resvg_py")
     command = fake_mmdc(tmp_path, stdout=SAMPLES / "mermaid-flowchart.svg")
     options = DocxOptions(code_block_renderers=(MermaidRenderer(command=command),))
-    markdown = "---\ntitel: B\n---\n# Bericht\n\n```mermaid\nflowchart TD\n  A --> B\n```\n"
-    result = DocxGenerator().generate(MarkdownDocument(markdown), io.BytesIO(), options)
-    [note] = result.notes
-    assert note.code == NoteCodes.CODE_NOT_DRAWN
-    assert "Word does not draw Mermaid" in note.message
-    assert not (tmp_path / "call.json").exists()  # mmdc was not even started
+    markdown = (
+        "---\ntitel: B\n---\n# Bericht\n\n```mermaid\nflowchart TD\n  A --> B\n```\n\n"
+        "Abbildung: Der Ablauf\n"
+    )
+    output = io.BytesIO()
+    result = DocxGenerator().generate(MarkdownDocument(markdown), output, options)
+    assert result.notes == ()
+    assert colors.TEXT_WORD in str(call(tmp_path)["stdin"])
+    import zipfile
+
+    with zipfile.ZipFile(io.BytesIO(output.getvalue())) as package:
+        names = package.namelist()
+        document = package.read("word/document.xml").decode("utf-8")
+    assert any(n.endswith(".svg") for n in names) and any(n.endswith(".png") for n in names)
+    assert "svgBlip" in document and 'descr="mermaid"' in document
+    assert "Der Ablauf" in document and "SEQ Abbildung" in document
 
 
 @posix_only

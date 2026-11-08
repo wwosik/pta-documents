@@ -62,8 +62,9 @@ Mär, 125, 140
   (auch in `::: columns`) auf `Titel und zwei Diagramme`. Titel, Einheit und Quelle stehen in
   den Platzhaltern des Layouts. Auf Folien mit Hinweisboxen, Karten o. Ä. ist ein Chart ein
   Fehler.
-- **Word:** Das Diagramm steht über die Satzspiegelbreite, mit einem Titel darunter die
-  Beschriftung „Abbildung n: Titel".
+- **Word:** Das Diagramm steht über die Satzspiegelbreite (höchstens 5:8 so hoch), mit einem
+  Titel darunter die Beschriftung „Abbildung n: Titel". Ein Absatz `Abbildung: …` direkt nach
+  dem Block geht dem Titel vor.
 - Ein Fehler in Einstellungen oder Daten bricht mit der Zeile ab, in der er steht.
 
 ### Finanzdiagramme
@@ -102,8 +103,10 @@ Brüche (`0.05` sind 5 %), `lastActual` zählt die Monate ab 0.
 - **Regeln:** Eine Farbe bedeutet eine Reihe, Grün und Rot stehen nur an Zahlen, gestrichelt
   heißt Prognose, jede Werteachse enthält null.
 - **Folien:** Das Diagramm steht als Gruppe bearbeitbarer Formen in der Inhaltsfläche von
-  `Nur Titel` (mit Text davor auf `Titel und Text`), nie größer als gezeichnet. Word kann
-  Finanzdiagramme noch nicht setzen (folgt mit E03-S04).
+  `Nur Titel` (mit Text davor auf `Titel und Text`), nie größer als gezeichnet.
+- **Word:** Das Diagramm steht als Bild (scharf als SVG, mit PNG für ältere Word-Versionen) in
+  seiner natürlichen Größe, höchstens über die Satzspiegelbreite; ein Absatz `Abbildung: …`
+  direkt nach dem Block wird die Beschriftung „Abbildung n: …". Dafür braucht es das Extra `svg`.
 - Ein unbekannter Schlüssel, ein falscher Typ oder ungültiges JSON bricht mit der Zeile ab;
   Kommentare (`//`) und ein Komma nach dem letzten Eintrag sind erlaubt.
 """

@@ -459,6 +459,78 @@ Mär,
 Apr, 96.5
 ```
 
+Ein Absatz `Abbildung: …` direkt nach dem Block wird die Beschriftung und geht dem Titel vor:
+
+````markdown
+```chart
+type: bar
+---
+Region, Aufträge
+Nord, 41
+Süd, 37
+```
+
+Abbildung: Aufträge je Region
+````
+
+```chart
+type: bar
+---
+Region, Aufträge
+Nord, 41
+Süd, 37
+```
+
+Abbildung: Aufträge je Region
+
+## Finanzdiagramme
+
+Ein `financial-chart`-Block steht in Word als scharfes Bild (SVG, mit PNG für ältere
+Word-Versionen) in seiner natürlichen Größe, höchstens über die Satzspiegelbreite; die
+Beschriftung kommt aus dem Absatz `Abbildung: …` danach:
+
+````markdown
+```financial-chart
+{
+  "type": "growth-trend",
+  "title": "Wachstum Aufträge",
+  "period": "April 2026",
+  "lastActual": 3,
+  "reference": 0.05,
+  "months": [
+    {"label": "Jan", "change": 0.056},
+    {"label": "Feb", "change": 0.054},
+    {"label": "Mär", "change": 0.04},
+    {"label": "Apr", "change": 0.048},
+    {"label": "Mai", "change": 0.042},
+    {"label": "Jun", "change": 0.035}
+  ]
+}
+```
+
+Abbildung: Wachstum der Aufträge gegenüber dem Vorjahr
+````
+
+```financial-chart
+{
+  "type": "growth-trend",
+  "title": "Wachstum Aufträge",
+  "period": "April 2026",
+  "lastActual": 3,
+  "reference": 0.05,
+  "months": [
+    {"label": "Jan", "change": 0.056},
+    {"label": "Feb", "change": 0.054},
+    {"label": "Mär", "change": 0.04},
+    {"label": "Apr", "change": 0.048},
+    {"label": "Mai", "change": 0.042},
+    {"label": "Jun", "change": 0.035}
+  ]
+}
+```
+
+Abbildung: Wachstum der Aufträge gegenüber dem Vorjahr
+
 # Code, Zitat und Trennlinie
 
 ## Codeblock

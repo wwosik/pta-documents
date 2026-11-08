@@ -3,8 +3,8 @@
 Stand nach Meilenstein M01: Markdown → Word und PowerPoint auf den PTA-Vorlagen, Word und
 PowerPoint → Markdown; seit E06-S01 native Diagramme aus `chart`-Blöcken in beiden Formaten,
 seit E06-S02 Finanzdiagramme (`financial-chart`) als Formengruppe in PowerPoint und als SVG,
-seit E06-S03 Mermaid-Diagramme (`mermaid`, über mermaid-cli) als Formengruppe in PowerPoint.
-PDF sowie Mermaid und Finanzdiagramme in Word folgen (E05, E03-S04).
+seit E06-S03 Mermaid-Diagramme (`mermaid`, über mermaid-cli) als Formengruppe in PowerPoint,
+seit E03-S04 beide auch in Word als Abbildung (SVG mit PNG-Ersatz). PDF folgt (E05).
 
 ## Einrichten
 
@@ -56,7 +56,8 @@ Zuordnung: `#`–`###` → „Überschrift 1–3" (nummeriert), tiefere → „Z
 Absätze → „Standard"; Listen → „Aufzählungszeichen" bzw. „Listenabsatz"; Tabellen →
 Tabellenformat „PTA", ein Absatz `Tabelle: …` direkt danach wird „Tabelle n: …"; ein Bild allein
 im Absatz bekommt „Abbildung n: …" aus Titel oder Alt-Text; Codeblöcke → „Code", Zitate →
-„Zitat"; Fußnoten werden Word-Fußnoten. Folien-Syntax: siehe *Folien-Syntax in Word* unten.
+„Zitat"; Fußnoten werden Word-Fußnoten; Diagramme und Charts aus Codeblöcken siehe
+[Grafiken in Word](#grafiken-in-word-e03-s04). Folien-Syntax: siehe *Folien-Syntax in Word* unten.
 
 ## Markdown → PowerPoint
 
@@ -166,8 +167,8 @@ Hotspots entfallen. Die Gruppe heißt `Drawing <id>` mit dem Info-String als Alt
 steht wie eine Tabelle in der Inhaltsfläche von `Nur Titel` (Text davor → `Titel und Text`,
 Text danach als Textfeld darunter), oben mittig, auf den Platz verkleinert, nie vergrößert
 (1 px = 9525 EMU). Auf Flow-Folien und benannten Layouts ist eine Zeichnung ein Fehler; Word
-wirft für Zeichnungen noch „does not support yet" (folgt mit E03-S04). Der PPTX-Konverter lässt
-`Drawing`-Gruppen weg.
+setzt Zeichnungen als Bild (siehe [Grafiken in Word](#grafiken-in-word-e03-s04)). Der
+PPTX-Konverter lässt `Drawing`-Gruppen weg.
 
 ### Sprechernotizen (E09-S01)
 
@@ -316,16 +317,17 @@ options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgN
   PowerPoint, ob die Folie `{.dark}` ist. Der erste Renderer mit Ergebnis gewinnt; `None` heißt
   „nicht meins". Codeblöcke ohne Info-String und eingerückter Code gehen an keinen Renderer.
 - Ergebnis `ImageGraphic(resource)`: das Bild steht an der Stelle des Codeblocks wie ein
-  Markdown-Bild, mit dem Info-String als Alt-Text — in Word ohne „Abbildung n"-Beschriftung, in
-  PowerPoint wie ein Bild allein auf einer Folie. `DrawingGraphic(drawing)` und
-  `ChartGraphic(chart, drawing)` (Daten in `pta_documents.charts.ChartSpec`, `drawing` ist ein
-  `Drawing` aus [`pta_documents.drawing`](#zeichenmodell-und-svg-e02-s03)): Charts setzen
-  beide Generatoren nativ ([Charts](#charts-e06-s01)); Zeichnungen setzt PowerPoint als
-  Formengruppe, Word ergibt noch einen Fehler „… does not support yet" (folgt mit E03-S04).
+  Markdown-Bild, mit dem Info-String als Alt-Text — in Word mit „Abbildung n"-Beschriftung nur,
+  wenn ein Absatz `Abbildung: …` folgt, in PowerPoint wie ein Bild allein auf einer Folie.
+  `DrawingGraphic(drawing)` und `ChartGraphic(chart, drawing)` (Daten in
+  `pta_documents.charts.ChartSpec`, `drawing` ist ein `Drawing` aus
+  [`pta_documents.drawing`](#zeichenmodell-und-svg-e02-s03)): Charts setzen beide Generatoren
+  nativ ([Charts](#charts-e06-s01)); Zeichnungen setzt PowerPoint als Formengruppe, Word als
+  Bild ([Grafiken in Word](#grafiken-in-word-e03-s04)).
 - **Nicht verfügbar:** Kann ein Renderer den Block hier nicht zeichnen (sein Werkzeug fehlt,
   oder das Format hat noch keinen Platz für seine Grafik), wirft er
   `RendererUnavailableError(grund)`: der Block bleibt Code, der Hinweis `code-not-drawn` nennt
-  den Grund (so macht es der Mermaid-Renderer ohne Chromium und in Word).
+  den Grund (so macht es der Mermaid-Renderer ohne mmdc oder Chromium).
 - **Konverter** (`generation/common/images.py`, `ImageConverter`) bekommen jedes Bild, dessen
   Format der Generator nicht setzt (alles außer PNG, JPEG, GIF, BMP, TIFF, z. B. SVG), mit
   `scale = 2`; der erste mit Ergebnis gewinnt. Word setzt das Ergebnis in der natürlichen Größe
@@ -385,10 +387,41 @@ drawing = draw(spec)  # Drawing 640 × 380 px, Zahlen deutsch („1.250,5")
   [Diagramm-Layouts](#pta-folienarten-und-diagramm-layouts-e04-s04). Word
   (`generation/docx/chart.py`): Chart-XML von python-pptx als Teil `word/charts/chartN.xml`,
   Arbeitsmappe `word/embeddings/Microsoft_Excel_WorksheetN.xlsx` (`c:externalData`), inline
-  über die Satzspiegelbreite im Verhältnis 640:380, 10 pt Segoe UI `TEXT_WORD`, Einheit als
+  über die Satzspiegelbreite, höchstens 5:8 so hoch (siehe
+  [Grafiken in Word](#grafiken-in-word-e03-s04)), 10 pt Segoe UI `TEXT_WORD`, Einheit als
   Titel der Werteachse; mit `title` danach „Abbildung n: Titel", `source` als Absatz in
-  „Beschriftung" ohne Nummer. Die Konverter (Word/PowerPoint → Markdown) lassen Diagramme bisher
-  weg.
+  „Beschriftung" ohne Nummer. Der DOCX-Konverter liest ein Diagramm als Tabelle seiner Daten,
+  der PPTX-Konverter lässt es weg.
+
+## Grafiken in Word (E03-S04)
+
+`BodyWriter.block` (`generation/docx/writer.py`) fragt für jeden Zaun die Renderer
+(`code_blocks.render_graphic`) und setzt jede Grafikart in einen eigenen Absatz
+(`graphic_figure`):
+
+- **Zeichnungen** (`DrawingGraphic`: Mermaid, Finanzdiagramme) über
+  `generation/docx/drawings.py`: `drawing.to_svg` (Text in `Segoe UI, Selawik, sans-serif`) →
+  `DocumentResource("<sprache>-<n>.svg")` → die Bildkonverter wie ein SVG-Bild aus Markdown
+  ([SVG-Bilder](#svg-bilder-e06-s04)): PNG im doppelten Maßstab im `a:blip`, das SVG als
+  `asvg:svgBlip`. Größe: die natürliche Größe des Drawings (1 px = 0,75 pt), verkleinert auf
+  Satzspiegelbreite und 80 % der Satzspiegelhöhe, nie vergrößert. Alt-Text = Info-String.
+  Nimmt kein Konverter SVG, ist das ein `DocumentConversionError`
+  `Line N: The `<sprache>` block is a drawing, which Word places as an SVG image …` mit dem
+  Hinweis auf das Extra `svg` (bzw. auf `DocxOptions.image_converters`, wenn sie abgeschaltet
+  sind).
+- **Charts** (`ChartGraphic`): nativ ([Charts](#charts-e06-s01)), so breit wie der Satzspiegel,
+  höchstens 5:8 so hoch, gedeckelt bei 80 % der Satzspiegelhöhe (`design/word.py`:
+  `CHART_HEIGHT_RATIO`, `FIGURE_HEIGHT_SHARE`) — im Querformat greift der Deckel.
+- **Bilder** (`ImageGraphic`): wie ein Markdown-Bild.
+- **Beschriftung, für alle gleich:** Ein Absatz, der mit `Abbildung:` (oder `Figure:`) beginnt
+  und direkt nach dem Zaun auf derselben Ebene steht, wird „Abbildung n: …" in „Beschriftung"
+  (`SEQ Abbildung`, fortlaufend mit den Bildern; mit `sprache: en` „Figure n: …"). Sonst gilt
+  der Titel eines Charts (`title`); ohne beides keine Beschriftung. Der Absatz geht dem Titel
+  vor. Grafik, Beschriftung und Quelle halten zusammen (`keepNext`).
+- **Rücklesen:** Der DOCX-Konverter macht aus einem nativen Diagramm (`c:chart`) eine
+  Markdown-Tabelle aus den zwischengespeicherten Werten des Chart-Teils: erste Spalte die
+  Kategorien (Kopf leer), dann je Reihe eine Spalte, Zahlen ohne `.0`, leere Werte leer. Eine
+  Zeichnung kommt als Bild (PNG) zurück.
 
 ## Finanzdiagramme (E06-S02)
 
@@ -448,7 +481,8 @@ chart, options = financial.parse(block, line=12)  # FinancialChartError (ValueEr
 - **Renderer:** Der `ChartRenderer` nimmt neben `chart` auch `financial-chart` (ohne Groß/Klein,
   nichts dahinter) und liefert `DrawingGraphic`; seine `authoring_guide` hat dazu den Abschnitt
   `### Finanzdiagramme`. PowerPoint setzt es als Formengruppe (siehe
-  [PTA-Folienarten](#pta-folienarten-und-diagramm-layouts-e04-s04)), Word noch nicht.
+  [PTA-Folienarten](#pta-folienarten-und-diagramm-layouts-e04-s04)), Word als Bild (siehe
+  [Grafiken in Word](#grafiken-in-word-e03-s04)).
 
 ## Mermaid (E06-S03)
 
@@ -508,8 +542,8 @@ options = PptxOptions(code_block_renderers=(ChartRenderer(), renderer))
   (ohne Hinweis). Ebenso ein SVG, das `to_drawing` nicht kennt. Eine Zeitüberschreitung ist
   immer ein Fehler. Fehlt `mmdc` oder startet Chromium nicht: `RendererUnavailableError`, der
   Block bleibt Code mit Hinweis.
-- **Word:** zeichnet Mermaid noch nicht (E03-S04); der Block bleibt Code mit dem Hinweis
-  `code-not-drawn` („Word does not draw Mermaid diagrams yet"), mmdc wird gar nicht gestartet.
+- **Word:** setzt das Diagramm als Bild (SVG mit PNG-Ersatz, siehe
+  [Grafiken in Word](#grafiken-in-word-e03-s04)); mmdc zeichnet dafür mit Word-Textfarbe.
 - `MermaidRenderer.authoring_guide` ist der Abschnitt `## Diagramme` für die Authoring Guides.
 - Jeder Block startet ein Chromium (hier etwa 0,7 s).
 
@@ -629,8 +663,8 @@ svg = to_svg(Drawing(120, 100, (balken, beschriftung, punkt)), SvgOptions(backgr
   entfallen). Eine Farbe, die nicht `RRGGBB` ist, oder eine nicht endliche Zahl wirft
   `ValueError` (Programmierfehler des Renderers).
 - Ausgabe als PNG über `pta_documents.svg.to_png(to_svg(drawing))` ([SVG-Bilder](#svg-bilder-e06-s04));
-  die Tooltips sind im PNG unsichtbar. Als PowerPoint-Formen folgt mit E06-S02, als PDF-Vektor
-  mit E05-S04, in Word mit E03-S04, SVG → `Drawing` (Mermaid) mit E06-S03.
+  die Tooltips sind im PNG unsichtbar. Als PowerPoint-Formen seit E06-S02, in Word als Bild seit
+  E03-S04, SVG → `Drawing` (Mermaid) seit E06-S03; als PDF-Vektor folgt mit E05-S04.
 
 ## SVG-Bilder (E06-S04)
 
@@ -737,7 +771,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `image-cropped` (`IMAGE_CROPPED`) | PPTX | ein Bildplatzhalter schneidet mehr als ein Viertel der Bildfläche ab |
 | `image-enlarged` (`IMAGE_ENLARGED`) | PPTX, DOCX | ein Bild wird mehr als doppelt so groß gezeigt wie seine Pixel bei 96 dpi und wirkt unscharf |
 | `raw-html` (`RAW_HTML`) | PPTX, DOCX | rohes HTML im Markdown; es wird **weggelassen**. HTML-Kommentare `<!-- … -->` fallen ohne Hinweis weg, `<br>` ist ein Zeilenumbruch |
-| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt; Word zeichnet Mermaid noch nicht) |
+| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt) |
 | `character-missing` (`CHARACTER_MISSING`) | PDF (E05-S04) | ein Zeichen fehlt in den Schriften |
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01) | Sprechernotizen fallen im Word-Dokument weg |
 | `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02) | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |

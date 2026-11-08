@@ -22,6 +22,7 @@ R: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 MC: Final = "http://schemas.openxmlformats.org/markup-compatibility/2006"
 A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
 WP: Final = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+C: Final = "http://schemas.openxmlformats.org/drawingml/2006/chart"
 V: Final = "urn:schemas-microsoft-com:vml"
 PTA: Final = "urn:pta-documents:wordprocessingml"
 """The DOCX generator's own markup: ``pta:codeLanguage`` holds the language of a code block."""
@@ -185,6 +186,9 @@ def _in_text_box(element: etree._Element) -> bool:
 
 def _render_paragraph(paragraph: etree._Element, context: _Context, out: list[str]) -> None:
     _render_paragraph_text(paragraph, context, out)
+    for chart in paragraph.iter(f"{{{C}}}chart"):
+        if not _in_fallback(chart) and not _in_text_box(chart):
+            _render_chart(chart, context, out)
     # Text boxes anchored in this paragraph; mc:Fallback repeats what mc:Choice already holds.
     for box in paragraph.iter(w("txbxContent")):
         if _in_fallback(box):
@@ -236,6 +240,59 @@ def _render_paragraph_text(paragraph: etree._Element, context: _Context, out: li
 
     _ensure_blank_line(out)
     out.append(text + "\n\n")
+
+
+def _render_chart(chart: etree._Element, context: _Context, out: list[str]) -> None:
+    """A native chart (E03-S04) as a table of its data: a column of categories (no header),
+    then one column per series, from the values Word caches in the chart part."""
+    rel_id = chart.get(f"{{{R}}}id")
+    part = context.rels.get(rel_id) if rel_id else None
+    space = context.package.read_xml(part) if part else None
+    if space is None:
+        return
+    series = list(space.iter(f"{{{C}}}ser"))
+    if not series:
+        return
+    categories = _chart_points(series[0].find(f"{{{C}}}cat"))
+    count = max(
+        [max(categories, default=-1) + 1]
+        + [max(_chart_points(s.find(f"{{{C}}}val")), default=-1) + 1 for s in series]
+    )
+    grid: list[list[str]] = [[""] + [md.escape(_series_name(s)) for s in series]]
+    values = [_chart_points(s.find(f"{{{C}}}val")) for s in series]
+    for index in range(count):
+        row = [md.escape(categories.get(index, ""))]
+        row += [_chart_number(v.get(index, "")) for v in values]
+        grid.append(row)
+    _ensure_blank_line(out)
+    out.append(md.table(grid))
+
+
+def _chart_points(element: etree._Element | None) -> dict[int, str]:
+    """The cached points (``c:pt``) under ``element``, by index."""
+    if element is None:
+        return {}
+    points: dict[int, str] = {}
+    for point in element.iter(f"{{{C}}}pt"):
+        value = point.find(f"{{{C}}}v")
+        points[_int(point.get("idx"))] = (value.text or "") if value is not None else ""
+    return points
+
+
+def _series_name(series: etree._Element) -> str:
+    text = series.find(f"{{{C}}}tx")
+    if text is None:
+        return ""
+    return "".join(v.text or "" for v in text.iter(f"{{{C}}}v"))
+
+
+def _chart_number(text: str) -> str:
+    """A cached value as the ``chart`` block writes it: ``132`` rather than ``132.0``."""
+    try:
+        value = float(text)
+    except ValueError:
+        return md.escape(text)
+    return str(int(value)) if value.is_integer() else repr(value)
 
 
 def _render_code(

@@ -6,9 +6,10 @@ Ergebnis; in der Präsentation steht der Quelltext jeder Folie auf ihrer Notizen
 
 | Datei | Zeigt |
 | ----- | ----- |
-| `funktionen-bericht.md` | Word: alle Front-Matter-Schlüssel, Überschriften 1–6, Zeichenformate, Links, Fußnoten, Typografie, Listen (verschachtelt, Neustart, Aufgaben, Definitionen), Tabellen mit Titel, Ausrichtung und Beschriftung, Status-Labels, markierte Zeile, Abbildungen, Bild im Text, Bildreihe, SVG-Grafik, Diagramme aus `chart`-Blöcken (Balken, gestapelte Flächen, Linie mit Lücke, `;` mit Dezimalkomma), Code, Zitat, Trennlinie, Inhaltsverzeichnis; die Folien-Syntax in Word: alle Container außer `notes`, Alerts, `==Markierung==`, farbige Wörter |
+| `funktionen-bericht.md` | Word: alle Front-Matter-Schlüssel, Überschriften 1–6, Zeichenformate, Links, Fußnoten, Typografie, Listen (verschachtelt, Neustart, Aufgaben, Definitionen), Tabellen mit Titel, Ausrichtung und Beschriftung, Status-Labels, markierte Zeile, Abbildungen, Bild im Text, Bildreihe, SVG-Grafik, Diagramme aus `chart`-Blöcken (Balken, gestapelte Flächen, Linie mit Lücke, `;` mit Dezimalkomma, Beschriftung `Abbildung: …`), ein Finanzdiagramm als Abbildung, Code, Zitat, Trennlinie, Inhaltsverzeichnis; die Folien-Syntax in Word: alle Container außer `notes`, Alerts, `==Markierung==`, farbige Wörter |
 | `funktionen-praesentation.md` | PowerPoint: Titel-, Trenn- und Abschlussfolie, Textebenen, nummerierte Listen mit Startwert, Verkleinern, Tabelle im PTA-Stil mit Titelzeile, längere Tabelle, Code, Bild mit Text, Bild allein, SVG-Grafik, Bildreihe, benannte Layouts mit `---`, Sprechernotizen (`::: notes`), Flow-Folien (alle Container, `.dark`, `kicker`, Alerts, Markierung, farbige Wörter, Status-Labels), Diagramme aus `chart`-Blöcken auf allen vier Diagrammlayouts, alle sechs Finanzdiagramme (`financial-chart`, mit Text davor und danach, alle `options`), PTA-Folienarten (`.agenda`, `.interim`, `.quote`, `.contact`) |
 | `mermaid-praesentation.md` | PowerPoint: jede gezeichnete Mermaid-Art (`flowchart`, `sequenceDiagram`, `classDiagram`, `stateDiagram-v2`, `erDiagram`, `pie`, `gantt`, `mindmap`) als Gruppe bearbeitbarer Formen; braucht mermaid-cli (`./run.sh setup` mit Node.js, Prüfung mit `./run.sh mermaid`) — ohne bleiben die Blöcke Code mit Hinweis |
+| `mermaid-bericht.md` | Word: Mermaid-Diagramme als Abbildungen (SVG mit PNG-Ersatz), mit und ohne `Abbildung: …`-Beschriftung; braucht mermaid-cli wie `mermaid-praesentation.md` |
 | `varianten-dokument.md` | Word-Variante `quer-ohne-deckblatt` mit `sprache: en` und `firma` |
 | `varianten-hochformat-dokument.md` | Word-Variante `hoch-ohne-deckblatt` mit `inhaltsverzeichnis: nein`, `typografie: nein`, `syntaxhervorhebung: nein` |
 | `varianten-querformat-dokument.md` | Word-Variante `quer` (mit Deckblatt) |
@@ -21,7 +22,7 @@ Ergebnis; in der Präsentation steht der Quelltext jeder Folie auf ihrer Notizen
 ./run.sh generate samples/funktionen --out documents/funktionen
 ```
 
-Alle Dateien erzeugen ohne Hinweise (`mermaid-praesentation.md` nur, wenn mermaid-cli eingerichtet ist) (`./run.sh generate-samples funktionen` endet mit Code 0)
+Alle Dateien erzeugen ohne Hinweise (`mermaid-praesentation.md` und `mermaid-bericht.md` nur, wenn mermaid-cli eingerichtet ist) (`./run.sh generate-samples funktionen` endet mit Code 0)
 und bestehen `./run.sh check samples/funktionen --strict`; die Folie „Viel Text wird
 verkleinert" ist absichtlich zu voll, darum schaltet `funktionen-praesentation.md` dafür
 `pruefung: style-bullets, style-words` ab.
@@ -34,4 +35,4 @@ ein Test fehl und nennt das Fehlende. Jede Datei muss in der Tabelle oben stehen
 Dokumente liegen danach in `.tmp/review/funktionen/`, ihre Rundreise durch die Konverter in
 `tests/samples/funktionen/*.roundtrip.expected.md`.
 
-Noch nicht enthalten, weil noch nicht umgesetzt: PDF, Mermaid und Finanzdiagramme in Word.
+Noch nicht enthalten, weil noch nicht umgesetzt: PDF.

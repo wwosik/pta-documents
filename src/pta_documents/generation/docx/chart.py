@@ -4,7 +4,7 @@ python-docx has no charts, so the chart XML comes from python-pptx (``ChartXmlWr
 ``CategoryChartData.xml_bytes``) in the PTA style of ``generation/common/native_chart.py``: a part
 ``word/charts/chartN.xml`` related from the document, its data as a workbook under
 ``word/embeddings/`` (``c:externalData``, so that Word's "Daten bearbeiten" opens it), placed
-inline as ``c:chart`` over the text width in the proportions of the chart drawing (640:380).
+inline as ``c:chart`` in the size the writer gives (E03-S04: the text width, at most 5:8 high).
 """
 
 from __future__ import annotations
@@ -19,7 +19,6 @@ from lxml import etree
 from pptx.chart.chart import Chart
 from pptx.oxml import parse_xml
 
-from pta_documents.charts import drawing
 from pta_documents.charts.spec import ChartSpec
 from pta_documents.design import colors
 from pta_documents.generation.common import native_chart
@@ -49,8 +48,8 @@ def chart_xml(spec: ChartSpec) -> Any:
     return chart_space
 
 
-def add_chart(paragraph: Paragraph, spec: ChartSpec, width: int, alt: str) -> None:
-    """``spec`` as a native chart in a new run of ``paragraph``, ``width`` EMU wide."""
+def add_chart(paragraph: Paragraph, spec: ChartSpec, width: int, height: int, alt: str) -> None:
+    """``spec`` as a native chart in a new run of ``paragraph``, ``width`` × ``height`` EMU."""
     part = paragraph.part
     package = part.package
     assert package is not None
@@ -72,7 +71,6 @@ def add_chart(paragraph: Paragraph, spec: ChartSpec, width: int, alt: str) -> No
         chart_space, xml_declaration=True, encoding="UTF-8", standalone=True
     )
 
-    height = round(width * drawing.HEIGHT / drawing.WIDTH)
     shape_id = part.next_id
     run = etree.SubElement(paragraph._p, w("r"))
     run.append(_inline(chart_rid, width, height, shape_id, alt))

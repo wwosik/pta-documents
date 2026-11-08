@@ -32,8 +32,8 @@ weil ihm vertraut wird.
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
   Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
   Diagrammlayouts (`chart`-Blöcke seit E06-S01, auch nativ in Word; Finanzdiagramme seit
-  E06-S02 als Formengruppe, nur PowerPoint; Mermaid seit E06-S03 über mermaid-cli, ebenso nur
-  PowerPoint); Word zeigt sie seit
+  E06-S02 als Formengruppe, Mermaid seit E06-S03 über mermaid-cli, beide in Word seit E03-S04
+  als Bild); Word zeigt sie seit
   E03-S03 schlicht in eigenen Formatvorlagen. Bedienung:
   `docs/verwendung.md`.
 - **Zweite Referenz:** `~/mvv/vt-tools-libs` (Schwesterbibliothek von DocLibs für die MVV,
@@ -70,7 +70,9 @@ weil ihm vertraut wird.
   `code_block_renderers`/`image_converters` nutzen die `default_*`-Funktionen als
   `default_factory` (Entscheidung: standardmäßig an, wenn verfügbar; `()` schaltet ab) — neue
   Renderer/Konverter der Bibliothek dort eintragen. Fences laufen in beiden Generatoren über
-  `code_blocks.draw` (notiert `code-not-drawn` nur, wenn nichts gezeichnet hat); PPTX konvertiert
+  `code_blocks.render_graphic` (notiert `code-not-drawn` nur, wenn nichts gezeichnet hat;
+  `code_blocks.draw`/`unsupported` nutzt nur ein Generator, der noch nicht alle Grafikarten
+  setzt — derzeit keiner); PPTX konvertiert
   Bilder im Parser (`DeckParser._placeable`), DOCX in `BodyWriter.place_picture`.
 
 ## Entscheidungen
@@ -139,8 +141,8 @@ weil ihm vertraut wird.
   lässt sie stehen, `write_agenda` entfernt die unter dem letzten Punkt selbst.
 - **Charts auf Folien** (E04-S04): PPTX nimmt Fences über `code_blocks.render_graphic` (alle
   Grafikarten) statt `draw`; `ChartGraphic` wird `model.Chart` und landet über
-  `generation/pptx/chart.insert_chart` nativ im Diagrammplatzhalter. Zeichnungen werfen weiter
-  (`code_blocks.unsupported`). Word nimmt seit E06-S01 ebenfalls `render_graphic`
+  `generation/pptx/chart.insert_chart` nativ im Diagrammplatzhalter; Zeichnungen seit E06-S02
+  als Formengruppe. Word nimmt seit E06-S01 ebenfalls `render_graphic`
   (`BodyWriter.draw`) und setzt Charts über `generation/docx/chart.add_chart`.
 - **Folien-Syntax in Word** (E03-S03): `BodyWriter` legt eigene Vorlagen bei Bedarf an
   (`design/word.STYLES`: `Hinweis`, `Hinweis wichtig`, `Markierung`, `Status …`, Tabellenvorlage
@@ -246,8 +248,8 @@ weil ihm vertraut wird.
   `generation/common/native_chart.py` (`apply_style` auf einem python-pptx-`Chart`); Word baut
   das Chart-XML mit python-pptx (`pptx.oxml.parse_xml` + `Chart(chart_space, None)`) und hängt
   Teil und Arbeitsmappe selbst an (`generation/docx/chart.py`). Abgeleitete Farben nur über
-  `colors.tint` (überlappende Flächen). Die Konverter lassen Diagramme weg (kein Rückweg zum
-  `chart`-Block). `test_funktionen.py` verlangt jede Art, jede Einstellung und beide
+  `colors.tint` (überlappende Flächen). Kein Rückweg zum `chart`-Block: der PPTX-Konverter
+  lässt Diagramme weg, der DOCX-Konverter liest sie seit E03-S04 als Tabelle. `test_funktionen.py` verlangt jede Art, jede Einstellung und beide
   Trennzeichen in `samples/funktionen/`. Wer einen Test mit ```` ```chart ```` ohne gültige
   Daten schreibt, muss die Renderer abschalten (`code_block_renderers=()`).
 - **Finanzdiagramme** (E06-S02): `pta_documents.charts.financial` (Port von DocLibs
@@ -261,8 +263,8 @@ weil ihm vertraut wird.
   auch `financial-chart` → `DrawingGraphic`; Kultur-Standard = `sprache:`. PowerPoint setzt
   `DrawingGraphic` über `generation/pptx/drawing.py` als Gruppe `Drawing <id>` (Modell-Visual
   `Diagram`, Inhaltsfläche wie Tabellen, nie vergrößert) — E06-S03 (Mermaid) nutzt denselben
-  Schreiber; der PPTX-Konverter überspringt `Drawing`-Gruppen. Word wirft für Zeichnungen
-  weiter „does not support yet" (E03-S04). Schnappschüsse
+  Schreiber; der PPTX-Konverter überspringt `Drawing`-Gruppen. Word setzt Zeichnungen seit
+  E03-S04 als SVG-Bild. Schnappschüsse
   `tests/charts/financial/samples/*.expected.svg` (Testdaten `figures.py`, deutsch);
   `test_funktionen.py` verlangt im Deck jeden Typ und jede Option.
 - **Mermaid** (E06-S03): `pta_documents.diagrams.mermaid` (`MermaidRenderer`, frozen
@@ -288,3 +290,18 @@ weil ihm vertraut wird.
   `PTA_DOCUMENTS_UPDATE_EXPECTED=1` bei funktionierendem mmdc (Mermaids Ausgabe ändert sich
   von Lauf zu Lauf leicht). Wer einen Test mit ```` ```mermaid ```` und Standardoptionen schreibt,
   hängt vom Rechner ab — Renderer explizit setzen.
+- **Grafiken in Word** (E03-S04): `BodyWriter.block` (Fall `fence`) → `draw` (alle Grafikarten)
+  → `graphic_figure`: `ChartGraphic` nativ (`docx_chart.add_chart(…, width, height, …)`, Größe
+  `chart_size`: Satzspiegelbreite, höchstens `design/word.CHART_HEIGHT_RATIO` = 5:8 hoch,
+  gedeckelt bei `FIGURE_HEIGHT_SHARE` = 80 % der Satzspiegelhöhe), `DrawingGraphic` über
+  `generation/docx/drawings.convert` (`to_svg` → die Bildkonverter → `insert_picture` mit
+  `natural` und `svg`; ohne SVG-Konverter `DocumentConversionError` mit Hinweis auf das Extra
+  `svg`), `ImageGraphic` wie bisher. Ein Absatz `Abbildung:`/`Figure:` direkt nach dem Zaun
+  (gleiche `level`) wird die Beschriftung und geht dem Chart-Titel vor (`_figure_caption`).
+  `place_picture` konvertiert nur noch und ruft `insert_picture`. Der Mermaid-Renderer hat
+  keinen Word-Zweig mehr: mit eingerichtetem mermaid-cli zeichnet er auch für Word. Der
+  DOCX-Konverter liest `c:chart` als Markdown-Tabelle aus dem Wertecache des Chart-Teils
+  (`_render_chart`, Kopf der Kategorienspalte leer). `samples/funktionen/mermaid-bericht.md`
+  braucht wie die Mermaid-Präsentation mmdc (Tests überspringen sie sonst über `drawable`, auch
+  `tests/generation/docx/test_notes.py`). `test_funktionen.py` verlangt im Bericht einen
+  `financial-chart` und eine `Abbildung: …`-Beschriftung nach einer Grafik.

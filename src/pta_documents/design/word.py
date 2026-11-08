@@ -115,5 +115,9 @@ PICTURE_GAP_CM: Final = 0.3
 """Room between the pictures of a row."""
 CONTACT_PHOTO_CM: Final = 3.0
 """The width a contact photo is shown at, at most."""
+FIGURE_HEIGHT_SHARE: Final = 0.8
+"""Pictures, drawings and charts are at most this share of the text height high."""
+CHART_HEIGHT_RATIO: Final = 5 / 8
+"""A chart is as wide as the text and at most this ratio of its width high (E03-S04)."""
 TABLE_BASE_STYLE: Final = "Normal Table"
 """The built-in table style without rules the picture row style is based on."""

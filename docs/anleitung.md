@@ -5,8 +5,7 @@ bekommst daraus ein Word-Dokument oder eine PowerPoint-Präsentation **auf den o
 PTA-Vorlagen** — mit Deckblatt, Logo, Kopf- und Fußzeile, PTA-Formatvorlagen und PTA-Layouts.
 Umgekehrt macht es aus vorhandenen Word- und PowerPoint-Dateien Markdown.
 
-Noch nicht möglich (geplant): PDF, Diagramme aus Mermaid, Finanzdiagramme in Word, farbige
-Hinweisboxen und Kartenlayouts auf Folien.
+Noch nicht möglich (geplant): PDF.
 
 ## 1. Einmal einrichten
 
@@ -151,6 +150,8 @@ der Generator als Hinweis `code-language-unknown`.
 | Bild allein im Absatz | Bild in Satzspiegelbreite, darunter „Abbildung 1: …" aus dem Bildtitel (in `"…"`) oder dem Alt-Text |
 | ```` ``` ```` Codeblock | Formatvorlage Code (Consolas, grau hinterlegt) |
 | ```` ```chart ```` mit Einstellungen und CSV | echtes Word-Diagramm über die Textbreite, darunter „Abbildung n: …" aus `title` (siehe [Diagramme aus Daten](#diagramme-aus-daten)) |
+| ```` ```mermaid ```` oder ```` ```financial-chart ```` | scharfes Bild in natürlicher Größe, höchstens über die Textbreite (siehe [Diagramme mit Mermaid](#diagramme-mit-mermaid), [Finanzdiagramme](#finanzdiagramme)) |
+| `Abbildung: Text` direkt unter einem solchen Codeblock | Beschriftung „Abbildung n: Text" (geht dem `title` eines Charts vor) |
 | `> Zitat` | eingerücktes Zitat |
 | `[Text](https://…)` | Hyperlink |
 | `Text[^1]` und `[^1]: Erklärung` | Word-Fußnote |
@@ -340,8 +341,10 @@ Q3, 12.5, 14
 - **Folien:** ein Chart allein → `Titel und Diagramm`; Text davor → `Titel, Text und Diagramm`,
   Text danach → `Titel, Diagramm und Text`; zwei Charts (auch in `::: columns`) →
   `Titel und zwei Diagramme`. Titel, Einheit und Quelle stehen in den Feldern des Layouts.
-- **Word:** das Diagramm steht über die Textbreite; mit `title` folgt „Abbildung n: Titel",
-  darunter die Quelle, die Einheit steht an der Werteachse.
+- **Word:** das Diagramm steht über die Textbreite (höchstens 5:8 so hoch, im Querformat etwas
+  flacher); mit `title` folgt „Abbildung n: Titel", darunter die Quelle, die Einheit steht an
+  der Werteachse. Ein Absatz `Abbildung: …` direkt unter dem Block ersetzt den Titel als
+  Beschriftung.
 - Ein Fehler (unbekannte Einstellung, Text statt Zahl, zu viele Werte in einer Zeile) bricht mit
   der Zeilennummer ab, z. B. `Line 12: The chart block cannot be drawn: 'viel' in row 3 of the
   data is not a number; …`.
@@ -378,7 +381,9 @@ kumuliert, Prognose gestrichelt), `growth-by-row` (Wachstum je Region o. Ä. geg
   `labels` (eigene Wörter, z. B. `{"reference": "Ziel"}`), `tolerance`, `restShare` und `width`
   um.
 - **Folien:** das Diagramm steht als Gruppe bearbeitbarer Formen in der Inhaltsfläche (Text davor
-  oder danach geht), nicht auf Flow-Folien. **Word** kann Finanzdiagramme noch nicht setzen.
+  oder danach geht), nicht auf Flow-Folien.
+- **Word:** das Diagramm steht als scharfes Bild in seiner natürlichen Größe (höchstens über die
+  Textbreite); ein Absatz `Abbildung: …` direkt darunter wird die Beschriftung „Abbildung n: …".
 - Ein Tippfehler im Schlüssel, ein Text statt einer Zahl oder kaputtes JSON bricht mit der
   Zeilennummer ab.
 
@@ -406,7 +411,9 @@ flowchart LR
 - Dafür braucht es **mermaid-cli**: Node.js (ab 22) installieren und `./run.sh setup`
   ausführen; `./run.sh mermaid` sagt, ob es geht. Ohne bleibt der Block Code mit Hinweis.
   Gezeichnet wird nur auf dem eigenen Rechner, nichts geht ins Internet.
-- **Word** setzt Mermaid-Diagramme noch nicht: dort bleibt der Block Code (mit Hinweis).
+- **Word:** das Diagramm steht als scharfes Bild in seiner natürlichen Größe (höchstens über die
+  Textbreite); ein Absatz `Abbildung: …` direkt darunter wird die Beschriftung „Abbildung n: …"
+  (Beispiel: `samples/funktionen/mermaid-bericht.md`).
 - Ein Syntaxfehler bricht mit der Zeile des Blocks und der Meldung von Mermaid ab.
 
 ## 6. Aus Python aufrufen (optional)
@@ -449,7 +456,8 @@ Fehler im Dokument melden sich als `DocumentConversionError` mit einem Satz, der
   `images/` oder der Pfad ist falsch geschrieben.
 - `The image 'images/plan.svg' cannot be converted: it has no size …` → dem SVG `width` und
   `height` oder eine `viewBox` geben (im Grafikprogramm mit fester Größe exportieren).
-- `… SVG images need the extra 'svg'` → `./run.sh setup` ausführen.
+- `… SVG images need the extra 'svg'` oder `… is a drawing, which Word places as an SVG image;
+  that needs the extra 'svg'` → `./run.sh setup` ausführen.
 - `The PTA layout of a chapter slide has no place for content` → Inhalt unter ein `##`.
 - `The mermaid block cannot be drawn: Parse error …` → Mermaid-Code berichtigen (ausprobieren
   z. B. mit `./run.sh mermaid datei.mmd`).

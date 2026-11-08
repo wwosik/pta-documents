@@ -94,8 +94,9 @@ Sprache = Hinweis `code-language-unknown`.
 - Abbildung: Bild allein im Absatz, Unterschrift als Bildtitel:
   `![Alt-Text](images/a.jpg "Unterschrift (Foto: Name, CC BY 4.0)")` → „Abbildung n: …".
 - Kein HTML (wird weggelassen, Hinweis `raw-html`; nur `<br>` in Tabellenzellen ist ein
-  Zeilenumbruch), keine Mermaid-Diagramme (Word zeigt sie als Code, Hinweis `code-not-drawn`).
-  Diagramme aus Zahlen: `chart`-Blöcke, siehe unten (`financial-chart` nur in PowerPoint).
+  Zeilenumbruch). Diagramme aus Zahlen: `chart`- und `financial-chart`-Blöcke, Abläufe:
+  `mermaid`, siehe unten; Beschriftung dazu mit einem Absatz `Abbildung: …` direkt nach dem
+  Block → „Abbildung n: …".
 - Folien-Syntax (`:::`-Container, Alerts `> [!NOTE]`, `==Markierung==`, `[Wörter]{.success}`)
   wird angenommen und schlicht gezeigt: Container-Inhalt nacheinander (`###` in Containern wird
   fett, keine Überschrift), Alerts/`conclusion`/`comment` als Hinweisabsatz mit fetter Art,
@@ -216,13 +217,14 @@ Q2, 11.8, 12.1
   Keine Tausenderpunkte, keine Einheiten in den Zellen. Leeres Feld = Lücke. Höchstens etwa
   zwölf Kategorien und fünf Reihen.
 - Word: Diagramm über die Textbreite, mit `title` darunter „Abbildung n: Titel", `source`
-  darunter, `unit` an der Werteachse. PowerPoint: ein Chart je Folie (`Titel und Diagramm`),
+  darunter, `unit` an der Werteachse; ein Absatz `Abbildung: …` direkt nach dem Block ersetzt
+  den Titel als Beschriftung. PowerPoint: ein Chart je Folie (`Titel und Diagramm`),
   Text davor oder danach → `Titel, Text und Diagramm` bzw. `Titel, Diagramm und Text`, zwei
   Charts (gern in `::: columns`) → `Titel und zwei Diagramme`; Titel, Einheit, Quelle in den
   Platzhaltern. Kein Chart auf Folien mit Hinweisboxen, Karten oder `.dark`.
 - Ein Fehler im Block bricht mit der Zeilennummer ab — die Meldung sagt, was zu ändern ist.
 
-## Finanzdiagramme (`financial-chart`, nur PowerPoint)
+## Finanzdiagramme (`financial-chart`)
 
 Für Ergebnisübersichten: ein Codeblock `financial-chart` mit **einem JSON-Objekt**. `type` ist
 `development`, `growth-by-row`, `actual-vs-reference`, `growth-trend`, `two-year` oder
@@ -235,20 +237,23 @@ Felder): `samples/funktionen/funktionen-praesentation.md`, Kapitel „Finanzdiag
 - Nur bekannte Schlüssel; Tippfehler, Text statt Zahl oder fehlende Pflichtfelder sind Fehler mit
   Zeilennummer. `"options"`: `culture`, `scale`, `unit`, `labels`, `tolerance`, `restShare`,
   `width`.
-- Eine Folie je Diagramm, Text davor oder danach geht; nicht auf Flow-Folien (`.dark`, Container)
-  und nicht in Word (Fehler).
+- Eine Folie je Diagramm, Text davor oder danach geht; nicht auf Flow-Folien (`.dark`, Container).
+- Word: ein Bild in natürlicher Größe; für eine Beschriftung direkt nach dem Block einen Absatz
+  `Abbildung: …` schreiben (sonst keine).
 
-## Mermaid-Diagramme (`mermaid`, nur PowerPoint)
+## Mermaid-Diagramme (`mermaid`)
 
 Abläufe, Sequenzen, Klassen, Zustände, Datenmodelle, Tortendiagramme, Pläne und Mindmaps als
-Codeblock `mermaid`; auf der Folie eine Gruppe bearbeitbarer Formen in den PTA-Farben. Vorlage
-für jede Art: `samples/funktionen/mermaid-praesentation.md`.
+Codeblock `mermaid`; auf der Folie eine Gruppe bearbeitbarer Formen in den PTA-Farben, in Word
+ein scharfes Bild (Beschriftung mit einem Absatz `Abbildung: …` direkt nach dem Block). Vorlage
+für jede Art: `samples/funktionen/mermaid-praesentation.md`, für Word
+`samples/funktionen/mermaid-bericht.md`.
 
 - Nur `flowchart`/`graph`, `sequenceDiagram`, `classDiagram`, `stateDiagram-v2`, `erDiagram`,
   `pie`, `gantt`, `mindmap`; andere Arten bleiben Code. Keine `classDef`/`style`-Farben.
 - Klein halten (bis etwa zwölf Knoten, kurze Beschriftungen), eine Folie je Diagramm.
-- Braucht mermaid-cli (`./run.sh mermaid` prüft es). Ohne — und in Word — bleibt der Block Code
-  mit Hinweis `code-not-drawn`; dann den Menschen fragen, statt das Diagramm anders nachzubauen.
+- Braucht mermaid-cli (`./run.sh mermaid` prüft es). Ohne bleibt der Block Code mit Hinweis
+  `code-not-drawn`; dann den Menschen fragen, statt das Diagramm anders nachzubauen.
 - Ein Syntaxfehler bricht mit Zeilennummer und der Meldung von Mermaid ab.
 
 ## Aus Python statt per Befehl

@@ -62,7 +62,7 @@ def test_a_native_chart_part_with_an_embedded_workbook(review_dir: Path) -> None
     second = etree.fromstring(files["word/charts/chart2.xml"])
     assert second.xpath("//c:ser[1]/c:val//c:pt/c:v/text()", namespaces=NS) == ["1.5", "2.5"]
 
-    # It opens with python-docx, inline over the text width at 640:380.
+    # It opens with python-docx, inline over the text width at 8:5 (E03-S04).
     document = open_docx(data)
     body: Any = cast(Any, document.element).body
     inlines = body.xpath(".//wp:inline[.//c:chart]")
@@ -72,7 +72,7 @@ def test_a_native_chart_part_with_an_embedded_workbook(review_dir: Path) -> None
     width = int(section.page_width or 0) - int(section.left_margin or 0)
     width -= int(section.right_margin or 0)
     assert int(extent.get("cx")) == width
-    assert int(extent.get("cy")) == round(width * 380 / 640)
+    assert int(extent.get("cy")) == round(width * 5 / 8)
     ids = body.xpath(".//wp:docPr/@id")
     assert len(ids) == len(set(ids))
     chart_rid = inlines[0].xpath(".//c:chart/@r:id")[0]

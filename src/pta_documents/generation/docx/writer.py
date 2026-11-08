@@ -32,7 +32,6 @@ from lxml import etree
 from markdown_it.token import Token
 from PIL import Image
 
-from pta_documents.charts.spec import ChartSpec
 from pta_documents.design import word
 from pta_documents.design.colors import STATUS_COLORS, StatusCategory
 from pta_documents.design.variants import GeneratedTexts
@@ -49,10 +48,16 @@ from pta_documents.generation.common import (
 )
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
 from pta_documents.generation.common.openxml import R, field_paragraph_runs, w
-from pta_documents.generation.common.renderers import ChartGraphic, ImageGraphic
+from pta_documents.generation.common.renderers import (
+    ChartGraphic,
+    CodeBlockGraphic,
+    DrawingGraphic,
+    ImageGraphic,
+)
 from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.generation.docx import chart as docx_chart
+from pta_documents.generation.docx import drawings as docx_drawings
 from pta_documents.generation.docx.options import DocxOptions
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
 from pta_documents.markdown.front_matter import FrontMatter
@@ -135,6 +140,8 @@ class BodyWriter:
         self.texts = texts
         self.figures = 0
         self.tables = 0
+        self.drawings = 0
+        """Drawings of the code-block renderers so far, for the names of their SVGs."""
         self.footnote_definitions: dict[int, list[Token]] = {}
         self.footnotes_part: Part | None = None
         self.footnotes_root: etree._Element | None = None
@@ -204,21 +211,12 @@ class BodyWriter:
                 return self.table_block(tokens, i)
             case "fence" | "code_block":
                 graphic = self.draw(token) if token.type == "fence" else None
-                if isinstance(graphic, ChartGraphic):
-                    self.chart_figure(graphic.chart, token.info.strip())
-                elif graphic is not None:
-                    paragraph = self.paragraph(word.STYLES.normal)
-                    self.place_picture(
-                        paragraph,
-                        graphic.image,
-                        graphic.image.path,
-                        token.info.strip(),
-                        "",
-                        self.line(token),
-                    )
-                else:
+                if graphic is None:
                     self.code_block(token)
-                return i + 1
+                    return i + 1
+                caption, after = self._figure_caption(tokens, i + 1, token.level)
+                self.graphic_figure(graphic, token, caption)
+                return after
             case "html_block":
                 if not html.is_comment(token.content):
                     html.note_raw_html(self.notes, self.line(token), WHAT)
@@ -245,23 +243,33 @@ class BodyWriter:
     def line(self, token: Token) -> int | None:
         return line_of(token, self.front.body_line)
 
-    def draw(self, fence: Token) -> ImageGraphic | ChartGraphic | None:
-        """The image or chart the code-block renderers make of ``fence``; None: it stays code.
-        Drawings raise until Word places them (E03-S04)."""
-        info = fence.info
-        line = self.line(fence)
-        graphic = code_blocks.render_graphic(
+    def draw(self, fence: Token) -> CodeBlockGraphic | None:
+        """The graphic the code-block renderers make of ``fence``; None: it stays code."""
+        return code_blocks.render_graphic(
             self.options.code_block_renderers,
             self.notes,
-            info,
+            fence.info,
             fence.content,
-            line,
+            self.line(fence),
             FORMAT,
             self.options.language,
         )
-        if graphic is None or isinstance(graphic, ImageGraphic | ChartGraphic):
-            return graphic
-        raise code_blocks.unsupported(graphic, info, line, FORMAT)
+
+    def _figure_caption(self, tokens: list[Token], i: int, level: int) -> tuple[Token | None, int]:
+        """The inline of an ``Abbildung: …`` paragraph at ``tokens[i]`` (directly after a
+        graphic, at its level) and the index after it; else None and ``i``."""
+        if (
+            i + 2 < len(tokens)
+            and tokens[i].type == "paragraph_open"
+            and tokens[i].level == level
+            and self._is_figure_caption(tokens[i + 1])
+        ):
+            return tokens[i + 1], i + 3
+        return None, i
+
+    def _is_figure_caption(self, inline: Token) -> bool:
+        prefixes = (self.texts.figure + ":", "Abbildung:", "Figure:")
+        return inline.content.startswith(prefixes)
 
     def container(self, tokens: list[Token], i: int, close: str, style: str | None) -> int:
         depth = 0
@@ -598,17 +606,57 @@ class BodyWriter:
             paragraph.paragraph_format.keep_with_next = True
             self.caption(self.texts.figure, None, text=text)
 
-    def chart_figure(self, spec: ChartSpec, info: str) -> None:
-        """A native chart over the text width; below it "Abbildung n: <title>" when the chart
-        has a title, and its source in the caption style without a number."""
+    def graphic_figure(
+        self, graphic: CodeBlockGraphic, fence: Token, caption: Token | None
+    ) -> None:
+        """A graphic of a code-block renderer in its own paragraph (E03-S04), below it
+        "Abbildung n: …" from ``caption`` (an ``Abbildung: …`` paragraph after the block) or
+        the chart's title; without either no caption. Graphic and caption stay together."""
+        info = fence.info.strip()
+        line = self.line(fence)
         paragraph = self.paragraph(word.STYLES.normal)
-        docx_chart.add_chart(paragraph, spec, self.text_width, spec.title or info)
-        if spec.title or spec.source:
+        title: str | None = None
+        source: str | None = None
+        match graphic:
+            case ChartGraphic(chart=spec):
+                width, height = self.chart_size()
+                docx_chart.add_chart(paragraph, spec, width, height, spec.title or info)
+                title, source = spec.title, spec.source
+            case DrawingGraphic(drawing=drawing):
+                self.drawings += 1
+                conversion = docx_drawings.convert(
+                    drawing, info, line, self.drawings, self.options.image_converters
+                )
+                self.insert_picture(
+                    paragraph,
+                    conversion.image,
+                    conversion.image.path,
+                    info,
+                    "",
+                    line,
+                    natural=(conversion.width, conversion.height),
+                    svg=conversion.svg,
+                )
+            case ImageGraphic(image=image):
+                self.place_picture(paragraph, image, image.path, info, "", line)
+        if caption is not None or title or source:
             paragraph.paragraph_format.keep_with_next = True
-        if spec.title:
-            self.caption(self.texts.figure, None, text=spec.title)
-        if spec.source:
-            _append_text(self.paragraph(word.STYLES.caption)._p, spec.source)
+        if caption is not None:
+            self.caption(self.texts.figure, caption, strip_prefix=True)
+        elif title:
+            self.caption(self.texts.figure, None, text=title)
+        if source:
+            _append_text(self.paragraph(word.STYLES.caption)._p, source)
+
+    def chart_size(self) -> tuple[int, int]:
+        """A chart is as wide as the text and at most 5:8 as high, but never higher than 80 %
+        of the text height (E03-S04), in EMU."""
+        width = self.text_width
+        height = min(
+            round(width * word.CHART_HEIGHT_RATIO),
+            int(self.text_height * word.FIGURE_HEIGHT_SHARE),
+        )
+        return width, height
 
     def caption(
         self,
@@ -678,6 +726,25 @@ class BodyWriter:
             resource = conversion.image
             natural = (conversion.width, conversion.height)
             svg = conversion.svg
+        self.insert_picture(
+            paragraph, resource, source, alt, title, line, max_width, natural=natural, svg=svg
+        )
+
+    def insert_picture(
+        self,
+        paragraph: Paragraph,
+        resource: DocumentResource,
+        source: str,
+        alt: str,
+        title: str,
+        line: int | None,
+        max_width: int | None = None,
+        *,
+        natural: tuple[float, float] | None = None,
+        svg: bytes | None = None,
+    ) -> None:
+        """``resource`` (PNG, JPEG …) as a picture in ``paragraph``, at its ``natural`` size in
+        pixels if given, with ``svg`` beside it (``asvg:svgBlip``) if given."""
         width, height = self._image_size(resource.content, natural, max_width)
         with Image.open(io.BytesIO(resource.content)) as opened:
             factor = width / (opened.size[0] * EMU_PER_PIXEL)
@@ -726,7 +793,7 @@ class BodyWriter:
             width = pixels_x / dpi_x * EMU_PER_INCH
             height = pixels_y / dpi_y * EMU_PER_INCH
         widest = min(self.text_width, max_width or self.text_width)
-        scale = min(1.0, widest / width, self.text_height * 0.8 / height)
+        scale = min(1.0, widest / width, self.text_height * word.FIGURE_HEIGHT_SHARE / height)
         return int(width * scale), int(height * scale)
 
     # ------------------------------------------------------------------ other blocks

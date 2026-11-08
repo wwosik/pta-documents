@@ -89,7 +89,9 @@ flowchart LR
 - Diagramme klein halten: bis etwa zwölf Knoten, kurze Beschriftungen. Ein breites Diagramm wird
   samt Schrift verkleinert und schwer lesbar.
 - Farben kommen aus dem Design; `classDef`, `style` und Symbole besser weglassen.
-- Word setzt Diagramme noch nicht; dort bleibt der Block Code (mit Hinweis).
+- **Word:** Das Diagramm steht als Bild (scharf als SVG, mit PNG für ältere Word-Versionen)
+  in seiner natürlichen Größe, höchstens über die Satzspiegelbreite. Ein Absatz
+  `Abbildung: …` direkt nach dem Block wird die Beschriftung „Abbildung n: …".
 - {errors}
 """
 
@@ -188,20 +190,14 @@ class MermaidRenderer:
         """A ``DrawingGraphic`` for a ``mermaid`` block of a supported type; None for other
         languages and types.
 
-        Raises ``RendererUnavailableError`` when mmdc or Chromium cannot run here or the
-        format has no place for drawings (Word), and ``ValueError`` for a diagram that cannot
-        be drawn (unless ``on_error`` is ``KEEP_CODE``).
+        Raises ``RendererUnavailableError`` when mmdc or Chromium cannot run here, and
+        ``ValueError`` for a diagram that cannot be drawn (unless ``on_error`` is ``KEEP_CODE``).
         """
         words = request.info.split()
         if not words or words[0].lower() != LANGUAGE:
             return None
         if diagram_type(request.code) not in SUPPORTED:
             return None
-        if request.format is DocumentFormat.DOCX:
-            raise RendererUnavailableError(
-                "Word does not draw Mermaid diagrams yet; PowerPoint does. Leave the block "
-                "out of the report, or keep it as code."
-            )
         try:
             svg = self.run(request)
             return DrawingGraphic(to_drawing(svg))

@@ -8,8 +8,11 @@ from pathlib import Path
 from PIL import Image
 
 from pta_documents import GenerationResult, NoteCodes
+from pta_documents.charts.renderer import ChartRenderer
 from pta_documents.generation.docx.generator import DocxGenerator
+from pta_documents.generation.docx.options import DocxOptions
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
+from tests.diagrams.support import drawable
 from tests.generation.docx.conftest import open_docx
 
 REPO = Path(__file__).resolve().parents[3]
@@ -64,7 +67,10 @@ def test_html_in_tables_lists_and_footnotes_is_noted() -> None:
 
 
 def test_a_diagram_block_is_noted_as_not_drawn() -> None:
-    result = run(FRONT + "# K\n\n```mermaid\ngraph TD\n```\n\n```json\n{}\n```\n")
+    # Without the Mermaid renderer: with mermaid-cli set up, Word draws Mermaid (E03-S04).
+    options = DocxOptions(code_block_renderers=(ChartRenderer(),))
+    markdown = FRONT + "# K\n\n```mermaid\ngraph TD\n```\n\n```json\n{}\n```\n"
+    result = DocxGenerator().generate(MarkdownDocument(markdown), io.BytesIO(), options)
     assert [(n.code, n.line) for n in result.notes] == [(NoteCodes.CODE_NOT_DRAWN, 6)]
     assert "`mermaid`" in result.notes[0].message
 
@@ -86,6 +92,8 @@ def test_the_samples_generate_without_notes() -> None:
             for p in sorted((root / "images").glob("*"))
         )
         for source in sorted(root.glob("*-bericht.md")) + sorted(root.glob("*-dokument.md")):
+            if not drawable(source.read_text(encoding="utf-8")):
+                continue  # Mermaid without mermaid-cli: tests/diagrams covers it
             result = run(source.read_text(encoding="utf-8"), images)
             assert result.notes == (), f"{source.name}:\n{result}"
 

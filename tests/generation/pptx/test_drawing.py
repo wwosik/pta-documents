@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import io
 from pathlib import Path
 from typing import Final
 
@@ -26,10 +25,8 @@ from pta_documents.drawing import (
     ShapeKind,
     TextAnchor,
 )
-from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.docx.generator import DocxGenerator
+from pta_documents.errors import DocumentConversionError
 from pta_documents.generation.pptx import drawing as writer
-from pta_documents.markdown import MarkdownDocument
 from tests.charts.financial import figures
 from tests.generation.pptx.conftest import generate, open_pptx
 
@@ -173,11 +170,3 @@ def test_the_converter_leaves_the_drawing_out() -> None:
 def test_a_flow_slide_has_no_place_for_a_drawing() -> None:
     with pytest.raises(DocumentConversionError, match="financial-chart` drawing goes on a slide"):
         generate(f"# D\n\n## Dunkel {{.dark}}\n\n{block(figures.growth_trend())}")
-
-
-def test_word_does_not_place_drawings_yet() -> None:
-    markdown = f"---\ntitel: T\n---\n\n# A\n\n{block(figures.growth_trend())}"
-    with pytest.raises(DocumentConversionError) as failure:
-        DocxGenerator().generate(MarkdownDocument(markdown), io.BytesIO())
-    assert failure.value.format is DocumentFormat.DOCX
-    assert "rendered as a drawing, which DOCX does not support yet" in failure.value.reason

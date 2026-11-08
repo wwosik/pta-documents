@@ -6,7 +6,8 @@ round trip through the converter is committed as ``funktionen/<file>.roundtrip.e
 ``.tmp/review/funktionen/``. What has to be shown comes from the code: the front matter keys of
 each generator, the template variants, the containers, alerts and heading attributes of the
 slide syntax, ``==mark==``, coloured words, status labels, the ``chart`` blocks (every kind,
-setting and separator) and in the deck the ``financial-chart`` blocks (every type and option).
+setting and separator), in the deck the ``financial-chart`` blocks (every type and option), in
+the report one of them and an ``Abbildung: …`` caption after a graphic (E03-S04).
 When the authoring guides exist (E02-S05), the list comes from their syntax instead.
 """
 
@@ -34,7 +35,7 @@ from pta_documents.design.slides import TITLE_SLIDES
 from pta_documents.design.variants import Language, SlidesVariant, WordVariant
 from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common import heading_attributes, layout_syntax
-from pta_documents.generation.common.code_blocks import fence_language
+from pta_documents.generation.common.code_blocks import KNOWN_GRAPHIC_LANGUAGES, fence_language
 from pta_documents.generation.common.coloured_words import PATTERN
 from pta_documents.generation.docx import generator as docx_generator
 from pta_documents.generation.docx.generator import DocxGenerator
@@ -54,6 +55,8 @@ NOT_SAMPLES: Final = ("readme.md", "quellen.md")
 CHART: Final = "chart"
 FINANCIAL: Final = financial_block.LANGUAGE
 SOURCE: Final = "markdown"
+FIGURE_CAPTION: Final = "Abbildung: … after a graphic"
+FIGURE_CAPTIONS: Final = ("Abbildung:", "Figure:")
 """The language of the fences that show the Markdown source of a feature."""
 DOCX: Final = DocumentFormat.DOCX
 PPTX: Final = DocumentFormat.PPTX
@@ -181,6 +184,22 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
             cell = re.fullmatch(r"`([^`]+)`", token.content.strip())
             if tokens[i - 1].type == "td_open" and cell and cell.group(1) in labels:
                 shown.add(f"status label: status.{labels[cell.group(1)].value}")
+        if figure_caption_after(tokens, i):
+            shown.add(FIGURE_CAPTION)
+
+
+def figure_caption_after(tokens: list[Token], i: int) -> bool:
+    """Whether ``tokens[i]`` is a fence in a graphic language with an ``Abbildung: …``
+    paragraph directly after it (E03-S04)."""
+    token = tokens[i]
+    if token.type != "fence" or fence_language(token.info) not in KNOWN_GRAPHIC_LANGUAGES:
+        return False
+    after = tokens[i + 1 : i + 3]
+    return (
+        len(after) == 2
+        and after[0].type == "paragraph_open"
+        and after[1].content.startswith(FIGURE_CAPTIONS)
+    )
 
 
 def shown_in_chart(code: str, shown: set[str]) -> None:
@@ -200,6 +219,7 @@ def shown_in_financial_chart(code: str, shown: set[str]) -> None:
     """The type and the options a ``financial-chart`` block shows."""
     chart, _ = financial_block.parse(code)
     names = {kind: name for name, kind in CHART_TYPES.items()}
+    shown.add(f"```{FINANCIAL}")
     shown.add(f"```{FINANCIAL} type: {names[type(chart)]}")
     options = re.search(r'"options"\s*:\s*\{(.*)\}', code, re.DOTALL)
     for key in re.findall(r'"(\w+)"\s*:', options.group(1) if options else ""):
@@ -230,8 +250,10 @@ def required(format: DocumentFormat) -> set[str]:
     result |= {f"```{CHART} type: {kind.value}" for kind in ChartKind}
     result |= {f"```{CHART} {key}:" for key in chart_parser.SETTINGS}
     result |= {f"```{CHART} separator ,", f"```{CHART} separator ;"}
+    if format is DOCX:
+        # Word places drawings as pictures (E03-S04); every type and option is in the deck.
+        result |= {f"```{FINANCIAL}", FIGURE_CAPTION}
     if format is PPTX:
-        # Word places no drawings yet (E03-S04): the financial charts are shown in the deck.
         result |= {f"```{FINANCIAL} type: {name}" for name in CHART_TYPES}
         result |= {f"```{FINANCIAL} options: {key}" for key in financial_block.OPTION_KEYS}
         # Word drops the heading attributes; they are slide syntax.
