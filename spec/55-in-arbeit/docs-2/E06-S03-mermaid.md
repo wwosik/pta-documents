@@ -1,8 +1,8 @@
 # E06-S03 Mermaid über mermaid-cli
 
-> Status: Entwurf
-> Epic: [E06 Diagramme und Charts](E06-diagramme-und-charts.md)
-> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E06 Diagramme und Charts](../../50-entwurf/E06-diagramme-und-charts.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](../../50-entwurf/M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 
