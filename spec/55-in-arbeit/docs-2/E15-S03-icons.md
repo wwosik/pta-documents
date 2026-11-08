@@ -1,8 +1,8 @@
 # E15-S03 Icons
 
-> Status: Entwurf
-> Epic: [E15 Visuelle Bausteine](E15-visuelle-bausteine.md)
-> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E15 Visuelle Bausteine](../../50-entwurf/E15-visuelle-bausteine.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](../../50-entwurf/M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 
