@@ -45,7 +45,8 @@ weil ihm vertraut wird.
   `make_document`, Feature-Tour. Abgleich: `spec/10-analysen/2026-11-07 abgleich-vt-tools-libs.md`;
   daraus die Epics E08–E10. E11–E17 sind eigene Ideen (Bausteine, Dokumentpflege, lange
   Berichte, Dokumenttypen der Beratung, visuelle Bausteine, Schulung, Arbeitsfluss), alle Stand
-  2026-11-07 im Entwurf und vom Menschen zur Umsetzung gewünscht; E08-S04 ist zurückgestellt.
+  2026-11-07 im Entwurf und vom Menschen zur Umsetzung gewünscht; E08-S04 war zurückgestellt
+  und ist seit 2026-11-08 umgesetzt (in Prüfung).
 - **Umsetzungsreihenfolge** nach M01: Meilensteine M02 (Rückmeldung, Folien-Syntax) → M03
   (Grafik, Charts) → M04 (Präsentieren, Schulung, Guides) → M05 (PDF) → M06 (Inhalte,
   Dokumentpflege); jede der 59 offenen Stories nennt ihren Meilenstein im Kopf.
@@ -211,6 +212,14 @@ weil ihm vertraut wird.
   (Test prüft das). Front-Matter-Schlüssel `pruefung` (`Keys.CHECK`) steht in `VALID_KEYS` beider
   Generatoren, die ihn ignorieren — ein neuer Generator (PDF) muss ihn auch annehmen. `samples/`
   muss `check --strict` bestehen (`test_the_samples_pass_the_check_without_notes`).
+- **Werkzeug `make_document`** (E08-S04): `pta_documents.tool` (`ToolOptions`, `describe`, `run`,
+  `reply`, `combined_guide`), ohne KI-SDK (Test durchsucht `src/`). Die PDF-Optionen nur unter
+  `TYPE_CHECKING` importieren, Generatoren erst in der Funktion — sonst braucht das Werkzeug das
+  Extra `pdf`. `vorlage` wird als `variant` in die Optionen gesetzt, das Front Matter überschreibt
+  es im Generator. Der kombinierte Guide entsteht aus den **erzeugten** Guides (Abschnitte an
+  `##`, Zeilen per `difflib`) — ändert sich ein Guide, folgt er von selbst; nur neue
+  Abschnittsarten (etwa ein `###`, das anderswo `##` ist) brauchen Code. Grenze im Test 4 500
+  Wörter für alle drei Formate (PowerPoint allein ~3 200). `jsonschema` nur in `dev`.
 - **Funktionsübersicht** (E08-S03): `tests/samples/test_funktionen.py` verlangt, dass
   `samples/funktionen/` jede Syntax, jeden Front-Matter-Schlüssel (`VALID_KEYS` je Generator,
   `status.<kategorie>`) und jede Vorlagenvariante (`vorlage`, `sprache`, `titelfolie`) zeigt —
