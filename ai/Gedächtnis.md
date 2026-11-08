@@ -25,7 +25,7 @@ weil ihm vertraut wird.
   `DocumentFormat`), `markdown/` (Dokumentmodell, Front Matter, Parser), `design/`
   (Designmodell, eingebettete Vorlagen), `drawing/` (Zeichenmodell, SVG aus und nach
   `Drawing`), `diagrams/` (Mermaid), `conversions/`
-  (→ Markdown), `generation/` (`common/`, `docx/`, `pptx/`).
+  (→ Markdown), `generation/` (`common/`, `docx/`, `pptx/`, `pdf/` seit E05-S01).
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
   eingebettete Vorlagen. PDF, Diagramme/Charts und PDF-Konverter sind nur geplant; die
@@ -305,3 +305,18 @@ weil ihm vertraut wird.
   braucht wie die Mermaid-Präsentation mmdc (Tests überspringen sie sonst über `drawable`, auch
   `tests/generation/docx/test_notes.py`). `test_funktionen.py` verlangt im Bericht einen
   `financial-chart` und eine `Abbildung: …`-Beschriftung nach einer Grafik.
+- **PDF-Grundgerüst** (E05-S01): `generation/pdf/` ist nur mit Extra `pdf` importierbar
+  (`__init__` wirft sonst `ImportError(EXTRA_MISSING)`); `check` und die Werkzeuge importieren es
+  erst bei `--pdf`/`DocumentFormat.PDF`, der Kern nie. Ablauf in `PdfGenerator.generate`: Front
+  Matter (`VALID_KEYS` ⊂ DOCX) → `parse` + `layout_syntax.check` → `PdfFonts(resolve())` →
+  `Notes.characters` (Hinweis `character-missing`) → **`generator.BODY_LAYOUT(BodySource,
+  FontMetrics) -> Layout`** (Naht zur Layout-Engine, vorläufig `simple_layout.lay_out`; E05-S02
+  ersetzt sie) → `renderer.render` (reportlab, invariant) → `pdfa.to_pdfa` (pikepdf).
+  `page_model` in Punkten, Ursprung oben links, y nach unten; gespiegelt wird nur im Renderer.
+  reportlab-Schriften heißen `PTA-<sha8>` des Inhalts (Kursiv = gleicher Name, schräggestellt über
+  die Textmatrix). Pillows sRGB-Profil trägt die aktuelle Uhrzeit — `pdfa.srgb_profile` setzt sie
+  fest, sonst sind Dateien nicht byte-gleich. Selawik hat **weder Griechisch noch Kyrillisch**
+  (Gelasio etwas Griechisch); ohne Segoe UI werden solche Zeichen `?`. reportlab ist ungetypt
+  und seine abgeleiteten Typen falsch (`initialFontName: float`): `CANVAS: Any`. Tests mit
+  `PdfOptions(created=…, system_fonts=False)`, damit sie nicht vom Rechner abhängen; veraPDF ist
+  hier nicht installiert (Test wird übersprungen).

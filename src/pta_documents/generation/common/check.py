@@ -3,8 +3,9 @@
 ``check()`` is what ``./run.sh check`` runs (E08-S02). Errors and notes come from a trial run of
 the generator into memory — the same code path as ``generate``, so the check never says less or
 other than generating would. Style notes come from ``style_rules`` on the Markdown, the
-statistics from the trial deck (PowerPoint) or the Markdown (Word, which counts its pages only
-when it lays the document out).
+statistics from the trial deck (PowerPoint), the trial PDF (its pages) or the Markdown (Word,
+which counts its pages only when it lays the document out). PDF needs the extra ``pdf``; its
+generator is only imported for a PDF check.
 
 Usage::
 
@@ -18,11 +19,12 @@ Usage::
 
 from __future__ import annotations
 
+import importlib
 import io
 import math
 import statistics
-from dataclasses import dataclass, field
-from typing import Final
+from dataclasses import dataclass, field, replace
+from typing import BinaryIO, Final, Protocol, cast
 
 import pptx
 from lxml import etree
@@ -121,18 +123,22 @@ class DeckStats:
 
 @dataclass(frozen=True)
 class ReportStats:
-    """The figures of a Word document, counted on the Markdown."""
+    """The figures of a Word document or a PDF, counted on the Markdown."""
 
     words: int
     """Words of the text (code blocks, front matter and speaker notes not counted)."""
     headings: int
     tables: int
     figures: int
+    counted_pages: int | None = None
+    """The pages of the trial PDF; None for Word."""
 
     @property
     def pages(self) -> int:
-        """Rough page count: 350 words a page plus half a page per table and figure; Word
-        counts the real number only when it opens the document."""
+        """The pages of the trial PDF, else a rough count: 350 words a page plus half a page
+        per table and figure; Word counts the real number only when it opens the document."""
+        if self.counted_pages is not None:
+            return self.counted_pages
         return max(
             1,
             math.ceil(self.words / WORDS_PER_PAGE + PAGES_PER_BLOCK * (self.tables + self.figures)),
@@ -140,9 +146,14 @@ class ReportStats:
 
     def lines(self) -> tuple[str, str]:
         """Two lines for people."""
-        return (
+        counts = (
             f"{self.words} words, {self.headings} headings, {self.tables} tables, "
-            f"{self.figures} figures",
+            f"{self.figures} figures"
+        )
+        if self.counted_pages is not None:
+            return counts, f"{self.counted_pages} pages (counted on the trial PDF)"
+        return (
+            counts,
             f"about {self.pages} pages (rule of thumb: {WORDS_PER_PAGE} words a page plus half a "
             "page per table and figure; Word counts when it opens the document)",
         )
@@ -174,20 +185,25 @@ class CheckResult:
 def check(
     document: MarkdownDocument, format: DocumentFormat, options: CheckOptions | None = None
 ) -> CheckResult:
-    """Check ``document`` for ``format`` (``DOCX`` or ``PPTX``) without writing a file."""
+    """Check ``document`` for ``format`` (``DOCX``, ``PPTX`` or ``PDF``) without writing a
+    file."""
     options = options or CheckOptions()
-    if format not in (DocumentFormat.DOCX, DocumentFormat.PPTX):
-        raise ValueError(f"check() takes DOCX or PPTX, not {format}")
+    if format not in (DocumentFormat.DOCX, DocumentFormat.PPTX, DocumentFormat.PDF):
+        raise ValueError(f"check() takes DOCX, PPTX or PDF, not {format}")
     errors: list[str] = []
     generated: GenerationResult | None = None
     output = io.BytesIO()
     try:
         if format is DocumentFormat.PPTX:
             generated = PptxGenerator().generate(document, output)
+        elif format is DocumentFormat.PDF:
+            generated = _pdf_generator().generate(document, output)
         else:
             generated = DocxGenerator().generate(document, output)
     except DocumentConversionError as error:
         errors.append(error.reason)
+    except ImportError as error:  # PDF without the extra: the message names it
+        errors.append(str(error))
     style: tuple[GenerationNote, ...] = ()
     try:
         style = style_notes(
@@ -208,12 +224,23 @@ def check(
     )
     stats: CheckStats | None = None
     if not errors:
-        stats = (
-            deck_stats(output.getvalue())
-            if format is DocumentFormat.PPTX
-            else report_stats(document, format)
-        )
+        if format is DocumentFormat.PPTX:
+            stats = deck_stats(output.getvalue())
+        else:
+            stats = report_stats(document, format)
+            if generated is not None and generated.pages is not None:
+                stats = replace(stats, counted_pages=generated.pages)
     return CheckResult(tuple(errors), notes, stats)
+
+
+class _Generator(Protocol):
+    def generate(self, document: MarkdownDocument, output: BinaryIO) -> GenerationResult: ...
+
+
+def _pdf_generator() -> _Generator:
+    """The PDF generator, imported only now: it needs the extra ``pdf``."""
+    module = importlib.import_module("pta_documents.generation.pdf")
+    return cast(_Generator, module.PdfGenerator())
 
 
 def deck_stats(deck: bytes) -> DeckStats:

@@ -4,7 +4,9 @@ Stand nach Meilenstein M01: Markdown → Word und PowerPoint auf den PTA-Vorlage
 PowerPoint → Markdown; seit E06-S01 native Diagramme aus `chart`-Blöcken in beiden Formaten,
 seit E06-S02 Finanzdiagramme (`financial-chart`) als Formengruppe in PowerPoint und als SVG,
 seit E06-S03 Mermaid-Diagramme (`mermaid`, über mermaid-cli) als Formengruppe in PowerPoint,
-seit E03-S04 beide auch in Word als Abbildung (SVG mit PNG-Ersatz). PDF folgt (E05).
+seit E03-S04 beide auch in Word als Abbildung (SVG mit PNG-Ersatz). Seit E05-S01 das
+Grundgerüst des PDF-Generators (PDF/A-2b, vorerst nur schlichter Text, siehe
+[Markdown → PDF](#markdown--pdf-e05-s01)); die Layout-Engine folgt mit E05-S02.
 
 ## Einrichten
 
@@ -58,6 +60,61 @@ Tabellenformat „PTA", ein Absatz `Tabelle: …` direkt danach wird „Tabelle 
 im Absatz bekommt „Abbildung n: …" aus Titel oder Alt-Text; Codeblöcke → „Code", Zitate →
 „Zitat"; Fußnoten werden Word-Fußnoten; Diagramme und Charts aus Codeblöcken siehe
 [Grafiken in Word](#grafiken-in-word-e03-s04). Folien-Syntax: siehe *Folien-Syntax in Word* unten.
+
+## Markdown → PDF (E05-S01)
+
+Braucht das Extra `pdf` (reportlab, pikepdf; `./run.sh setup` installiert es). Ohne Extra
+schlägt schon der Import fehl, mit einem `ImportError`, der `pip install -e '.[pdf]'` nennt.
+
+```python
+import datetime as dt
+
+from pta_documents.generation.pdf import PdfGenerator, PdfOptions
+
+with open("bericht.pdf", "wb") as output:
+    result = PdfGenerator().generate(document, output, PdfOptions(created=dt.datetime(2026, 11, 8)))
+print(result.pages, result)
+```
+
+```sh
+./run.sh generate bericht.md --pdf     # schreibt bericht.pdf daneben
+./run.sh check bericht.md --pdf        # Probelauf, zählt die Seiten
+```
+
+- **Stand:** Das Ergebnis ist ein PDF/A-2b mit eingebetteten Schriften und Metadaten, aber noch
+  **ohne PTA-Layout**: jeder Block wird schlichter, linksbündiger Text auf A4 (Überschriften fett,
+  Code in der Codeschrift, Listen mit „–", Tabellenzeilen als Zellen nebeneinander, Ränder der
+  Word-Vorlage). Bilder, Links, Lesezeichen, Nummerierung, Formatvorlagen und
+  Seitenumbruchregeln kommen mit der Layout-Engine (E05-S02), Deckblatt, Kopf- und Fußzeile mit
+  E05-S03.
+- **Front Matter:** dieselben Schlüssel wie Word, außer `typografie` und `syntaxhervorhebung`
+  (kommen mit E05-S02): `vorlage` (Hoch- oder Querformat; Vorlagen mit Deckblatt brauchen wie in
+  Word einen `titel`), `titel`, `untertitel`, `autor`, `ort`, `datum`, `firma`, `sprache`,
+  `inhaltsverzeichnis`, `pruefung`, `status.<kategorie>`. Titel und Autor fallen auf
+  `document.metadata` zurück.
+- **`PdfOptions`:** `variant`, `language`, `date`, `company`, `toc` wie `DocxOptions`;
+  `created` (Zeitstempel der Metadaten, sonst jetzt in UTC — gleiche Eingabe und gleiches
+  `created` ergeben byte-gleiche Dateien); `system_fonts` (Standard `True`: Segoe UI und Consolas
+  aus dem System, wenn vollständig installiert, sonst Selawik und Inconsolata, siehe
+  [Schriften](#schriften-für-pdf-und-svg-e01-s03)); `replace_unsupported` (für E05-S04),
+  `code_block_renderers`, `image_converters` (noch ohne Wirkung).
+- **Fehlende Zeichen:** Selawik hat weder Griechisch noch Kyrillisch noch U+00A0. Ein Zeichen,
+  das der Schrift fehlt, wird `?` (Leerraum ein Leerzeichen), mit dem Hinweis
+  `character-missing` an seiner ersten Zeile — PDF/A erlaubt kein `.notdef`.
+- **PDF/A-2b:** XMP mit `pdfaid:part` 2 / `conformance` B, Titel, Autor, Sprache, Producer
+  „PTA Documents" und Zeitstempel gleich im Info-Dictionary; OutputIntent `GTS_PDFA1` mit
+  sRGB-Profil (aus Pillow); `/F 4` auf jeder Annotation; `/Lang` (`de-DE`/`en`); PDF 1.7;
+  `/ID` aus dem Inhalt; unverschlüsselt. Geprüft wird der Aufbau mit pikepdf; veraPDF
+  (`verapdf --flavour 2b`) prüft ein Test nur, wenn `verapdf` im `PATH` liegt.
+- **Aufbau** (`generation/pdf/`): `generator.py` (Front Matter, Parser, Schriften, dann
+  `BODY_LAYOUT`), `body.py` (`BodySource`, Protocol `BodyLayout`: die Naht zur Layout-Engine),
+  `simple_layout.py` (das vorläufige Layout), `page_model.py` (`Layout`, `LaidOutPage`,
+  `TextItem`, `LineItem`, `RectItem`, `ImageItem`, `ShapeItem`, `LinkItem`, `Anchor`,
+  `Bookmark`, `PageGeometry`; Punkte, Ursprung oben links), `fonts.py` (Protocol `FontMetrics`,
+  `PdfFonts`), `renderer.py` (`render(layout, fonts, info)`, reportlab), `pdfa.py`
+  (`to_pdfa(data, info)`, pikepdf), `metadata.py` (`PdfInfo`).
+- **Lizenzen:** reportlab BSD, pikepdf MPL-2.0 (nur als Bibliothek genutzt, nicht verändert),
+  pdfplumber MIT (nur Tests und PDF-Konverter).
 
 ## Markdown → PowerPoint
 
@@ -756,7 +813,7 @@ Modul `pta_documents.generation.common.result`):
 | ---- | ------ |
 | `notes` | Tupel von `GenerationNote(code, line, message)`, nach Zeile sortiert, jeder Hinweis einmal; leer, wenn nichts umgangen werden musste |
 | `slides` | Zahl der Folien (PowerPoint), sonst `None` |
-| `pages` | Zahl der Seiten (PDF, später), sonst `None` — Word zählt Seiten erst beim Öffnen |
+| `pages` | Zahl der Seiten (PDF), sonst `None` — Word zählt Seiten erst beim Öffnen |
 
 `line` ist die Zeile im Markdown, Front Matter mitgezählt (oder `None`); `message` ist ein
 englischer Satz, was geschah und was stattdessen zu schreiben ist. `str(note)` ergibt
@@ -772,7 +829,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `image-enlarged` (`IMAGE_ENLARGED`) | PPTX, DOCX | ein Bild wird mehr als doppelt so groß gezeigt wie seine Pixel bei 96 dpi und wirkt unscharf |
 | `raw-html` (`RAW_HTML`) | PPTX, DOCX | rohes HTML im Markdown; es wird **weggelassen**. HTML-Kommentare `<!-- … -->` fallen ohne Hinweis weg, `<br>` ist ein Zeilenumbruch |
 | `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt) |
-| `character-missing` (`CHARACTER_MISSING`) | PDF (E05-S04) | ein Zeichen fehlt in den Schriften |
+| `character-missing` (`CHARACTER_MISSING`) | PDF | ein Zeichen fehlt in den Schriften; es erscheint als `?` (bis E05-S04 Ersatz vorschlägt) |
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01) | Sprechernotizen fallen im Word-Dokument weg |
 | `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02) | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |
 
@@ -783,12 +840,12 @@ Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 
 ## Prüfen ohne Erzeugen (`check`)
 
 ```sh
-./run.sh check <datei-oder-ordner> [...] [--docx | --pptx] [--strict] [--skip <code>,…] [--sources] [--json]
+./run.sh check <datei-oder-ordner> [...] [--docx | --pptx | --pdf] [--strict] [--skip <code>,…] [--sources] [--json]
 ```
 
 prüft Markdown-Dateien, **ohne eine Datei zu schreiben**. Dateiauswahl und Formatwahl wie bei
-`generate`. Je Datei: `OK <datei>` bzw. `ERROR <datei>: <grund>`, dann die Hinweise
-(`  - line 12: … [code]`), dann zwei Zeilen Statistik. Exit-Code 1 bei Fehlern, mit `--strict`
+`generate` (PDF nur mit `--pdf`, Extra `pdf`; die Stilregeln sind die von Word). Je Datei:
+`OK <datei>` bzw. `ERROR <datei>: <grund>`, dann die Hinweise (`  - line 12: … [code]`), dann zwei Zeilen Statistik. Exit-Code 1 bei Fehlern, mit `--strict`
 auch bei Hinweisen; `--json` gibt dasselbe als ein JSON-Objekt aus
 (`{"ok": …, "files": [{"file", "ok", "errors", "notes": [{"code", "line", "message"}], "stats"}]}`).
 
@@ -822,6 +879,7 @@ und ignorieren ihn.
 - Word (`ReportStats`, gezählt am Markdown): Wörter (ohne Code und Notizen), Überschriften,
   Tabellen, Abbildungen; `pages` = Wörter / 350 plus eine halbe Seite je Tabelle und Abbildung —
   die echte Seitenzahl kennt erst Word beim Öffnen.
+- PDF (`ReportStats` wie Word, dazu `counted_pages`): `pages` sind die Seiten des Probe-PDFs.
 
 ## Beliebiges Dokument → Markdown
 
@@ -892,7 +950,7 @@ eine Rundreise den geschriebenen Text wiederfindet. Codeblöcke des DOCX-Generat
 `samples/` enthält Beispielinhalte, z. B. `samples/gsb/` (Hauptbeskidenweg, mit CC-Fotos).
 `./run.sh generate-samples [name]` erzeugt daraus DOCX (`*-bericht.md`, `*-dokument.md`) und
 PPTX (`*-praesentation.md`, `*-folien.md`) nach `.tmp/samples/<name>/`. Für beliebige Ordner und
-Dateien gibt es `./run.sh generate <pfad> [--docx|--pptx] [--out <ordner>] [--strict]` (siehe
+Dateien gibt es `./run.sh generate <pfad> [--docx|--pptx|--pdf] [--out <ordner>] [--strict]` (siehe
 [anleitung.md](anleitung.md)). Die Beispiele erzeugen ohne Hinweise.
 
 **Funktionsübersicht** (E08-S03): `samples/funktionen/` zeigt jede Funktion; der Word-Bericht
