@@ -76,3 +76,8 @@ generiert. Die Guides selbst schreiben E03-S05, E04-S06 und E05-S05.
 
 - (2026-11-07, E08-S01) Der Abschnitt „Hinweise, die zurückkommen können" listet `NoteCodes.ALL`
   (`generation/common/result.py`); die Tabelle in `docs/verwendung.md` (Hinweise) ist die Vorlage.
+- (E17-S02, docs-2) Die Guides bekommen einen Abschnitt „Typografie": gerade Anführungszeichen
+  schreiben, die Generatoren setzen sie (Liste der Ersetzungen in `docs/verwendung.md`,
+  *Typografie und Code*); Code, Links und Front Matter bleiben unberührt; `typografie: nein`;
+  Codeblöcke mit Sprache werden farbig (`syntaxhervorhebung: nein`, Hinweis
+  `code-language-unknown`).

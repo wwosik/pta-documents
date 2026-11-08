@@ -1,8 +1,8 @@
 # E17-S02 Deutsche Typografie, Silbentrennung, Code-Highlighting
 
-> Status: in Bearbeitung (docs-2)
-> Epic: [E17 Qualität und Arbeitsfluss](../../50-entwurf/E17-qualitaet-und-arbeitsfluss.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Prüfung
+> Epic: [E17 Qualität und Arbeitsfluss](../50-entwurf/E17-qualitaet-und-arbeitsfluss.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
@@ -105,3 +105,83 @@ will, schaltet die Typografie ab.
   E07-S02/S03 für `plain_quotes`.
 - pyphen ist Tri-Lizenz GPL/LGPL/MPL; die MPL-Wahl macht es für das Repo unbedenklich, steht aber
   ausdrücklich in `pyproject.toml` (Kommentar) und `docs/verwendung.md`.
+
+## Implementierungsnotizen
+
+Umgesetzt von `docs-2` am 2026-11-08: Typografie und Code-Highlighting für Word und PowerPoint,
+`plain_quotes` in beiden Konvertern, Codezäune mit Sprache aus dem DOCX zurück. Der PDF-Teil
+(Silbentrennung, Blocksatz, `blocksatz`/`silbentrennung`, farbiger Code in Mono,
+`PdfOptions.typography`) folgt mit **E05-S02** (dort in den Notizen vermerkt) — es gibt noch
+keinen PDF-Generator; pyphen ist deshalb noch nicht eingetragen.
+
+### Entscheidungen
+
+- `markdown/typography.py`: `typeset(tokens, language)` als Durchgang **nach** dem Parsen und
+  nach `layout_syntax.check` (nicht als Core-Regel im gemeinsamen Parser), damit Prüfungen und
+  Konverter-Tests den rohen Text sehen; die Generatoren rufen es auf, wenn
+  `options.typography` (Front Matter `typografie`, Standard ja). Es ändert nur `text`-Kinder von
+  `inline`-Token sowie Alt-Text/Titel von Bildern; Code-Spans, Codeblöcke, Link-Ziele,
+  Autolinks, rohes HTML und das Front Matter bleiben. Anführungszeichen schauen über Kinder
+  hinweg (`"**fett**"`).
+- Der Attribut-Block am Ende einer Überschrift (`{kicker="Warum"}`) bleibt roh, sonst würden
+  seine `"` zu „“ und die Attribute nicht mehr erkannt; der Kicker-Text selbst wird deshalb
+  nicht gesetzt.
+- Status-Labels aus dem Front Matter werden mit `typeset_text` genauso gesetzt, sonst fänden sie
+  gesetzte Tabellenzellen (`Ziel: 100 %`) nicht mehr.
+- Apostroph im Wort und nach einem Wort ohne offenes `'` wird `’` (U+2019).
+- Geschützte Leerzeichen: Abkürzungen als allgemeine Regel „ein Buchstabe mit Punkt, dann ein
+  bis zwei Buchstaben mit Punkt" (`z. B.`, `i. d. R.`, `z. Hd.`), feste Liste vor Zahlen (`Nr.`,
+  `S.`, `Abs.`, `Art.`, `Kap.`, `Abb.`, `Tab.`, `Ziff.`, `§` …), feste Einheitenliste nach
+  Zahlen (`%`, `€`, `km`, `GB`, `Mio.` …, in `de` und `en`), Tag + Monatsname.
+- U+202F wird nie gesetzt (Plan: nur, wenn die Schrift es hat) — Word und PowerPoint nutzen
+  Office-Schriften, deren Abdeckung hier nicht prüfbar ist; immer U+00A0. Kein U+2011
+  (Frage 1).
+- Code-Highlighting `generation/common/code_highlight.py`: Pygments als Kernabhängigkeit
+  (BSD-2-Clause, Kommentar in `pyproject.toml`); `Keyword.Constant`/`Name.Constant` zählen als
+  Konstanten (`404040`), `Operator.Word` (`and`, `in`) als Schlüsselwort; Leerzeichen hängen am
+  Span davor. Hinweis `code-language-unknown` (neu in `NoteCodes`) nur bei angegebener,
+  unbekannter Sprache und nicht für `mermaid`/`chart`/`financial-chart` (die haben
+  `code-not-drawn`), und nicht bei abgeschalteter Hervorhebung.
+- DOCX: Farben/fett/kursiv als direkte Run-Formatierung in der Formatvorlage „Code"; die
+  Fence-Info (ganze Info-Zeile, nicht nur das erste Wort) steht als
+  `<pta:codeLanguage pta:val="…"/>` im `w:pPr` (Frage 3). Damit Word das unbekannte Element
+  ignoriert, deklariert `declare_own_namespace` den Namensraum am `w:document` und trägt `pta` in
+  `mc:Ignorable` ein (nur, wenn ein Codeblock eine Sprache hat).
+- Der DOCX-Konverter gab Codeblöcke bisher als gewöhnliche Absätze aus; er erkennt jetzt die
+  Vorlage „Code" am Namen und gibt einen Zaun mit der gespeicherten Sprache aus (Umbrüche als
+  Zeilen, ohne Markdown-Escape). Der PPTX-Konverter erkennt Codefelder weiterhin nicht.
+- `ConversionOptions.plain_quotes` (Standard aus) wirkt auf das fertige Markdown außerhalb von
+  Zäunen und Code-Spans: `„“”` → `"`, `‚‘’` → `'`, `–` → `-`, `…` → `...`, U+00A0/U+202F →
+  Leerzeichen (`typography.plain`). `…` zusätzlich zum Plan, weil die Typografie `...` ersetzt.
+- Die Rundreise-Erwartungen (`*.roundtrip.expected.md`, DOCX und PPTX) sind einmal erneuert:
+  geschützte Leerzeichen vor `%`, `€`, `GB` und die neuen Codezäune im DOCX.
+- Tests, die gesetzten Text oder einfarbigen Code prüften, sind angepasst, nicht abgeschwächt:
+  `test_no_direct_font_size_or_colour_except_code` erlaubt Farben nur in „Code"-Absätzen,
+  `test_code_box` prüft den Zeilentext über die Runs, `test_each_block_lands_in_its_style`
+  erwartet `100 %` mit U+00A0.
+
+### Warnungen
+
+- **Warnung:** Der Front-Matter-Schlüssel heißt `syntaxhervorhebung` statt `highlight` aus dem
+  Plan — Front-Matter-Schlüssel sind im Repo deutsch (Entscheidungen 2026-11-06/07). Bitte
+  bestätigen oder umbenennen (`Keys.HIGHLIGHT`).
+- **Warnung:** Das Öffnen in Word mit `pta:codeLanguage` + `mc:Ignorable` ist nicht geprüft
+  (kein Word auf der Maschine). Nach MCE-Spezifikation korrekt; Word verwirft das Element beim
+  Speichern, ein in Word gespeichertes DOCX verliert die Sprache also.
+- **Warnung:** Typografie ist standardmäßig an (Epic-Frage 2): jeder bestehende Text mit
+  `"…"`, ` - `, `...` oder `10 %` sieht in Word/PowerPoint jetzt anders aus, und Konverter geben
+  die gesetzten Zeichen zurück, solange `plain_quotes` aus ist.
+- **Warnung:** Die Abkürzungsregel ist allgemein und kann selten zu viel schützen (z. B.
+  „Plan B. Da." → geschütztes Leerzeichen nach „B."); das verhindert nur einen Umbruch.
+
+### Prüfpunkte
+
+- `samples/funktionen/` zeigt Typografie (Bericht, Abschnitt „Code, Zitat und Trennlinie") und
+  farbigen Python-Code in beiden Formaten: `./run.sh generate-samples funktionen`.
+- Word und PowerPoint öffnen: Farben im Codeblock, geschützte Leerzeichen (Formatierungszeichen
+  einblenden), „…“ in Überschriften und Tabellen.
+
+### Offene Punkte
+
+- PDF-Teil → E05-S02 (siehe dort). Guide-Abschnitt „Typografie" → E02-S05 (dort vermerkt).
+- `sprache: en` hat keine englische Abkürzungsliste (Plan); `e.g.` bleibt wie geschrieben.

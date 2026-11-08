@@ -157,3 +157,14 @@ eigenen Formatvorlagen. Bedienung:
   solange Modul oder Extra fehlen. Ablehnungsmeldungen stehen in `ConverterRegistry._rejection`.
   Die Testbeispiele `sample.doc/.xls/.xlsx/.rtf/.pdf` stammen aus `~/mvv/vt-tools-libs`; der
   Autor „VT-Tools" ist byte-gleich lang durch „PTA-Docs" ersetzt (OLE/PDF-Offsets bleiben).
+- **Typografie und Code** (E17-S02): `markdown/typography.typeset(tokens, language)` setzt die
+  Textkinder in place (Anführungszeichen, `–`, `…`, U+00A0) — beide Generatoren rufen es nach
+  `layout_syntax.check` auf (`options.typography`, Front Matter `typografie`). Wer Text mit
+  Front-Matter-Werten vergleicht (Status-Labels), muss sie mit `typeset_text` genauso setzen.
+  Der Attribut-Block am Ende einer Überschrift bleibt roh — sonst bricht `kicker="…"`.
+  Tests, die erzeugten Text mit `"`, ` - `, `%` o. ä. vergleichen, sehen die gesetzten Zeichen.
+  Code-Highlighting: `generation/common/code_highlight` (Pygments, Kernabhängigkeit);
+  `highlight_fence` notiert `code-language-unknown`. DOCX speichert die Fence-Info als
+  `<pta:codeLanguage pta:val="…"/>` im `w:pPr` (Namensraum `urn:pta-documents:wordprocessingml`,
+  `declare_own_namespace` deklariert ihn am Wurzelelement und trägt ihn in `mc:Ignorable` ein —
+  Word öffnet sonst nicht); der DOCX-Konverter macht aus „Code"-Absätzen wieder Zäune.

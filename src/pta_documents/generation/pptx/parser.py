@@ -21,6 +21,7 @@ from pta_documents.design.colors import StatusCategory
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     code_blocks,
+    code_highlight,
     heading_attributes,
     html,
     layout_syntax,
@@ -65,6 +66,7 @@ from pta_documents.markdown.parser import (
     line_of,
     parse,
 )
+from pta_documents.markdown.typography import typeset, typeset_text
 
 FORMAT: Final = DocumentFormat.PPTX
 WHAT: Final = "the deck"
@@ -93,6 +95,11 @@ class DeckParser:
         self.labels = labels or {}
         """Status labels of the front matter (``status.<kategorie>``): label text -> category."""
         self.options = options or PptxOptions()
+        if self.options.typography:
+            # Label cells are typeset like any text, so the labels must be too.
+            self.labels = {
+                typeset_text(k, self.options.language): v for k, v in self.labels.items()
+            }
         self.body = body
         self.line_offset = line_offset
         self.notes = notes if notes is not None else Notes()
@@ -108,6 +115,8 @@ class DeckParser:
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
         layout_syntax.check(tokens, FORMAT, self.line_offset)
+        if self.options.typography:
+            typeset(tokens, self.options.language)
         end = next((i for i, t in enumerate(tokens) if t.type == "footnote_block_open"), None)
         if end is not None:
             tokens = tokens[:end]
@@ -137,6 +146,15 @@ class DeckParser:
 
     def line(self, token: Token) -> int | None:
         return line_of(token, self.line_offset)
+
+    def code(self, token: Token) -> Code:
+        """A code block no renderer took; with a known language in the PTA colours."""
+        lines = tuple(token.content.rstrip("\n").split("\n"))
+        info = token.info.strip() if token.type == "fence" else ""
+        spans = code_highlight.highlight_fence(
+            info, lines, self.line(token), self.notes, self.options.highlight
+        )
+        return Code(lines, spans or ())
 
     def _error(self, reason: str, token: Token) -> DocumentConversionError:
         line = self.line(token)
@@ -421,7 +439,7 @@ class DeckParser:
                     image = Image(graphic.image, token.info.strip(), self.line(token))
                     out.append(Images((self._placeable(image, token),)))
                 else:
-                    out.append(Code(tuple(token.content.rstrip("\n").split("\n"))))
+                    out.append(self.code(token))
                 return i + 1
             case "html_block":
                 if not html.is_comment(token.content):

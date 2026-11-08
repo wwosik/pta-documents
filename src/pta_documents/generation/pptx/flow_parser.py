@@ -178,7 +178,7 @@ class FlowReader:
                 case Images():
                     target.add(ImageRowBlock(item.images))
                 case Code():
-                    target.add(CodeLinesBlock(item.lines))
+                    target.add(CodeLinesBlock(item.lines, item.spans))
                 case Chart():
                     raise layout_syntax.at_line(
                         DocumentConversionError(

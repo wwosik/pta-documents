@@ -65,8 +65,8 @@ Numbers for the quarter:
 | Revenue by region |  |  |
 | --- | --- | --- |
 | Region | Revenue | Change |
-| North | 1,200 | +4 % |
-| South | 950 | -2 % |
+| North | 1,200 | +4 % |
+| South | 950 | -2 % |
 
 Figures are preliminary.
 

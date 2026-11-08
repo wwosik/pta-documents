@@ -119,7 +119,9 @@ def test_code_box() -> None:
     root = slide_xml(deck(), 4)
     fill = find(root, "//p:sp/p:spPr/a:solidFill/a:srgbClr")
     assert fill and fill[0].get("val") == colors.GREY_LIGHT
-    assert find(root, "//a:r[a:t='var answer = 42;']/a:rPr/a:latin[@typeface='Consolas']")
+    lines = ["".join(t.text or "" for t in find(p, ".//a:t")) for p in find(root, "//a:p")]
+    assert "var answer = 42;" in lines
+    assert find(root, "//a:r[a:t='var ']/a:rPr/a:latin[@typeface='Consolas']")
 
 
 def test_long_text_shrinks_then_continues() -> None:

@@ -20,7 +20,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E03-S03](../60-prüfung/E03-S03-folien-syntax-in-word.md) | Folien-Syntax in Word | in Prüfung |
 | [E09-S01](../60-prüfung/E09-S01-sprechernotizen.md) | Sprechernotizen | in Prüfung |
 | [E07-S01](../60-prüfung/E07-S01-formaterkennung-und-registry.md) | Formaterkennung und Registry | in Prüfung |
-| [E17-S02](../55-in-arbeit/docs-2/E17-S02-typografie-und-code.md) | Deutsche Typografie, Silbentrennung, Code-Highlighting | in Bearbeitung (docs-2) |
+| [E17-S02](../60-prüfung/E17-S02-typografie-und-code.md) | Deutsche Typografie, Silbentrennung, Code-Highlighting | in Prüfung |
 | [E08-S02](E08-S02-pruefbefehl-und-stilregeln.md) | Prüfbefehl und Stilregeln | Entwurf |
 | [E08-S03](E08-S03-funktionsuebersicht-durch-tests.md) | Funktionsübersicht durch Tests gesichert | Entwurf |
 

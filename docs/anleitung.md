@@ -82,8 +82,22 @@ datum: 2026-11-06
 | `sprache` | ✓ | ✓ | `de` (Standard) oder `en` — z. B. „Page"/„Table"/„Figure", englische Titelfolie |
 | `fusszeile` | | ✓ | Text der Fußzeile „PTA – …" (sonst der Titel) |
 | `titelfolie` | | ✓ | `bild-02` (Standard), `bild-01`, `branchen`, `ohne-bild` |
+| `typografie` | ✓ | ✓ | `ja` (Standard) oder `nein`: Anführungszeichen, Gedankenstriche, geschützte Leerzeichen (siehe unten) |
+| `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) oder `nein`: Codeblöcke mit Sprache farbig |
 
 Ein falscher Schlüssel oder Wert bricht mit einer Meldung ab, die die gültigen Werte nennt.
+
+**Typografie:** Gerade Anführungszeichen schreiben, die Typografie macht den Rest. Beim
+Erzeugen wird `"so"` zu „so“, `'so'` zu ‚so‘, `geht's` zu geht’s, ` - ` (mit Leerzeichen) zu
+einem Gedankenstrich –, `...` zu …; in `z. B.`, `u. a.`, `d. h.`, `Nr. 3`, `S. 12`, `§ 5`,
+`10 %`, `5 km`, `3 Mio.` und `1. Januar` kommt ein geschütztes Leerzeichen, damit dort keine
+Zeile umbricht. Code (`` `so` `` und Codeblöcke), Links und der Kopf bleiben, wie sie
+geschrieben sind. Mit `sprache: en` gibt es “englische” Anführungszeichen und keine deutschen
+Abkürzungen. Wer gerade Zeichen will, schreibt `typografie: nein`.
+
+**Code:** Ein Codeblock mit Sprache (```` ```python ````, ```` ```csharp ````, ```` ```sql ````
+…) wird im PTA-Schema farbig. Ohne Sprache bleibt er einfarbig; eine unbekannte Sprache meldet
+der Generator als Hinweis `code-language-unknown`.
 
 ## 4. Word-Bericht schreiben
 

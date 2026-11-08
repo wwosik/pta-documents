@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Final
 
 from pta_documents.design.colors import StatusCategory
+from pta_documents.generation.common.code_highlight import CodeLine
 from pta_documents.generation.common.renderers import ChartGraphic
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.markdown.document import DocumentResource
@@ -124,6 +125,12 @@ class Images:
 @dataclass(frozen=True)
 class Code:
     lines: tuple[str, ...]
+    spans: tuple[CodeLine, ...] = ()
+    """The highlighted spans of each line (E17-S02); empty: in one colour."""
+
+    def part(self, start: int, stop: int) -> Code:
+        """Lines ``start`` to ``stop`` (for code split over slides)."""
+        return Code(self.lines[start:stop], self.spans[start:stop])
 
 
 Visual = Table | Images | Code
@@ -262,6 +269,8 @@ class CodeLinesBlock:
     """A code block no renderer took: its lines on a box of their own."""
 
     lines: tuple[str, ...]
+    spans: tuple[CodeLine, ...] = ()
+    """As ``Code.spans``."""
 
 
 @dataclass(frozen=True)

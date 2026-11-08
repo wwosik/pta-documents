@@ -27,7 +27,7 @@ from pta_documents.generation.common.openxml import (
 )
 from pta_documents.generation.common.result import GenerationResult, Notes
 from pta_documents.generation.docx.options import DocxOptions
-from pta_documents.generation.docx.writer import BodyWriter
+from pta_documents.generation.docx.writer import BodyWriter, declare_own_namespace
 from pta_documents.markdown.document import MarkdownDocument, MetadataKeys
 from pta_documents.markdown.front_matter import FrontMatter, Keys
 
@@ -41,6 +41,8 @@ VALID_KEYS: Final = (
     Keys.DATE,
     Keys.COMPANY,
     Keys.LANGUAGE,
+    Keys.TYPOGRAPHY,
+    Keys.HIGHLIGHT,
     Keys.TOC,
 )
 TEMPLATE_COMPANY: Final = "PTA IT-Beratung"
@@ -104,6 +106,7 @@ class DocxGenerator:
         if options.toc:
             write_toc(result, texts)
         BodyWriter(result, document, front, options, texts, notes).write()
+        declare_own_namespace(result)
         fill_headers_and_footers(result, info, options, texts)
         set_properties(result, info)
         if options.toc:
@@ -117,6 +120,10 @@ def apply_front_matter(front: FrontMatter, options: DocxOptions) -> DocxOptions:
         options = replace(options, variant=WordVariant.parse(value))
     if (value := front.get(Keys.LANGUAGE)) is not None:
         options = replace(options, language=Language.parse(value, FORMAT))
+    if (value := front.boolean(Keys.TYPOGRAPHY)) is not None:
+        options = replace(options, typography=value)
+    if (value := front.boolean(Keys.HIGHLIGHT)) is not None:
+        options = replace(options, highlight=value)
     if (value := front.date()) is not None:
         options = replace(options, date=value)
     if (value := front.get(Keys.COMPANY)) is not None:

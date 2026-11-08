@@ -17,6 +17,7 @@ from pptx.util import Emu
 
 from pta_documents.design import colors
 from pta_documents.design import slides as design
+from pta_documents.generation.common.code_highlight import CodeLine, CodeSpan
 from pta_documents.generation.pptx import fitting
 from pta_documents.generation.pptx.model import Align, Code, Image, Run, Table
 
@@ -226,6 +227,31 @@ def _cell(
         _solid(tc_pr, fill)
 
 
+def code_runs(
+    paragraph: etree._Element, line: str, spans: CodeLine | None, size_pt: float, lang: str
+) -> None:
+    """The runs of a line of code in Consolas: one in the text colour, or one per highlighted
+    span in the PTA colours (E17-S02)."""
+    parts = [CodeSpan(line)] if spans is None else list(spans)
+    for span in parts:
+        if not span.text:
+            continue
+        look = span.look
+        run = etree.SubElement(paragraph, a("r"))
+        r_pr = etree.SubElement(run, a("rPr"))
+        r_pr.set("lang", lang)
+        r_pr.set("sz", str(round(size_pt * 100)))
+        if look.bold:
+            r_pr.set("b", "1")
+        if look.italic:
+            r_pr.set("i", "1")
+        r_pr.set("dirty", "0")
+        _solid(r_pr, look.color or colors.TEXT_SLIDES)
+        etree.SubElement(r_pr, a("latin")).set("typeface", design.CODE_FONT)
+        etree.SubElement(r_pr, a("cs")).set("typeface", design.CODE_FONT)
+        etree.SubElement(run, a("t")).text = span.text
+
+
 def draw_code(
     slide: PptxSlide, code: Code, size_pt: float, left: int, top: int, width: int, lang: str
 ) -> int:
@@ -249,19 +275,10 @@ def draw_code(
     body_pr.set("wrap", "none")
     for old in body.findall(a("p")):
         body.remove(old)
-    for line in code.lines:
+    for n, line in enumerate(code.lines):
         paragraph = etree.SubElement(body, a("p"))
         etree.SubElement(paragraph, a("pPr")).set("algn", "l")
-        if line:
-            run = etree.SubElement(paragraph, a("r"))
-            r_pr = etree.SubElement(run, a("rPr"))
-            r_pr.set("lang", lang)
-            r_pr.set("sz", str(round(size_pt * 100)))
-            r_pr.set("dirty", "0")
-            _solid(r_pr, colors.TEXT_SLIDES)
-            etree.SubElement(r_pr, a("latin")).set("typeface", design.CODE_FONT)
-            etree.SubElement(r_pr, a("cs")).set("typeface", design.CODE_FONT)
-            etree.SubElement(run, a("t")).text = line
+        code_runs(paragraph, line, code.spans[n] if code.spans else None, size_pt, lang)
         end = etree.SubElement(paragraph, a("endParaRPr"))
         end.set("lang", lang)
         end.set("sz", str(round(size_pt * 100)))

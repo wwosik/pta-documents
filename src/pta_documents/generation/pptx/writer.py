@@ -245,9 +245,9 @@ class DeckWriter:
                 first = fitting.code_lines_per_slide(room)
                 rest = fitting.code_lines_per_slide(room_rest)
                 lines = list(visual.lines)
-                parts = [Code(tuple(lines[:first]))]
+                parts = [visual.part(0, first)]
                 for start in range(first, len(lines), rest):
-                    parts.append(Code(tuple(lines[start : start + rest])))
+                    parts.append(visual.part(start, start + rest))
         elif isinstance(visual, Images):
             per_row = design.MAX_PICTURES_PER_ROW
             parts = [

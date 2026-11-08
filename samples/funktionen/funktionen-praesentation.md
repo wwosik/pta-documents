@@ -101,7 +101,9 @@ Längere Tabellen werden mit wiederholter Kopfzeile geteilt (Hinweis `slide-spli
 ```python
 from pta_documents.generation.pptx.generator import PptxGenerator
 
-PptxGenerator().generate(document, output)
+# Farbig im PTA-Schema, wenn die Sprache angegeben ist
+with open("folien.pptx", "wb") as output:
+    PptxGenerator().generate(document, output)
 ```
 
 # Bilder

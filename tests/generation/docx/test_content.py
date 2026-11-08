@@ -92,7 +92,10 @@ def test_no_direct_font_size_or_colour_except_code() -> None:
     root = body(report())
     for r_pr in root.iter(w("rPr")):
         assert r_pr.find(w("sz")) is None
-        assert r_pr.find(w("color")) is None
+        paragraph = next(r_pr.iterancestors(w("p")))
+        in_code = paragraph.find(f"{w('pPr')}/{w('pStyle')}[@{w('val')}='Code']") is not None
+        # Highlighted code blocks colour their tokens (E17-S02), nothing else does.
+        assert r_pr.find(w("color")) is None or in_code
         fonts = r_pr.find(w("rFonts"))
         if fonts is not None:
             assert fonts.get(w("ascii")) == "Consolas"

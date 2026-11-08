@@ -63,6 +63,10 @@ class NoteCodes:
     NOTES_DROPPED: Final = "notes-dropped"
     """Speaker notes (``::: notes``) left out of a format that has none (DOCX, from E09-S01)."""
 
+    CODE_LANGUAGE_UNKNOWN: Final = "code-language-unknown"
+    """A code block whose language (```` ```sprache ````) the highlighter does not know: it shows
+    in one colour (PPTX, DOCX, from E17-S02)."""
+
     ALL: Final = (
         SLIDE_SPLIT,
         SLIDE_OVERFULL,
@@ -72,6 +76,7 @@ class NoteCodes:
         CODE_NOT_DRAWN,
         CHARACTER_MISSING,
         NOTES_DROPPED,
+        CODE_LANGUAGE_UNKNOWN,
     )
     """Every code, in the order the guides list them."""
 

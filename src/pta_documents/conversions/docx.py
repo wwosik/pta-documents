@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import BinaryIO, Final
 
@@ -13,6 +14,7 @@ from pta_documents.design import word
 from pta_documents.design.variants import TEXTS
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown import text as md
+from pta_documents.markdown import typography
 from pta_documents.markdown.document import MarkdownDocument
 
 W: Final = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -21,6 +23,8 @@ MC: Final = "http://schemas.openxmlformats.org/markup-compatibility/2006"
 A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
 WP: Final = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
 V: Final = "urn:schemas-microsoft-com:vml"
+PTA: Final = "urn:pta-documents:wordprocessingml"
+"""The DOCX generator's own markup: ``pta:codeLanguage`` holds the language of a code block."""
 
 DOCUMENT_PART: Final = "word/document.xml"
 HARD_BREAK: Final = "\\\n"
@@ -86,8 +90,9 @@ class DocxConverter:
                 _render_block(block, context, out)
             metadata: dict[str, str] = {}
             package.add_core_properties(metadata)
+            text = md.normalize("".join(out))
             return MarkdownDocument(
-                md.normalize("".join(out)),
+                typography.plain(text) if options.plain_quotes else text,
                 tuple(context.images.resources) if context.images else (),
                 metadata,
             )
@@ -193,10 +198,13 @@ def _render_paragraph(paragraph: etree._Element, context: _Context, out: list[st
 
 
 def _render_paragraph_text(paragraph: etree._Element, context: _Context, out: list[str]) -> None:
-    text = _render_runs(paragraph, context).rstrip()
     properties = paragraph.find(w("pPr"))
     style = properties.find(w("pStyle")) if properties is not None else None
     style_id = style.get(w("val")) if style is not None else None
+    if style_id and context.style_names.get(style_id.lower()) == word.STYLES.code:
+        _render_code(paragraph, properties, out)
+        return
+    text = _render_runs(paragraph, context).rstrip()
     heading = context.styles.get(style_id.lower(), "") if style_id else ""
     if not heading and style_id:
         heading = _classify_heading(style_id, style_id)
@@ -228,6 +236,30 @@ def _render_paragraph_text(paragraph: etree._Element, context: _Context, out: li
 
     _ensure_blank_line(out)
     out.append(text + "\n\n")
+
+
+def _render_code(
+    paragraph: etree._Element, properties: etree._Element | None, out: list[str]
+) -> None:
+    """A paragraph in the style "Code" (one code block of the generator) as a fence, with the
+    language the generator noted in ``pta:codeLanguage``."""
+    parts: list[str] = []
+    for node in paragraph.iter(w("t"), w("br"), w("cr"), w("tab")):
+        if node.tag == w("t"):
+            parts.append(node.text or "")
+        elif node.tag == w("tab"):
+            parts.append("\t")
+        elif node.get(w("type")) not in ("page", "column"):
+            parts.append("\n")
+    code = "".join(parts)
+    if not code.strip():
+        return
+    language = properties.find(f"{{{PTA}}}codeLanguage") if properties is not None else None
+    info = (language.get(f"{{{PTA}}}val") or "") if language is not None else ""
+    longest = max((len(run) for run in re.findall("`+", code)), default=0)
+    fence = "`" * max(3, longest + 1)
+    _ensure_blank_line(out)
+    out.append(f"{fence}{info}\n{code}\n{fence}\n\n")
 
 
 def _note(text: str) -> str:

@@ -20,6 +20,10 @@ class ConversionOptions:
     notes: bool = True
     """PPTX: the speaker notes of each slide after it, as ``::: notes`` … ``:::``; without,
     only the slides' content."""
+    plain_quotes: bool = False
+    """Typographic characters back to straight ones outside code — „“ → ", ‚‘’ → ', – → -,
+    … → ..., non-breaking spaces → spaces — so that Markdown the generators typeset
+    (``typografie: ja``) comes back as it was written (E17-S02)."""
 
 
 @dataclass

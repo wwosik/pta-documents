@@ -37,6 +37,7 @@ from pta_documents.design.variants import GeneratedTexts
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     code_blocks,
+    code_highlight,
     heading_attributes,
     html,
     layout_syntax,
@@ -58,6 +59,7 @@ from pta_documents.markdown.parser import (
     create_parser,
     line_of,
 )
+from pta_documents.markdown.typography import typeset, typeset_text
 
 FORMAT: Final = DocumentFormat.DOCX
 EMU_PER_TWIP: Final = 635
@@ -75,6 +77,14 @@ ABSOLUTE_URI: Final = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 SUPPORTED_IMAGES: Final = ("image/png", "image/jpeg", "image/gif", "image/bmp", "image/tiff")
 FOOTNOTES_RT: Final = RT.FOOTNOTES
 XML_SPACE: Final = "{http://www.w3.org/XML/1998/namespace}space"
+PTA_NAMESPACE: Final = "urn:pta-documents:wordprocessingml"
+"""Our own markup in the document, ignorable for Word (``mc:Ignorable``): the language of a code
+block, so that the converter writes its fence again (decision 2026-11-07)."""
+PTA_PREFIX: Final = "pta"
+CODE_LANGUAGE: Final = f"{{{PTA_NAMESPACE}}}codeLanguage"
+"""``<pta:codeLanguage pta:val="python"/>`` in the ``w:pPr`` of a code block."""
+CODE_LANGUAGE_VALUE: Final = f"{{{PTA_NAMESPACE}}}val"
+MC_IGNORABLE: Final = "{http://schemas.openxmlformats.org/markup-compatibility/2006}Ignorable"
 
 
 @dataclass
@@ -127,6 +137,9 @@ class BodyWriter:
         self.next_footnote_id = 1
         self.style_ids: dict[str, str] = {}
         self.labels = front.status_labels()
+        if options.typography:
+            # Label cells are typeset like any text, so the labels must be too.
+            self.labels = {typeset_text(k, options.language): v for k, v in self.labels.items()}
         self.container_depth = 0
         """How deep the writer is in ``:::`` containers: headings there are no headings."""
         self.kind: str | None = None
@@ -145,6 +158,8 @@ class BodyWriter:
         env: dict[str, object] = {}
         tokens = create_parser().parse(self.front.body, env)
         layout_syntax.check(tokens, FORMAT, self.front.body_line)
+        if self.options.typography:
+            typeset(tokens, self.options.language)
         end = next((i for i, t in enumerate(tokens) if t.type == "footnote_block_open"), None)
         if end is not None:
             self._collect_footnotes(tokens[end:])
@@ -196,7 +211,7 @@ class BodyWriter:
                         self.line(token),
                     )
                 else:
-                    self.code_block(token.content)
+                    self.code_block(token)
                 return i + 1
             case "html_block":
                 if not html.is_comment(token.content):
@@ -688,13 +703,27 @@ class BodyWriter:
 
     # ------------------------------------------------------------------ other blocks
 
-    def code_block(self, content: str) -> None:
+    def code_block(self, token: Token) -> None:
+        """A code block in the style "Code"; with a known language, its tokens in the PTA
+        colours (E17-S02). The language of a fence goes into the paragraph properties."""
         paragraph = self.paragraph(self._ensure_code_style())
-        lines = content.rstrip("\n").split("\n")
+        lines = token.content.rstrip("\n").split("\n")
+        info = token.info.strip() if token.type == "fence" else ""
+        spans = code_highlight.highlight_fence(
+            info, lines, self.line(token), self.notes, self.options.highlight
+        )
         for n, text in enumerate(lines):
             if n:
                 etree.SubElement(etree.SubElement(paragraph._p, w("r")), w("br"))
-            _append_text(paragraph._p, text)
+            if spans is None:
+                _append_text(paragraph._p, text)
+            else:
+                for span in spans[n]:
+                    _append_code_span(paragraph._p, span)
+        if info:
+            p_pr = paragraph._p.get_or_add_pPr()
+            etree.SubElement(p_pr, CODE_LANGUAGE).set(CODE_LANGUAGE_VALUE, info)
+            _order_ppr(p_pr)
 
     def horizontal_rule(self) -> None:
         paragraph = self.paragraph(word.STYLES.normal)
@@ -1107,6 +1136,36 @@ def _strip_caption_prefix(inline: Token) -> Token:
         content = first.content.split(":", 1)[1].lstrip() if ":" in first.content else first.content
         children[0] = first.copy(content=content)
     return inline.copy(children=children)
+
+
+def _append_code_span(parent: etree._Element, span: code_highlight.CodeSpan) -> None:
+    run = etree.SubElement(parent, w("r"))
+    look = span.look
+    if look.color is not None or look.bold or look.italic:
+        r_pr = etree.SubElement(run, w("rPr"))
+        if look.bold:
+            etree.SubElement(r_pr, w("b"))
+        if look.italic:
+            etree.SubElement(r_pr, w("i"))
+        if look.color is not None:
+            etree.SubElement(r_pr, w("color")).set(w("val"), look.color)
+    t = etree.SubElement(run, w("t"))
+    t.text = span.text
+    t.set(XML_SPACE, "preserve")
+
+
+def declare_own_namespace(document: Document) -> None:
+    """Declare ``PTA_NAMESPACE`` on the document element and make it ignorable, when the body
+    uses it (code languages). Word skips what it does not know only if it is told so."""
+    root: etree._Element = document.part.element  # type: ignore[attr-defined]
+    if next(root.iter(CODE_LANGUAGE), None) is None:
+        return
+    etree.cleanup_namespaces(
+        root, top_nsmap={PTA_PREFIX: PTA_NAMESPACE}, keep_ns_prefixes=[p for p in root.nsmap if p]
+    )
+    ignorable = (root.get(MC_IGNORABLE) or "").split()
+    if PTA_PREFIX not in ignorable:
+        root.set(MC_IGNORABLE, " ".join([*ignorable, PTA_PREFIX]))
 
 
 def _append_text(parent: etree._Element, text: str) -> None:

@@ -32,6 +32,8 @@ class Keys:
     TOC: Final = "inhaltsverzeichnis"
     FOOTER: Final = "fusszeile"
     TITLE_SLIDE: Final = "titelfolie"
+    TYPOGRAPHY: Final = "typografie"
+    HIGHLIGHT: Final = "syntaxhervorhebung"
     STATUS_PREFIX: Final = "status."
 
 

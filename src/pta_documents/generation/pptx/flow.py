@@ -272,7 +272,7 @@ class FlowWriter:
             assert body_pr is not None
             body_pr.set("wrap", "none")
             lang = self.deck.lang
-            for text in block.lines:
+            for n, text in enumerate(block.lines):
                 paragraph = etree.SubElement(body, a("p"))
                 p_pr = etree.SubElement(paragraph, a("pPr"), marL="0", indent="0", algn="l")
                 spacing = etree.SubElement(p_pr, a("lnSpc"))
@@ -281,14 +281,8 @@ class FlowWriter:
                 )
                 etree.SubElement(etree.SubElement(p_pr, a("spcBef")), a("spcPts")).set("val", "0")
                 etree.SubElement(p_pr, a("buNone"))
-                if text:
-                    run = etree.SubElement(paragraph, a("r"))
-                    r_pr = etree.SubElement(run, a("rPr"), lang=lang, sz=str(round(size * 100)))
-                    r_pr.set("dirty", "0")
-                    _fill(r_pr, colors.TEXT_SLIDES)
-                    etree.SubElement(r_pr, a("latin")).set("typeface", design.CODE_FONT)
-                    etree.SubElement(r_pr, a("cs")).set("typeface", design.CODE_FONT)
-                    etree.SubElement(run, a("t")).text = text
+                spans = block.spans[n] if block.spans else None
+                visuals.code_runs(paragraph, text, spans, size, lang)
                 end = etree.SubElement(paragraph, a("endParaRPr"), lang=lang)
                 end.set("sz", str(round(size * 100)))
         return height

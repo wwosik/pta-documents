@@ -24,6 +24,11 @@ class PptxOptions:
     date: dt.date | None = None
     """``datum:`` — shown on the title slide after author and location."""
     show_slide_numbers: bool = True
+    typography: bool = True
+    """``typografie:``: German (or English) typography on the text — „quotes“, dashes,
+    non-breaking spaces (``markdown.typography``); code, links and front matter stay as written."""
+    highlight: bool = True
+    """``syntaxhervorhebung:``: code blocks with a known language in the PTA colours."""
     code_block_renderers: tuple[CodeBlockRenderer, ...] = field(default_factory=default_renderers)
     """Asked in order for every fenced code block with an info string; the first graphic wins.
     Defaults to every renderer of the library that is available; ``()`` turns them off."""

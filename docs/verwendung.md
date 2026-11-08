@@ -43,6 +43,8 @@ umgehen musste, ohne dass es ein Fehler ist, steht im Rückgabewert (siehe
 | `firma` | Text | ersetzt „PTA IT-Beratung" in der Fußzeile |
 | `sprache` | `de` (Standard), `en` | erzeugte Texte: Seite/Page, Stand/As of, Tabelle/Table, Abbildung/Figure, Inhalt/Contents |
 | `inhaltsverzeichnis` | `ja`, `nein` | Inhaltsverzeichnis nach dem Deckblatt (Word füllt es beim Öffnen) |
+| `typografie` | `ja` (Standard), `nein` | deutsche (bzw. englische) Typografie, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
+| `syntaxhervorhebung` | `ja` (Standard), `nein` | Codeblöcke mit Sprache farbig |
 
 Zuordnung: `#`–`###` → „Überschrift 1–3" (nummeriert), tiefere → „Zwischenüberschrift";
 Absätze → „Standard"; Listen → „Aufzählungszeichen" bzw. „Listenabsatz"; Tabellen →
@@ -68,6 +70,7 @@ result.slides  # Zahl der erzeugten Folien
 | `untertitel`, `autor`, `ort`, `datum` | Text | Titelfolie |
 | `fusszeile` | Text | Fußzeile „PTA – …" (sonst der Titel) |
 | `sprache` | `de`, `en` | `en`: englische Titelfolie mit englischem Logo, „(cont.)" statt „(Forts.)" |
+| `typografie`, `syntaxhervorhebung` | `ja` (Standard), `nein` | wie in Word, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
 
 Gliederung: erstes `#` = Titelfolie, weitere `#` = Trennfolie „01", „02" …,
 `# Text {.closing}` = Abschlussfolie, `##` = Folie. `## Titel {layout="Name"}` wählt ein
@@ -218,6 +221,42 @@ DOCX-Konverter liest die neuen Vorlagen wie „Standard"; „Hinweis …" wird w
 Alert mit seiner Art, `> [!NOTE]`), eine Bildreihe wieder ein Absatz aus Bildern mit den
 Beschriftungen danach.
 
+## Typografie und Code (E17-S02)
+
+Beide Generatoren setzen den Text typografisch (`markdown.typography.typeset` auf den Token,
+nach der Prüfung der Folien-Syntax), sofern nicht `typografie: nein` bzw.
+`DocxOptions(typography=False)`/`PptxOptions(typography=False)`:
+
+| Geschrieben | Gesetzt (`sprache: de`) | `sprache: en` |
+| ----------- | ----------------------- | ------------- |
+| `"Zitat"`, `'halb'` | „Zitat“, ‚halb‘ | “Zitat”, ‘halb’ |
+| `geht's`, `Hans'` | geht’s, Hans’ | ebenso |
+| ` - `, ` -- ` (mit Leerzeichen) | ` – ` (Halbgeviertstrich) | ebenso |
+| `...` | … | ebenso |
+| `z. B.`, `u. a.`, `d. h.`, `i. d. R.` | geschütztes Leerzeichen (U+00A0) | unverändert |
+| `Nr. 3`, `S. 12`, `Abs. 2`, `§ 5` | geschütztes Leerzeichen vor der Zahl | unverändert |
+| `10 %`, `5 km`, `3 Mio.`, `2 GB`, `20 °C` | geschütztes Leerzeichen vor der Einheit | ebenso |
+| `1. Januar`, `24. Dez.` | geschütztes Leerzeichen | unverändert |
+
+Unverändert bleiben Code-Spans, Codeblöcke, Link-Ziele, Autolinks, rohes HTML, das
+Attribut-Block einer Überschrift (`{kicker="…"}`) und das Front Matter (auch `titel:`).
+Bindestriche in Wörtern (`E-Mail`) bleiben (Entscheidung 2026-11-07), ein schmales
+geschütztes Leerzeichen (U+202F) wird nie gesetzt. Status-Labels (`status.<kategorie>`)
+werden genauso gesetzt, damit sie die gesetzten Tabellenzellen wiederfinden.
+
+Codeblöcke mit Sprache im Zaun (```` ```python ````) werden mit **Pygments** (BSD-2-Clause,
+Kernabhängigkeit) farbig hervorgehoben (`generation.common.code_highlight`): Schlüsselwörter
+PTA-Blau fett, Zeichenketten Dunkelblau, Kommentare Grau kursiv, Zahlen und Konstanten
+`404040`, der Rest in der Textfarbe; die graue Fläche bleibt. Word schreibt Runs mit
+`w:color`/`w:b`/`w:i` in der Formatvorlage „Code" und merkt sich die Sprache als eigene,
+für Word ignorierbare Absatz-Eigenschaft `<pta:codeLanguage pta:val="python"/>` (Namensraum
+`urn:pta-documents:wordprocessingml`, in `mc:Ignorable`); der DOCX-Konverter gibt Absätze in
+„Code" daraus wieder als Zaun mit Sprache aus. PowerPoint färbt die Runs im Codefeld (auch auf
+Flow-Folien und über „(Forts.)"-Folien hinweg). Ohne Sprache bleibt der Block einfarbig; eine
+unbekannte Sprache ergibt den Hinweis `code-language-unknown`. `syntaxhervorhebung: nein`
+bzw. `highlight=False` schaltet die Farben ab. PDF (Silbentrennung, Blocksatz, farbiger Code)
+folgt mit E05-S02.
+
 ## Code-Block-Renderer und Bildkonverter
 
 Zwei Erweiterungspunkte, über die Diagramme, Charts und fremde Bildformate in die Generatoren
@@ -303,6 +342,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (die Renderer der Bibliothek folgen mit E06) |
 | `character-missing` (`CHARACTER_MISSING`) | PDF (E05-S04) | ein Zeichen fehlt in den Schriften |
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01) | Sprechernotizen fallen im Word-Dokument weg |
+| `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02) | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |
 
 Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate` zeigt die
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;
@@ -363,6 +403,12 @@ Der PPTX-Konverter gibt die Notizenseite einer Folie (Platzhalter `body` der `no
 nach deren Inhalt als `::: notes` … `:::` aus, Listenebenen als `-`-Listen; leere Notizen und
 Notizen nur aus dem Aufforderungstext des Notizenmasters entfallen. `ConversionOptions(notes=False)`
 lässt sie weg.
+
+Beide Konverter geben den Text so zurück, wie er im Dokument steht — nach der Typografie also
+`„…“` statt `"…"`. `ConversionOptions(plain_quotes=True)` setzt außerhalb von Code `„“”` →
+`"`, `‚‘’` → `'`, `–` → `-`, `…` → `...` und geschützte Leerzeichen → Leerzeichen zurück, damit
+eine Rundreise den geschriebenen Text wiederfindet. Codeblöcke des DOCX-Generators (Vorlage
+„Code") kommen als Zaun mit ihrer Sprache zurück.
 
 ## Beispiele
 

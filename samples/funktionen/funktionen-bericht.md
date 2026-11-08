@@ -107,10 +107,18 @@ Ohne Titel dient der Alt-Text als Beschriftung:
 
 # Code, Zitat und Trennlinie
 
+Gerade Zeichen werden beim Erzeugen typografisch gesetzt: "Anführungszeichen" und 'halbe' -
+ein Gedankenstrich, z. B. 10 % oder S. 12 ohne Umbruch dazwischen, und drei Punkte...
+In `"Code"` bleibt alles, wie es geschrieben ist. `typografie: nein` schaltet das ab.
+
+Ein Codeblock mit Sprache wird farbig hervorgehoben:
+
 ```python
 from pta_documents.generation.docx.generator import DocxGenerator
 
-DocxGenerator().generate(document, output)
+# Schlüsselwörter blau, Zeichenketten dunkelblau, Kommentare grau
+with open("bericht.docx", "wb") as output:
+    DocxGenerator().generate(document, output)
 ```
 
 > Ein Zitat wird in die Formatvorlage „Zitat" gesetzt

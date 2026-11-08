@@ -92,3 +92,15 @@ in den Formatvorlagen der PTA-Word-Vorlage statt in DocLibs' eigenen Größen.
   prüfen die Tests das Layout am Seitenmodell.
 - Kopf- und Fußzeile, Deckblatt und Inhaltsverzeichnis kommen in E05-S03; die Engine lässt dafür
   wie DocLibs `Decorate` einen Durchgang nach dem Layout, wenn die Seitenzahl feststeht.
+- (E17-S02, docs-2) Der PDF-Teil von E17-S02 kommt hierher: `generation/pdf/hyphenation.py` mit
+  **pyphen** im Extra `pdf` (Tri-Lizenz, MPL-Wahl in `pyproject.toml` kommentieren und in
+  `docs/verwendung.md` nennen); Trennung nur an pyphen-Trennstellen, wenn sonst mehr als ein
+  Fünftel der Zeile leer bliebe, mind. 2 Zeichen davor/3 danach, nie in Code/Links/letztem Wort
+  eines Absatzes/über Seitenwechsel, Bindestrich-Wörter nur am Bindestrich; Front Matter
+  `blocksatz: ja|nein` (Standard nein) und `silbentrennung: ja|nein` (Standard ja), Tests
+  `tests/generation/pdf/test_hyphenation.py`. Dazu `PdfOptions.typography`/`highlight` und die
+  Front-Matter-Schlüssel `typografie`/`syntaxhervorhebung` (`Keys.TYPOGRAPHY`/`HIGHLIGHT`),
+  `markdown.typography.typeset(tokens, language)` nach `layout_syntax.check` aufrufen (Status-
+  Labels mit `typeset_text` setzen), und Code farbig in Mono über
+  `generation.common.code_highlight.highlight_fence` (Spans mit `CodeSpan.look`: Farbe, fett,
+  kursiv; `None` = Textfarbe).

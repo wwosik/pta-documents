@@ -30,6 +30,8 @@ VALID_KEYS: Final = (
     Keys.LOCATION,
     Keys.DATE,
     Keys.LANGUAGE,
+    Keys.TYPOGRAPHY,
+    Keys.HIGHLIGHT,
     Keys.FOOTER,
     Keys.TITLE_SLIDE,
 )
@@ -104,6 +106,10 @@ def apply_front_matter(front: FrontMatter, options: PptxOptions) -> PptxOptions:
         options = replace(options, variant=SlidesVariant.parse(value))
     if (value := front.get(Keys.LANGUAGE)) is not None:
         options = replace(options, language=Language.parse(value, FORMAT))
+    if (value := front.boolean(Keys.TYPOGRAPHY)) is not None:
+        options = replace(options, typography=value)
+    if (value := front.boolean(Keys.HIGHLIGHT)) is not None:
+        options = replace(options, highlight=value)
     if (value := front.get(Keys.FOOTER)) is not None:
         options = replace(options, footer=value)
     if (value := front.get(Keys.TITLE_SLIDE)) is not None:

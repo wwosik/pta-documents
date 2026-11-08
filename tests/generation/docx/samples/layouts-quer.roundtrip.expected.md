@@ -16,7 +16,7 @@ für 12 Arten von Regeln; die Formel versteckt sich in der Struktur.
 
 Große Fahrpläne sind zu langsam
 
-3,2 GB
+3,2 GB
 
 Speicher je Fahrplan bei 5.000 Halten, vor allem Objekt-Overhead.
 
@@ -100,15 +100,17 @@ Mit Hafen
 
 **Vier Wochen** lang rechnen altes System und Hafen dieselben Buchungen.
 
+```
 vergleiche --alt planer --neu hafen
+```
 
 | Woche | Gleiche Ergebnisse |
 | --- | --- |
-| 1 | 91 % |
-| 2 | 97 % |
-| 3 | 99 % |
+| 1 | 91 % |
+| 2 | 97 % |
+| 3 | 99 % |
 
-> **Kommentar:** Ziel: 100 %
+> **Kommentar:** Ziel: 100 %
 
 > **Fazit:** Erst wenn der Schattenlauf vier Wochen lang gleiche Ergebnisse liefert, wird umgestellt.
 

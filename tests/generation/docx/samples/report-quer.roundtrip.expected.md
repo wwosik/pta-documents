@@ -28,8 +28,8 @@ Kosten je Quartal
 
 | Quartal | Kosten | Anteil |
 | --- | --- | --- |
-| Q1 | 1.200 € | 20 % |
-| Q2 | 2.400 € | 40 % |
+| Q1 | 1.200 € | 20 % |
+| Q2 | 2.400 € | 40 % |
 
 Tabelle 1: Kosten der Quartale
 
@@ -43,7 +43,9 @@ Abbildung 1: Übersicht der Systeme
 
 Ein Zitat aus dem Lenkungskreis.
 
+```python
 print("Hallo PTA")
+```
 
 Begriff
 

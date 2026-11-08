@@ -14,7 +14,7 @@ Die Konfiguration ist zu kompliziert
 
 für 12 Arten von Regeln; die Formel versteckt sich in der Struktur.
 
-3,2 GB
+3,2 GB
 
 Große Fahrpläne sind zu langsam
 
@@ -159,11 +159,11 @@ vergleiche --alt planer --neu hafen
 
 | Woche | Gleiche Ergebnisse |
 | --- | --- |
-| 1 | 91 % |
-| 2 | 97 % |
-| 3 | 99 % |
+| 1 | 91 % |
+| 2 | 97 % |
+| 3 | 99 % |
 
-Ziel: 100 %
+Ziel: 100 %
 
 Erst wenn der Schattenlauf vier Wochen lang gleiche Ergebnisse liefert, wird umgestellt.
 

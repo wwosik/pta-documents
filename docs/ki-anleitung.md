@@ -59,9 +59,18 @@ YAML, keine Listen). Schlüssel und Werte sind **deutsch**; `ja`/`nein`; Datum `
 | `inhaltsverzeichnis` | ✓ | – | `ja` · `nein` |
 | `fusszeile` | – | ✓ | Fußzeilentext nach „PTA – " |
 | `titelfolie` | – | ✓ | `bild-02` (Standard) · `bild-01` · `branchen` · `ohne-bild` |
+| `typografie` | ✓ | ✓ | `ja` (Standard) · `nein` — gerade Zeichen behalten |
+| `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) · `nein` — Codeblöcke einfarbig |
 
 `firma`/`inhaltsverzeichnis` in einer Präsentation oder `fusszeile`/`titelfolie` in einem
 Word-Dokument sind Fehler.
+
+**Typografie:** Gerade Anführungszeichen (`"…"`, `'…'`), ` - ` und `...` schreiben — die
+Generatoren setzen daraus „…“, ‚…‘, –, … und geschützte Leerzeichen in `z. B.`, `u. a.`,
+`d. h.`, `Nr. 3`, `S. 12`, `§ 5`, `10 %`, `5 km`, `3 Mio.`, `1. Januar`. Keine typografischen
+Zeichen von Hand tippen, keine `&nbsp;`. Code, Links und Front Matter bleiben unberührt.
+**Codeblöcke** immer mit Sprache (```` ```python ````), dann werden sie farbig; unbekannte
+Sprache = Hinweis `code-language-unknown`.
 
 ## Word-Bericht
 

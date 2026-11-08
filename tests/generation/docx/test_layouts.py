@@ -94,7 +94,7 @@ def test_each_block_lands_in_its_style() -> None:
             "Hinweis: Der Fairness halber: Buchungen werden nach der Erfassung noch "
             "bearbeitet – daher Revisionen statt strenger Unveränderlichkeit.",
         ),
-        ("Hinweis", "Kommentar: Ziel: 100 %"),
+        ("Hinweis", "Kommentar: Ziel: 100\u00a0%"),  # typeset: non-breaking space
         (
             "Hinweis",
             "Fazit: Erst wenn der Schattenlauf vier Wochen lang gleiche Ergebnisse "

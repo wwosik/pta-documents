@@ -10,6 +10,7 @@ from pta_documents.conversions.openxml import OpenXmlPackage, guard, read_input
 from pta_documents.conversions.options import ConversionOptions, ResourceCollector
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown import text as md
+from pta_documents.markdown import typography
 from pta_documents.markdown.document import MarkdownDocument, MetadataKeys
 
 P: Final = "http://schemas.openxmlformats.org/presentationml/2006/main"
@@ -70,8 +71,9 @@ class PptxConverter:
                     any_content |= _render_notes(package, part, out)
             metadata = {MetadataKeys.SLIDE_COUNT: str(number)}
             package.add_core_properties(metadata)
+            text = md.normalize("".join(out)) if any_content else ""
             return MarkdownDocument(
-                md.normalize("".join(out)) if any_content else "",
+                typography.plain(text) if options.plain_quotes else text,
                 tuple(images.resources) if images else (),
                 metadata,
             )
