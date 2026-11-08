@@ -20,7 +20,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E06-S02](../60-prüfung/E06-S02-finanzdiagramme.md) | Finanzdiagramme | in Prüfung |
 | [E06-S03](../60-prüfung/E06-S03-mermaid.md) | Mermaid über mermaid-cli | in Prüfung |
 | [E03-S04](../60-prüfung/E03-S04-diagramme-und-charts-im-docx.md) | Diagramme und Charts im DOCX | in Prüfung |
-| [E11-S04](E11-S04-qr-codes.md) | QR-Codes aus Links | Entwurf |
+| [E11-S04](../55-in-arbeit/docs-2/E11-S04-qr-codes.md) | QR-Codes aus Links | in Bearbeitung (docs-2) |
 | [E15-S01](E15-S01-zeitstrahl-und-gantt.md) | Zeitstrahl und Gantt | Entwurf |
 | [E15-S02](E15-S02-schritte-bewertungen-risikomatrix.md) | Schrittfolge, Harvey Balls und Risikomatrix | Entwurf |
 | [E15-S03](E15-S03-icons.md) | Icons | Entwurf |

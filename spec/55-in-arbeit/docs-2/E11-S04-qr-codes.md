@@ -1,8 +1,8 @@
 # E11-S04 QR-Codes aus Links
 
-> Status: Entwurf
-> Epic: [E11 Bausteine, Variablen und Datenquellen](E11-bausteine-variablen-datenquellen.md)
-> Milestone: [M03 Grafik, Diagramme und Charts](M03-grafik-diagramme-und-charts.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E11 Bausteine, Variablen und Datenquellen](../../50-entwurf/E11-bausteine-variablen-datenquellen.md)
+> Milestone: [M03 Grafik, Diagramme und Charts](../../50-entwurf/M03-grafik-diagramme-und-charts.md)
 
 ## Zusammenfassung
 
