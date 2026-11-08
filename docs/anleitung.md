@@ -530,6 +530,8 @@ Folien für Rückfragen stehen **hinter** der Abschlussfolie:
 
 - Alles ab `{.backup}` ist Backup, auch weitere `#`-Kapitel: ohne Kapitelnummer, nicht in der
   Agenda, im HTML-Deck nach dem Ende der Fortschrittsanzeige; `check` zählt die Folien extra.
+- Im [Zeitplan](#schulung-planen) kommt das Backup nicht vor: keine Uhrzeiten, zählt nicht zu
+  `laenge:`. Eine Pause oder `dauer` im Backup ist deshalb ein Fehler.
 - `{.backup}` steht einmal, nach `{.closing}` (nicht davor). Die Kundenfassung zeigt das Backup;
   wer es weglassen will, markiert die Folien mit `{.internal}`.
 - Im Word-Bericht heißt das Gegenstück `# Glossar {.appendix}`: ab dort heißen die Kapitel A, B,

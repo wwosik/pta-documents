@@ -182,6 +182,23 @@ Umgesetzt am 2026-11-08 (docs-2), ohne Zwischenprüfung.
   (Pausenfolie, Agenda mit/ohne `beginn:`, Notizen je Fassung, geteilte Folien, Word, HTML,
   `generate --audience alle`).
 
+### Zusammenführung mit E16-S02
+
+Am 2026-11-08 mit E16-S04 (Backup-Folien und Anhang) zusammengeführt
+(`E16-S02/E16-S04: Zeitplan ohne Backup-Folien`):
+
+- `training_schedule.build` endet an der Abschlussfolie **oder** an `# … {.backup}` — auch in
+  einem Deck ohne Abschlussfolie, das ein Backup hat. Backup-Folien bekommen keine Zeit, keine
+  Zeitnotiz der Trainerfassung und zählen nicht zu `laenge:`.
+- **Warnung (Entscheidung ohne Rückfrage, die vorsichtigere):** `{.break}` und `dauer=…` hinter
+  der Abschlussfolie oder im Backup (auch an der `{.backup}`-Überschrift selbst) sind ein Fehler
+  (`backup.check`, in allen Formaten), statt stillschweigend ungeplant zu bleiben. Vorher wurden
+  sie hinter `{.closing}` still übergangen.
+- `check`: `DeckStats.minutes` zählt Backup-Folien nicht, der Zeitplan auch nicht —
+  `schedule-estimate` vergleicht also Gleiches; zehn Backup-Folien lösen keinen Hinweis aus.
+- Heading-Attribute: `VALID`/`VALID_ON_SECTION` nennen beide Erweiterungen.
+- Tests in `tests/generation/common/test_training_schedule.py` (Abschnitt „backup (E16-S04)").
+
 ### Offene Punkte
 
 - E16-S03 setzt dieselbe Tabelle (`Schedule.to_markdown()`) vorn ins Handout.

@@ -580,4 +580,7 @@ weil ihm vertraut wird.
   Überschriften-`abstractNum` mit `upperLetter` (`BodyWriter._appendix_num`), die Absätze tragen
   `w:numPr`; ändert sich die Überschriften-Nummerierung der Vorlage, prüft
   `test_the_appendix_is_lettered_in_word`. PDF: `StoryBuilder.appendix`, `backup.letters`.
-  Das jeweils andere Attribut meldet `attribute-ignored`.
+  Das jeweils andere Attribut meldet `attribute-ignored`. Zusammen mit E16-S02:
+  `training_schedule.build` endet an `{.closing}` **oder** `{.backup}`; `backup.check` weist `{.break}` und `dauer=…` ab
+  der Abschlussfolie bzw. ab dem Backup ab (Entscheidung 2026-11-08, vorsichtig: Fehler statt
+  stillschweigend ungeplant).

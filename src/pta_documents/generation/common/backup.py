@@ -4,7 +4,9 @@ Both attributes go on a ``#`` heading and make it and every chapter after it som
 deck the backup behind the closing slide (no chapter number, not on the agenda), in Word and PDF
 the appendices lettered A, B, C. Each format ignores the other's attribute with the note
 ``attribute-ignored``; ``check`` (called by ``layout_syntax.check``) rejects the same mistakes in
-every format: either attribute twice, one inside a container, a closing slide after the backup.
+every format: either attribute twice, one inside a container, a closing slide after the backup,
+and a break or ``dauer`` (E16-S02) behind the closing slide or in the backup, which the training
+schedule does not plan.
 """
 
 from __future__ import annotations
@@ -25,11 +27,14 @@ APPENDIX: Final = ".appendix"
 
 def check(tokens: Sequence[Token], format: DocumentFormat, line_offset: int = 0) -> None:
     """Raise, with the line in front (``Line 12: …``), for ``{.backup}`` or ``{.appendix}``
-    named twice or on a heading in a container, and for a ``{.closing}`` after ``{.backup}``."""
+    named twice or on a heading in a container, for a ``{.closing}`` after ``{.backup}``, and for
+    ``{.break}`` or ``dauer=…`` from the closing slide or the backup on."""
     backup: int | None = None
     appendix: int | None = None
+    behind: str | None = None
+    """What ends the training schedule (E16-S02): the closing slide or the backup."""
     for i, token in enumerate(tokens):
-        if token.type != "heading_open" or token.tag != "h1":
+        if token.type != "heading_open" or token.tag not in ("h1", "h2"):
             continue
         children = tokens[i + 1].children or []
         if not children or children[-1].type != "text":
@@ -38,6 +43,15 @@ def check(tokens: Sequence[Token], format: DocumentFormat, line_offset: int = 0)
         if attributes is None:
             continue
         line = line_of(token, line_offset) or 0
+        if token.level == 0 and behind is None:
+            if attributes.closing:
+                behind = "behind the closing slide {.closing}"
+            elif attributes.backup:
+                behind = "in the backup {.backup}"
+        if token.level == 0 and behind is not None:
+            _check_unplanned(attributes, behind, format, line)
+        if token.tag != "h1":
+            continue
         for name, flag, first in (
             (BACKUP, attributes.backup, backup),
             (APPENDIX, attributes.appendix, appendix),
@@ -70,6 +84,31 @@ def check(tokens: Sequence[Token], format: DocumentFormat, line_offset: int = 0)
                 f"The closing slide {{.closing}} goes before the backup ({{.backup}} on line "
                 f"{backup}): the backup slides stand behind the closing slide.",
             )
+
+
+def _check_unplanned(
+    attributes: heading_attributes.HeadingAttributes,
+    behind: str,
+    format: DocumentFormat,
+    line: int,
+) -> None:
+    """Raise for a break or a ``dauer`` behind the closing slide or in the backup: the training
+    schedule (E16-S02) ends before them, so it would plan neither (Entscheidung 2026-11-08: a
+    mistake rather than silently left out)."""
+    if attributes.kind == heading_attributes.BREAK:
+        _raise(
+            format,
+            line,
+            f"The break '{attributes.block}' stands {behind}, where nothing is planned any "
+            "more: put it before the closing slide, or make it an ordinary slide.",
+        )
+    if attributes.duration is not None and not attributes.closing:
+        _raise(
+            format,
+            line,
+            f"The heading attributes '{attributes.block}' plan a length {behind}, where the "
+            "schedule has ended: backup slides get no time. Leave out dauer.",
+        )
 
 
 def _raise(format: DocumentFormat, line: int, reason: str) -> NoReturn:

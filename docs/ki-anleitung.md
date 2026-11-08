@@ -424,14 +424,15 @@ laenge: 4h
 
 ## Pause {.break dauer=15}        ← Pausenfolie „Pause · 15 min", KEIN Inhalt darunter
 
-# Danke {.closing}                ← keine dauer; was danach kommt, ist nicht geplant
+# Danke {.closing}                ← keine dauer; was danach kommt (auch Backup), ist nicht geplant
 ```
 
 - Die Summe muss `laenge:` treffen, sonst Hinweis `schedule-length`; Folien ohne Angabe zählen
   2 Minuten (`schedule-missing`); `check` meldet `schedule-estimate`, wenn die Sprechzeit mehr
   als die Hälfte von „2 Minuten je Folie plus Notizen" abweicht — dann Dauern oder Folienzahl
   prüfen.
-- `.break` nur an `##`, immer mit `dauer`; Pausen zählen zu den höchstens acht Agendapunkten.
+- `.break` nur an `##`, immer mit `dauer`, nie hinter `{.closing}` oder im Backup (dort auch
+  keine `dauer` — Fehler); Pausen zählen zu den höchstens acht Agendapunkten.
 - Die Trainerfassung (`--audience trainer`) schreibt „Geplant: 09:20–09:25 (5 min)" als erste
   Notizenzeile; `./run.sh schedule <praesentation.md>` erzeugt `<name>-zeitplan.docx` mit der
   Zeitplantabelle (`--markdown` zeigt sie als Markdown zum Prüfen).

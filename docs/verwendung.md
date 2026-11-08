@@ -1696,9 +1696,12 @@ laenge: 4h
 - `## Pause {.break dauer=15}` ist eine Pausenfolie auf `Zwischenfazit 01` (bzw. `layout="…"`
   der Zwischenfazit-Layouts) mit dem Titel „Pause · 15 min", ohne Inhalt. Eine Pause zählt nicht
   zur `dauer` ihres Kapitels; Pausen am Ende eines Kapitels stehen im Zeitplan hinter ihm.
-- Nach der Abschlussfolie (`{.closing}`) ist nichts mehr geplant. `dauer` an der Abschlussfolie
-  ist ein Fehler, ebenso `.break` ohne `dauer`, an `#` oder mit Inhalt, und jeder Wert, der keine
-  Dauer ist (`Line 3: The heading attribute dauer=abc is no length of time; write minutes or
+- Nach der Abschlussfolie (`{.closing}`) und ab dem Backup (`{.backup}`, E16-S04, auch ohne
+  Abschlussfolie) ist nichts mehr geplant: Backup-Folien bekommen keine Zeit und zählen nicht zu
+  `laenge:`. Eine Pause oder `dauer` dort ist ein Fehler (`… stands in the backup {.backup},
+  where nothing is planned any more …` bzw. `… backup slides get no time. Leave out dauer.`),
+  ebenso `dauer` an der Abschlussfolie und `.break` ohne `dauer`, an `#` oder mit Inhalt, und
+  jeder Wert, der keine Dauer ist (`Line 3: The heading attribute dauer=abc is no length of time; write minutes or
   hours and minutes, like '5', '90', '4h' or '1h30' (more than 0).`).
 - Einen Zeitplan hat ein Deck, sobald es `dauer`, eine Pause, `beginn:` oder `laenge:` nennt. Er
   gilt für die Fassung (E16-S01): interne Folien zählen nur intern und beim Trainer.
@@ -1771,7 +1774,9 @@ daran und an „erste Folie hinter der Abschlussfolie" (`design.slides.backup_st
 HTML-Deck, `check` und der PPTX-Konverter, wo das Backup beginnt. Das HTML-Deck zeigt Backup-Folien
 nicht in der Kapitelanzeige; die Fortschrittsanzeige ist auf der Abschlussfolie voll (`mainSlides`
 im `data-config`), Tastatur und `#n` erreichen die Folien dahinter. `check` zählt sie getrennt
-(`DeckStats.backup`, `…, 1 closing, 4 backup`); Wörter, Inhaltsfolien und Minuten zählen sie nicht.
+(`DeckStats.backup`, `…, 1 closing, 4 backup`); Wörter, Inhaltsfolien und Minuten zählen sie nicht
+— so vergleicht `schedule-estimate` (E16-S02) den Zeitplan, der vor dem Backup endet, mit einer
+Schätzung ohne Backup-Folien.
 Die Kundenfassung (E16-S01) behält das Backup.
 
 Word: Ab `{.appendix}` hängen die Überschriften 1–3 über ihr eigenes `w:numPr` an eine neue

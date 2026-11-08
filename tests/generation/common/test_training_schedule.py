@@ -13,7 +13,7 @@ from pta_documents.conversions.docx import DocxConverter
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import heading_attributes, layout_syntax
 from pta_documents.generation.common.audience import Audience
-from pta_documents.generation.common.check import check
+from pta_documents.generation.common.check import DeckStats, check
 from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.common.training_schedule import (
     EntryKind,
@@ -270,6 +270,65 @@ def test_check_compares_with_the_rule_of_thumb() -> None:
 def test_check_does_not_compare_a_schedule_without_any_dauer() -> None:
     markdown = "---\nlaenge: 2\n---\n# K\n\n## A\n\nText\n"
     assert check(MarkdownDocument(markdown), PPTX).codes() == [NoteCodes.SCHEDULE_MISSING]
+
+
+# ---------------------------------------------------------------------- backup (E16-S04)
+
+BACKUP_SLIDES: Final = "".join(f"## Reserve {n}\n\nText\n\n" for n in range(1, 11))
+
+
+@pytest.mark.parametrize("closing", ["# Danke {.closing}\n\n", ""])
+def test_backup_chapters_get_no_times_and_do_not_count_toward_laenge(closing: str) -> None:
+    markdown = (
+        "---\nbeginn: 09:00\nlaenge: 15\n---\n# K\n\n## A {dauer=5}\n\nText\n\n"
+        "# Teil {dauer=10}\n\n## B\n\nText\n\n"
+        f"{closing}# Backup {{.backup}}\n\n{BACKUP_SLIDES}# Mehr Backup\n\n## Noch eine\n"
+    )
+    schedule = schedule_of(markdown)
+    assert [e.title for e in schedule.entries] == ["A", "Teil", "B"]
+    assert schedule.total == 15 and schedule.missing == ()
+    notes = Notes()
+    schedule.add_notes(notes)
+    assert notes.to_tuple() == ()
+
+
+@pytest.mark.parametrize(
+    "markdown",
+    [
+        "# K\n\n## A {dauer=5}\n\n# Danke {.closing}\n\n# Backup {.backup}\n\n"
+        "## Pause {.break dauer=15}\n",
+        "# K\n\n## A {dauer=5}\n\n# Backup {.backup}\n\n# Mehr\n\n## Pause {.break dauer=5}\n",
+        "# K\n\n## A {dauer=5}\n\n# Danke {.closing}\n\n## Pause {.break dauer=15}\n",
+    ],
+)
+def test_a_break_in_the_backup_or_behind_the_closing_slide_raises(markdown: str) -> None:
+    for format in (PPTX, DocumentFormat.DOCX):
+        with pytest.raises(DocumentConversionError) as caught:
+            layout_syntax.check(parse(markdown), format)
+        assert "where nothing is planned any more" in caught.value.reason
+        assert caught.value.reason.startswith("Line ")
+
+
+@pytest.mark.parametrize(
+    "markdown",
+    [
+        "# K\n\n# Danke {.closing}\n\n# Backup {.backup dauer=10}\n",
+        "# K\n\n# Backup {.backup}\n\n## Reserve {dauer=5}\n",
+        "# K\n\n# Danke {.closing}\n\n## Danach {dauer=5}\n",
+    ],
+)
+def test_a_dauer_in_the_backup_or_behind_the_closing_slide_raises(markdown: str) -> None:
+    with pytest.raises(DocumentConversionError) as caught:
+        layout_syntax.check(parse(markdown), PPTX)
+    assert "backup slides get no time. Leave out dauer." in caught.value.reason
+
+
+def test_check_compares_without_the_backup_slides() -> None:
+    markdown = f"# K\n\n## A {{dauer=3}}\n\nText\n\n# Danke {{.closing}}\n\n{BACKUP_SLIDES}"
+    result = check(MarkdownDocument(markdown), PPTX)
+    assert result.codes() == []
+    assert isinstance(result.stats, DeckStats)
+    assert result.stats.backup == 10 and result.stats.minutes == 2
 
 
 # ---------------------------------------------------------------------- the table

@@ -8,7 +8,8 @@ an entry per chapter, slide and break with its start and length. A slide without
 a chapter without one counts ``MINUTES_PER_SLIDE`` (the rule of thumb of ``check``) and is
 reported (``schedule-missing``); the slides of a split slide count once (the schedule is made
 from the headings, not from the slides written). The schedule ends at the closing slide
-(``{.closing}``): what comes after it is not planned.
+(``{.closing}``) or at the backup (``{.backup}``, E16-S04): what comes after it is not planned
+(``backup.check`` rejects a break or a ``dauer`` there).
 
 A deck has a schedule only when it says something about time: a ``dauer``, a break,
 ``beginn:`` or ``laenge:``. The deck uses it for the agenda (clock times, the breaks as items)
@@ -291,8 +292,8 @@ def build(
         duration = attributes.duration if attributes is not None else None
         timed |= duration is not None
         if token.tag == "h1":
-            if attributes is not None and attributes.closing:
-                break
+            if attributes is not None and (attributes.closing or attributes.backup):
+                break  # nothing behind the closing slide is planned, the backup neither
             groups.append(_Group(i, title, line, duration, not seen_title))
             seen_title = True
             continue
