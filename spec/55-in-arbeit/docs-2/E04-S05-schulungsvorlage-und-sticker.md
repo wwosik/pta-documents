@@ -1,8 +1,8 @@
 # E04-S05 Schulungsvorlage, englische Titelfolie, Sticker „VERTRAULICH"
 
-> Status: Entwurf
-> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](E04-pptx-generator.md)
-> Milestone: [M04 Präsentieren und Schulung](M04-praesentieren-und-schulung.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E04 PPTX-Generator auf der PTA-PowerPoint-Vorlage](../../50-entwurf/E04-pptx-generator.md)
+> Milestone: [M04 Präsentieren und Schulung](../../50-entwurf/M04-praesentieren-und-schulung.md)
 
 ## Zusammenfassung
 
