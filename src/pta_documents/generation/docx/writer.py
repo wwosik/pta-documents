@@ -11,6 +11,7 @@ styles, image rows as a table without rules, the PTA slide kinds as headings, qu
 
 from __future__ import annotations
 
+import copy
 import io
 import math
 import re
@@ -44,6 +45,7 @@ from pta_documents.drawing.model import Drawing
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     audience,
+    backup,
     block_shapes,
     code_blocks,
     code_highlight,
@@ -173,6 +175,9 @@ class BodyWriter:
         """How deep the writer is in ``:::`` containers: headings there are no headings."""
         self.kind: str | None = None
         """The PTA slide kind of the ``##`` section being written (E04-S04)."""
+        self.appendix_num: str | None = None
+        """From ``# … {.appendix}`` on: the numbering that letters the headings A, A.1, A.1.1
+        (E16-S04); None: the template's numbering of the headings."""
         section = document.sections[0]
         page_width = int(section.page_width or 0)
         margins = int(section.left_margin or 0) + int(section.right_margin or 0)
@@ -226,11 +231,15 @@ class BodyWriter:
                     paragraph.paragraph_format.keep_with_next = True
                     self.inline(paragraph, inline, plain_bold=True)
                     return i + 3
+                if attributes is not None and level == 1:
+                    backup.note_ignored(self.notes, attributes, self.line(token), slides=False)
+                    if attributes.appendix and self.appendix_num is None:
+                        self.appendix_num = self._appendix_num()
                 if attributes is not None and attributes.kind is not None and token.level == 0:
                     return self.slide_kind(tokens, i, inline, attributes.kind)
                 styles = word.STYLES
                 heading = styles.headings[level - 1] if level <= 3 else styles.sub_heading
-                paragraph = self.paragraph(heading)
+                paragraph = self.heading_paragraph(heading, level)
                 self.inline(paragraph, inline)
                 return i + 3
             case "paragraph_open":
@@ -554,7 +563,7 @@ class BodyWriter:
                 style = word.STYLES.quote
                 self.inline(self.paragraph(style), inline)
             case _:
-                self.inline(self.paragraph(word.STYLES.headings[1]), inline)
+                self.inline(self.heading_paragraph(word.STYLES.headings[1], 2), inline)
         if kind == heading_attributes.AGENDA and all(
             t.type == "html_block" and html.is_comment(t.content) for t in tokens[i + 3 : end]
         ):
@@ -567,14 +576,16 @@ class BodyWriter:
         return end
 
     def chapters(self, tokens: list[Token], start: int) -> None:
-        """The ``#`` headings from ``tokens[start]`` on (the closing one aside) as a numbered
-        list: the agenda without a list of its own."""
+        """The ``#`` headings from ``tokens[start]`` on (the closing one aside) up to the
+        appendix (E16-S04) as a numbered list: the agenda without a list of its own."""
         num_id: str | None = None
         for i in range(start, len(tokens)):
             token = tokens[i]
             if token.type != "heading_open" or token.tag != "h1" or token.level != 0:
                 continue
             inline, attributes = layout_syntax.without_attributes(tokens[i + 1], 1, FORMAT)
+            if self.appendix_num is not None or (attributes is not None and attributes.appendix):
+                break
             if attributes is not None and attributes.closing:
                 continue
             style = word.STYLES.list_number
@@ -1384,6 +1395,61 @@ class BodyWriter:
             self.footnotes_part._blob = blob  # type: ignore[attr-defined]
 
     # ------------------------------------------------------------------ numbering
+
+    def heading_paragraph(self, style: str, level: int) -> Paragraph:
+        """A heading paragraph of ``style``; in the appendix (E16-S04) on its lettered
+        numbering, levels 1–3."""
+        paragraph = self.paragraph(style)
+        if self.appendix_num is not None and level <= len(word.STYLES.headings):
+            _set_numbering(paragraph, self.appendix_num, level - 1)
+        return paragraph
+
+    def _appendix_num(self) -> str:
+        """A numbering of the appendix (E16-S04): a copy of the headings' list with
+        ``upperLetter`` on level 1 (A, B; below it A.1, A.1.1, as the levels' texts are
+        ``%1.%2``), not bound to the styles, and an instance of it for the headings' ``numPr``.
+        Word goes on counting it in a heading copied or continued from an appendix."""
+        numbering = self.document.part.numbering_part.element
+        base = self._style_num(word.STYLES.headings[0])
+        source = numbering.find(f"{w('num')}[@{w('numId')}='{base}']")
+        abstract_ref = source.find(w("abstractNumId")) if source is not None else None
+        abstract_id = abstract_ref.get(w("val")) if abstract_ref is not None else None
+        abstract = numbering.find(f"{w('abstractNum')}[@{w('abstractNumId')}='{abstract_id}']")
+        if abstract is None:
+            raise DocumentConversionError(
+                FORMAT, f"The numbering {base} of the headings is missing."
+            )
+        abstracts = numbering.findall(w("abstractNum"))
+        lettered = copy.deepcopy(abstract)
+        new_abstract = max(int(a.get(w("abstractNumId"), "0")) for a in abstracts) + 1
+        lettered.set(w("abstractNumId"), str(new_abstract))
+        ids = {
+            int(n.get(w("val"), "0"), 16)
+            for n in numbering.iter(w("nsid"))
+            if re.fullmatch(r"[0-9A-Fa-f]{1,8}", n.get(w("val"), ""))
+        }
+        nsid = lettered.find(w("nsid"))
+        if nsid is not None:
+            # Word tells lists apart by it: the appendix's must be its own.
+            value = int(nsid.get(w("val"), "0"), 16) if nsid.get(w("val")) else 0
+            while value in ids:
+                value = (value + 1) % 2**32
+            nsid.set(w("val"), f"{value:08X}")
+        for lvl in lettered.iterfind(w("lvl")):
+            for style in lvl.findall(w("pStyle")):
+                lvl.remove(style)
+            if lvl.get(w("ilvl")) == "0":
+                fmt = lvl.find(w("numFmt"))
+                if fmt is not None:
+                    fmt.set(w("val"), "upperLetter")
+        abstracts[-1].addnext(lettered)
+        ids_num = [int(n.get(w("numId"), "0")) for n in numbering.iterfind(w("num"))]
+        new_id = str(max(ids_num) + 1)
+        num = etree.Element(w("num"))
+        num.set(w("numId"), new_id)
+        etree.SubElement(num, w("abstractNumId")).set(w("val"), str(new_abstract))
+        numbering.findall(w("num"))[-1].addnext(num)
+        return new_id
 
     def _style_num(self, style: str) -> str:
         element = self.document.styles[style].element

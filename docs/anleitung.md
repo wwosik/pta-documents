@@ -189,6 +189,7 @@ der Generator als Hinweis `code-language-unknown`.
 | `# Kapitel` | Überschrift 1 (nummeriert 1, 2, 3 …) |
 | `## Abschnitt`, `### Unterabschnitt` | Überschrift 2 und 3 (1.1, 1.1.1) |
 | `#### Zwischentitel` | Zwischenüberschrift (Versalien, ohne Nummer) |
+| `# Glossar {.appendix}` | ab hier Anhänge: A, B, C (A.1, A.1.1) statt 1, 2, 3 — die Überschrift ist Anhang A, jedes `#` danach der nächste (siehe [Backup und Anhang](#backup-und-anhang)) |
 | normaler Absatz | Standard |
 | `**Absatz nur fett**` | Standard fett — direkt vor einer Tabelle ist das ihr Titel |
 | `- Punkt` (eingerückt bis 3 Ebenen) | PTA-Aufzählung (■, dann ―) |
@@ -514,6 +515,26 @@ laenge: 4h
   `kurs-praesentation-zeitplan.docx`: eine Tabelle Von | Bis | Dauer | Kapitel/Folie | Notizen
   (leer, zum Ausfüllen), Pausen gelb markiert, unten die Summe. Ohne `beginn:` stehen dort
   relative Zeiten („+0:15").
+
+### Backup und Anhang
+
+Folien für Rückfragen stehen **hinter** der Abschlussfolie:
+
+```markdown
+# Danke! {.closing}             ← Abschlussfolie
+
+# Backup {.backup}              ← Trennfolie „Backup", ohne Nummer
+
+## Details zur Migration        ← Backup-Folie, Fußzeile „PTA – <Titel> · Backup"
+```
+
+- Alles ab `{.backup}` ist Backup, auch weitere `#`-Kapitel: ohne Kapitelnummer, nicht in der
+  Agenda, im HTML-Deck nach dem Ende der Fortschrittsanzeige; `check` zählt die Folien extra.
+- `{.backup}` steht einmal, nach `{.closing}` (nicht davor). Die Kundenfassung zeigt das Backup;
+  wer es weglassen will, markiert die Folien mit `{.internal}`.
+- Im Word-Bericht heißt das Gegenstück `# Glossar {.appendix}`: ab dort heißen die Kapitel A, B,
+  C (Abschnitte A.1), auch im Inhaltsverzeichnis und im PDF. Jedes Format ignoriert das Attribut
+  des anderen mit dem Hinweis `attribute-ignored`.
 
 ### Agenda, Zwischenfazit, Zitat, Kontakt
 

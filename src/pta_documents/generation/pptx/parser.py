@@ -22,6 +22,7 @@ from pta_documents.design.colors import StatusCategory
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     audience,
+    backup,
     code_blocks,
     code_highlight,
     generated_images,
@@ -157,6 +158,8 @@ class DeckParser:
         self.schedule: training_schedule.Schedule | None = None
         """The training schedule (``dauer=…``, ``{.break}``, ``beginn:``, E16-S02); None when
         the deck says nothing about time."""
+        self.backup = False
+        """From ``# … {.backup}`` on, every slide is a backup slide (E16-S04)."""
 
     def parse(self) -> list[Slide]:
         tokens = parse(self.body)
@@ -245,6 +248,8 @@ class DeckParser:
         transition = self._transition(heading)
         if transition is not None:
             self.slides[first:] = [replace(s, transition=transition) for s in self.slides[first:]]
+        if self.backup:
+            self.slides[first:] = [replace(s, backup=True) for s in self.slides[first:]]
 
     def _planned(self, heading: int) -> Paragraph | None:
         """In the trainer version, the first line of the speaker notes of the slides of the
@@ -316,7 +321,14 @@ class DeckParser:
         section = items
         if open_token.tag == "h1":
             text = [i for i in section if not isinstance(i, Separator)]
-            if attributes is not None and attributes.closing:
+            if attributes is not None:
+                backup.note_ignored(self.notes, attributes, line, slides=True)
+            if attributes is not None and attributes.backup:
+                # The divider slide of the backup: no number, never the title slide.
+                self._no_content(text, "the backup's divider slide", open_token)
+                self.backup = True
+                self.slides.append(ChapterSlide(title, line, None, layout, backup=True))
+            elif attributes is not None and attributes.closing:
                 self._no_content(text, "the closing slide", open_token)
                 self.slides.append(ClosingSlide(title, line, layout))
             elif not self.has_cover:
@@ -331,8 +343,11 @@ class DeckParser:
                 self.has_cover = True
             else:
                 self._no_content(text, "a chapter slide", open_token)
-                self.chapters += 1
-                self.slides.append(ChapterSlide(title, line, self.chapters, layout))
+                number: int | None = None
+                if not self.backup:
+                    self.chapters += 1
+                    number = self.chapters
+                self.slides.append(ChapterSlide(title, line, number, layout))
             return
         if attributes is not None and attributes.closing:
             raise self._error("{.closing} goes on a '#' heading: the closing slide", open_token)

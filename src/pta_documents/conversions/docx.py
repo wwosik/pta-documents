@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import BinaryIO, Final
 
 from lxml import etree
@@ -56,6 +56,15 @@ class _Context:
     """Style id (lower case) -> name."""
     numbering_is_ordered: dict[tuple[str, int], bool]
     images: ResourceCollector | None
+    lettered: frozenset[str] = frozenset()
+    """The numberings (``numId``) whose first level counts A, B, C: the appendix (E16-S04)."""
+    state: _State = field(default_factory=lambda: _State())
+
+
+@dataclass
+class _State:
+    appendix: bool = False
+    """The first heading of the appendix is written (with ``{.appendix}``, E16-S04)."""
 
 
 Segment = tuple[str, str]
@@ -89,6 +98,7 @@ class DocxConverter:
                 _load_style_names(package),
                 _load_numbering(package),
                 ResourceCollector(options.resource_path_prefix) if options.include_images else None,
+                _lettered_numberings(package),
             )
             out: list[str] = []
             for block in body:
@@ -161,6 +171,24 @@ def _load_numbering(package: OpenXmlPackage) -> dict[tuple[str, int], bool]:
     return result
 
 
+def _lettered_numberings(package: OpenXmlPackage) -> frozenset[str]:
+    """The numberings whose first level is ``upperLetter``: the appendix's (E16-S04)."""
+    numbering = package.read_xml("word/numbering.xml")
+    if numbering is None:
+        return frozenset()
+    lettered: set[str] = set()
+    for abstract in numbering.iterfind(w("abstractNum")):
+        fmt = abstract.find(f"{w('lvl')}[@{w('ilvl')}='0']/{w('numFmt')}")
+        if fmt is not None and fmt.get(w("val")) == "upperLetter":
+            lettered.add(abstract.get(w("abstractNumId"), ""))
+    result: set[str] = set()
+    for num in numbering.iterfind(w("num")):
+        ref = num.find(w("abstractNumId"))
+        if ref is not None and ref.get(w("val")) in lettered:
+            result.add(num.get(w("numId"), ""))
+    return frozenset(result)
+
+
 def _int(value: str | None) -> int:
     try:
         return int(value) if value is not None else 0
@@ -224,7 +252,16 @@ def _render_paragraph_text(paragraph: etree._Element, context: _Context, out: li
     if heading in ("title", "h1", "h2", "h3", "h4", "h5", "h6"):
         _ensure_blank_line(out)
         level = 1 if heading == "title" else int(heading[1])
-        out.append("#" * level + " " + text.replace(HARD_BREAK, " ").strip() + "\n\n")
+        suffix = ""
+        if (
+            heading == "h1"
+            and not context.state.appendix
+            and _num_id(properties) in (context.lettered)
+        ):
+            # The first appendix (E16-S04): the attribute comes back.
+            context.state.appendix = True
+            suffix = " {.appendix}"
+        out.append("#" * level + " " + text.replace(HARD_BREAK, " ").strip() + suffix + "\n\n")
         return
 
     if style_id and context.style_names.get(style_id.lower()) in NOTE_STYLES:
@@ -244,6 +281,11 @@ def _render_paragraph_text(paragraph: etree._Element, context: _Context, out: li
 
     _ensure_blank_line(out)
     out.append(text + "\n\n")
+
+
+def _num_id(properties: etree._Element | None) -> str | None:
+    element = properties.find(f"{w('numPr')}/{w('numId')}") if properties is not None else None
+    return element.get(w("val")) if element is not None else None
 
 
 def _render_chart(chart: etree._Element, context: _Context, out: list[str]) -> None:

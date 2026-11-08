@@ -108,6 +108,8 @@ class DeckStats:
     words_max: int
     notes_words: int
     """Words in the speaker notes."""
+    backup: int = 0
+    """Backup slides behind the closing slide (E16-S04); none of the other figures counts them."""
 
     @property
     def minutes(self) -> int:
@@ -121,7 +123,8 @@ class DeckStats:
         """Two lines for people."""
         return (
             f"{self.slides} slides: {self.title} title, {self.chapters} chapters, "
-            f"{self.content} content ({self.continued} continued), {self.closing} closing",
+            f"{self.content} content ({self.continued} continued), {self.closing} closing"
+            + (f", {self.backup} backup" if self.backup else ""),
             f"{self.words} words, per content slide {self.words_min}/{self.words_median}/"
             f"{self.words_max} (min/median/max), {self.notes_words} in notes; about "
             f"{self.minutes} minutes (rule of thumb: 2 per content slide plus notes at "
@@ -287,7 +290,10 @@ def deck_stats(deck: bytes) -> DeckStats:
     title = chapters = closing = continued = notes_words = 0
     content_words: list[int] = []
     total = 0
-    for slide in presentation.slides:
+    slides = list(presentation.slides)
+    start = design.backup_start([(s.slide_layout.name, s.name) for s in slides])
+    main = slides if start is None else slides[:start]
+    for slide in main:
         layout = slide.slide_layout.name
         count = _slide_words(slide)
         total += count
@@ -315,6 +321,7 @@ def deck_stats(deck: bytes) -> DeckStats:
         words_median=int(statistics.median(content_words)) if content_words else 0,
         words_max=max(content_words, default=0),
         notes_words=notes_words,
+        backup=len(slides) - len(main),
     )
 
 

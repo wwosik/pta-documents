@@ -93,6 +93,11 @@ class NoteCodes:
     """The planned talking time is more than half off the rule of thumb of ``./run.sh check``
     (2 minutes per content slide plus the notes); only the check reports it (E16-S02)."""
 
+    ATTRIBUTE_IGNORED: Final = "attribute-ignored"
+    """A heading attribute of the other kind of document (E16-S04): ``{.backup}`` in Word and
+    PDF, which have no closing slide, ``{.appendix}`` on slides, which number no appendices
+    (PPTX, DOCX, PDF)."""
+
     ALL: Final = (
         SLIDE_SPLIT,
         SLIDE_OVERFULL,
@@ -109,6 +114,7 @@ class NoteCodes:
         SCHEDULE_MISSING,
         SCHEDULE_LENGTH,
         SCHEDULE_ESTIMATE,
+        ATTRIBUTE_IGNORED,
     )
     """Every code, in the order the guides list them."""
 

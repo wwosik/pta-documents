@@ -68,7 +68,8 @@
       var chapter = slide.hasAttribute('data-chapter') ? +slide.getAttribute('data-chapter') : -1;
       chapters.forEach(function (c) { c.classList.toggle('on', +c.getAttribute('data-c') === chapter); });
       if (progress) {
-        var share = slides.length > 1 ? (cur + step / (slide.steps + 1)) / (slides.length - 1) : 1;
+        var main = Math.min(+(config.mainSlides || slides.length), slides.length);
+        var share = main > 1 ? (cur + step / (slide.steps + 1)) / (main - 1) : 1;
         progress.style.width = (Math.min(share, 1) * 100) + '%';
       }
       var notes = slide.querySelector('.notes');

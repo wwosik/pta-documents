@@ -103,6 +103,9 @@ Sprache = Hinweis `code-language-unknown`.
 - `#` ist **Kapitel** (Überschrift 1, nummeriert), nie der Titel — der Titel steht nur im Front
   Matter. `##`, `###` = Überschrift 2/3; `####`+ = unnummerierte Zwischenüberschrift. Überschriften
   ohne eigene Nummern schreiben (Word nummeriert selbst).
+- **Anhänge:** `# Glossar {.appendix}` an das erste Anhangskapitel (einmal, nicht „Anhang" als
+  eigenes Kapitel davor) — ab dort heißen die Kapitel A, B, C (A.1, A.1.1), auch im
+  Inhaltsverzeichnis und im PDF. Jedes `#` danach ist der nächste Anhang, ohne Attribut.
 - Absätze, `-`/`1.`-Listen (bis drei Ebenen), Tabellen, `> Zitat`, Codeblöcke, Links, Fußnoten
   `[^1]`, **fett**, *kursiv*, ~~durchgestrichen~~, `code` gehen.
 - Derselbe Bericht geht mit `--pdf` (bei `generate` und `check`) auch als PDF: gleiche Syntax,
@@ -153,7 +156,13 @@ Gliederung:
 # Kapitel                       ← Trennfolie „01", „02" …  — KEIN Inhalt darunter
 ## Folientitel                  ← eine Folie (Titel höchstens zwei Zeilen)
 # Schlussbotschaft {.closing}   ← Abschlussfolie — KEIN Inhalt darunter
+# Backup {.backup}              ← optional: Trennfolie ohne Nummer, dann Reservefolien
 ```
+
+- **Backup:** Folien für Rückfragen nach der Abschlussfolie hinter `# Backup {.backup}` (einmal,
+  immer nach `{.closing}`). Alles danach ist Backup: keine Kapitelnummer, nicht in der Agenda,
+  Fußzeile „… · Backup". Für Word heißt das Gegenstück `{.appendix}`; das jeweils andere
+  Attribut ergibt den Hinweis `attribute-ignored`.
 
 - Absatz = Einleitungstext, `-`-Listen = Aufzählung (bis drei Ebenen), `1.` = nummeriert,
   `###` = Subheadline. **Fett** erscheint in Segoe UI statt Light (PTA-Hervorhebung).
@@ -180,7 +189,7 @@ Gliederung:
   eingepasst, nie beschnitten. Den Link zusätzlich als Text auf die Folie schreiben.
 - Ein bestimmtes PTA-Layout: `## Titel {layout="Titel und Text (zweispaltig)"}` und den Inhalt mit
   `---` in Spalten teilen. Nur exakte Layoutnamen; die Fehlermeldung listet alle.
-- Heading-Attribute: `#` kennt `.closing`, `layout="…"` und `uebergang="…"`, `##` kennt `.dark`,
+- Heading-Attribute: `#` kennt `.closing`, `.backup`, `layout="…"` und `uebergang="…"`, `##` kennt `.dark`,
   `kicker="…"`, `layout="…"`, `uebergang="…"` und die PTA-Folienarten `.agenda`, `.interim`, `.quote`, `.contact` (siehe
   unten); alles andere ist ein Fehler. `kicker` ist eine kleine Zeile über dem Titel,
   `.dark` setzt die Folie auf den Verlauf der Titelfolie mit weißer Schrift (beides macht die
@@ -221,7 +230,7 @@ Zwischenfazit fett, Zitat und Quelle als Zitat, Kontakt mit fettem Namen und kle
 | Schreiben | Ergebnis |
 | --------- | -------- |
 | `## Agenda {.agenda}` + **eine** Liste (je Punkt eine Zeile, max. 8) | Agendafolie mit „01" …; ≤ 4 kurz, 5–8 lang; mehr = Fehler → zwei Agendafolien |
-| `## Agenda {.agenda}` ohne Inhalt | Agenda aus den `#`-Kapiteln (ohne Titel und `{.closing}`) |
+| `## Agenda {.agenda}` ohne Inhalt | Agenda aus den `#`-Kapiteln (ohne Titel, `{.closing}` und Backup) |
 | `## Aussage {.interim}` — **kein** Inhalt darunter | Zwischenfazit (`layout="Zwischenfazit 02"` für die zweite Variante) |
 | `## Pause {.break dauer=15}` — **kein** Inhalt darunter | Pausenfolie „Pause · 15 min" auf dem Zwischenfazit-Layout, siehe [Schulungs-Zeitplan](#schulungs-zeitplan) |
 | `## Zitat {.quote}` + höchstens **ein** Absatz (die Quelle) | Zitatfolie (`layout="Zitat 02"`) |

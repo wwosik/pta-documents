@@ -52,6 +52,7 @@ from pta_documents.drawing.model import (
 )
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
+    backup,
     block_shapes,
     code_blocks,
     code_highlight,
@@ -216,6 +217,8 @@ class StoryBuilder:
         self.notes = notes
         self.out: list[_Entry] = []
         self.numbers = [0, 0, 0]
+        self.appendix = False
+        """From ``# … {.appendix}`` on, the headings are lettered A, A.1, A.1.1 (E16-S04)."""
         self.figures = 0
         self.tables = 0
         self.container_depth = 0
@@ -297,8 +300,14 @@ class StoryBuilder:
     def heading(self, tokens: list[Token], i: int) -> int:
         token = tokens[i]
         level = int(token.tag[1])
-        inline, _ = layout_syntax.without_attributes(tokens[i + 1], level, FORMAT)
+        inline, attributes = layout_syntax.without_attributes(tokens[i + 1], level, FORMAT)
         anchor = self.anchors.get(id(token))
+        if attributes is not None and level == 1:
+            backup.note_ignored(self.notes, attributes, self.line(token), slides=False)
+            if attributes.appendix and not self.appendix:
+                # The appendices count A, B, C from here (as Word's lettered numbering).
+                self.appendix = True
+                self.numbers = [0, 0, 0]
         if self.container_depth:
             # A heading in a box or container: bold text without number (as in Word).
             self.paragraph(inline, self.styles.normal_bold, keep=True, anchor=anchor)
@@ -309,7 +318,10 @@ class StoryBuilder:
         self.numbers[level - 1] += 1
         for deeper in range(level, 3):
             self.numbers[deeper] = 0
-        number = ".".join(str(n) for n in self.numbers[:level])
+        parts = [str(n) for n in self.numbers[:level]]
+        if self.appendix:
+            parts[0] = backup.letters(self.numbers[0])
+        number = ".".join(parts)
         style = self.styles.headings[level - 1]
         level_format = self.styles.design.level(self.styles.format(style.style.name))
         # Bookmarks and the table of contents show what the text shows (replace_unsupported).

@@ -570,3 +570,14 @@ weil ihm vertraut wird.
   (`_with_estimate`, braucht die Statistik des Probedecks). `generate --audience alle` hängt für
   Decks mit Zeitplan die Trainerfassung an (`tools/generate.audiences_of`), weil sich deren
   Token-Strom nicht unterscheidet. Werkzeug `./run.sh schedule` → `<name>-zeitplan.docx`.
+- **Backup und Anhang** (E16-S04): `HeadingAttributes.backup`/`.appendix` (nur `#`), Regeln für
+  das ganze Dokument in `generation/common/backup.check` (aus `layout_syntax.check`, alle
+  Formate). PPTX: `Slide.backup` (kw-only, wie `notes`) ab `{.backup}`, `ChapterSlide.number`
+  `None` = ohne Nummer; die Trennfolie heißt `Backup` (`p:cSld/@name`) — HTML-Deck, `check`
+  (`DeckStats.backup`) und PPTX-Konverter finden den Anfang über `design.slides.backup_start`
+  (Name, sonst erste Folie hinter der Abschlussfolie). Wer Agenda/Zeitplan aus `#`-Kapiteln baut,
+  hört vor `{.backup}` (Deck) bzw. `{.appendix}` (Word) auf. Word: eigene Kopie der
+  Überschriften-`abstractNum` mit `upperLetter` (`BodyWriter._appendix_num`), die Absätze tragen
+  `w:numPr`; ändert sich die Überschriften-Nummerierung der Vorlage, prüft
+  `test_the_appendix_is_lettered_in_word`. PDF: `StoryBuilder.appendix`, `backup.letters`.
+  Das jeweils andere Attribut meldet `attribute-ignored`.

@@ -16,6 +16,7 @@ from markdown_it.token import Token
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     audience,
+    backup,
     coloured_words,
     heading_attributes,
     icons,
@@ -219,7 +220,8 @@ def check(
     Block markers (``{.build}`` …, E09-S02) must be known ones before a block. A scene must
     stand alone under a ``##`` and its shapes be right (``scene``, E09-S04). The audience
     syntax (``::: internal``, ``::: solution`` after ``::: exercise``, ``{.internal}``, E16-S01)
-    is checked for every version (``audience.check``).
+    is checked for every version (``audience.check``), ``{.backup}`` and ``{.appendix}`` in every
+    format (``backup.check``, E16-S04).
     """
     day = schedule.reference_day(today)
     headed = False
@@ -265,6 +267,7 @@ def check(
             _check_coloured_words(token, heading_level, format, line_offset)
             icons.check(token, format, line_offset)
     audience.check(tokens, format, line_offset)
+    backup.check(tokens, format, line_offset)
 
 
 def _check_coloured_words(
