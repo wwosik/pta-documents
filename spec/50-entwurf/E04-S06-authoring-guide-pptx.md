@@ -80,3 +80,8 @@ Keine.
 - (2026-11-07, E09-S01) Sprechernotizen `::: notes` aufnehmen (Regeln in `docs/ki-anleitung.md`,
   Abschnitt *Präsentation*): zu jeder Folie zwei bis fünf Sätze; auf jeder Teilfolie wiederholt;
   Tabellen/Bilder darin entfallen.
+- (2026-11-08, E02-S05) Bausteine in `generation/common/authoring_guides.py` (u. a.
+  `layout_syntax_section(PPTX, effect)`, `icons_section`, `notes_section`, `typography_section`),
+  Testhilfen in `tests/generation/guides.py`. `tests/samples/test_funktionen.guide_syntax` auf
+  `PptxGenerator().authoring_guide()` umstellen (ohne die Fehlerbeispiele). Wortbudget: die
+  Folien-Syntax allein hat rund 700 Wörter, die Icons rund 280.

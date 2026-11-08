@@ -70,3 +70,13 @@ Keine.
 
 - Abhängigkeiten: E02-S05; die Abschnitte zu Folien-Syntax und Diagrammen erst nach E03-S03 und
   E03-S04 vollständig — bis dahin beschreibt der Guide nur, was schon geht.
+- (2026-11-08, E02-S05) Bausteine stehen in `generation/common/authoring_guides.py`, Testhilfen
+  in `tests/generation/guides.py`, Beispiel eines Guides aus Vorlage und Bausteinen in
+  `tests/generation/common/test_authoring_guides.py` (`example_guide`). `common_keys()` liefert
+  die Zeilen für `datum`, `sprache`, `typografie`, `syntaxhervorhebung`, `pruefung`, `fassung`.
+  `tests/samples/test_funktionen.guide_syntax` auf `DocxGenerator().authoring_guide()`
+  umstellen (ohne „Wenn etwas falsch ist"). PTA-Folienarten nennt `layout_syntax_section(DOCX)`
+  nur als bloße Namen, weil der Word-Bericht sie nicht zeigt — Beispiele ergänzen und in
+  `DOCUMENT_ATTRIBUTES` aufnehmen, wenn der Guide sie beschreiben soll. Die Icon-Liste aus
+  `docs/ki-anleitung.md` kann dann auf den Guide verweisen (`icons_section`; Test in
+  `tests/design/icons/test_icons.py` mitziehen).
