@@ -22,7 +22,7 @@ Zeile `./run.sh generate` tippen.
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
 | [E17-S01](E17-S01-rueckweg-aus-word.md) | Word-Kommentare aus Markdown; Kommentare und Änderungen eines zurückgeschickten DOCX zurück ins Markdown | Entwurf |
-| [E17-S02](E17-S02-typografie-und-code.md) | Deutsche Typografie beim Erzeugen, Silbentrennung und Blocksatz im PDF, Code-Highlighting | Entwurf |
+| [E17-S02](../55-in-arbeit/docs-2/E17-S02-typografie-und-code.md) | Deutsche Typografie beim Erzeugen, Silbentrennung und Blocksatz im PDF, Code-Highlighting | in Bearbeitung (docs-2) |
 | [E17-S03](E17-S03-terminologie-und-quellen.md) | Terminologieprüfung in `check`; `QUELLEN.md` maschinenlesbar, `[@kennung]`, Quellenverzeichnis | Entwurf |
 | [E17-S04](E17-S04-watch-und-seitenumbrueche.md) | `./run.sh watch`; Seitenumbrüche und Querformat-Abschnitte in Word und PDF | Entwurf |
 

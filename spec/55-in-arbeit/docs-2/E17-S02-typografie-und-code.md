@@ -1,8 +1,8 @@
 # E17-S02 Deutsche Typografie, Silbentrennung, Code-Highlighting
 
-> Status: Entwurf
-> Epic: [E17 Qualität und Arbeitsfluss](E17-qualitaet-und-arbeitsfluss.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E17 Qualität und Arbeitsfluss](../../50-entwurf/E17-qualitaet-und-arbeitsfluss.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
