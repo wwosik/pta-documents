@@ -23,7 +23,7 @@ deutlich: `Brand`, `BrandPack`, `BrandRegistry`, `ResolvedBrand` entfallen (sieh
 | [E02-S02](../60-prüfung/E02-S02-folien-syntax.md) | Folien-Syntax: Heading-Attribute, `:::`-Container, Alerts, `==mark==`, `[Wörter]{.success}`, Status-Labels | in Prüfung |
 | [E02-S03](../60-prüfung/E02-S03-zeichenmodell-und-svg.md) | Zeichenmodell `Drawing` und SVG-Ausgabe mit Tooltips | in Prüfung |
 | [E02-S04](../60-prüfung/E02-S04-code-block-renderer-und-bildkonverter.md) | Code-Block-Renderer und Bildkonverter (Schnittstellen, Fehlerweitergabe) | in Prüfung |
-| [E02-S05](E02-S05-authoring-guides.md) | Authoring Guides (Markdown-Beschreibung für Schreiber, aus den Optionen erzeugt) | Entwurf |
+| [E02-S05](../55-in-arbeit/docs-2/E02-S05-authoring-guides.md) | Authoring Guides (Markdown-Beschreibung für Schreiber, aus den Optionen erzeugt) | in Bearbeitung (docs-2) |
 
 ## Bereichsweite Entscheidungen
 
