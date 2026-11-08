@@ -13,6 +13,7 @@ from pta_documents.generation.common.image_attributes import CENTER, Focus
 from pta_documents.generation.common.renderers import ChartGraphic
 from pta_documents.generation.common.risks import RiskMatrix
 from pta_documents.generation.common.schedule import Schedule
+from pta_documents.generation.common.slide_transition import SlideTransition
 from pta_documents.generation.common.steps import Steps
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.markdown.document import DocumentResource
@@ -238,6 +239,8 @@ class Slide:
     line: int | None = None
     notes: tuple[Paragraph, ...] = field(default=(), kw_only=True)
     """The speaker notes (``::: notes`` of the heading): on every slide written for it."""
+    transition: SlideTransition | None = field(default=None, kw_only=True)
+    """How the slide comes in (E09-S03): of its heading or chapter; None: the deck's."""
 
 
 @dataclass(frozen=True)

@@ -200,6 +200,7 @@ result.slides  # Zahl der erzeugten Folien
 | `typografie`, `syntaxhervorhebung` | `ja` (Standard), `nein` | wie in Word, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
 | `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | wie in Word |
 | `aufbau` | `listen`, `nein` (Standard) | `listen`: jede äußere Liste Punkt für Punkt, siehe [Builds](#builds-e09-s02) |
+| `uebergang` | `none` (Standard), `fade`, `push`, `wipe` (mit `-left`/`-right`/`-up`/`-down`), `split`, `cover`, `uncover`, `zoom`, `cut`, `morph` | Übergang jeder Folie, siehe [Folienübergänge](#folienübergänge-e09-s03) |
 
 Gliederung: erstes `#` = Titelfolie, weitere `#` = Trennfolie „01", „02" …,
 `# Text {.closing}` = Abschlussfolie, `##` = Folie. `## Titel {layout="Name"}` wählt ein
@@ -385,6 +386,32 @@ Wischen von unten (22), Ausblenden (Exit 10), Schriftfarbe PTA-Blau (Emphasis 3)
 für Tabellen und Charts; Bilder und Gruppen ohne Eintrag; eigene `grpId` je Form und
 Effektklasse. Der PPTX-Konverter liest keine Builds.
 
+### Folienübergänge (E09-S03)
+
+`generation/common/slide_transition.SlideTransition` (`StrEnum`, Port von vt-tools-libs
+`SlideTransition`, erweitert nach der Entscheidung vom 2026-11-07) nennt die Werte, `VALID` die
+Liste für Meldungen. Front Matter `uebergang` (`Keys.TRANSITION`, nur PowerPoint) setzt
+`PptxOptions.transition` (Standard `none`); das Heading-Attribut `uebergang="…"`
+(`HeadingAttributes.transition`, auf `#` und `##`) prüft `heading_attributes.split` in **allen**
+Formaten (`Line 3: Unknown slide transition 'slide'. Valid transitions: none, fade, …`); Word und
+PDF ignorieren es. `DeckParser._transition` gibt jeder Folie einer Überschrift
+`Slide.transition`: die eigene, sonst die des letzten `#` (Trennfolie und Kapitel; ein `#` ohne
+Attribut setzt sie zurück); geteilte Folien erben sie. `DeckWriter.new_slide` schreibt
+`animations.set_transition(slide.transition ?? options.transition)` direkt nach `p:clrMapOvr`,
+also vor `p:timing` (Schemareihenfolge, sonst Reparatur).
+
+| Wert | XML (`spd="med"`) |
+| ---- | --- |
+| `fade` | `p:fade` |
+| `push`, `push-left`/`-right`/`-up`/`-down` | `p:push`, `dir="l"`/`"r"`/`"u"`/`"d"` (Richtung der Bewegung, Standard `l`) |
+| `wipe`, `wipe-left`/`-right`/`-up`/`-down` | `p:wipe`, ebenso |
+| `split` | `p:split orient="vert" dir="out"` |
+| `cover`, `uncover` | `p:cover`, `p:pull` |
+| `zoom`, `cut` | `p:zoom`, `p:cut` |
+| `morph` | `mc:AlternateContent`: `mc:Choice Requires="p159"` mit `p159:morph option="byObject"`, `mc:Fallback` mit `p:fade` (beide `spd="slow"`) |
+
+`none` schreibt nichts. Der PPTX-Konverter liest keine Übergänge.
+
 ## Folien-Syntax (gemeinsam für Word und PowerPoint)
 
 Beide Generatoren lesen und prüfen dieselbe Folien-Syntax aus DocLibs, bevor sie schreiben
@@ -394,7 +421,7 @@ Front Matter mitgezählt).
 
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
-| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
+| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`, `uebergang="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, `uebergang="…"` (siehe [Folienübergänge](#folienübergänge-e09-s03)), PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
 | Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle; PDF wie Word, die Grafiken als Vektoren |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |

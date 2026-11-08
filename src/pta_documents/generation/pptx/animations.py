@@ -12,6 +12,10 @@ turns the text PTA blue (emphasis preset 3, font colour).
 
 ``Builds`` collects what a slide builds while the writer draws it: paragraphs of text bodies by
 their index, and every shape drawn ``at`` a click; ``timing`` turns that into the XML.
+
+Transitions (E09-S03): ``transition`` is the port of vt-tools-libs ``Animations.Transition``,
+``set_transition`` puts it where the schema wants it in ``p:sld``: after ``p:clrMapOvr``, before
+``p:timing`` (else PowerPoint repairs the file).
 """
 
 from __future__ import annotations
@@ -25,6 +29,7 @@ from typing import Final
 from lxml import etree
 
 from pta_documents.design import colors
+from pta_documents.generation.common.slide_transition import SlideTransition
 from pta_documents.generation.pptx.model import Click, Effect, Paragraph
 
 A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -34,6 +39,9 @@ DURATION: Final = 500
 EMPHASIS_COLOR: Final = colors.PTA_BLUE
 END_TIME: Final = 100 * 1000
 """The end of a motion path in its time list (per cent times 1000)."""
+MC: Final = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+P159: Final = "http://schemas.microsoft.com/office/powerpoint/2015/09/main"
+"""PowerPoint 2019's namespace, of ``p159:morph``."""
 
 
 def p(name: str) -> str:
@@ -365,3 +373,62 @@ def _behaviours(effect: Effect, target: str, next_id: Callable[[], int]) -> str:
             )
         case Effect.EMPHASIZE:
             return _colour(target, "style.color", next_id())
+
+
+# ---------------------------------------------------------------------- transitions (E09-S03)
+
+_TRANSITIONS: Final = {
+    SlideTransition.FADE: "<p:fade/>",
+    SlideTransition.PUSH: "<p:push/>",
+    SlideTransition.PUSH_LEFT: '<p:push dir="l"/>',
+    SlideTransition.PUSH_RIGHT: '<p:push dir="r"/>',
+    SlideTransition.PUSH_UP: '<p:push dir="u"/>',
+    SlideTransition.PUSH_DOWN: '<p:push dir="d"/>',
+    SlideTransition.WIPE: "<p:wipe/>",
+    SlideTransition.WIPE_LEFT: '<p:wipe dir="l"/>',
+    SlideTransition.WIPE_RIGHT: '<p:wipe dir="r"/>',
+    SlideTransition.WIPE_UP: '<p:wipe dir="u"/>',
+    SlideTransition.WIPE_DOWN: '<p:wipe dir="d"/>',
+    SlideTransition.SPLIT: '<p:split orient="vert" dir="out"/>',
+    SlideTransition.COVER: "<p:cover/>",
+    SlideTransition.UNCOVER: "<p:pull/>",
+    SlideTransition.ZOOM: "<p:zoom/>",
+    SlideTransition.CUT: "<p:cut/>",
+}
+"""The effect element of each transition but ``none`` and ``morph``; ``dir`` is the way the
+slide moves, the default ``l``."""
+
+
+def transition(kind: SlideTransition) -> etree._Element | None:
+    """The ``p:transition`` of ``kind`` (``spd="med"``, as PowerPoint writes it), for ``morph``
+    an ``mc:AlternateContent`` with the morph for PowerPoint 2019 (``p159``) and a fade for
+    every other program, both ``spd="slow"``; None for ``none``."""
+    if kind is SlideTransition.NONE:
+        return None
+    if kind is SlideTransition.MORPH:
+        return etree.fromstring(
+            f'<mc:AlternateContent xmlns:mc="{MC}">'
+            f'<mc:Choice xmlns:p159="{P159}" Requires="p159">'
+            f'<p:transition xmlns:p="{P}" spd="slow"><p159:morph option="byObject"/>'
+            "</p:transition></mc:Choice>"
+            f'<mc:Fallback><p:transition xmlns:p="{P}" spd="slow"><p:fade/></p:transition>'
+            "</mc:Fallback></mc:AlternateContent>"
+        )
+    return etree.fromstring(
+        f'<p:transition xmlns:p="{P}" spd="med">{_TRANSITIONS[kind]}</p:transition>'
+    )
+
+
+def set_transition(slide: etree._Element, kind: SlideTransition) -> None:
+    """The transition ``kind`` into ``slide`` (``p:sld``) at its place in the schema: after
+    ``p:cSld`` and ``p:clrMapOvr``, before ``p:timing`` and ``p:extLst``."""
+    element = transition(kind)
+    if element is None:
+        return
+    after = slide.find(p("clrMapOvr"))
+    if after is None:
+        after = slide.find(p("cSld"))
+    if after is None:  # pragma: no cover - every slide has its common data
+        slide.insert(0, element)
+    else:
+        after.addnext(element)

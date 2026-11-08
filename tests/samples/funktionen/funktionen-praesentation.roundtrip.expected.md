@@ -1440,6 +1440,35 @@ Was keinen Marker hat, steht von Anfang an da.
 
 :::
 
+## Folienübergang
+
+Diese Folie schiebt die vorige nach oben weg. Die anderen Folien des Kapitels blenden über.
+
+uebergang: fade im Kopf gilt für alle Folien
+
+{uebergang="fade"} an einem # gilt für das Kapitel
+
+an einem ## nur für diese Folie
+
+morph bewegt gleichnamige Formen, ältere Programme blenden über
+
+::: notes
+
+Erlaubt sind none, fade, push, wipe, die Richtungen push-left bis wipe-down, split, cover, uncover, zoom, cut und morph.
+
+```
+## Folienübergang {uebergang="push-up"}
+
+Diese Folie schiebt die vorige nach oben weg. Die anderen Folien des Kapitels blenden über.
+
+- `uebergang: fade` im Kopf gilt für alle Folien
+- `{uebergang="fade"}` an einem `#` gilt für das Kapitel
+- an einem `##` nur für diese Folie
+- `morph` bewegt gleichnamige Formen, ältere Programme blenden über
+```
+
+:::
+
 ## PTA-Folienarten
 
 11

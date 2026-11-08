@@ -44,6 +44,9 @@ class Keys:
     """``listen``: on slides every list not inside another appears item by item (E09-S02);
     ``nein`` (the default): only what ``{.build}`` marks."""
     BUILD_LISTS: Final = "listen"
+    TRANSITION: Final = "uebergang"
+    """On slides the transition of every slide (E09-S03): ``none`` (the default), ``fade``,
+    ``push`` … (``generation.common.slide_transition``)."""
     STATUS_PREFIX: Final = "status."
 
 

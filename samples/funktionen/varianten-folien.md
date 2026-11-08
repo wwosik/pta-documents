@@ -6,6 +6,7 @@ untertitel: Training template, title slide without picture
 autor: PTA Documents
 sprache: en
 aufbau: listen
+uebergang: fade
 ---
 # Template variants
 
@@ -16,5 +17,6 @@ aufbau: listen
 - `sprache: en` switches generated texts to English, e.g. "(cont.)", and puts the English logo on the title slide
 - The training template carries the sticker "For internal use only" (`kennzeichnung: intern`)
 - `aufbau: listen` makes this list appear item by item, one click each
+- `uebergang: fade` fades in every slide
 
 # Thank you {.closing}
