@@ -1,4 +1,4 @@
-"""E05-S01: the PDF generator — front matter, the interim layout, check and the tools."""
+"""E05-S01/E05-S02: the PDF generator — front matter, the layout engine, check and the tools."""
 
 from __future__ import annotations
 
@@ -15,29 +15,21 @@ import pdfplumber
 import pikepdf
 import pytest
 
-from pta_documents.design.fonts import FontFace
+from pta_documents.design.word_styles import POINTS_PER_CM
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common.check import ReportStats, check
 from pta_documents.generation.common.result import NoteCodes
 from pta_documents.generation.docx import generator as docx_generator
 from pta_documents.generation.pdf import EXTRA_MISSING, PdfGenerator, PdfOptions
 from pta_documents.generation.pdf import generator as pdf_generator
-from pta_documents.generation.pdf.body import BodySource
-from pta_documents.generation.pdf.fonts import FontMetrics
-from pta_documents.generation.pdf.page_model import (
-    A4_HEIGHT,
-    A4_WIDTH,
-    LaidOutPage,
-    Layout,
-    PageGeometry,
-    TextItem,
-)
-from pta_documents.markdown import MarkdownDocument
+from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
 from tests.conftest import REPO_ROOT
 
 CREATED: Final = dt.datetime(2026, 11, 8, 9, 0, tzinfo=dt.UTC)
 OPTIONS: Final = PdfOptions(created=CREATED, system_fonts=False)
 NO_COVER: Final = "---\nvorlage: hoch-ohne-deckblatt\n---\n"
+A4_WIDTH: Final = 21.0 * POINTS_PER_CM
+A4_HEIGHT: Final = 29.7 * POINTS_PER_CM
 
 
 def generate(markdown: str, options: PdfOptions = OPTIONS, **metadata: str) -> tuple[bytes, int]:
@@ -59,7 +51,7 @@ def test_an_empty_document_gives_one_empty_page() -> None:
         assert len(pdf.pages) == 1
         assert pdf.open_metadata()["pdfaid:part"] == "2"
         width, height = (float(v) for v in pdf.pages[0].mediabox[2:])
-    assert (width, height) == pytest.approx((A4_WIDTH, A4_HEIGHT))
+    assert (width, height) == pytest.approx((A4_WIDTH, A4_HEIGHT), abs=0.1)
     assert pages_text(data) == [""]
 
 
@@ -73,7 +65,7 @@ def test_the_text_of_the_document_comes_back() -> None:
     data, _ = generate(markdown)
     (text,) = pages_text(data)
     lines = text.split("\n")
-    assert lines[:4] == ["Einleitung", "Ein Absatz mit fett und code.", "– erstens", "– zweitens"]
+    assert lines[:4] == ["1 Einleitung", "Ein Absatz mit fett und code.", "erstens", "zweitens"]
     assert "1. eins" in lines and "Zitat" in lines and "print('hallo')" in lines
     assert "Spalte Wert" in text.replace("   ", " ")
     with pikepdf.open(io.BytesIO(data)) as pdf:
@@ -115,7 +107,7 @@ def test_template_orientation_and_language_reach_the_pdf() -> None:
     with pikepdf.open(io.BytesIO(data)) as pdf:
         width, height = (float(v) for v in pdf.pages[0].mediabox[2:])
         assert str(pdf.Root.Lang) == "en"
-    assert (width, height) == pytest.approx((A4_HEIGHT, A4_WIDTH))
+    assert (width, height) == pytest.approx((A4_HEIGHT, A4_WIDTH), abs=0.1)
 
 
 def test_missing_characters_are_replaced_and_noted() -> None:
@@ -136,21 +128,60 @@ def test_equal_input_and_created_give_equal_bytes() -> None:
     assert generate(markdown, later)[0] != generate(markdown)[0]
 
 
-def test_the_body_layout_is_a_seam(monkeypatch: pytest.MonkeyPatch) -> None:
-    seen: list[BodySource] = []
+def test_typography_and_highlighting_follow_the_front_matter() -> None:
+    text = 'Er sagte "ja" - und ging.\n\n```python\nx = 1  # eins\n```\n'
+    typeset, _ = generate(NO_COVER + text)
+    plain, _ = generate(NO_COVER.replace("---\n", "---\ntypografie: nein\n", 1) + text)
+    assert "Er sagte „ja“ – und ging." in pages_text(typeset)[0]
+    assert 'Er sagte "ja" - und ging.' in pages_text(plain)[0]
+    grey, _ = generate(NO_COVER.replace("---\n", "---\nsyntaxhervorhebung: nein\n", 1) + text)
+    assert colours_of(typeset, "eins") != colours_of(grey, "eins")
 
-    def three_pages(source: BodySource, fonts: FontMetrics) -> Layout:
-        seen.append(source)
-        assert fonts.has_glyph("a", FontFace.REGULAR)
-        page = LaidOutPage((TextItem(50, 50, "eigene Engine", FontFace.REGULAR, 10),))
-        return Layout(PageGeometry(300, 200, 10, 10, 10, 10), (page, page, page))
 
-    monkeypatch.setattr(pdf_generator, "BODY_LAYOUT", three_pages)
-    data, pages = generate(NO_COVER + "# Kapitel\n\nText\n")
-    assert pages == 3 and pages_text(data) == ["eigene Engine"] * 3
-    (source,) = seen
-    assert [t.type for t in source.tokens][:3] == ["heading_open", "inline", "heading_close"]
-    assert source.front.body_line == 3 and source.texts.page == "Seite"
+def colours_of(data: bytes, word: str) -> set[tuple[float, ...]]:
+    with pdfplumber.open(io.BytesIO(data)) as pdf:
+        chars = pdf.pages[0].chars
+    text = "".join(c["text"] for c in chars)
+    start = text.index(word)
+    return {tuple(c["non_stroking_color"]) for c in chars[start : start + len(word)]}
+
+
+def test_a_qr_code_is_three_centimetres_wide_as_in_word() -> None:
+    data, _ = generate(NO_COVER + '![Umfrage](qr:https://www.pta.de/)\n\n![](qr:x "scale=2")\n')
+    with pdfplumber.open(io.BytesIO(data)) as pdf:
+        widths = [round(float(i["width"]) / POINTS_PER_CM, 2) for i in pdf.pages[0].images]
+    assert widths == [3.0, 6.0]
+
+
+def test_timelines_and_gantt_charts_show_as_their_content_with_a_note() -> None:
+    markdown = NO_COVER + "::: timeline\n- 2026-01: Kick-off\n- 2027: Betrieb\n:::\n"
+    output = io.BytesIO()
+    result = PdfGenerator().generate(MarkdownDocument(markdown), output, OPTIONS)
+    assert result.codes() == [NoteCodes.CODE_NOT_DRAWN]
+    assert "2026-01: Kick-off" in pages_text(output.getvalue())[0]
+
+
+def test_characters_missing_from_the_code_font_become_question_marks() -> None:
+    data, _ = generate(NO_COVER + "`Привет` und\n\n```\nΔ = 1\n```\n")
+    assert pages_text(data)[0].split("\n") == ["?????? und", "? = 1"]
+
+
+def test_the_report_samples_generate_with_only_what_is_not_drawn_yet(review_dir: Path) -> None:
+    """Every Word sample is a PDF too; charts, drawings, timelines and Gantt charts stay their
+    source with ``code-not-drawn`` until E05-S04."""
+    for folder in ("gsb", "funktionen"):
+        root = REPO_ROOT / "samples" / folder
+        images = tuple(
+            DocumentResource(f"images/{p.name}", content_type_of(p.name), p.read_bytes())
+            for p in sorted((root / "images").glob("*"))
+        )
+        for source in sorted(root.glob("*-bericht.md")) + sorted(root.glob("*-dokument.md")):
+            output = io.BytesIO()
+            document = MarkdownDocument(source.read_text(encoding="utf-8"), images)
+            result = PdfGenerator().generate(document, output, OPTIONS)
+            assert set(result.codes()) <= {NoteCodes.CODE_NOT_DRAWN}, f"{source.name}:\n{result}"
+            assert result.pages and result.pages >= 1
+            (review_dir / f"pdf-{source.stem}.pdf").write_bytes(output.getvalue())
 
 
 def test_check_takes_pdf_and_counts_the_pages() -> None:

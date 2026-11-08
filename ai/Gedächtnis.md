@@ -28,7 +28,8 @@ weil ihm vertraut wird.
   (→ Markdown), `generation/` (`common/`, `docx/`, `pptx/`, `pdf/` seit E05-S01).
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
-  eingebettete Vorlagen. PDF, Diagramme/Charts und PDF-Konverter sind nur geplant; die
+  eingebettete Vorlagen. Seit E05-S01/E05-S02 ein PDF-Generator (Rumpf im Word-Design, PDF/A-2b;
+  ohne Seitenrahmen und Grafiken), der PDF-Konverter ist nur geplant; die
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
   Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
   Diagrammlayouts (`chart`-Blöcke seit E06-S01, auch nativ in Word; Finanzdiagramme seit
@@ -202,7 +203,8 @@ weil ihm vertraut wird.
   `selawkl.ttf` des Releases ersetzt, die SHA-256 in `tests/design/test_fonts.py` und im
   Modul-Docstring nachziehen. Selawik hat **kein U+00A0** (Typografie setzt es!): der
   PDF-Generator weicht aus (seit E05-S02 leiht U+00A0 beim Registrieren die Glyphe des
-  Leerzeichens, `truetype.with_aliases`; andere fehlende Zeichen: E05-S04). Segoe UI wird nur mit allen fünf
+  Leerzeichens, `truetype.with_aliases`; andere fehlende Zeichen werden `?`, Ersatz: E05-S04).
+  Segoe UI wird nur mit allen fünf
   Dateien (inkl. `segoeuil.ttf`) übernommen.
 - **Logos** (E01-S04): `pta_documents.design.logos` (Unterpaket; SVG/PNG als Paketdaten daneben)
   — `Logo` (`WORD`, `SLIDES`, `SLIDES_PLAIN`), `svg()`, `png()`, `size()`, `aspect_ratio()`,
@@ -328,28 +330,37 @@ weil ihm vertraut wird.
   Gruppe `Drawing <n>`, Breite des Platzes, nie geschrumpft). Word: `BodyWriter.timeline` (Bild
   über `docx_drawings.convert`, Extra `svg`) und `BodyWriter.gantt` (Tabelle „PTA",
   Schattierung, `tcBorders` **nach** `w:shd` anlegen, sonst falsche Schema-Reihenfolge). Der
-  DOCX-Konverter liest leere Zellen mit Füllung PTA-Blau/Hellblau als `■`. Ein PDF-Generator
-  muss beide Container selbst zeichnen (E05-S04).
-- **PDF-Grundgerüst** (E05-S01): `generation/pdf/` ist nur mit Extra `pdf` importierbar
-  (`__init__` wirft sonst `ImportError(EXTRA_MISSING)`); `check` und die Werkzeuge importieren es
-  erst bei `--pdf`/`DocumentFormat.PDF`, der Kern nie. Ablauf in `PdfGenerator.generate`: Front
-  Matter (`VALID_KEYS` ⊂ DOCX) → `parse` + `layout_syntax.check` → `PdfFonts(resolve())` →
-  `Notes.characters` (Hinweis `character-missing`) → **`generator.BODY_LAYOUT(BodySource,
-  FontMetrics) -> Layout`** (Naht zur Layout-Engine, vorläufig `simple_layout.lay_out`; E05-S02
-  ersetzt sie) → `renderer.render` (reportlab, invariant) → `pdfa.to_pdfa` (pikepdf).
-  `page_model` in Punkten, Ursprung oben links, y nach unten; gespiegelt wird nur im Renderer.
-  reportlab-Schriften heißen `PTA-<sha8>` des Inhalts (Kursiv = gleicher Name, schräggestellt über
-  die Textmatrix). Pillows sRGB-Profil trägt die aktuelle Uhrzeit — `pdfa.srgb_profile` setzt sie
-  fest, sonst sind Dateien nicht byte-gleich. Selawik hat **weder Griechisch noch Kyrillisch**
-  (Gelasio etwas Griechisch); ohne Segoe UI werden solche Zeichen `?`. reportlab ist ungetypt
-  und seine abgeleiteten Typen falsch (`initialFontName: float`): `CANVAS: Any`. Tests mit
+  DOCX-Konverter liest leere Zellen mit Füllung PTA-Blau/Hellblau als `■`. Das PDF zeigt beide
+  bis E05-S04 als ihren Inhalt mit `code-not-drawn` (`StoryBuilder.layout_container`); zeichnen
+  muss es sie selbst (E05-S04).
+- **PDF-Generator** (E05-S01 + E05-S02, zusammengeführt 2026-11-08): `generation/pdf/` ist nur
+  mit Extra `pdf` importierbar (`__init__` wirft sonst `ImportError(EXTRA_MISSING)`); `check` und
+  die Werkzeuge importieren es erst bei `--pdf`/`DocumentFormat.PDF`, der Kern nie. Ablauf in
+  `PdfGenerator.generate`: Front Matter (`VALID_KEYS` = die von DOCX) → `create_parser().parse` +
+  `layout_syntax.check(…, today)` → `generated_images.add_generated` → `typeset` (und die
+  Status-Labels) → `design.fonts.resolve` → `Notes.characters` (`character-missing`) →
+  **`layout.layout(tokens, document, LayoutSettings, notes, PdfInfo)`** → `pdfa.to_pdfa`
+  (pikepdf) auf `result.content`; `GenerationResult.pages` = `result.pages`. Es gibt **ein**
+  `PdfInfo` (`metadata.py`) für reportlab und PDF/A und **eine** Schriftregistrierung
+  (`layout/fonts.register`). Das Seitenmodell, der eigene Renderer und das Zwischenlayout von
+  E05-S01 sind entfallen (Stand in Commit 175e572); E05-S03 zeichnet den Seitenrahmen über
+  `layout(…, decorate=…)`, E05-S04 Zeichnungen als eigene Flowables auf dem reportlab-Canvas.
+  Fehlende Zeichen werden in `InlineWriter.text` zu `?` (`PdfFonts.shown`; Text: Regular+Bold,
+  Code: Mono; `ALIASES` zählen als vorhanden) — PDF/A verbietet `.notdef`. QR-Codes sind 3 cm
+  (× `scale_of`) wie in Word (`StoryBuilder.picture`). Pillows sRGB-Profil trägt die aktuelle
+  Uhrzeit — `pdfa.srgb_profile` setzt sie fest, sonst sind Dateien nicht byte-gleich. Selawik hat
+  **weder Griechisch noch Kyrillisch**; ohne Segoe UI werden solche Zeichen `?`. Tests mit
   `PdfOptions(created=…, system_fonts=False)`, damit sie nicht vom Rechner abhängen; veraPDF ist
-  hier nicht installiert (Test wird übersprungen).
-- **PDF-Layout-Engine** (E05-S02): `pta_documents.generation.pdf.layout` (Unterpaket; das Paket
-  `generation/pdf/` hat bis zur Zusammenführung mit E05-S01 kein `__init__.py`) auf reportlabs
-  **Platypus** statt eines eigenen Seitenmodells — `layout(tokens, document, LayoutSettings,
-  notes, PdfInfo, decorate)` bzw. `build_story` + `render`. Werte der Formatvorlagen liest
-  `design/word_styles.read(variant)` aus der Vorlage (kein Wert im PDF-Code doppeln). Fallen:
+  hier nicht installiert (Test wird übersprungen). Präsentationen gibt es nicht als PDF
+  (`fusszeile` u. a. sind keine gültigen Schlüssel). Jedes Word-Beispiel in `samples/` muss als
+  PDF entstehen und darf nur `code-not-drawn` melden
+  (`tests/generation/pdf/test_generator.py`); wer E05-S04 umsetzt, verschärft das auf „keine
+  Hinweise".
+- **PDF-Layout-Engine** (E05-S02): `pta_documents.generation.pdf.layout` (Unterpaket) auf
+  reportlabs **Platypus** statt eines eigenen Seitenmodells — `layout(tokens, document,
+  LayoutSettings, notes, PdfInfo, decorate)` bzw. `build_story` + `render`. Werte der
+  Formatvorlagen und den Satzspiegel liest `design/word_styles.read(variant)` aus der Vorlage
+  (kein Wert im PDF-Code doppeln). Fallen:
   reportlab unterscheidet eingebettete Schriften am **PostScript-Namen** — die schräggestellte
   Kursive (`truetype.slanted`) heißt deshalb `…-Slanted`, sonst landet sie nicht im PDF;
   `Frame(overlapAttachedSpace=0)`, sonst verschluckt reportlab den kleineren von Abstand nach/vor

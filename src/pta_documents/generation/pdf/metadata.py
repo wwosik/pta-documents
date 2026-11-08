@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Final
 
 from pta_documents.design.variants import Language
@@ -15,14 +15,22 @@ LANGUAGE_TAGS: Final = {Language.DE: "de-DE", Language.EN: "en"}
 """``/Lang`` of the catalog and ``dc:language`` per document language."""
 
 
+def _now() -> dt.datetime:
+    return dt.datetime.now(dt.UTC)
+
+
 @dataclass(frozen=True)
 class PdfInfo:
-    title: str | None
-    author: str | None
-    subject: str | None
-    language: Language
-    created: dt.datetime
-    """Creation and modification time; naive values count as UTC."""
+    """The document information of a PDF: reportlab writes it (``layout.render``), the PDF/A
+    pass writes it again with the XMP (``pdfa.to_pdfa``)."""
+
+    title: str | None = None
+    author: str | None = None
+    subject: str | None = None
+    language: Language = Language.DE
+    created: dt.datetime = field(default_factory=_now)
+    """Creation and modification time; naive values count as UTC. The generator sets it from
+    ``PdfOptions.created``."""
 
     @property
     def language_tag(self) -> str:

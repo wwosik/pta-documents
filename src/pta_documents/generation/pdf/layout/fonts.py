@@ -27,6 +27,11 @@ from reportlab.pdfbase.ttfonts import TTFont
 from pta_documents.design.fonts import SYNTHETIC_ITALIC_ANGLE, FontFace, FontFile, FontSet, truetype
 
 PREFIX: Final = "PTA-"
+MISSING: Final = "?"
+"""What a character the faces lack becomes: PDF/A forbids ``.notdef`` (the generator notes
+it, ``character-missing``; E05-S04 brings ``replace_unsupported``)."""
+TEXT_FACES: Final = (FontFace.REGULAR, FontFace.BOLD)
+CODE_FACES: Final = (FontFace.MONO,)
 ALIASES: Final = {0x00A0: 0x0020, 0x202F: 0x0020, 0x2011: 0x002D}
 """Characters a face may lack that look like others: no-break spaces like the space, the
 no-break hyphen like the hyphen (the typography of E17-S02 sets U+00A0, which Selawik lacks).
@@ -55,7 +60,21 @@ class PdfFonts:
         return self.fonts.file(face).info.line_height
 
     def has_glyph(self, code_point: int, face: FontFace) -> bool:
-        return self.fonts.has_glyph(code_point, face)
+        return code_point in ALIASES or self.fonts.has_glyph(code_point, face)
+
+    def shown(self, text: str, code: bool = False) -> str:
+        """``text`` with every character the text faces (``code``: the code face) lack as
+        ``MISSING``, white space as a space."""
+        faces = CODE_FACES if code else TEXT_FACES
+        if all(self._has(c, faces) for c in text):
+            return text
+        return "".join(
+            c if self._has(c, faces) else (" " if c.isspace() else MISSING) for c in text
+        )
+
+    def _has(self, char: str, faces: tuple[FontFace, ...]) -> bool:
+        code = ord(char)
+        return all(self.has_glyph(code, face) for face in faces)
 
 
 def register(fonts: FontSet) -> PdfFonts:

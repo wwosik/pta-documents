@@ -47,25 +47,26 @@ class NoteCodes:
 
     IMAGE_ENLARGED: Final = "image-enlarged"
     """An image shown at more than twice its natural size (pixels at 96 dpi), which can look
-    blurred (PPTX, DOCX)."""
+    blurred (PPTX, DOCX, PDF)."""
 
     RAW_HTML: Final = "raw-html"
-    """Raw HTML, which is left out of the document (PPTX, DOCX). HTML comments are left out
+    """Raw HTML, which is left out of the document (PPTX, DOCX, PDF). HTML comments are left out
     without a note."""
 
     CODE_NOT_DRAWN: Final = "code-not-drawn"
     """A code block in a diagram or chart language (``mermaid``, ``chart`` …) that no renderer
-    drew, so it shows as code (PPTX, DOCX)."""
+    drew, so it shows as code (PPTX, DOCX, PDF). The PDF draws no charts and drawings yet and
+    shows ``::: timeline``/``::: gantt`` as their content, with this note (until E05-S04)."""
 
     CHARACTER_MISSING: Final = "character-missing"
-    """A character the document's fonts lack (PDF, from E05-S04)."""
+    """A character the document's fonts lack; it shows as ``?`` (PDF)."""
 
     NOTES_DROPPED: Final = "notes-dropped"
-    """Speaker notes (``::: notes``) left out of a format that has none (DOCX, from E09-S01)."""
+    """Speaker notes (``::: notes``) left out of a format that has none (DOCX, PDF)."""
 
     CODE_LANGUAGE_UNKNOWN: Final = "code-language-unknown"
     """A code block whose language (```` ```sprache ````) the highlighter does not know: it shows
-    in one colour (PPTX, DOCX, from E17-S02)."""
+    in one colour (PPTX, DOCX, PDF)."""
 
     ALL: Final = (
         SLIDE_SPLIT,

@@ -266,3 +266,43 @@ Die Einbindung in `PdfGenerator.generate` geschieht bei der Zusammenführung mit
 - **E05-S04:** Folien-Syntax als Boxen/Spalten, Charts/Zeichnungen (bis dahin Code mit
   `code-not-drawn`), `replace_unsupported`.
 - Silbentrennung (siehe Warnung).
+
+### Zusammenführung mit E05-S01 (2026-11-08)
+
+E05-S01 und E05-S02 wurden parallel in getrennten Worktrees umgesetzt und danach gemeinsam nach
+`main` gebracht (Merge-Commits, dann ein Commit „E05-S01/E05-S02: Layout-Engine in den
+PDF-Generator eingebunden"). Vereinheitlicht:
+
+- `PdfGenerator.generate` ruft für den Rumpf die Layout-Engine aus E05-S02 auf
+  (`layout.layout(tokens, document, LayoutSettings, notes, PdfInfo)`) und schickt
+  `result.content` durch den PDF/A-2b-Schritt aus E05-S01 (`pdfa.to_pdfa`);
+  `GenerationResult.pages` kommt aus der Engine. Davor wie im DOCX:
+  `layout_syntax.check(…, today)`, `generated_images.add_generated` (QR-Codes), `typeset`.
+- Front Matter: `typografie` und `syntaxhervorhebung` stehen jetzt in `VALID_KEYS`, in
+  `PdfOptions` (`typography`, `highlight`) und in `apply_front_matter`; `VALID_KEYS` ist damit
+  gleich dem des DOCX-Generators. Status-Labels werden wie im DOCX mitgesetzt.
+- Ränder und Seitengröße kommen aus der Vorlage (`design.word_styles`), nicht mehr aus
+  Konstanten.
+- **Eine** Schriftregistrierung (`layout/fonts.register`, `PTA-<sha8>`), **ein** `PdfInfo`
+  (`metadata.py`, mit Standardwerten; die Engine nimmt es auch für reportlab).
+- Fehlende Zeichen werden jetzt in der Engine `?` (`PdfFonts.shown`, aufgerufen in
+  `InlineWriter.text`; Text: Regular und Bold, Code: Mono; die Aliase U+00A0/U+202F/U+2011
+  zählen als vorhanden) — dieselbe Regel wie `Notes.characters` im Generator.
+- QR-Codes sind im PDF 3 cm breit (mal `scale`) wie in Word; `::: timeline` und `::: gantt`
+  zeigen ihren Inhalt mit `code-not-drawn` bis E05-S04 (beide kamen nach den Claims mit E11-S04
+  bzw. E15-S01 auf `main`).
+- Ein leeres Dokument ergibt wie bisher eine leere Seite (die Engine baut dann einen leeren
+  Spacer).
+
+Entfernt (nichts nutzt es mehr; Stand in Commit 175e572): `simple_layout.py` (Zwischenlayout),
+`body.py` (`BodySource`/`BodyLayout`, die Naht `generator.BODY_LAYOUT`), `page_model.py` und
+`renderer.py` (eigenes Seitenmodell und Zeichner — die Engine setzt mit Platypus direkt auf den
+Canvas), `fonts.py` aus E05-S01 (`FontMetrics`, zweite Registrierung). E05-S03 braucht sie
+nicht (Seitenrahmen über `layout(…, decorate=…)`), E05-S04 zeichnet Zeichnungen als eigene
+Flowables auf dem reportlab-Canvas; das Malen von Pfaden mit Kurven und Strichmustern aus dem
+alten `renderer.py` kann dort aus der Git-Geschichte übernommen werden. `test_renderer.py` wurde
+zu `test_pdfa.py`: dieselben Prüfungen (PDF/A-Metadaten, OutputIntent, eingebettete Schriften,
+>255 Zeichen, lange Titel, Lesezeichen, Links, Bilder einmal, Byte-Gleichheit, veraPDF) laufen
+jetzt über den Generator mit Markdown; der Naht-Test entfiel. Neu: Tests für Typografie,
+Hervorhebung, QR-Größe, Zeitstrahl-Hinweis, fehlende Zeichen im Code und alle Word-Beispiele in
+`samples/` als PDF (nur `code-not-drawn` erlaubt).

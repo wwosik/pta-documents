@@ -107,3 +107,12 @@ Vektoren bzw. Bilder gesetzt.
   `layout_container`); mit `notizen: ja` (DocLibs/vt-tools-libs `showNotes`) zeigt es sie unter
   der Folie. Die Absätze liefert der PPTX-Parser schon als `Slide.notes`
   (`DeckParser._take_notes`).
+- (2026-11-08, Zusammenführung E05-S01/E05-S02) Die PDF-Engine ist reportlabs Platypus
+  (`generation/pdf/layout/`), es gibt kein `layout.py`, kein Seitenmodell (`ShapeItem`,
+  `TextItem`) und keinen eigenen Renderer mehr: Zeichnungen werden eigene Flowables, die das
+  `Drawing` direkt auf den Canvas malen (Pfadcode des alten `renderer.py` in Commit 175e572).
+  Fehlende Zeichen setzt die Engine bis hierher als `?` (`PdfFonts.shown` in
+  `InlineWriter.text`) — dort greift `replace_unsupported` an. Auch `::: timeline` und
+  `::: gantt` (E15-S01) zeigt das PDF bis hierher nur als Inhalt mit `code-not-drawn`
+  (`StoryBuilder.layout_container`); sie sind hier mitzuzeichnen (`drawing/schedule.py`,
+  Gantt als Tabelle wie in Word).

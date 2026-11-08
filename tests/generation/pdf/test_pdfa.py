@@ -1,8 +1,9 @@
-"""E05-S01: renderer and PDF/A-2b on a hand-built ``Layout``.
+"""E05-S01: PDF/A-2b, fonts, metadata, bookmarks and links of what the generator writes.
 
 Ported from DocLibs ``PdfGeneratorTests.cs``: ``Output_IsPdfA2b_WithEmbeddedFonts``,
 ``Characters_BeyondWinAnsi_SurviveTheRoundTrip``, ``MoreThan255DistinctCharacters_Work``,
-``LongNonAsciiTitleAndAuthor_StillFitTheMetadata``, bookmarks and links.
+``LongNonAsciiTitleAndAuthor_StillFitTheMetadata``, bookmarks and links. Since the merge with
+E05-S02 the PDFs come from Markdown through the layout engine.
 """
 
 from __future__ import annotations
@@ -19,31 +20,16 @@ import pikepdf
 import pytest
 from PIL import Image
 
-from pta_documents.design import colors
 from pta_documents.design.fonts import FontFace, bundled
-from pta_documents.design.variants import Language, Orientation
-from pta_documents.drawing.model import ClosePath, CubicTo, LineTo, MoveTo
-from pta_documents.generation.pdf.fonts import PdfFonts, registered_name
-from pta_documents.generation.pdf.metadata import PRODUCER, PdfInfo
-from pta_documents.generation.pdf.page_model import (
-    Anchor,
-    Bookmark,
-    ImageItem,
-    LaidOutPage,
-    Layout,
-    LineItem,
-    LinkItem,
-    PageGeometry,
-    RectItem,
-    ShapeItem,
-    TextItem,
-)
-from pta_documents.generation.pdf.pdfa import PRINT_FLAG, srgb_profile, to_pdfa
-from pta_documents.generation.pdf.renderer import nest, render
+from pta_documents.generation.pdf import PdfGenerator, PdfOptions
+from pta_documents.generation.pdf.metadata import PRODUCER
+from pta_documents.generation.pdf.pdfa import PRINT_FLAG, srgb_profile
+from pta_documents.markdown.document import DocumentResource, MarkdownDocument
 
 CREATED: Final = dt.datetime(2026, 11, 8, 12, 30, tzinfo=dt.UTC)
-INFO: Final = PdfInfo("Grundgerüst", "Wojciech Wosik", "PDF/A-2b", Language.DE, CREATED)
-GEOMETRY: Final = PageGeometry.a4(Orientation.PORTRAIT, 62, 99, 62, 57)
+OPTIONS: Final = PdfOptions(created=CREATED, system_fonts=False)
+TITLE: Final = "Grundgerüst"
+AUTHOR: Final = "Wojciech Wosik"
 STANDARD_14: Final = {
     "Courier",
     "Courier-Bold",
@@ -62,81 +48,46 @@ STANDARD_14: Final = {
 }
 MIXED: Final = "Größe Maß Zażółć gęślą jaźń „Anführung“ – Ende…"
 """German and Polish: beyond WinAnsi, all in Selawik."""
-GREEK: Final = "ΔΣΩ πμ"
-"""Selawik has neither Greek nor Cyrillic; the bundled Gelasio has some Greek
-(no Cyrillic in any bundled face; Segoe UI from the system has both)."""
-
-
-@pytest.fixture(scope="module")
-def fonts() -> PdfFonts:
-    return PdfFonts(bundled())
+FILLER: Final = "Fülltext, der die Seite füllt. " * 40
 
 
 def png(color: tuple[int, int, int]) -> bytes:
     stream = io.BytesIO()
-    Image.new("RGB", (8, 4), color).save(stream, "PNG")
+    Image.new("RGB", (80, 40), color).save(stream, "PNG")
     return stream.getvalue()
 
 
-def sample_layout() -> Layout:
-    """Two pages with every kind of item, bookmarks on three levels and both kinds of link."""
-    picture = png((0, 111, 185))
-    first = LaidOutPage(
-        (
-            TextItem(62, 120, "Kapitel 1", FontFace.BOLD, 16, color=colors.PTA_BLUE),
-            TextItem(62, 150, MIXED, FontFace.REGULAR, 10),
-            TextItem(62, 170, "schräg gestellt", FontFace.ITALIC, 10),
-            TextItem(62, 190, "print('code')", FontFace.MONO, 9),
-            TextItem(62, 210, GREEK, FontFace.QUOTE, 10),
-            LineItem(62, 220, 300, 220, 0.5, colors.GREY_MID, dash=(2, 2)),
-            RectItem(62, 230, 100, 20, colors.GREY_LIGHT, stroke=colors.PTA_BLUE, stroke_width=1),
-            RectItem(170, 230, 100, 20, colors.LIGHT_BLUE, corner_radius=4),
-            ImageItem(62, 260, 80, 40, picture),
-            ImageItem(160, 260, 80, 40, picture),
-            ShapeItem(
-                (
-                    MoveTo(300, 260),
-                    LineTo(340, 260),
-                    CubicTo(350, 270, 350, 290, 340, 300),
-                    ClosePath(),
-                ),
-                colors.YELLOW,
-                colors.TEXT_WORD,
-                0.75,
-                round_joins=True,
-            ),
-            TextItem(62, 330, "PTA im Netz", FontFace.REGULAR, 10, color=colors.DARK_BLUE),
-            LinkItem(62, 320, 60, 12, url="https://www.pta.de/"),
-            TextItem(62, 350, "zu Abschnitt 1.1", FontFace.REGULAR, 10),
-            LinkItem(62, 340, 80, 12, target="abschnitt-1-1"),
-        ),
-        (Anchor("kapitel-1", 100),),
+def sample_markdown() -> str:
+    """Two pages and more: bookmarks on three levels, both kinds of link, one image twice."""
+    return "\n\n".join(
+        [
+            f"---\nvorlage: hoch-ohne-deckblatt\ntitel: {TITLE}\nautor: {AUTHOR}\n"
+            "untertitel: PDF/A-2b\n---",
+            "# Kapitel 1",
+            MIXED,
+            "*schräg gestellt*",
+            "```\nprint('code')\n```",
+            "[PTA im Netz](https://www.pta.de/) und [zu Abschnitt 1.1](#abschnitt-11)",
+            "![](bild.png)",
+            "![](bild.png)",
+            *[FILLER] * 8,
+            "## Abschnitt 1.1",
+            "### Unterabschnitt 1.1.1",
+            "# Kapitel 2",
+        ]
     )
-    second = LaidOutPage(
-        (
-            TextItem(62, 120, "Abschnitt 1.1", FontFace.BOLD, 13),
-            TextItem(62, 150, "Unterabschnitt 1.1.1", FontFace.BOLD, 11),
-            TextItem(62, 180, "Kapitel 2", FontFace.BOLD, 16),
-        ),
-        (Anchor("abschnitt-1-1", 100),),
-    )
-    bookmarks = (
-        Bookmark("1 Kapitel 1", 1, 0, 100),
-        Bookmark("1.1 Abschnitt 1.1", 2, 1, 100),
-        Bookmark("1.1.1 Unterabschnitt 1.1.1", 3, 1, 140),
-        Bookmark("2 Kapitel 2", 1, 1, 170),
-    )
-    return Layout(GEOMETRY, (first, second), bookmarks)
 
 
-def build(fonts: PdfFonts, layout: Layout | None = None, info: PdfInfo = INFO) -> bytes:
-    layout = layout or sample_layout()
-    return to_pdfa(render(layout, fonts, info), info)
+def build(markdown: str, options: PdfOptions = OPTIONS) -> bytes:
+    resources = (DocumentResource("bild.png", "image/png", png((0, 111, 185))),)
+    output = io.BytesIO()
+    PdfGenerator().generate(MarkdownDocument(markdown, resources), output, options)
+    return output.getvalue()
 
 
 @pytest.fixture(scope="module")
-def sample(fonts: PdfFonts) -> bytes:
-    return build(fonts)
+def sample() -> bytes:
+    return build(sample_markdown())
 
 
 def text_of(data: bytes) -> list[str]:
@@ -162,8 +113,9 @@ def test_the_output_is_pdfa_2b_in_its_metadata(sample: bytes) -> None:
         meta = pdf.open_metadata()
         assert meta["pdfaid:part"] == "2"
         assert meta["pdfaid:conformance"] == "B"
-        assert meta["dc:title"] == INFO.title == str(pdf.docinfo["/Title"])
-        assert meta["dc:creator"] == [INFO.author] == [str(pdf.docinfo["/Author"])]
+        assert meta["dc:title"] == TITLE == str(pdf.docinfo["/Title"])
+        assert meta["dc:creator"] == [AUTHOR] == [str(pdf.docinfo["/Author"])]
+        assert meta["dc:description"] == "PDF/A-2b" == str(pdf.docinfo["/Subject"])
         assert meta["dc:language"] == {"de-DE"}
         assert meta["pdf:Producer"] == PRODUCER == str(pdf.docinfo["/Producer"])
         assert meta["xmp:CreatorTool"] == PRODUCER == str(pdf.docinfo["/Creator"])
@@ -209,39 +161,44 @@ def test_annotations_print_and_the_file_is_unencrypted_with_an_id(sample: bytes)
 
 
 def test_characters_beyond_winansi_survive_the_round_trip(sample: bytes) -> None:
-    first, second = text_of(sample)
-    assert MIXED in first
-    assert "schräg gestellt" in first
-    assert "print('code')" in first
-    assert GREEK in first
-    assert "Unterabschnitt 1.1.1" in second
+    pages = text_of(sample)
+    assert MIXED in pages[0]
+    assert "schräg gestellt" in pages[0]
+    assert "print('code')" in pages[0]
+    assert "1.1.1 Unterabschnitt 1.1.1" in pages[-1]
 
 
-def test_more_than_255_distinct_characters_work(fonts: PdfFonts) -> None:
-    advances = fonts.fonts.file(FontFace.REGULAR).info.advances
-    chars = [chr(c) for c in sorted(advances) if chr(c).isprintable() and not chr(c).isspace()]
+def test_more_than_255_distinct_characters_work() -> None:
+    advances = bundled().file(FontFace.REGULAR).info.advances
+    # Not ASCII punctuation, which Markdown might read as syntax.
+    chars = [
+        chr(c)
+        for c in sorted(advances)
+        if chr(c).isprintable() and not chr(c).isspace() and (chr(c).isalnum() or c > 0x7F)
+    ]
     assert len(chars) > 255
     lines = ["".join(chars[i : i + 40]) for i in range(0, len(chars), 40)]
-    page = LaidOutPage(
-        tuple(TextItem(40, 60 + 20 * n, line, FontFace.REGULAR, 9) for n, line in enumerate(lines))
-    )
-    (text,) = text_of(build(fonts, Layout(GEOMETRY, (page,))))
+    markdown = "---\nvorlage: hoch-ohne-deckblatt\ntypografie: nein\n---\n" + "\n\n".join(lines)
+    text = "\n".join(text_of(build(markdown)))
     assert text.split("\n") == lines
 
 
-def test_a_long_non_ascii_title_and_author_still_fit_the_metadata(fonts: PdfFonts) -> None:
+def test_a_long_non_ascii_title_and_author_still_fit_the_metadata() -> None:
     title = "Überprüfung der Ölförderanlagen – Zażółć gęślą jaźń " * 12
     author = "Łucja Żółkiewska-Grünwald, Ægir Ørsted " * 6
-    info = PdfInfo(title, author, None, Language.EN, CREATED)
-    data = build(fonts, Layout(GEOMETRY, (LaidOutPage(),)), info)
+    markdown = (
+        f"---\nvorlage: hoch-ohne-deckblatt\nsprache: en\ntitel: {title.strip()}\n"
+        f"autor: {author.strip()}\n---\n"
+    )
+    data = build(markdown)
     with pikepdf.open(io.BytesIO(data)) as pdf:
         meta = pdf.open_metadata()
-        assert meta["dc:title"] == title == str(pdf.docinfo["/Title"])
-        assert meta["dc:creator"] == [author]
+        assert meta["dc:title"] == title.strip() == str(pdf.docinfo["/Title"])
+        assert meta["dc:creator"] == [author.strip()]
         assert str(pdf.Root.Lang) == "en"
         assert "/Subject" not in pdf.docinfo
     with pdfplumber.open(io.BytesIO(data)) as pdf:
-        assert pdf.metadata["Title"] == title
+        assert pdf.metadata["Title"] == title.strip()
 
 
 def test_bookmarks_nest_by_level(sample: bytes) -> None:
@@ -254,30 +211,29 @@ def test_bookmarks_nest_by_level(sample: bytes) -> None:
 
 
 def test_nesting_never_skips_a_level() -> None:
-    marks = [Bookmark(str(level), level, 0, 0) for level in (3, 1, 3, 2, 3, 1)]
-    assert nest(marks) == [0, 0, 1, 1, 2, 0]
+    data = build("---\nvorlage: hoch-ohne-deckblatt\n---\n# Eins\n\n### Tief\n\n# Zwei\n")
+    with pikepdf.open(io.BytesIO(data)) as pdf, pdf.open_outline() as outline:
+        (first, second) = outline.root
+        assert [c.title for c in first.children] == ["1.0.1 Tief"]
+        assert second.title == "2 Zwei"
 
 
 def test_external_and_internal_links_work(sample: bytes) -> None:
     with pikepdf.open(io.BytesIO(sample)) as pdf:
         annotations = list(pdf.pages[0].obj.Annots)
-        uri = next(a for a in annotations if "/A" in a)
+        uri = next(a for a in annotations if "/URI" in a.get("/A", {}))
         assert uri.A.S == pikepdf.Name.URI and str(uri.A.URI) == "https://www.pta.de/"
-        internal = next(a for a in annotations if "/Dest" in a)
-        destination = internal.Dest
+        internal = next(a for a in annotations if a is not uri)
+        destination = internal.get("/Dest")
+        if destination is None:  # a GoTo action
+            destination = internal.A.D
         if not isinstance(destination, pikepdf.Array):  # a named destination
             names = pdf.Root.Names.Dests.Names
             keys = [str(names[i]) for i in range(0, len(names), 2)]
             destination = names[keys.index(str(destination)) + 1]
             if isinstance(destination, pikepdf.Dictionary):
                 destination = destination.D
-        assert destination[0].objgen == pdf.pages[1].obj.objgen
-
-
-def test_an_unknown_link_target_is_a_layout_bug(fonts: PdfFonts) -> None:
-    page = LaidOutPage((LinkItem(0, 0, 10, 10, target="nirgends"),))
-    with pytest.raises(ValueError, match="nirgends"):
-        render(Layout(GEOMETRY, (page,)), fonts, INFO)
+        assert destination[0].objgen == pdf.pages[len(pdf.pages) - 1].obj.objgen
 
 
 def test_equal_images_are_embedded_once(sample: bytes) -> None:
@@ -290,23 +246,10 @@ def test_equal_images_are_embedded_once(sample: bytes) -> None:
     assert len(images) == 1
 
 
-def test_equal_input_gives_equal_bytes(fonts: PdfFonts, sample: bytes) -> None:
-    assert build(PdfFonts(bundled())) == sample
-    later = PdfInfo(INFO.title, INFO.author, INFO.subject, INFO.language, CREATED.replace(hour=13))
-    assert build(fonts, info=later) != sample
-
-
-def test_fonts_are_registered_by_content(fonts: PdfFonts) -> None:
-    regular = fonts.fonts.file(FontFace.REGULAR)
-    assert fonts.name(FontFace.REGULAR) == registered_name(regular)
-    assert fonts.name(FontFace.ITALIC) == fonts.name(FontFace.REGULAR)
-    assert fonts.synthetic_italic(FontFace.ITALIC)
-    assert not fonts.synthetic_italic(FontFace.REGULAR)
-    assert fonts.has_glyph("ż", FontFace.REGULAR)
-    assert not fonts.has_glyph("ж", FontFace.REGULAR)
-    assert fonts.width("ab", FontFace.REGULAR, 10) == pytest.approx(
-        fonts.width("a", FontFace.REGULAR, 10) + fonts.width("b", FontFace.REGULAR, 10)
-    )
+def test_equal_input_gives_equal_bytes(sample: bytes) -> None:
+    assert build(sample_markdown()) == sample
+    later = PdfOptions(created=CREATED.replace(hour=13), system_fonts=False)
+    assert build(sample_markdown(), later) != sample
 
 
 @pytest.mark.skipif(shutil.which("verapdf") is None, reason="veraPDF is not installed")

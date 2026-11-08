@@ -1,14 +1,15 @@
 """The PDF layout engine (E05-S02): Markdown tokens → pages in the PTA Word design.
 
 Port of DocLibs ``MarkdownParser`` and ``LayoutEngine`` onto reportlab's platypus. The PDF
-generator (E05-S01) calls ``layout``::
+generator (``generator.PdfGenerator``) calls ``layout``::
 
     tokens = create_parser().parse(front.body)
-    layout_syntax.check(tokens, DocumentFormat.PDF, front.body_line)
+    layout_syntax.check(tokens, DocumentFormat.PDF, front.body_line, today)
+    document = generated_images.add_generated(document, tokens, DocumentFormat.PDF, offset)
     typeset(tokens, language)  # if typography is on
     settings = LayoutSettings(variant, language, fonts, line_offset=front.body_line, ...)
-    pdf = layout(tokens, document, settings, notes, PdfInfo(title, author))
-    output.write(to_pdfa(pdf.content, ...))
+    pdf = layout(tokens, document, settings, notes, PdfInfo(title, author, ...))
+    output.write(to_pdfa(pdf.content, info))
 
 ``build_story`` and ``render`` are the two halves of ``layout`` for callers that add flowables
 of their own (cover, table of contents: E05-S03). Needs the extra ``pdf`` (reportlab, fontTools).
@@ -19,7 +20,7 @@ from __future__ import annotations
 from markdown_it.token import Token
 
 from pta_documents.generation.common.result import Notes
-from pta_documents.generation.pdf.layout.document import Decorate, PdfInfo, RenderedPdf, render
+from pta_documents.generation.pdf.layout.document import Decorate, RenderedPdf, render
 from pta_documents.generation.pdf.layout.fonts import PdfFonts, register
 from pta_documents.generation.pdf.layout.story import (
     LayoutContext,
@@ -28,6 +29,7 @@ from pta_documents.generation.pdf.layout.story import (
     build_story,
     prepare,
 )
+from pta_documents.generation.pdf.metadata import PdfInfo
 from pta_documents.markdown.document import MarkdownDocument
 
 

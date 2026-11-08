@@ -1,8 +1,9 @@
 """Markdown to PDF/A-2b in the PTA design: port of DocLibs ``PdfGenerator.cs``.
 
-The steps: front matter (the keys of the DOCX generator), parsing and ``layout_syntax.check``,
-the fonts (``design.fonts.resolve``), the layout (``BODY_LAYOUT``), drawing with reportlab
-(``renderer.render``) and PDF/A-2b with pikepdf (``pdfa.to_pdfa``).
+The steps: front matter (the keys of the DOCX generator), parsing, ``layout_syntax.check``,
+generated images (QR codes) and the typography, the fonts (``design.fonts.resolve``), the
+layout engine of E05-S02 (``layout.layout``: reportlab platypus on the styles and the type area
+of the PTA Word template) and PDF/A-2b with pikepdf (``pdfa.to_pdfa``).
 """
 
 from __future__ import annotations
@@ -13,20 +14,19 @@ from typing import BinaryIO, Final
 
 from pta_documents.design import fonts as design_fonts
 from pta_documents.design.fonts import FontFace
-from pta_documents.design.variants import TEXTS, Language, WordVariant
+from pta_documents.design.variants import Language, WordVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import layout_syntax
+from pta_documents.generation.common import generated_images, layout_syntax, schedule
 from pta_documents.generation.common.result import GenerationResult, Notes
-from pta_documents.generation.pdf import simple_layout
-from pta_documents.generation.pdf.body import BodyLayout, BodySource
-from pta_documents.generation.pdf.fonts import PdfFonts
+from pta_documents.generation.pdf.layout import LayoutSettings, layout
+from pta_documents.generation.pdf.layout.fonts import ALIASES
 from pta_documents.generation.pdf.metadata import PdfInfo
 from pta_documents.generation.pdf.options import PdfOptions
 from pta_documents.generation.pdf.pdfa import to_pdfa
-from pta_documents.generation.pdf.renderer import render
 from pta_documents.markdown.document import MarkdownDocument, MetadataKeys
 from pta_documents.markdown.front_matter import FrontMatter, Keys
-from pta_documents.markdown.parser import parse
+from pta_documents.markdown.parser import create_parser
+from pta_documents.markdown.typography import typeset, typeset_text
 
 FORMAT: Final = DocumentFormat.PDF
 VALID_KEYS: Final = (
@@ -38,11 +38,11 @@ VALID_KEYS: Final = (
     Keys.DATE,
     Keys.COMPANY,
     Keys.LANGUAGE,
+    Keys.TYPOGRAPHY,
+    Keys.HIGHLIGHT,
     Keys.CHECK,
     Keys.TOC,
 )
-BODY_LAYOUT: Final[BodyLayout] = simple_layout.lay_out
-"""The layout engine; E05-S02 puts its own here."""
 MISSING_EFFECT: Final = "shows as '?' in the PDF"
 
 
@@ -61,7 +61,7 @@ class PdfGenerator:
         notes = Notes()
         front = FrontMatter.read(document.text, FORMAT)
         front.check_keys(VALID_KEYS, allow_status=True)
-        front.status_labels()  # raises for an unknown category or a label in two
+        labels = front.status_labels()  # raises for an unknown category or a label in two
         options = apply_front_matter(front, options or PdfOptions())
         title = front.get(Keys.TITLE) or document.metadata.get(MetadataKeys.TITLE)
         author = front.get(Keys.AUTHOR) or document.metadata.get(MetadataKeys.AUTHOR)
@@ -71,19 +71,37 @@ class PdfGenerator:
                 f"The template '{options.variant.value}' has a cover page and needs a title: "
                 f"add '{Keys.TITLE}: …' to the front matter.",
             )
-        tokens = parse(front.body)
-        layout_syntax.check(tokens, FORMAT, front.body_line)
+        tokens = create_parser().parse(front.body)
+        layout_syntax.check(tokens, FORMAT, front.body_line, schedule.reference_day(options.date))
+        document = generated_images.add_generated(document, tokens, FORMAT, front.body_line)
+        if options.typography:
+            typeset(tokens, options.language)
+            # Label cells are typeset like any text, so the labels must be too.
+            labels = {typeset_text(k, options.language): v for k, v in labels.items()}
 
-        fonts = PdfFonts(design_fonts.resolve(system_fonts=options.system_fonts))
+        fonts = design_fonts.resolve(system_fonts=options.system_fonts)
+
+        def shown(char: str, *faces: FontFace) -> bool:
+            code = ord(char)
+            return code in ALIASES or all(fonts.has_glyph(code, face) for face in faces)
+
         notes.characters(
             front.body,
             front.body_line,
-            lambda c: fonts.has_glyph(c, FontFace.REGULAR) and fonts.has_glyph(c, FontFace.BOLD),
-            lambda c: fonts.has_glyph(c, FontFace.MONO),
+            lambda c: shown(c, FontFace.REGULAR, FontFace.BOLD),
+            lambda c: shown(c, FontFace.MONO),
             MISSING_EFFECT,
         )
-        source = BodySource(tokens, document, front, options, TEXTS[options.language], notes)
-        layout = BODY_LAYOUT(source, fonts)
+        settings = LayoutSettings(
+            variant=options.variant,
+            language=options.language,
+            fonts=fonts,
+            highlight=options.highlight,
+            image_converters=options.image_converters,
+            code_block_renderers=options.code_block_renderers,
+            line_offset=front.body_line,
+            status_labels=labels,
+        )
         info = PdfInfo(
             title=title,
             author=author,
@@ -91,8 +109,9 @@ class PdfGenerator:
             language=options.language,
             created=options.created or dt.datetime.now(dt.UTC),
         )
-        output.write(to_pdfa(render(layout, fonts, info), info))
-        return GenerationResult(notes.to_tuple(), pages=len(layout.pages))
+        pdf = layout(tokens, document, settings, notes, info)
+        output.write(to_pdfa(pdf.content, info))
+        return GenerationResult(notes.to_tuple(), pages=pdf.pages)
 
 
 def apply_front_matter(front: FrontMatter, options: PdfOptions) -> PdfOptions:
@@ -104,6 +123,10 @@ def apply_front_matter(front: FrontMatter, options: PdfOptions) -> PdfOptions:
         options = replace(options, variant=variant)
     if (value := front.get(Keys.LANGUAGE)) is not None:
         options = replace(options, language=Language.parse(value, FORMAT))
+    if (value := front.boolean(Keys.TYPOGRAPHY)) is not None:
+        options = replace(options, typography=value)
+    if (value := front.boolean(Keys.HIGHLIGHT)) is not None:
+        options = replace(options, highlight=value)
     if (value := front.date()) is not None:
         options = replace(options, date=value)
     if (value := front.get(Keys.COMPANY)) is not None:

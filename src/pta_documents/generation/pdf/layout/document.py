@@ -15,24 +15,15 @@ from dataclasses import dataclass
 from typing import Any, Final
 
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate
+from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate, Spacer
 
 from pta_documents.generation.pdf.layout.story import Story
+from pta_documents.generation.pdf.metadata import PRODUCER, PdfInfo
 
 Decorate = Callable[[Canvas, int, int], None]
 """Draws the frame of page ``n`` (1-based) of ``count`` pages on the canvas."""
 
 RULE_PT: Final = 0.5
-
-
-@dataclass(frozen=True)
-class PdfInfo:
-    """The document information reportlab writes (PDF/A comes after, E05-S01)."""
-
-    title: str = ""
-    author: str = ""
-    subject: str = ""
-    language: str = "de-DE"
 
 
 @dataclass(frozen=True)
@@ -58,12 +49,12 @@ class _Template(BaseDocTemplate):
             rightMargin=page.right_pt,
             topMargin=page.top_pt,
             bottomMargin=page.bottom_pt,
-            title=info.title,
-            author=info.author,
-            subject=info.subject,
-            creator="PTA Documents",
-            producer="PTA Documents",
-            lang=info.language,
+            title=info.title or "",
+            author=info.author or "",
+            subject=info.subject or "",
+            creator=PRODUCER,
+            producer=PRODUCER,
+            lang=info.language_tag,
             invariant=1,  # fixed dates and ids: the same input gives the same bytes
             initialFontName=story.context.fonts.text,
             initialFontSize=10,
@@ -130,10 +121,12 @@ def render(
     decorate: Decorate | None = None,
     page_count: int = 0,
 ) -> RenderedPdf:
-    """Lay ``story`` out on pages and write the PDF (no PDF/A yet: that is the post-processing
-    of E05-S01). The bookmarks show when the PDF opens; ``decorate`` draws every page's frame
-    with ``page_count`` as the number of pages (``layout`` finds it with a first pass)."""
+    """Lay ``story`` out on pages and write the PDF (not yet PDF/A: the generator passes it
+    through ``pdfa.to_pdfa``). The bookmarks show when the PDF opens; ``decorate`` draws every
+    page's frame with ``page_count`` as the number of pages (``layout`` finds it with a first
+    pass)."""
     output = io.BytesIO()
     template = _Template(output, story, info or PdfInfo(), decorate, page_count)
-    template.build(list(story.flowables))
+    # An empty document is one empty page, as in Word.
+    template.build(list(story.flowables) or [Spacer(0, 0)])
     return RenderedPdf(output.getvalue(), template.page)

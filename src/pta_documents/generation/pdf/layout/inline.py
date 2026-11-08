@@ -92,7 +92,8 @@ class InlineWriter:
                     parts.append("<br/>")
                 case "code_inline":
                     font = quoteattr(self.styles.fonts.mono)
-                    parts.append(f"<font name={font}>{self.text(child.content, options)}</font>")
+                    code = self.text(child.content, options, code=True)
+                    parts.append(f"<font name={font}>{code}</font>")
                 case "strong_open":
                     parts.append("<b>")
                 case "strong_close":
@@ -135,8 +136,9 @@ class InlineWriter:
             body = f"<b>{body}</b>"
         return body
 
-    def text(self, text: str, options: InlineOptions) -> str:
-        return escape(text.upper() if options.caps else text)
+    def text(self, text: str, options: InlineOptions, *, code: bool = False) -> str:
+        """``text`` escaped for paragraph markup, characters the faces lack as ``?``."""
+        return escape(self.styles.fonts.shown(text.upper() if options.caps else text, code))
 
     def status(self, text: str, color: str, options: InlineOptions) -> str:
         return f"<font color={hex_attribute(color)}><b>{self.text(text, options)}</b></font>"

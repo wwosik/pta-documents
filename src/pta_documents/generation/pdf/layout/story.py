@@ -42,6 +42,7 @@ from pta_documents.generation.common import (
     block_shapes,
     code_blocks,
     code_highlight,
+    generated_images,
     html,
     layout_syntax,
     layout_tokens,
@@ -361,7 +362,8 @@ class StoryBuilder:
 
     def layout_container(self, tokens: list[Token], i: int) -> int:
         """A ``:::`` container shown plainly, as in Word (the slide-layout syntax in PDF comes
-        with E05-S04): its content as ordinary blocks, speaker notes left out."""
+        with E05-S04): its content as ordinary blocks, speaker notes left out, timelines and
+        Gantt charts as their lists with a ``code-not-drawn`` note."""
         name, _ = container(tokens[i])
         end = _block_end(tokens, i)
         if name == layout_syntax.NOTES:
@@ -372,6 +374,14 @@ class StoryBuilder:
                 "pages of the PowerPoint deck.",
             )
             return end
+        if name in (layout_syntax.TIMELINE, layout_syntax.GANTT):
+            # Read and checked by layout_syntax.check; drawn in the PDF with E05-S04.
+            self.notes.add(
+                NoteCodes.CODE_NOT_DRAWN,
+                self.line(tokens[i]),
+                f"The '::: {name}' shows as its content: the PDF does not draw timelines and "
+                "Gantt charts yet (E05-S04).",
+            )
         if name in (layout_syntax.CONCLUSION, layout_syntax.COMMENT):
             label = (
                 self.texts.conclusion if name == layout_syntax.CONCLUSION else self.texts.comment
@@ -728,7 +738,13 @@ class StoryBuilder:
             raise DocumentConversionError(
                 FORMAT, f"The image '{source}'{where} is not among the document's resources."
             )
-        return self.place(resource, source, line, max_width, max_height, scale)
+        size: tuple[float, float] | None = None
+        if generated_images.is_generated(source):
+            # A QR code (``generated_images.add_generated``) is 3 cm wide, as in Word.
+            edge = generated_images.SIZE_CM * word_styles.POINTS_PER_CM
+            edge *= generated_images.scale_of(image)
+            size = (edge, edge)
+        return self.place(resource, source, line, max_width, max_height, scale, size_pt=size)
 
     def place(
         self,
@@ -738,9 +754,12 @@ class StoryBuilder:
         max_width: float,
         max_height: float,
         scale: float = 1.0,
+        *,
+        size_pt: tuple[float, float] | None = None,
     ) -> Flowable:
-        """``resource`` at its natural size (pixels at 96 dpi) times ``scale``, shrunk to
-        ``max_width`` and to the share of the page Word gives figures, never enlarged."""
+        """``resource`` at its natural size (pixels at 96 dpi, or ``size_pt``) times ``scale``,
+        shrunk to ``max_width`` and to the share of the page Word gives figures, never
+        enlarged."""
         where = f" (line {line})" if line else ""
         natural: tuple[float, float] | None = None
         content = resource.content
@@ -768,6 +787,8 @@ class StoryBuilder:
         width_px, height_px = natural or (float(pixels_x), float(pixels_y))
         width = width_px * POINTS_PER_PIXEL * scale
         height = height_px * POINTS_PER_PIXEL * scale
+        if size_pt is not None:
+            width, height = size_pt[0] * scale, size_pt[1] * scale
         highest = min(max_height, self.context.frame_height * word.FIGURE_HEIGHT_SHARE)
         shrink = min(1.0, max_width / width, highest / height) if width and height else 1.0
         if scale * shrink > MAX_ENLARGEMENT:
@@ -844,11 +865,11 @@ class StoryBuilder:
         written: list[str] = []
         for n, text in enumerate(lines):
             if spans is None:
-                written.append(_code_text(self.inline_writer.text(text, options)))
+                written.append(_code_text(self.inline_writer.text(text, options, code=True)))
                 continue
             parts: list[str] = []
             for span in spans[n]:
-                piece = _code_text(self.inline_writer.text(span.text, options))
+                piece = _code_text(self.inline_writer.text(span.text, options, code=True))
                 look = span.look
                 if look.bold:
                     piece = f"<b>{piece}</b>"

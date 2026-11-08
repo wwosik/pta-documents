@@ -4,9 +4,9 @@ Stand nach Meilenstein M01: Markdown → Word und PowerPoint auf den PTA-Vorlage
 PowerPoint → Markdown; seit E06-S01 native Diagramme aus `chart`-Blöcken in beiden Formaten,
 seit E06-S02 Finanzdiagramme (`financial-chart`) als Formengruppe in PowerPoint und als SVG,
 seit E06-S03 Mermaid-Diagramme (`mermaid`, über mermaid-cli) als Formengruppe in PowerPoint,
-seit E03-S04 beide auch in Word als Abbildung (SVG mit PNG-Ersatz). Seit E05-S01 das
-Grundgerüst des PDF-Generators (PDF/A-2b, vorerst nur schlichter Text, siehe
-[Markdown → PDF](#markdown--pdf-e05-s01)); die Layout-Engine folgt mit E05-S02.
+seit E03-S04 beide auch in Word als Abbildung (SVG mit PNG-Ersatz). Seit E05-S01/E05-S02 der
+PDF-Generator (PDF/A-2b im Design der Word-Vorlage, noch ohne Deckblatt, Kopf- und Fußzeile,
+siehe [Markdown → PDF](#markdown--pdf-e05-s01-e05-s02)).
 
 ## Einrichten
 
@@ -62,7 +62,7 @@ im Absatz bekommt „Abbildung n: …" aus Titel oder Alt-Text (`![…](qr:…)`
 „Zitat"; Fußnoten werden Word-Fußnoten; Diagramme und Charts aus Codeblöcken siehe
 [Grafiken in Word](#grafiken-in-word-e03-s04). Folien-Syntax: siehe *Folien-Syntax in Word* unten.
 
-## Markdown → PDF (E05-S01)
+## Markdown → PDF (E05-S01, E05-S02)
 
 Braucht das Extra `pdf` (reportlab, pikepdf; `./run.sh setup` installiert es). Ohne Extra
 schlägt schon der Import fehl, mit einem `ImportError`, der `pip install -e '.[pdf]'` nennt.
@@ -82,38 +82,42 @@ print(result.pages, result)
 ./run.sh check bericht.md --pdf        # Probelauf, zählt die Seiten
 ```
 
-- **Stand:** Das Ergebnis ist ein PDF/A-2b mit eingebetteten Schriften und Metadaten, aber noch
-  **ohne PTA-Layout**: jeder Block wird schlichter, linksbündiger Text auf A4 (Überschriften fett,
-  Code in der Codeschrift, Listen mit „–", Tabellenzeilen als Zellen nebeneinander, Ränder der
-  Word-Vorlage). Bilder, Links, Lesezeichen, Nummerierung, Formatvorlagen und
-  Seitenumbruchregeln kommen mit der Layout-Engine (E05-S02), Deckblatt, Kopf- und Fußzeile mit
-  E05-S03.
-- **Front Matter:** dieselben Schlüssel wie Word, außer `typografie` und `syntaxhervorhebung`
-  (kommen mit E05-S02): `vorlage` (Hoch- oder Querformat; Vorlagen mit Deckblatt brauchen wie in
-  Word einen `titel`), `titel`, `untertitel`, `autor`, `ort`, `datum`, `firma`, `sprache`,
-  `inhaltsverzeichnis`, `pruefung`, `status.<kategorie>`. Titel und Autor fallen auf
-  `document.metadata` zurück.
-- **`PdfOptions`:** `variant`, `language`, `date`, `company`, `toc` wie `DocxOptions`;
-  `created` (Zeitstempel der Metadaten, sonst jetzt in UTC — gleiche Eingabe und gleiches
-  `created` ergeben byte-gleiche Dateien); `system_fonts` (Standard `True`: Segoe UI und Consolas
-  aus dem System, wenn vollständig installiert, sonst Selawik und Inconsolata, siehe
-  [Schriften](#schriften-für-pdf-und-svg-e01-s03)); `replace_unsupported` (für E05-S04),
-  `code_block_renderers`, `image_converters` (noch ohne Wirkung).
-- **Fehlende Zeichen:** Selawik hat weder Griechisch noch Kyrillisch noch U+00A0. Ein Zeichen,
-  das der Schrift fehlt, wird `?` (Leerraum ein Leerzeichen), mit dem Hinweis
-  `character-missing` an seiner ersten Zeile — PDF/A erlaubt kein `.notdef`.
+- **Stand:** Das Ergebnis ist ein PDF/A-2b mit eingebetteten Schriften und Metadaten. Den Rumpf
+  setzt die [Layout-Engine](#pdf-layout-engine-e05-s02) in den Formatvorlagen und auf dem
+  Satzspiegel der gewählten Word-Vorlage (Nummerierung, Listen, Tabellen, Bilder, QR-Codes, Code
+  mit Hervorhebung, Hinweis-Boxen, Fußnoten, Lesezeichen, Links, Seitenumbruchregeln).
+  Deckblatt, Inhaltsverzeichnis, Kopf- und Fußzeile kommen mit E05-S03. Charts, Zeichnungen
+  (Mermaid, Finanzdiagramme), `::: timeline` und `::: gantt` zeichnet das PDF noch nicht
+  (E05-S04): Codeblöcke bleiben Code, Zeitstrahl und Gantt zeigen ihren Inhalt (Liste bzw.
+  Tabelle), jeweils mit dem Hinweis `code-not-drawn`.
+- **Front Matter:** dieselben Schlüssel wie Word: `vorlage` (Hoch- oder Querformat; Vorlagen mit
+  Deckblatt brauchen wie in Word einen `titel`), `titel`, `untertitel`, `autor`, `ort`, `datum`
+  (auch „heute" in Zeitstrahl und Gantt), `firma`, `sprache`, `typografie`,
+  `syntaxhervorhebung`, `inhaltsverzeichnis`, `pruefung`, `status.<kategorie>`. Titel und Autor
+  fallen auf `document.metadata` zurück. `firma` und `inhaltsverzeichnis` wirken erst mit
+  E05-S03. Präsentationen (`fusszeile` u. a.) gibt es nicht als PDF.
+- **`PdfOptions`:** `variant`, `language`, `typography`, `highlight`, `date`, `company`, `toc`
+  wie `DocxOptions`; `created` (Zeitstempel der Metadaten, sonst jetzt in UTC — gleiche Eingabe
+  und gleiches `created` ergeben byte-gleiche Dateien); `system_fonts` (Standard `True`: Segoe UI
+  und Consolas aus dem System, wenn vollständig installiert, sonst Selawik und Inconsolata, siehe
+  [Schriften](#schriften-für-pdf-und-svg-e01-s03)); `code_block_renderers`, `image_converters`
+  wie in Word (Bilder, die nicht PNG, JPEG, GIF, BMP, TIFF oder WebP sind, z. B. SVG, gehen über
+  die Bildkonverter); `replace_unsupported` (für E05-S04, noch ohne Wirkung).
+- **Fehlende Zeichen:** Selawik hat weder Griechisch noch Kyrillisch. Ein Zeichen, das der
+  Schrift fehlt (Text: Regular und Bold, Code: die Codeschrift), wird `?` (Leerraum ein
+  Leerzeichen), mit dem Hinweis `character-missing` an seiner ersten Zeile — PDF/A erlaubt kein
+  `.notdef`. U+00A0, U+202F und U+2011 leihen sich die Glyphe von Leerzeichen bzw. Bindestrich
+  und zählen nicht als fehlend.
 - **PDF/A-2b:** XMP mit `pdfaid:part` 2 / `conformance` B, Titel, Autor, Sprache, Producer
   „PTA Documents" und Zeitstempel gleich im Info-Dictionary; OutputIntent `GTS_PDFA1` mit
   sRGB-Profil (aus Pillow); `/F 4` auf jeder Annotation; `/Lang` (`de-DE`/`en`); PDF 1.7;
   `/ID` aus dem Inhalt; unverschlüsselt. Geprüft wird der Aufbau mit pikepdf; veraPDF
   (`verapdf --flavour 2b`) prüft ein Test nur, wenn `verapdf` im `PATH` liegt.
-- **Aufbau** (`generation/pdf/`): `generator.py` (Front Matter, Parser, Schriften, dann
-  `BODY_LAYOUT`), `body.py` (`BodySource`, Protocol `BodyLayout`: die Naht zur Layout-Engine),
-  `simple_layout.py` (das vorläufige Layout), `page_model.py` (`Layout`, `LaidOutPage`,
-  `TextItem`, `LineItem`, `RectItem`, `ImageItem`, `ShapeItem`, `LinkItem`, `Anchor`,
-  `Bookmark`, `PageGeometry`; Punkte, Ursprung oben links), `fonts.py` (Protocol `FontMetrics`,
-  `PdfFonts`), `renderer.py` (`render(layout, fonts, info)`, reportlab), `pdfa.py`
-  (`to_pdfa(data, info)`, pikepdf), `metadata.py` (`PdfInfo`).
+- **Aufbau** (`generation/pdf/`): `generator.py` (Front Matter, Parser, `layout_syntax.check`,
+  QR-Codes, Typografie, Schriften, dann `layout.layout` und `pdfa.to_pdfa`), `options.py`
+  (`PdfOptions`), `layout/` (die Layout-Engine, siehe unten), `pdfa.py` (`to_pdfa(data, info)`,
+  pikepdf), `metadata.py` (`PdfInfo`: Titel, Autor, Betreff, Sprache, Zeitstempel — dieselbe
+  Klasse für reportlab und den PDF/A-Schritt).
 - **Lizenzen:** reportlab BSD, pikepdf MPL-2.0 (nur als Bibliothek genutzt, nicht verändert),
   pdfplumber MIT (nur Tests und PDF-Konverter).
 
@@ -333,8 +337,8 @@ für Word ignorierbare Absatz-Eigenschaft `<pta:codeLanguage pta:val="python"/>`
 „Code" daraus wieder als Zaun mit Sprache aus. PowerPoint färbt die Runs im Codefeld (auch auf
 Flow-Folien und über „(Forts.)"-Folien hinweg). Ohne Sprache bleibt der Block einfarbig; eine
 unbekannte Sprache ergibt den Hinweis `code-language-unknown`. `syntaxhervorhebung: nein`
-bzw. `highlight=False` schaltet die Farben ab. PDF (Silbentrennung, Blocksatz, farbiger Code)
-folgt mit E05-S02.
+bzw. `highlight=False` schaltet die Farben ab. Das PDF färbt Code genauso (seit E05-S02) und
+setzt die Typografie wie Word.
 
 ## Code-Block-Renderer und Bildkonverter
 
@@ -662,16 +666,18 @@ schriften.has_glyph(0x20AC, FontFace.LIGHT)  # nur BMP; U+00A0 fehlt in Selawik
 ## PDF-Layout-Engine (E05-S02)
 
 Die Layout-Engine setzt den Markdown-Rumpf auf Seiten im Design der PTA-Word-Vorlage; der
-PDF-Generator (E05-S01) ruft sie auf und macht aus dem Ergebnis PDF/A. Sie liegt in
+PDF-Generator (`PdfGenerator`, oben) ruft sie auf und macht aus dem Ergebnis PDF/A. Sie liegt in
 `pta_documents.generation.pdf.layout` (Extra `pdf`) und arbeitet auf reportlabs Platypus:
 
 ```python
-from pta_documents.generation.common import layout_syntax
+from pta_documents.generation.common import generated_images, layout_syntax
 from pta_documents.generation.pdf.layout import LayoutSettings, PdfInfo, layout
 from pta_documents.markdown.parser import create_parser
 
 tokens = create_parser().parse(front.body)
-layout_syntax.check(tokens, DocumentFormat.PDF, front.body_line)
+layout_syntax.check(tokens, DocumentFormat.PDF, front.body_line, heute)
+dokument = generated_images.add_generated(dokument, tokens, DocumentFormat.PDF, front.body_line)
+typeset(tokens, sprache)           # wenn die Typografie an ist
 einstellungen = LayoutSettings(
     variant=WordVariant.PORTRAIT,  # Vorlage: Formatvorlagen und Satzspiegel
     language=Language.DE,          # „Tabelle"/„Abbildung", Hinweis-Wörter
@@ -683,7 +689,7 @@ einstellungen = LayoutSettings(
     status_labels={},              # FrontMatter.status_labels(), für Statusbeschriftungen
 )
 pdf = layout(tokens, dokument, einstellungen, notes, PdfInfo(title=..., author=...))
-pdf.content, pdf.pages  # PDF-Bytes (noch kein PDF/A), Seitenzahl
+pdf.content, pdf.pages  # PDF-Bytes (noch kein PDF/A, das macht pdfa.to_pdfa), Seitenzahl
 ```
 
 `layout(…, decorate=f)` setzt die Seiten zweimal: zuerst, um sie zu zählen, dann mit
@@ -712,7 +718,7 @@ page_count)`.
   der ersten Zeile. Tabellen wiederholen ihren Kopf und teilen zu hohe Zeilen. Abstand nach und
   Abstand vor addieren sich wie in Word.
 - **Bilder:** 96 dpi (ein Pixel = 0,75 pt), `"scale=0.5"` im Titel skaliert, sonst werden sie
-  nur verkleinert: auf die Satzspiegelbreite, auf 80 % der Satzspiegelhöhe und so weit, dass sie
+  nur verkleinert (ein QR-Code ist wie in Word 3 cm breit, mal `scale`): auf die Satzspiegelbreite, auf 80 % der Satzspiegelhöhe und so weit, dass sie
   mit der Überschrift davor auf eine Seite passen. PNG und JPEG direkt, GIF/BMP/TIFF/WebP über
   Pillow, alles andere über die Bildkonverter. Mehrere Bilder in einem Absatz stehen
   nebeneinander (bis vier je Reihe).
@@ -724,14 +730,16 @@ page_count)`.
   brauchen eine absolute URL (`https:`, `mailto:` …), sonst bleibt nur der Text.
 - **Fußnoten** stehen am Fuß der Seite mit dem Verweis („Fußnotentext", Trennlinie 2 Zoll);
   passen sie mit dem Anfang des Absatzes nicht mehr hin, wandern beide auf die nächste Seite.
-- **Schriften:** jede Schrift wird bei reportlab unter `PTA-<sha8>` ihres Inhalts registriert.
+- **Schriften:** jede Schrift wird bei reportlab unter `PTA-<sha8>` ihres Inhalts registriert
+  (`layout/fonts.register`, die einzige Registrierung).
   Fehlende Leerzeichen-Glyphen (U+00A0, U+202F, U+2011 in Selawik) leihen sich die Glyphe von
   Leerzeichen bzw. Bindestrich (`truetype.with_aliases`); Kursiv ist eine schräggestellte Kopie
   (`truetype.slanted`, 12°). Zeilenhöhe „einfach" = Windows-Ascent + -Descent der Schrift wie
   in Word.
 - **Noch nicht** (spätere Stories): Deckblatt, Kopf-/Fußzeile, Inhaltsverzeichnis (E05-S03),
-  Ersetzen fehlender Zeichen, Folien-Syntax als Boxen und Spalten, Charts und Zeichnungen
-  (E05-S04; bis dahin bleibt ein `chart`/`mermaid`-Block Code mit Hinweis `code-not-drawn`),
+  Ersetzen fehlender Zeichen (bis dahin `?`), Folien-Syntax als Boxen und Spalten, Charts,
+  Zeichnungen, Zeitstrahl und Gantt (E05-S04; bis dahin bleibt ein `chart`/`mermaid`-Block Code
+  und ein `::: timeline`/`::: gantt` zeigt seinen Inhalt, beide mit Hinweis `code-not-drawn`),
   Silbentrennung.
 
 ## Zeichenmodell und SVG (E02-S03)
@@ -838,8 +846,8 @@ png = to_png(svg, PngOptions(width=600))  # Breite in Pixeln, Höhe folgt
 - **Fehler:** `DocumentConversionError` mit Format `svg`; `to_png` meldet `The SVG cannot be
   converted: …`, der Konverter im Generator `The image 'images/plan.svg' cannot be converted: …`.
   Ein Maßstab ≤ 0 oder ein Hintergrund, der nicht `RRGGBB` ist, wirft `ValueError`.
-- **PDF** (E05) wird das PNG in dreifacher Größe (≈ 288 dpi) setzen (Antwort in E06-S04); den
-  PDF-Generator gibt es noch nicht.
+- **PDF** (seit E05-S02): das PNG des Konverters (Maßstab 2, wie in Word) in natürlicher Größe;
+  die dreifache Größe (≈ 288 dpi) aus der Antwort in E06-S04 ist noch nicht umgesetzt.
 
 ## QR-Codes (E11-S04)
 
@@ -872,7 +880,7 @@ der Generator selbst erzeugt — in Word und PowerPoint:
 - **Prüfen:** `style-image-source` verlangt für QR-Codes keine Quelle.
 - **Rundreise:** die Konverter lesen ein gewöhnliches PNG zurück (`![Zur Umfrage](images/…png)`),
   nicht `qr:…`.
-- **PDF** (E05) wird das PNG wie jedes Bild setzen; das gibt es noch nicht.
+- **PDF** setzt das PNG wie Word 3 cm breit, mal `scale`.
 
 ```python
 from pta_documents.generation.common.generated_images import (
@@ -950,7 +958,8 @@ einen Projektplan — ohne Extra (außer dem Bild des Zeitstrahls in Word) und i
 - **Rundreise:** der PPTX-Konverter lässt die Formgruppe weg (wie alle `Drawing`-Gruppen), der
   DOCX-Konverter liest den Zeitstrahl als Bild und den Gantt als Markdown-Tabelle, gefüllte
   Zellen als `■`, Meilensteine als `◆`.
-- **PDF** (E05-S04) soll beide als Grafik zeichnen; das gibt es noch nicht.
+- **PDF** zeigt bis E05-S04 den Inhalt (Liste bzw. Tabelle) mit dem Hinweis `code-not-drawn`;
+  zeichnen soll es beide mit E05-S04.
 
 ```python
 from pta_documents.drawing import schedule as drawing
@@ -1022,12 +1031,12 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `slide-split` (`SLIDE_SPLIT`) | PPTX | Text, Tabelle, Code oder Bildreihe passt nicht auf eine Folie und geht auf „(Forts.)"-Folien weiter; Zeile des `##` |
 | `slide-overfull` (`SLIDE_OVERFULL`) | PPTX | passt auch bei 12 pt nicht und läuft über den Folienrand (z. B. ein sehr langer Absatz) |
 | `image-cropped` (`IMAGE_CROPPED`) | PPTX | ein Bildplatzhalter schneidet mehr als ein Viertel der Bildfläche ab |
-| `image-enlarged` (`IMAGE_ENLARGED`) | PPTX, DOCX | ein Bild wird mehr als doppelt so groß gezeigt wie seine Pixel bei 96 dpi und wirkt unscharf |
-| `raw-html` (`RAW_HTML`) | PPTX, DOCX | rohes HTML im Markdown; es wird **weggelassen**. HTML-Kommentare `<!-- … -->` fallen ohne Hinweis weg, `<br>` ist ein Zeilenumbruch |
-| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt) |
+| `image-enlarged` (`IMAGE_ENLARGED`) | PPTX, DOCX, PDF | ein Bild wird mehr als doppelt so groß gezeigt wie seine Pixel bei 96 dpi und wirkt unscharf |
+| `raw-html` (`RAW_HTML`) | PPTX, DOCX, PDF | rohes HTML im Markdown; es wird **weggelassen**. HTML-Kommentare `<!-- … -->` fallen ohne Hinweis weg, `<br>` ist ein Zeilenumbruch |
+| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX, PDF | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt). Das PDF zeichnet bis E05-S04 keine Charts und Zeichnungen und zeigt `::: timeline`/`::: gantt` als ihren Inhalt, mit diesem Hinweis |
 | `character-missing` (`CHARACTER_MISSING`) | PDF | ein Zeichen fehlt in den Schriften; es erscheint als `?` (bis E05-S04 Ersatz vorschlägt) |
-| `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01) | Sprechernotizen fallen im Word-Dokument weg |
-| `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02) | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |
+| `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01), PDF | Sprechernotizen fallen im Word-Dokument bzw. PDF weg |
+| `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02), PDF | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |
 
 Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate` zeigt die
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;
