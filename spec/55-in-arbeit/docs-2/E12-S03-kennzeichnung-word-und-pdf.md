@@ -1,8 +1,8 @@
 # E12-S03 Kennzeichnung „Vertraulich" und „Entwurf" in Word und PDF
 
-> Status: Entwurf
-> Epic: [E12 Dokumentpflege: Historie, Vergleich, Kennzeichnung](E12-dokumentpflege.md)
-> Milestone: [M04 Präsentieren und Schulung](M04-praesentieren-und-schulung.md)
+> Status: in Bearbeitung (docs-2)
+> Epic: [E12 Dokumentpflege: Historie, Vergleich, Kennzeichnung](../../50-entwurf/E12-dokumentpflege.md)
+> Milestone: [M04 Präsentieren und Schulung](../../50-entwurf/M04-praesentieren-und-schulung.md)
 
 ## Zusammenfassung
 
