@@ -22,6 +22,7 @@ from pta_documents.generation.common import (
     schedule,
     steps,
 )
+from pta_documents.markdown import block_markers
 from pta_documents.markdown.parser import ALERT, CONTAINER_OPEN, child_lines, container, line_of
 
 CARDS: Final = "cards"
@@ -200,6 +201,7 @@ def check(
     first ``#``/``##`` heading has no slide to belong to. Timelines and Gantt charts are read
     (``schedule``), ``heute`` in them is ``today`` (default: the day of generating), steps and
     risk matrices too (``steps``, ``risks``). Icons must be bundled ones (``icons.check``).
+    Block markers (``{.build}`` …, E09-S02) must be known ones before a block.
     """
     day = schedule.reference_day(today)
     headed = False
@@ -220,6 +222,8 @@ def check(
                 is_important(str(token.meta[ALERT]), format)
             elif token.type == "heading_open" and token.tag in ("h1", "h2"):
                 heading(tokens[i + 1], int(token.tag[1]), format)
+            if block_markers.ERROR in token.meta:
+                raise DocumentConversionError(format, str(token.meta[block_markers.ERROR]))
         except DocumentConversionError as error:
             raise at_line(error, line) from None
         if token.type == CONTAINER_OPEN and container(token)[0] == TIMELINE:

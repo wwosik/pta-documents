@@ -124,6 +124,7 @@ datum: 2026-11-06
 | `typografie` | ✓ | ✓ | `ja` (Standard) oder `nein`: Anführungszeichen, Gedankenstriche, geschützte Leerzeichen (siehe unten) |
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) oder `nein`: Codeblöcke mit Sprache farbig |
 | `pruefung` | ✓ | ✓ | nur für `./run.sh check`: `aus` schaltet die Stilregeln ab, `style-words, style-title` nur diese |
+| `aufbau` | | ✓ | `listen`: jede Liste erscheint beim Vortragen Punkt für Punkt (siehe [Klick für Klick](#klick-für-klick)); `nein` (Standard) |
 
 Ein falscher Schlüssel oder Wert bricht mit einer Meldung ab, die die gültigen Werte nennt.
 
@@ -234,6 +235,40 @@ Zuerst die gute Nachricht nennen, dann **kurz** auf den Süden eingehen.
   Codeblöcke darin werden ohne Fehler weggelassen.
 - Ein `::: notes` vor der ersten Überschrift ist ein Fehler.
 - Faustregel: zu jeder Folie zwei bis fünf Sätze Sprechtext.
+
+### Klick für Klick
+
+Eine Zeile `{.build}` direkt vor einer Liste lässt ihre Punkte beim Vortragen einzeln
+erscheinen, jeden mit einem Klick (sanft eingeblendet). Vor Karten (`::: cards`), Zeilen
+(`::: rows`), Spalten (`::: columns`) und einer Reihe von Bildern erscheint so ein Element nach
+dem anderen; vor einer Tabelle, einem Codeblock, einem Diagramm oder einem Absatz der ganze
+Block. `{.frag}` zeigt den nächsten Block immer als Ganzes. Word und PDF zeigen alles wie ohne
+die Zeile.
+
+```markdown
+## Unser Vorschlag
+
+{.build}
+- Erst das Problem
+- dann die Lösung
+
+{.frag=fly}
+| Phase | Dauer |
+| ----- | ----- |
+| Analyse | 4 Wochen |
+```
+
+- Statt des Einblendens: `{.build=appear}` (erscheint sofort), `=fly` (fliegt von unten herein),
+  `=wipe` (wird von unten aufgedeckt); dasselbe mit `{.frag=…}`.
+- `{.exit}` vor einem Block: er steht von Anfang an da und verschwindet beim Klick.
+  `{.emphasize}` vor Text (Absatz, Liste): er wird beim Klick PTA-blau.
+- `aufbau: listen` im Kopf lässt jede Liste der Präsentation so erscheinen.
+- Die Zeile steht für sich (mit oder ohne Leerzeile davor und danach). Ein falscher Name, ein
+  Marker ohne Block danach oder vor einer Folienüberschrift ist ein Fehler mit Zeilennummer. Auf
+  Titel-, Trenn- und Abschlussfolie und auf Agenda, Zwischenfazit, Zitat und Kontakt gibt es
+  keine Builds.
+- Die Folie wird beim Klicken in der Reihenfolge des Markdowns aufgebaut; wird sie geteilt
+  („Forts."), baut jeder Teil seine Inhalte.
 
 ### Folien-Syntax
 

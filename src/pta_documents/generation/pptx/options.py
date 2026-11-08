@@ -33,6 +33,9 @@ class PptxOptions:
     non-breaking spaces (``markdown.typography``); code, links and front matter stay as written."""
     highlight: bool = True
     """``syntaxhervorhebung:``: code blocks with a known language in the PTA colours."""
+    build_lists: bool = False
+    """``aufbau: listen``: every list not inside another appears item by item, as if
+    ``{.build}`` stood before it (E09-S02)."""
     code_block_renderers: tuple[CodeBlockRenderer, ...] = field(default_factory=default_renderers)
     """Asked in order for every fenced code block with an info string; the first graphic wins.
     Defaults to every renderer of the library that is available; ``()`` turns them off."""

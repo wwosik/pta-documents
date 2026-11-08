@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import io
 from collections.abc import Sequence
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -22,13 +23,22 @@ from pta_documents.design.variants import GeneratedTexts, Language
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import icons
 from pta_documents.generation.common.result import NoteCodes, Notes
-from pta_documents.generation.pptx import chart, drawing, fitting, flow, kinds, visuals
+from pta_documents.generation.pptx import (
+    animations,
+    chart,
+    drawing,
+    fitting,
+    flow,
+    kinds,
+    visuals,
+)
 from pta_documents.generation.pptx import notes as speaker_notes
 from pta_documents.generation.pptx.model import (
     AgendaSlide,
     ChapterSlide,
     Chart,
     ChartSlide,
+    Click,
     ClosingSlide,
     Code,
     ContactSlide,
@@ -97,12 +107,35 @@ class DeckWriter:
         self.layouts = {layout.name: layout for layout in presentation.slide_layouts}
         self.number = 0
         self.body_style = fitting.BodyStyle.read(presentation)
+        self.builds = animations.Builds()
+        """What the slide being written builds (E09-S02); its timing goes in when the next
+        slide begins, or at the end."""
+        self.built: PptxSlide | None = None
 
     # ------------------------------------------------------------------ entry
 
     def write(self, slides: Sequence[Slide]) -> None:
         for slide in slides:
             self.slide(slide)
+        self.write_builds()
+
+    def write_builds(self) -> None:
+        """The timing of the slide written last, if it builds anything."""
+        if self.built is not None:
+            self.builds.write(self.built._element)
+        self.built = None
+        self.builds = animations.Builds()
+
+    def at(self, slide: PptxSlide | None, click: Click | None) -> AbstractContextManager[None]:
+        """What is drawn on ``slide`` within is built on ``click`` (None: there from the
+        start; no slide: only measured)."""
+        return self.builds.at(slide.shapes._spTree if slide is not None else None, click)
+
+    def each(
+        self, slide: PptxSlide | None, clicks: Sequence[Click | None]
+    ) -> AbstractContextManager[None]:
+        """Drawing within adds one shape per click of ``clicks``, each built on its own."""
+        return self.builds.each(slide.shapes._spTree if slide is not None else None, clicks)
 
     def slide(self, slide: Slide) -> None:
         match slide:
@@ -216,7 +249,8 @@ class DeckWriter:
                     text,
                     scale or self.body_style.scales()[-1],
                 )
-            self.fill_picture(target, design.PLACEHOLDERS.picture, image, slide)
+            with self.at(target, image.click):
+                self.fill_picture(target, design.PLACEHOLDERS.picture, image, slide)
             self.finish(target, footer=True)
             return
         self.visual_on_content_area(slide)
@@ -301,6 +335,38 @@ class DeckWriter:
             y += height + fitting.GAP
         below_height = self.text_block_height(below)
         room = area.bottom - y - (below_height + fitting.GAP if below else 0)
+        used = self.draw_visual(slide, target, visual, y, room)
+        y += used + fitting.GAP
+        if below:
+            body = visuals.text_box(target, area.left, y, area.width, below_height)
+            self.write_paragraphs(target, body, below)
+        self.finish(target, footer=True)
+
+    def draw_visual(
+        self, slide: VisualSlide, target: PptxSlide, visual: Visual, y: int, room: int
+    ) -> int:
+        """The visual at ``y`` in the content area, at most ``room`` high; the height used."""
+        area = design.CONTENT_AREA
+        if isinstance(visual, Images):
+            with self.each(target, [image.click for image in visual.images]):
+                used, factors = visuals.draw_pictures(
+                    target, list(visual.images), area.left, y, area.width, room
+                )
+            for image, factor in zip(visual.images, factors, strict=True):
+                self.note_enlarged(image, factor)
+            return used
+        with self.at(target, visual.click):
+            return self.draw_shapes(slide, target, visual, y, room)
+
+    def draw_shapes(
+        self,
+        slide: VisualSlide,
+        target: PptxSlide,
+        visual: Table | Code | Diagram,
+        y: int,
+        room: int,
+    ) -> int:
+        area = design.CONTENT_AREA
         if isinstance(visual, Table):
             table_layout = fitting.fit_table(visual, area.width, room)
             if table_layout is None:
@@ -315,22 +381,12 @@ class DeckWriter:
                 self.note_overfull(slide)
                 size = fitting.CODE_SIZES[-1]
             used = visuals.draw_code(target, visual, size, area.left, y, area.width, self.lang)
-        elif isinstance(visual, Diagram):
+        else:
             # Fitted like a picture: scaled down, never up (DocLibs DeckWriter.Drawing).
             used = drawing.place(
                 target, visual.drawing, area.left, y, area.width, room, visual.alt, self.lang
             )
-        else:
-            used, factors = visuals.draw_pictures(
-                target, list(visual.images), area.left, y, area.width, room
-            )
-            for image, factor in zip(visual.images, factors, strict=True):
-                self.note_enlarged(image, factor)
-        y += used + fitting.GAP
-        if below:
-            body = visuals.text_box(target, area.left, y, area.width, below_height)
-            self.write_paragraphs(target, body, below)
-        self.finish(target, footer=True)
+        return used
 
     def continued(self, title: tuple[Run, ...], index: int) -> tuple[Run, ...]:
         if index == 0:
@@ -369,11 +425,13 @@ class DeckWriter:
                     pictures
                 ):
                     for image in visual.images:
-                        self.fill_picture(target, pictures[picture_index][0], image, slide)
+                        with self.at(target, image.click):
+                            self.fill_picture(target, pictures[picture_index][0], image, slide)
                         picture_index += 1
                 elif isinstance(visual, Chart) and chart_index < len(charts):
                     placeholder = self.placeholder(target, charts[chart_index][0])
-                    chart.insert_chart(placeholder, visual.graphic.chart, show_title=True)
+                    with self.at(target, visual.click):
+                        chart.insert_chart(placeholder, visual.graphic.chart, show_title=True)
                     chart_index += 1
                 else:
                     raise self.error(
@@ -397,7 +455,9 @@ class DeckWriter:
                 f"The PTA template has no layout '{layout_name}'. Valid layouts: {valid}", slide
             )
         self.number += 1
+        self.write_builds()
         target = self.presentation.slides.add_slide(layout)
+        self.built = target
         if slide.notes:
             speaker_notes.write_notes(self, target, slide.notes)
         return target
@@ -579,8 +639,10 @@ class DeckWriter:
                 body_pr.remove(child)
             autofit = etree.SubElement(body_pr, a("normAutofit"))
             autofit.set("fontScale", str(round(scale * 100000)))
-        for paragraph in paragraphs or [Paragraph(())]:
+        written = paragraphs or [Paragraph(())]
+        for paragraph in written:
             body.append(self.paragraph_element(slide, paragraph, color=color))
+        self.builds.paragraphs(body, written)
 
     def paragraph_element(
         self,

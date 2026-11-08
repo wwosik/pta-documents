@@ -14,4 +14,6 @@ sprache: en switches generated texts to English, e.g. “(cont.)”, and puts th
 
 The training template carries the sticker “For internal use only” (kennzeichnung: intern)
 
+aufbau: listen makes this list appear item by item, one click each
+
 ## Thank you

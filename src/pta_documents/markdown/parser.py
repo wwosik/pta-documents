@@ -13,6 +13,7 @@ from mdit_py_plugins.deflist import deflist_plugin
 from mdit_py_plugins.footnote import footnote_plugin
 from mdit_py_plugins.tasklists import tasklists_plugin
 
+from pta_documents.markdown.block_markers import block_markers_rule
 from pta_documents.markdown.icon import icon_plugin
 from pta_documents.markdown.image_attributes import image_attributes_plugin
 from pta_documents.markdown.mark import mark_plugin
@@ -38,7 +39,8 @@ def create_parser() -> MarkdownIt:
     whether the name exists is checked by ``generation.common.layout_syntax.check``. Containers
     nest with longer fences outside (``::::`` around ``:::``). An alert is a block quote whose
     first paragraph starts with a line ``[!KIND]``: the line is removed and the kind is in
-    ``blockquote_open.meta[ALERT]``.
+    ``blockquote_open.meta[ALERT]``. A line of only ``{.build}`` (or ``{.frag}``, ``{.exit}``,
+    ``{.emphasize}``) is taken out and marks the block after it (``block_markers``, E09-S02).
     """
     parser = MarkdownIt("commonmark", {"html": True, "linkify": False, "typographer": False})
     parser.enable(["table", "strikethrough"])
@@ -46,6 +48,7 @@ def create_parser() -> MarkdownIt:
     parser.use(container_plugin, "layout", validate=_any_name).use(mark_plugin)
     parser.use(icon_plugin).use(image_attributes_plugin)
     parser.core.ruler.before("inline", "alerts", _alerts)
+    parser.core.ruler.after("alerts", "block_markers", block_markers_rule)
     return parser
 
 

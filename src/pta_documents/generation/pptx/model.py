@@ -18,6 +18,27 @@ from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.markdown.document import DocumentResource
 
 
+class Effect(Enum):
+    """How something comes, goes or stands out on its click (E09-S02): the entrances of
+    ``{.build=…}``/``{.frag=…}``, ``{.exit}`` and ``{.emphasize}``."""
+
+    FADE = "fade"
+    APPEAR = "appear"
+    FLY = "fly"
+    WIPE = "wipe"
+    EXIT = "exit"
+    EMPHASIZE = "emphasize"
+
+
+@dataclass(frozen=True)
+class Click:
+    """The click of the presentation a block is built on: clicks are numbered across the deck
+    in the order of the Markdown; a slide plays its clicks in that order."""
+
+    number: int
+    effect: Effect = Effect.FADE
+
+
 @dataclass(frozen=True)
 class Run:
     text: str
@@ -69,6 +90,9 @@ class Paragraph:
     """The first number of a numbered list."""
     icon: str | None = field(default=None, kw_only=True)
     """The icon that is the bullet of a list item (E15-S03): a picture bullet."""
+    click: Click | None = field(default=None, kw_only=True)
+    """The click it is built on (``{.build}``, ``{.frag}`` …, E09-S02); None: there from the
+    start."""
 
     @property
     def level(self) -> int:
@@ -100,6 +124,9 @@ class Table:
     title: tuple[Run, ...] | None = None
     highlighted: tuple[bool, ...] = ()
     """Per row: its first cell is ``==marked==`` as a whole, and the row is on the PTA yellow."""
+    click: Click | None = field(default=None, kw_only=True)
+    """The click it is built on (``{.build}``, ``{.frag}`` …, E09-S02); None: there from the
+    start."""
 
     def is_highlighted(self, row: int) -> bool:
         return row < len(self.highlighted) and self.highlighted[row]
@@ -112,6 +139,7 @@ class Table:
             self.has_header,
             self.title if keep_title else None,
             tuple(self.is_highlighted(r) for r in chosen),
+            click=self.click,
         )
 
 
@@ -140,6 +168,9 @@ class Image:
     centre (E15-S04)."""
     round: bool = field(default=False, kw_only=True)
     """``{.round}``: a square around the focus in an ellipse geometry (E15-S04)."""
+    click: Click | None = field(default=None, kw_only=True)
+    """The click it is built on (``{.build}``, ``{.frag}`` …, E09-S02); None: there from the
+    start."""
 
     @property
     def point(self) -> Focus:
@@ -156,10 +187,13 @@ class Code:
     lines: tuple[str, ...]
     spans: tuple[CodeLine, ...] = ()
     """The highlighted spans of each line (E17-S02); empty: in one colour."""
+    click: Click | None = field(default=None, kw_only=True)
+    """The click it is built on (``{.build}``, ``{.frag}`` …, E09-S02); None: there from the
+    start."""
 
     def part(self, start: int, stop: int) -> Code:
         """Lines ``start`` to ``stop`` (for code split over slides)."""
-        return Code(self.lines[start:stop], self.spans[start:stop])
+        return Code(self.lines[start:stop], self.spans[start:stop], click=self.click)
 
 
 @dataclass(frozen=True)
@@ -171,6 +205,9 @@ class Diagram:
     alt: str
     """The info string of its fence, as the group's alternative text."""
     line: int | None = None
+    click: Click | None = field(default=None, kw_only=True)
+    """The click it is built on (``{.build}``, ``{.frag}`` …, E09-S02); None: there from the
+    start."""
 
 
 Visual = Table | Images | Code | Diagram
@@ -187,6 +224,9 @@ class Chart:
 
     graphic: ChartGraphic
     line: int | None = None
+    click: Click | None = field(default=None, kw_only=True)
+    """The click it is built on (``{.build}``, ``{.frag}`` …, E09-S02); None: there from the
+    start."""
 
 
 Item = Paragraph | Table | Images | Code | Diagram | Chart | Separator
@@ -299,6 +339,10 @@ class ChartSlide(Slide):
 # ---------------------------------------------------------------------- flow slides
 
 
+# The flow blocks carry the click they are built on as a whole (E09-S02); a text block has
+# none, its paragraphs carry theirs.
+
+
 @dataclass(frozen=True)
 class TextBlock:
     paragraphs: tuple[Paragraph, ...]
@@ -311,6 +355,7 @@ class CodeLinesBlock:
     lines: tuple[str, ...]
     spans: tuple[CodeLine, ...] = ()
     """As ``Code.spans``."""
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -332,6 +377,9 @@ class ColumnsBlock:
 
     widths: tuple[int, ...]
     columns: tuple[tuple[FlowBlock, ...], ...]
+    click: Click | None = field(default=None, kw_only=True)
+    clicks: tuple[Click | None, ...] = field(default=(), kw_only=True)
+    """``{.build}``: the click of each column."""
 
 
 @dataclass(frozen=True)
@@ -343,6 +391,7 @@ class Card:
     blocks: tuple[FlowBlock, ...]
     icon: str | None = field(default=None, kw_only=True)
     """The icon at the start of the title (E15-S03): the card's figure, drawn above the title."""
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -350,12 +399,14 @@ class CardsBlock:
     """``::: cards``: boxes side by side, up to four to a row."""
 
     cards: tuple[Card, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
 class Row:
     term: tuple[Run, ...]
     description: tuple[Paragraph, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -363,6 +414,7 @@ class RowsBlock:
     """``::: rows``: the term in the left third, its description beside it, a rule above each."""
 
     rows: tuple[Row, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -371,6 +423,7 @@ class PanelBlock:
 
     dark: bool
     blocks: tuple[FlowBlock, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -380,6 +433,7 @@ class CalloutBlock:
 
     important: bool
     blocks: tuple[FlowBlock, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -387,6 +441,7 @@ class StatementBlock:
     """The first paragraph of ``::: statement``, set large."""
 
     text: tuple[Run, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -394,6 +449,7 @@ class TagsBlock:
     """A paragraph of nothing but code spans: chips that flow and wrap."""
 
     tags: tuple[str, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -408,6 +464,7 @@ class LabelledTagsBlock:
     beside it."""
 
     items: tuple[LabelledTag, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -415,6 +472,7 @@ class ConclusionBlock:
     """``::: conclusion``: the PTA conclusion box at the foot of the content area."""
 
     paragraphs: tuple[Paragraph, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -422,6 +480,7 @@ class CommentBlock:
     """``::: comment``: the PTA comment box, a speech bubble on the block before it."""
 
     paragraphs: tuple[Paragraph, ...]
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -430,6 +489,7 @@ class ScheduleBlock:
     place on the slide, as high as its content."""
 
     schedule: Schedule
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -437,6 +497,7 @@ class StepsBlock:
     """``::: steps`` (E15-S02): a row of chevrons as wide as its place, as a group of shapes."""
 
     steps: Steps
+    click: Click | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -446,6 +507,7 @@ class RiskMatrixBlock:
 
     matrix: RiskMatrix
     legend: Table
+    click: Click | None = field(default=None, kw_only=True)
 
 
 FlowBlock = (

@@ -30,12 +30,14 @@ from pta_documents.generation.pptx.model import (
     Card,
     CardsBlock,
     Chart,
+    Click,
     Code,
     CodeLinesBlock,
     ColumnsBlock,
     CommentBlock,
     ConclusionBlock,
     Diagram,
+    Effect,
     FlowBlock,
     FlowSlide,
     ImageRowBlock,
@@ -155,32 +157,42 @@ class FlowReader:
         return collector.blocks
 
     def walk(self, i: int, target: _Collector) -> None:
+        with self.deck.marked(self.tokens, i):
+            self.read(i, target)
+
+    def read(self, i: int, target: _Collector) -> None:
+        """The block at ``tokens[i]``, its block marker applied (E09-S02): a block carries the
+        click it is built on as a whole, ``deck.current``."""
         tokens = self.tokens
         token = tokens[i]
+        deck = self.deck
         if token.type == CONTAINER_OPEN:
             self.container(i, target)
         elif token.type == "blockquote_open" and ALERT in token.meta:
             important = layout_syntax.is_important(str(token.meta[ALERT]), FORMAT)
+            click = deck.current
             blocks = self.flow(children(tokens, i), in_container=True)
-            target.add(CalloutBlock(important, tuple(blocks)))
+            target.add(CalloutBlock(important, tuple(blocks), click=click))
         elif token.type == "paragraph_open" and (tags := layout_tokens.tags(tokens[i + 1])):
-            target.add(TagsBlock(tuple(tags)))
+            target.add(TagsBlock(tuple(tags), click=deck.current))
         elif (
             token.type in LISTS
             and target.in_container
             and (labelled := layout_tokens.labelled_tags(tokens, i)) is not None
         ):
+            each = deck.take_each()
+            click = deck.next_click(each) if each is not None else deck.current
             tagged = tuple(LabelledTag(label, self.inline_runs(rest)) for label, rest in labelled)
-            target.add(LabelledTagsBlock(tagged))
+            target.add(LabelledTagsBlock(tagged, click=click))
         elif token.type == "table_open":
             items: list[Item] = []
-            self.deck.table(tokens, i, items, labels=True)
+            deck.table(tokens, i, items, labels=True)
             self.items(items, target)
         elif token.type == "hr":
             pass
         else:
             items = []
-            self.deck.block(tokens, i, items, depth=0, italic=False)
+            deck.read_block(tokens, i, items, depth=0, italic=False)
             self.items(items, target)
 
     def items(self, items: list[Item], target: _Collector) -> None:
@@ -193,7 +205,7 @@ class FlowReader:
                 case Images():
                     target.add(ImageRowBlock(item.images))
                 case Code():
-                    target.add(CodeLinesBlock(item.lines, item.spans))
+                    target.add(CodeLinesBlock(item.lines, item.spans, click=item.click))
                 case Diagram():
                     raise layout_syntax.at_line(
                         DocumentConversionError(
@@ -241,22 +253,25 @@ class FlowReader:
         token = tokens[i]
         name, arguments = container(token)
         kids = children(tokens, i)
+        # '{.build}' builds cards, rows and columns one by one: each takes a click of its own.
+        each = self.deck.take_each()
+        click = self.deck.current
         match name:
             case layout_syntax.CARDS:
-                target.add(CardsBlock(tuple(self.cards(i, kids))))
+                target.add(CardsBlock(tuple(self.cards(i, kids, each)), click=click))
             case layout_syntax.ROWS:
-                target.add(RowsBlock(tuple(self.rows(i, kids))))
+                target.add(RowsBlock(tuple(self.rows(i, kids, each)), click=click))
             case layout_syntax.PANEL:
                 blocks = self.flow(kids, in_container=True)
-                target.add(PanelBlock(arguments == "dark", tuple(blocks)))
+                target.add(PanelBlock(arguments == "dark", tuple(blocks), click=click))
             case layout_syntax.COLUMNS:
-                target.add(self.columns(i, kids, arguments))
+                target.add(self.columns(i, kids, arguments, each))
             case layout_syntax.STATEMENT:
                 if not kids or tokens[kids[0]].type != "paragraph_open":
                     raise self.error(
                         "A '::: statement' starts with a paragraph, its statement.", token
                     )
-                target.add(StatementBlock(self.paragraph_runs(kids[0])))
+                target.add(StatementBlock(self.paragraph_runs(kids[0]), click=click))
                 for kid in kids[1:]:
                     self.walk(kid, target)
             case layout_syntax.CONCLUSION:
@@ -268,7 +283,7 @@ class FlowReader:
                     )
                 if self.conclusion is not None:
                     raise self.error("A slide holds one '::: conclusion' at most.", token)
-                self.conclusion = ConclusionBlock(self.text_only(kids, name, token))
+                self.conclusion = ConclusionBlock(self.text_only(kids, name, token), click=click)
             case layout_syntax.COMMENT:
                 paragraphs = self.text_only(kids, name, token)
                 if not target.blocks or isinstance(target.blocks[-1], CommentBlock):
@@ -277,29 +292,36 @@ class FlowReader:
                         "a paragraph, list, table, image or container.",
                         token,
                     )
-                target.add(CommentBlock(paragraphs))
+                target.add(CommentBlock(paragraphs, click=click))
             case layout_syntax.TIMELINE:
                 read = schedule.read_timeline(tokens, i, FORMAT, self.deck.line_offset, self.today)
-                target.add(ScheduleBlock(read))
+                target.add(ScheduleBlock(read, click=click))
             case layout_syntax.GANTT:
                 language = self.deck.options.language
                 read = schedule.read_gantt(
                     tokens, i, FORMAT, self.deck.line_offset, self.today, language
                 )
-                target.add(ScheduleBlock(read))
+                target.add(ScheduleBlock(read, click=click))
             case layout_syntax.STEPS:
-                target.add(StepsBlock(steps.read_steps(tokens, i, FORMAT, self.deck.line_offset)))
+                read_steps = steps.read_steps(tokens, i, FORMAT, self.deck.line_offset)
+                target.add(StepsBlock(read_steps, click=click))
             case layout_syntax.RISK_MATRIX:
                 matrix = risks.read_risk_matrix(tokens, i, FORMAT, self.deck.line_offset)
                 legend = matrix.legend()
                 rows = tuple(tuple((Run(text),) for text in row) for row in legend)
                 table = Table(rows, (Align.DEFAULT,) * len(legend[0]), True)
-                target.add(RiskMatrixBlock(matrix, table))
+                target.add(RiskMatrixBlock(matrix, table, click=click))
             case _:  # pragma: no cover - layout_syntax.check refused it before
                 layout_syntax.check_container(name, arguments, FORMAT)
 
-    def cards(self, i: int, kids: list[int]) -> list[Card]:
-        """A list of ``**Title** – text`` items, or a ``###`` heading before each card's blocks."""
+    def click(self, each: Effect | None) -> Click | None:
+        """The click of the next element of a container built one by one; None: not built
+        so."""
+        return self.deck.next_click(each) if each is not None else None
+
+    def cards(self, i: int, kids: list[int], each: Effect | None = None) -> list[Card]:
+        """A list of ``**Title** – text`` items, or a ``###`` heading before each card's blocks;
+        with ``each``, every card on a click of its own."""
         tokens = self.tokens
         if len(kids) == 1 and tokens[kids[0]].type in LISTS:
             cards: list[Card] = []
@@ -310,11 +332,13 @@ class FlowReader:
                     if first and tokens[first[0]].type == "paragraph_open"
                     else None
                 )
-                title, rest, others = self.item(item, layout_syntax.CARDS)
-                body = self.flow(others, in_container=True)
-                if rest:
-                    body.insert(0, TextBlock((Paragraph(rest),)))
-                cards.append(Card(title, None, tuple(body), icon=icon))
+                click = self.click(each)
+                with self.deck.at(click):
+                    title, rest, others = self.item(item, layout_syntax.CARDS)
+                    body = self.flow(others, in_container=True)
+                    if rest:
+                        body.insert(0, TextBlock((Paragraph(rest, click=self.deck.current),)))
+                cards.append(Card(title, None, tuple(body), icon=icon, click=click))
             return cards
 
         cards = []
@@ -341,9 +365,11 @@ class FlowReader:
                     "below it, not both.",
                     tokens[heading],
                 )
-            body = self.flow(rest, in_container=True)
+            click = self.click(each)
+            with self.deck.at(click):
+                body = self.flow(rest, in_container=True)
             title = self.deck.text_runs(icons.without_leading(inline))
-            cards.append(Card(title, figure, tuple(body), icon=icon))
+            cards.append(Card(title, figure, tuple(body), icon=icon, click=click))
 
         for kid in kids:
             token = tokens[kid]
@@ -364,7 +390,7 @@ class FlowReader:
             raise self.error("A '::: cards' holds no cards.", tokens[i])
         return cards
 
-    def rows(self, i: int, kids: list[int]) -> list[Row]:
+    def rows(self, i: int, kids: list[int], each: Effect | None = None) -> list[Row]:
         tokens = self.tokens
         if len(kids) != 1 or tokens[kids[0]].type not in LISTS:
             raise self.error(
@@ -372,13 +398,15 @@ class FlowReader:
             )
         rows: list[Row] = []
         for item in children(tokens, kids[0]):
-            term, rest, others = self.item(item, layout_syntax.ROWS)
-            description: list[Paragraph] = [Paragraph(rest)] if rest else []
-            for block in self.flow(others, in_container=True):
-                if not isinstance(block, TextBlock):
-                    raise self.error("The items of '::: rows' hold text only.", tokens[item])
-                description.extend(block.paragraphs)
-            rows.append(Row(term, tuple(description)))
+            click = self.click(each)
+            with self.deck.at(click):
+                term, rest, others = self.item(item, layout_syntax.ROWS)
+                description = [Paragraph(rest, click=self.deck.current)] if rest else []
+                for block in self.flow(others, in_container=True):
+                    if not isinstance(block, TextBlock):
+                        raise self.error("The items of '::: rows' hold text only.", tokens[item])
+                    description.extend(block.paragraphs)
+            rows.append(Row(term, tuple(description), click=click))
         return rows
 
     def item(self, i: int, name: str) -> tuple[tuple[Run, ...], tuple[Run, ...], list[int]]:
@@ -409,8 +437,11 @@ class FlowReader:
             rest[0] = replace(rest[0], text=SEPARATOR.sub("", rest[0].text, count=1))
         return tuple(trim(title)), tuple(trim(rest)), kids[1:]
 
-    def columns(self, i: int, kids: list[int], arguments: str) -> ColumnsBlock:
-        """The parts of ``::: columns``, split at ``---``."""
+    def columns(
+        self, i: int, kids: list[int], arguments: str, each: Effect | None = None
+    ) -> ColumnsBlock:
+        """The parts of ``::: columns``, split at ``---``; with ``each``, every column on a
+        click of its own."""
         tokens = self.tokens
         parts: list[list[int]] = [[]]
         for kid in kids:
@@ -424,8 +455,15 @@ class FlowReader:
             )
         except DocumentConversionError as error:
             raise layout_syntax.at_line(error, self.deck.line(tokens[i])) from None
-        columns = tuple(tuple(self.flow(part, in_container=True)) for part in parts)
-        return ColumnsBlock(tuple(widths), columns)
+        click = self.deck.current
+        columns: list[tuple[FlowBlock, ...]] = []
+        clicks: list[Click | None] = []
+        for part in parts:
+            clicks.append(self.click(each))
+            with self.deck.at(clicks[-1]):
+                columns.append(tuple(self.flow(part, in_container=True)))
+        built = tuple(clicks) if each is not None else ()
+        return ColumnsBlock(tuple(widths), tuple(columns), click=click, clicks=built)
 
 
 def _is_plain(run: Run) -> bool:
