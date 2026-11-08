@@ -13,9 +13,13 @@ of E05-S01 (commit 175e572).
 
 from __future__ import annotations
 
+import io
+from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any, Final
 
 from reportlab.lib.colors import HexColor
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Flowable
 
 from pta_documents.design.fonts import FontFace
@@ -182,3 +186,76 @@ class DrawingFlowable(Flowable):
             writer.setFillColor(_color(color))
             writer.textOut(content)
         canvas.drawText(writer)
+
+
+@dataclass(frozen=True)
+class SceneImage:
+    """A picture of a scene (E09-S04), drawn before the item ``index`` of the drawing: PNG or
+    JPEG ``content`` of ``natural`` pixels, fitted into its box (pixels of the drawing), turned
+    ``rotation`` degrees clockwise about the box's centre."""
+
+    index: int
+    content: bytes
+    natural: tuple[float, float]
+    box: tuple[float, float, float, float]
+    rotation: float = 0.0
+
+
+class SceneFlowable(DrawingFlowable):
+    """A scene's still picture: its drawing with its images among the items, in their order."""
+
+    def __init__(
+        self,
+        drawing: Drawing,
+        images: Sequence[SceneImage],
+        fonts: PdfFonts,
+        scale: float = 1.0,
+        *,
+        space_before: float = 0.0,
+        space_after: float = 0.0,
+        name: str = "",
+    ) -> None:
+        super().__init__(
+            drawing, fonts, scale, space_before=space_before, space_after=space_after, name=name
+        )
+        self.images = tuple(images)
+
+    def draw(self) -> None:
+        canvas: Any = self.canv
+        for index, item in enumerate(self.drawing.items):
+            self._images_at(canvas, index)
+            match item:
+                case DrawingShape():
+                    self._shape(canvas, item)
+                case DrawingText():
+                    self._text(canvas, item)
+                case DrawingHotspot():
+                    pass
+        self._images_at(canvas, len(self.drawing.items))
+
+    def _images_at(self, canvas: Any, index: int) -> None:
+        for image in self.images:
+            if image.index == index:
+                self._image(canvas, image)
+
+    def _image(self, canvas: Any, image: SceneImage) -> None:
+        x, y, w, h = image.box
+        pixels_x, pixels_y = image.natural
+        fit = min(w / pixels_x, h / pixels_y) if pixels_x > 0 and pixels_y > 0 else 0
+        if fit <= 0:
+            return
+        width, height = pixels_x * fit * self.factor, pixels_y * fit * self.factor
+        cx, cy = self.x(x + w / 2), self.y(y + h / 2)
+        canvas.saveState()
+        canvas.translate(cx, cy)
+        if image.rotation:
+            canvas.rotate(-image.rotation)  # clockwise on the page, where y runs up
+        canvas.drawImage(
+            ImageReader(io.BytesIO(image.content)),
+            -width / 2,
+            -height / 2,
+            width,
+            height,
+            mask="auto",
+        )
+        canvas.restoreState()

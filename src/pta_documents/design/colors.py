@@ -67,3 +67,12 @@ def tint(color: str, share: float) -> str:
         raise ValueError(f"share must be between 0 and 1, not {share}")
     channels = (int(color[i : i + 2], 16) for i in (0, 2, 4))
     return "".join(f"{round(255 - (255 - c) * share):02X}" for c in channels)
+
+
+def mix(color: str, share: float, ground: str) -> str:
+    """``color`` at ``share`` (0 … 1) on ``ground``: what a half-transparent colour looks like
+    on it, for outputs without transparency (scenes in the PDF, E09-S04)."""
+    if not 0 <= share <= 1:
+        raise ValueError(f"share must be between 0 and 1, not {share}")
+    pairs = ((int(color[i : i + 2], 16), int(ground[i : i + 2], 16)) for i in (0, 2, 4))
+    return "".join(f"{round(g + (c - g) * share):02X}" for c, g in pairs)

@@ -101,7 +101,8 @@ def shape_id(element: etree._Element) -> int | None:
 
 def target_of(element: etree._Element) -> Target:
     if element.tag == p("sp"):
-        return Target.TEXT
+        # A shape without a text body (a line of a scene, E09-S04) is no text to list.
+        return Target.TEXT if element.find(p("txBody")) is not None else Target.OTHER
     if element.tag == p("graphicFrame"):
         return Target.GRAPHIC
     return Target.OTHER

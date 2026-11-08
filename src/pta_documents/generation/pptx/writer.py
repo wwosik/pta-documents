@@ -30,6 +30,7 @@ from pta_documents.generation.pptx import (
     fitting,
     flow,
     kinds,
+    scene_writer,
     visuals,
 )
 from pta_documents.generation.pptx import notes as speaker_notes
@@ -53,6 +54,7 @@ from pta_documents.generation.pptx.model import (
     Paragraph,
     QuoteSlide,
     Run,
+    SceneSlide,
     Slide,
     Table,
     TitleSlide,
@@ -158,6 +160,8 @@ class DeckWriter:
                 self.layout_slide(slide)
             case FlowSlide():
                 flow.write_flow_slide(self, slide)
+            case SceneSlide():
+                scene_writer.write_scene_slide(self, slide)
             case AgendaSlide():
                 kinds.write_agenda(self, slide)
             case InterimSlide():

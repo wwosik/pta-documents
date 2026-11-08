@@ -45,6 +45,7 @@ from pta_documents.generation.pptx.model import (
     RiskMatrixBlock,
     RowsBlock,
     Run,
+    SceneSlide,
     ScheduleBlock,
     StatementBlock,
     StepsBlock,
@@ -863,7 +864,7 @@ def write_flow_slide(deck: DeckWriter, slide: FlowSlide) -> None:
         deck.note_split(slide, len(parts))
     color = colors.WHITE if slide.dark else None
     for n, (blocks, part_step) in enumerate(parts):
-        target = _headed_slide(deck, slide, design.LAYOUTS.title_only, n)
+        target = headed_slide(deck, slide, design.LAYOUTS.title_only, n)
         FlowWriter(deck, target).stack(blocks, area, Look(slide.dark, steps[part_step]))
         if slide.conclusion is not None and conclusion_pt is not None and n == len(parts) - 1:
             with deck.at(target, slide.conclusion.click):
@@ -871,8 +872,11 @@ def write_flow_slide(deck: DeckWriter, slide: FlowSlide) -> None:
         deck.finish(target, footer=True, color=color)
 
 
-def _headed_slide(deck: DeckWriter, slide: FlowSlide, layout: str, part: int) -> PptxSlide:
-    """A new slide with its title (and kicker); dark: on the background of the title slide."""
+def headed_slide(
+    deck: DeckWriter, slide: FlowSlide | SceneSlide, layout: str, part: int
+) -> PptxSlide:
+    """A new slide with its title (and kicker); dark: on the background of the title slide
+    (flow slides, scene slides of E09-S04)."""
     target = deck.new_slide(layout, slide)
     color = colors.WHITE if slide.dark else None
     if slide.dark:
@@ -948,7 +952,7 @@ def _two_columns(deck: DeckWriter, slide: FlowSlide) -> bool:
         if scale is None:
             return False
         scales.append(scale)
-    target = _headed_slide(deck, slide, layout_name, 0)
+    target = headed_slide(deck, slide, layout_name, 0)
     for idx, text in zip((ph.body, ph.second_body), texts, strict=True):
         deck.set_paragraphs(target, idx, text, min(scales))
     deck.finish(target, footer=True)

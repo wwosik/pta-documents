@@ -21,6 +21,10 @@ from pta_documents.markdown.mark import mark_plugin
 CONTAINER_OPEN: Final = "container_layout_open"
 """The token type of a ``::: name arguments`` fence; ``container(token)`` reads both."""
 CONTAINER_CLOSE: Final = "container_layout_close"
+SOURCE_LINES: Final = "source_lines"
+"""The key in ``CONTAINER_OPEN.meta`` of the container's lines as written, between its fences
+(a tuple of strings; the closing fence not included): for containers whose content is no
+Markdown, such as ``::: scene`` (E09-S04)."""
 ALERT: Final = "alert"
 """The key in ``blockquote_open.meta`` of a GitHub alert (``> [!NOTE]``): its kind, upper case."""
 
@@ -41,6 +45,7 @@ def create_parser() -> MarkdownIt:
     first paragraph starts with a line ``[!KIND]``: the line is removed and the kind is in
     ``blockquote_open.meta[ALERT]``. A line of only ``{.build}`` (or ``{.frag}``, ``{.exit}``,
     ``{.emphasize}``) is taken out and marks the block after it (``block_markers``, E09-S02).
+    Every container keeps its lines as written in ``meta[SOURCE_LINES]`` (E09-S04).
     """
     parser = MarkdownIt("commonmark", {"html": True, "linkify": False, "typographer": False})
     parser.enable(["table", "strikethrough"])
@@ -49,6 +54,7 @@ def create_parser() -> MarkdownIt:
     parser.use(icon_plugin).use(image_attributes_plugin)
     parser.core.ruler.before("inline", "alerts", _alerts)
     parser.core.ruler.after("alerts", "block_markers", block_markers_rule)
+    parser.core.ruler.after("block_markers", "container_sources", _container_sources)
     return parser
 
 
@@ -61,6 +67,14 @@ def container(token: Token) -> tuple[str, str]:
 
 def _any_name(params: str, *_: object) -> bool:
     return bool(params.strip())
+
+
+def _container_sources(state: StateCore) -> None:
+    lines = state.src.split("\n")
+    for token in state.tokens:
+        if token.type == CONTAINER_OPEN and token.map is not None:
+            start, end = token.map
+            token.meta[SOURCE_LINES] = tuple(line.rstrip("\r") for line in lines[start + 1 : end])
 
 
 def _alerts(state: StateCore) -> None:

@@ -301,9 +301,12 @@ def required(format: DocumentFormat) -> set[str]:
         result.add(f"front matter: {Keys.STATUS_PREFIX}{category.value}")
         result.add(f"status label: {Keys.STATUS_PREFIX}{category.value}")
         result.add(f"[words]{{.{category.value}}}")
-    # Word leaves speaker notes out with a note, and the samples generate without notes.
+    # Word leaves speaker notes and scenes (E09-S04) out with a note, and the samples generate
+    # without notes.
     containers = [
-        name for name in layout_syntax.CONTAINER_NAMES if format is PPTX or name != "notes"
+        name
+        for name in layout_syntax.CONTAINER_NAMES
+        if format is PPTX or name not in (layout_syntax.NOTES, layout_syntax.SCENE)
     ]
     result |= {f"::: {name}" for name in containers}
     # The arguments ``check_container`` accepts.

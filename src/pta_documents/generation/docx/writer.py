@@ -317,6 +317,14 @@ class BodyWriter:
                 "notes pages of the PowerPoint deck.",
             )
             return end
+        if name == layout_syntax.SCENE:
+            self.notes.add(
+                NoteCodes.SCENE_DROPPED,
+                self.line(tokens[i]),
+                "The scene (::: scene) is left out of the Word document; it shows on the slides "
+                "of the PowerPoint deck and as a picture in the PDF.",
+            )
+            return end
         if name == layout_syntax.TIMELINE:
             offset = self.front.body_line
             self.timeline(schedule.read_timeline(tokens, i, FORMAT, offset, self.today), tokens[i])

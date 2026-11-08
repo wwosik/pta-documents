@@ -19,6 +19,7 @@ from pta_documents.generation.common import (
     heading_attributes,
     icons,
     risks,
+    scene,
     schedule,
     steps,
 )
@@ -46,6 +47,9 @@ STEPS: Final = "steps"
 RISK_MATRIX: Final = "riskmatrix"
 """A 5 × 5 risk matrix with a legend from a table of risks (E15-S02); takes ``green=4
 yellow=12``."""
+SCENE: Final = scene.SCENE
+"""Named shapes on the grid of a slide, which Morph moves (E09-S04): only under a ``##``, alone
+with its notes; a still picture in the PDF, left out of Word."""
 
 CONTAINER_NAMES: Final = (
     CARDS,
@@ -60,6 +64,7 @@ CONTAINER_NAMES: Final = (
     GANTT,
     STEPS,
     RISK_MATRIX,
+    SCENE,
 )
 CONTAINERS: Final = ", ".join(CONTAINER_NAMES)
 """The containers, for error messages."""
@@ -201,7 +206,8 @@ def check(
     first ``#``/``##`` heading has no slide to belong to. Timelines and Gantt charts are read
     (``schedule``), ``heute`` in them is ``today`` (default: the day of generating), steps and
     risk matrices too (``steps``, ``risks``). Icons must be bundled ones (``icons.check``).
-    Block markers (``{.build}`` …, E09-S02) must be known ones before a block.
+    Block markers (``{.build}`` …, E09-S02) must be known ones before a block. A scene must
+    stand alone under a ``##`` and its shapes be right (``scene``, E09-S04).
     """
     day = schedule.reference_day(today)
     headed = False
@@ -235,6 +241,9 @@ def check(
             steps.read_steps(tokens, i, format, line_offset)
         elif token.type == CONTAINER_OPEN and container(token)[0] == RISK_MATRIX:
             risks.read_risk_matrix(tokens, i, format, line_offset)
+        elif token.type == CONTAINER_OPEN and container(token)[0] == SCENE:
+            scene.check_place(tokens, i, format, line_offset)
+            scene.read_scene(tokens, i, format, line_offset)
         if token.type == "inline":
             heading_level = (
                 int(tokens[i - 1].tag[1])

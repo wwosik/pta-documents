@@ -12,6 +12,7 @@ from pta_documents.generation.common.code_highlight import CodeLine
 from pta_documents.generation.common.image_attributes import CENTER, Focus
 from pta_documents.generation.common.renderers import ChartGraphic
 from pta_documents.generation.common.risks import RiskMatrix
+from pta_documents.generation.common.scene import Scene
 from pta_documents.generation.common.schedule import Schedule
 from pta_documents.generation.common.slide_transition import SlideTransition
 from pta_documents.generation.common.steps import Steps
@@ -542,6 +543,17 @@ class FlowSlide(Slide):
     dark: bool = False
     blocks: tuple[FlowBlock, ...] = ()
     conclusion: ConclusionBlock | None = None
+
+
+@dataclass(frozen=True)
+class SceneSlide(Slide):
+    """A ``##`` section with a ``::: scene`` (E09-S04): its named shapes on ``Nur Titel``, each
+    image with its picture in a format slides take (``images``, by the index of its shape)."""
+
+    kicker: str | None = None
+    dark: bool = False
+    scene: Scene = field(default_factory=lambda: Scene(()))
+    images: tuple[tuple[int, Image], ...] = ()
 
 
 def plain_text(runs: tuple[Run, ...]) -> str:
