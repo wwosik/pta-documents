@@ -280,7 +280,14 @@ class StoryBuilder:
         level_format = self.styles.design.level(self.styles.format(style.style.name))
         text = _plain_text(inline)
         outline_level = min(level - 1, (self.outline[-1].level + 1) if self.outline else 0)
-        outline = fl.Outline(f"{number} {text}".strip(), outline_level)
+        outline = fl.Outline(
+            f"{number} {text}".strip(),
+            outline_level,
+            heading=level,
+            number=number,
+            text=text,
+            anchor=anchor,
+        )
         self.outline.append(outline)
         number_color = style.style.textColor
         if level_format is not None and level_format.color is not None:

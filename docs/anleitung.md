@@ -6,8 +6,9 @@ PTA-Vorlagen** — mit Deckblatt, Logo, Kopf- und Fußzeile, PTA-Formatvorlagen 
 Umgekehrt macht es aus vorhandenen Word- und PowerPoint-Dateien Markdown.
 
 PDF gibt es als Vorstufe: `./run.sh generate bericht.md --pdf` schreibt ein PDF/A in den
-Formatvorlagen der PTA-Word-Vorlage, aber noch ohne Deckblatt, Kopf- und Fußzeile; Diagramme,
-Charts, Zeitstrahl, Gantt, Schrittfolge und Risikomatrix zeigt es noch als Quelltext bzw. Liste.
+Formatvorlagen der PTA-Word-Vorlage, mit Deckblatt, Inhaltsverzeichnis, Kopf- und Fußzeile wie
+in Word; Diagramme, Charts, Zeitstrahl, Gantt, Schrittfolge und Risikomatrix zeigt es noch als
+Quelltext bzw. Liste.
 
 ## 1. Einmal einrichten
 

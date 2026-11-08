@@ -25,6 +25,7 @@ from pta_documents.generation.pdf import PdfGenerator, PdfOptions
 from pta_documents.generation.pdf.metadata import PRODUCER
 from pta_documents.generation.pdf.pdfa import PRINT_FLAG, srgb_profile
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
+from tests.generation.pdf.support import body_texts
 
 CREATED: Final = dt.datetime(2026, 11, 8, 12, 30, tzinfo=dt.UTC)
 OPTIONS: Final = PdfOptions(created=CREATED, system_fonts=False)
@@ -91,8 +92,7 @@ def sample() -> bytes:
 
 
 def text_of(data: bytes) -> list[str]:
-    with pdfplumber.open(io.BytesIO(data)) as pdf:
-        return [page.extract_text() or "" for page in pdf.pages]
+    return body_texts(data)
 
 
 def font_dictionaries(pdf: pikepdf.Pdf) -> list[pikepdf.Dictionary]:

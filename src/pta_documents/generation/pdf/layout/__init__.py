@@ -1,7 +1,7 @@
 """The PDF layout engine (E05-S02): Markdown tokens → pages in the PTA Word design.
 
-Port of DocLibs ``MarkdownParser`` and ``LayoutEngine`` onto reportlab's platypus. The PDF
-generator (``generator.PdfGenerator``) calls ``layout``::
+Port of DocLibs ``MarkdownParser`` and ``LayoutEngine`` onto reportlab's platypus. Without a page
+frame (header, footer, cover) the body is laid out with ``layout``::
 
     tokens = create_parser().parse(front.body)
     layout_syntax.check(tokens, DocumentFormat.PDF, front.body_line, today)
@@ -12,7 +12,9 @@ generator (``generator.PdfGenerator``) calls ``layout``::
     output.write(to_pdfa(pdf.content, info))
 
 ``build_story`` and ``render`` are the two halves of ``layout`` for callers that add flowables
-of their own (cover, table of contents: E05-S03). Needs the extra ``pdf`` (reportlab, fontTools).
+of their own: the PDF generator goes through ``generation.pdf.frame.lay_out`` (E05-S03), which
+puts cover and table of contents before the story and draws header and footer. Needs the
+extra ``pdf`` (reportlab, fontTools).
 """
 
 from __future__ import annotations

@@ -71,6 +71,8 @@ SUBTITLE_PLACEHOLDER: Final = "Untertitel des Dokuments"
 DATE_PLACEHOLDER: Final = "xx.xx.xxxx"
 AS_OF_LABEL: Final = "Stand:"
 PAGE_LABEL: Final = "Seite"
+COMPANY_PLACEHOLDER: Final = "PTA IT-Beratung"
+"""The company in the footer of the templates; ``firma:`` replaces it."""
 TOC_FIELD: Final = 'TOC \\o "1-2" \\h \\z \\u'
 
 

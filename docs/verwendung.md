@@ -5,8 +5,9 @@ PowerPoint → Markdown; seit E06-S01 native Diagramme aus `chart`-Blöcken in b
 seit E06-S02 Finanzdiagramme (`financial-chart`) als Formengruppe in PowerPoint und als SVG,
 seit E06-S03 Mermaid-Diagramme (`mermaid`, über mermaid-cli) als Formengruppe in PowerPoint,
 seit E03-S04 beide auch in Word als Abbildung (SVG mit PNG-Ersatz). Seit E05-S01/E05-S02 der
-PDF-Generator (PDF/A-2b im Design der Word-Vorlage, noch ohne Deckblatt, Kopf- und Fußzeile,
-siehe [Markdown → PDF](#markdown--pdf-e05-s01-e05-s02)).
+PDF-Generator (PDF/A-2b im Design der Word-Vorlage, siehe
+[Markdown → PDF](#markdown--pdf-e05-s01-e05-s02)), seit E05-S03 mit Deckblatt,
+Inhaltsverzeichnis, Kopf- und Fußzeile ([PTA-Seitenrahmen](#pta-seitenrahmen-im-pdf-e05-s03)).
 
 ## Einrichten
 
@@ -85,8 +86,9 @@ print(result.pages, result)
 - **Stand:** Das Ergebnis ist ein PDF/A-2b mit eingebetteten Schriften und Metadaten. Den Rumpf
   setzt die [Layout-Engine](#pdf-layout-engine-e05-s02) in den Formatvorlagen und auf dem
   Satzspiegel der gewählten Word-Vorlage (Nummerierung, Listen, Tabellen, Bilder, QR-Codes, Code
-  mit Hervorhebung, Hinweis-Boxen, Fußnoten, Lesezeichen, Links, Seitenumbruchregeln).
-  Deckblatt, Inhaltsverzeichnis, Kopf- und Fußzeile kommen mit E05-S03. Charts, Zeichnungen
+  mit Hervorhebung, Hinweis-Boxen, Fußnoten, Lesezeichen, Links, Seitenumbruchregeln), im
+  [PTA-Seitenrahmen](#pta-seitenrahmen-im-pdf-e05-s03) mit Deckblatt, Inhaltsverzeichnis, Kopf-
+  und Fußzeile (seit E05-S03). Charts, Zeichnungen
   (Mermaid, Finanzdiagramme), `::: timeline`, `::: gantt`, `::: steps` und `::: riskmatrix`
   zeichnet das PDF noch nicht (E05-S04): Codeblöcke bleiben Code, die Container zeigen ihren
   Inhalt (Liste, Überschriften bzw. Tabelle), jeweils mit dem Hinweis `code-not-drawn`. Harvey
@@ -95,8 +97,9 @@ print(result.pages, result)
   Deckblatt brauchen wie in Word einen `titel`), `titel`, `untertitel`, `autor`, `ort`, `datum`
   (auch „heute" in Zeitstrahl und Gantt), `firma`, `sprache`, `typografie`,
   `syntaxhervorhebung`, `inhaltsverzeichnis`, `pruefung`, `status.<kategorie>`. Titel und Autor
-  fallen auf `document.metadata` zurück. `firma` und `inhaltsverzeichnis` wirken erst mit
-  E05-S03. Präsentationen (`fusszeile` u. a.) gibt es nicht als PDF.
+  fallen auf `document.metadata` zurück. `firma` ersetzt „PTA IT-Beratung" in der Fußzeile,
+  `inhaltsverzeichnis: ja` setzt ein Verzeichnis mit Seitenzahlen nach dem Deckblatt.
+  Präsentationen (`fusszeile` u. a.) gibt es nicht als PDF.
 - **`PdfOptions`:** `variant`, `language`, `typography`, `highlight`, `date`, `company`, `toc`
   wie `DocxOptions`; `created` (Zeitstempel der Metadaten, sonst jetzt in UTC — gleiche Eingabe
   und gleiches `created` ergeben byte-gleiche Dateien); `system_fonts` (Standard `True`: Segoe UI
@@ -115,7 +118,8 @@ print(result.pages, result)
   `/ID` aus dem Inhalt; unverschlüsselt. Geprüft wird der Aufbau mit pikepdf; veraPDF
   (`verapdf --flavour 2b`) prüft ein Test nur, wenn `verapdf` im `PATH` liegt.
 - **Aufbau** (`generation/pdf/`): `generator.py` (Front Matter, Parser, `layout_syntax.check`,
-  QR-Codes, Typografie, Schriften, dann `layout.layout` und `pdfa.to_pdfa`), `options.py`
+  QR-Codes, Typografie, Schriften, dann `frame.lay_out` und `pdfa.to_pdfa`), `frame.py`
+  (Seitenrahmen, E05-S03), `options.py`
   (`PdfOptions`), `layout/` (die Layout-Engine, siehe unten), `pdfa.py` (`to_pdfa(data, info)`,
   pikepdf), `metadata.py` (`PdfInfo`: Titel, Autor, Betreff, Sprache, Zeitstempel — dieselbe
   Klasse für reportlab und den PDF/A-Schritt).
@@ -770,12 +774,57 @@ page_count)`.
   Leerzeichen bzw. Bindestrich (`truetype.with_aliases`); Kursiv ist eine schräggestellte Kopie
   (`truetype.slanted`, 12°). Zeilenhöhe „einfach" = Windows-Ascent + -Descent der Schrift wie
   in Word.
-- **Noch nicht** (spätere Stories): Deckblatt, Kopf-/Fußzeile, Inhaltsverzeichnis (E05-S03),
+- **Seitenrahmen:** Deckblatt, Kopf-/Fußzeile und Inhaltsverzeichnis setzt `frame.lay_out`
+  (E05-S03, unten) um die Engine herum; `render(…, first_top_pt=…)` lässt die erste Seite tiefer
+  beginnen, `RenderedPdf.heading_pages` nennt die Seite jeder Überschrift 1–3 (nach Anker).
+- **Noch nicht** (spätere Stories):
   Ersetzen fehlender Zeichen (bis dahin `?`), Folien-Syntax als Boxen und Spalten, Charts,
   Zeichnungen, Zeitstrahl, Gantt, Schrittfolge und Risikomatrix (E05-S04; bis dahin bleibt ein
   `chart`/`mermaid`-Block Code und ein `::: timeline`/`gantt`/`steps`/`riskmatrix` zeigt seinen
   Inhalt, beide mit Hinweis `code-not-drawn`),
   Silbentrennung.
+
+## PTA-Seitenrahmen im PDF (E05-S03)
+
+Was in Word um den Text jeder Seite steht, zeichnet der PDF-Generator nach der gewählten Vorlage
+(`vorlage`): `hoch`, `hoch-ohne-deckblatt`, `quer`, `quer-ohne-deckblatt`.
+
+- **Werte aus der Vorlage:** `pta_documents.design.word_frame.read(variante)` liest aus
+  `word/header*.xml`, `word/footer*.xml` und dem `w:sectPr` des Rumpfs, was Word zeigt:
+  `PageFrame(page, other, first)` mit je einem `PageKind(header, footer)` für die erste Seite
+  (nur mit `w:titlePg`, also `hoch` und `quer`) und alle anderen. Ein `Band` enthält die Blöcke
+  (`FrameTable` mit Zeilen und Zellen, `FrameParagraph` mit Formatvorlage, direkter Formatierung
+  und Feld `FrameField`: Titel, Untertitel, Firma, Stand, Seite), das Logo (`Box` aus dem
+  `wp:anchor` der Grafik) und die Linien (`FrameRule` mit Verlauf aus `a:gradFill`, Strich aus
+  `a:lnRef` des Themes). Positionen in Punkt ab der linken oberen Ecke. Welches Feld ein Absatz
+  ist, sagt der Platzhaltertext der Vorlage („Titel des Dokuments", „PTA IT-Beratung", „Stand:",
+  `PAGE`). `body_top(frame, seite, zeilenfaktor)` ist, wo der Text einer Seite beginnt: am
+  oberen Rand, oder tiefer, wenn die Kopfzeile darüber hinausreicht — so setzt Word das
+  Deckblatt (`hoch` 8,50 cm, `quer` 6,79 cm).
+- **Kopfzeile** (jede Seite außer dem Deckblatt): Titel fett in PTA-Blau und darunter der
+  Untertitel in „Kopfzeile" 10 pt, senkrecht mittig in der Kopfzeilentabelle (11,5 bzw.
+  17,5 cm); was nicht hineinpasst, endet mit „…". Ohne `untertitel` steht der Titel allein (der
+  DOCX-Generator löscht den Absatz ebenso). Logo oben rechts (Hoch 2,22 × 1,28 cm, Quer 3,01 ×
+  1,73 cm) als Vektorgrafik (`design.logos`, Logo `WORD`), einmal als Form-XObject eingebettet
+  und auf jeder Seite verwendet; Verlaufslinie PTA-Blau → Hellblau (53 %) → transparent, das
+  transparente Ende gegen Weiß gemischt.
+- **Fußzeile:** Verlaufslinie, darunter die Zellen der Fußzeilentabelle in 6,5 pt — „PTA
+  IT-Beratung" (`firma`) fett in PTA-Blau, „Stand: TT.MM.JJJJ" (`datum`, sonst der Tag von
+  `PdfOptions.created`, sonst heute), „Seite n | m" fett in PTA-Blau; `n` und `m` zählen jede
+  Seite, das Deckblatt eingeschlossen (wie `PAGE`/`NUMPAGES` in Word). Mit `sprache: en`
+  „As of:" und „Page". Die Fußzeile endet im Fußzeilenabstand über dem unteren Seitenrand.
+- **Deckblatt** (`hoch`, `quer`): auf Seite 1 nur Logo und Linie (Quer: bei 6,00 cm), keine
+  Fußzeile; „Titel" 34 pt fett PTA-Blau, „Untertitel" 22 pt, „Autor" 14 pt mit „Autor, Ort,
+  Datum" (jedes nur, wenn angegeben), dann Seitenwechsel — wie `write_cover` im DOCX.
+- **Inhaltsverzeichnis** (`inhaltsverzeichnis: ja`): nach dem Deckblatt (ohne Deckblatt am
+  Anfang) „Inhalt" in „Zwischenüberschrift", dann Überschrift 1 und 2 (wie `TOC \o "1-2"`) in
+  „Verzeichnis 1/2": Nummer im hängenden Einzug, Text, Seitenzahl rechtsbündig, Ebene 2 mit
+  Punkten davor; jeder Eintrag verlinkt die Überschrift. Danach Seitenwechsel.
+- **Ablauf:** `frame.lay_out(tokens, dokument, LayoutSettings, FrameInfo, notes, PdfInfo)` setzt
+  Deckblatt und Verzeichnis vor die Story der Engine und rendert, bis Seitenzahl und Seiten der
+  Überschriften stabil sind (meist zwei Durchgänge, höchstens `MAX_PASSES`); `PageDecorator`
+  zeichnet Kopf und Fuß jeder Seite (`decorate`). `FrameInfo` trägt Titel, Untertitel, Autor,
+  Ort, Datum, Stand, Firma und `toc`.
 
 ## Zeichenmodell und SVG (E02-S03)
 

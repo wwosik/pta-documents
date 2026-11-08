@@ -2,8 +2,9 @@
 
 The steps: front matter (the keys of the DOCX generator), parsing, ``layout_syntax.check``,
 generated images (QR codes) and the typography, the fonts (``design.fonts.resolve``), the
-layout engine of E05-S02 (``layout.layout``: reportlab platypus on the styles and the type area
-of the PTA Word template) and PDF/A-2b with pikepdf (``pdfa.to_pdfa``).
+layout engine of E05-S02 in the page frame of E05-S03 (``frame.lay_out``: reportlab platypus on
+the styles and the type area of the PTA Word template, with cover, table of contents, header and
+footer) and PDF/A-2b with pikepdf (``pdfa.to_pdfa``).
 """
 
 from __future__ import annotations
@@ -18,7 +19,8 @@ from pta_documents.design.variants import Language, WordVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import generated_images, layout_syntax, schedule
 from pta_documents.generation.common.result import GenerationResult, Notes
-from pta_documents.generation.pdf.layout import LayoutSettings, layout
+from pta_documents.generation.pdf.frame import FrameInfo, lay_out
+from pta_documents.generation.pdf.layout import LayoutSettings
 from pta_documents.generation.pdf.layout.fonts import ALIASES
 from pta_documents.generation.pdf.metadata import PdfInfo
 from pta_documents.generation.pdf.options import PdfOptions
@@ -102,14 +104,26 @@ class PdfGenerator:
             line_offset=front.body_line,
             status_labels=labels,
         )
+        subtitle = front.get(Keys.SUBTITLE)
         info = PdfInfo(
             title=title,
             author=author,
-            subject=front.get(Keys.SUBTITLE),
+            subject=subtitle,
             language=options.language,
             created=options.created or dt.datetime.now(dt.UTC),
         )
-        pdf = layout(tokens, document, settings, notes, info)
+        frame_info = FrameInfo(
+            title=title,
+            subtitle=subtitle,
+            author=author,
+            location=front.get(Keys.LOCATION),
+            date=options.date,
+            # „Stand:" is ``datum`` or the day of creation (Word: the day of generation).
+            as_of=options.date or (options.created.date() if options.created else dt.date.today()),
+            company=options.company,
+            toc=options.toc,
+        )
+        pdf = lay_out(tokens, document, settings, frame_info, notes, info)
         output.write(to_pdfa(pdf.content, info))
         return GenerationResult(notes.to_tuple(), pages=pdf.pages)
 
