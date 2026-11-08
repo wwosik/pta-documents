@@ -59,6 +59,13 @@ class GeneratedTexts:
     confidential: str = ""
     internal: str = ""
     draft: str = ""
+    key_hint: str = ""
+    """The keys of an HTML deck (E10-S01), shown until the first slide change."""
+    notes_title: str = ""
+    """The heading of the notes panel of an HTML deck; ``{0}`` is the slide number."""
+    slide_announcement: str = ""
+    """What a screen reader hears on a slide change of an HTML deck; ``{0}`` is the slide
+    number, ``{1}`` the count."""
 
     def marking(self, marking: Marking) -> str:
         """The text of the sticker or the marking (``kennzeichnung:``); empty for ``kein``."""
@@ -92,6 +99,9 @@ TEXTS: Final = {
         confidential="VERTRAULICH",
         internal="Für den internen Gebrauch",
         draft="ENTWURF",
+        key_hint="→ / Leertaste weiter · ← zurück · F Vollbild · N Notizen",
+        notes_title="Notizen · Folie {0}",
+        slide_announcement="Folie {0} von {1}",
     ),
     Language.EN: GeneratedTexts(
         page="Page",
@@ -110,6 +120,9 @@ TEXTS: Final = {
         confidential="CONFIDENTIAL",
         internal="For internal use only",
         draft="DRAFT",
+        key_hint="→ / Space next · ← back · F full screen · N notes",
+        notes_title="Notes · Slide {0}",
+        slide_announcement="Slide {0} of {1}",
     ),
 }
 

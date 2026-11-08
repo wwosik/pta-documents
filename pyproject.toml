@@ -32,6 +32,9 @@ svg = ["fonttools>=4.50", "resvg-py>=0.1"]
 # cssselect: BSD-3-Clause; the CSS of mermaid-cli's SVG (E06-S03). mermaid-cli itself is
 # Node.js (MIT), installed repo-locally by ./run.sh setup from tools/mermaid/package.json.
 diagrams = ["cssselect>=1.2"]
+# Playwright: Apache-2.0; opens HTML decks in Chromium for the browser tests (E10-S01) and the
+# preview (E10-S02). Its browser comes with "python -m playwright install chromium".
+preview = ["playwright>=1.40"]
 dev = ["lxml-stubs>=0.5", "pyright>=1.1.380", "pytest>=8.0", "ruff>=0.6"]
 
 [tool.hatch.build.targets.wheel]

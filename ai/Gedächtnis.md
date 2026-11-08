@@ -25,7 +25,8 @@ weil ihm vertraut wird.
   `DocumentFormat`), `markdown/` (Dokumentmodell, Front Matter, Parser), `design/`
   (Designmodell, eingebettete Vorlagen), `drawing/` (Zeichenmodell, SVG aus und nach
   `Drawing`), `diagrams/` (Mermaid), `conversions/`
-  (→ Markdown), `generation/` (`common/`, `docx/`, `pptx/`, `pdf/` seit E05-S01).
+  (→ Markdown), `generation/` (`common/`, `docx/`, `pptx/`, `pdf/` seit E05-S01, `html/` seit
+  E10-S01).
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
   eingebettete Vorlagen. Seit E05-S01/E05-S02 ein PDF-Generator (Rumpf im Word-Design, PDF/A-2b;
@@ -508,3 +509,17 @@ weil ihm vertraut wird.
   Seitenrahmen in `tests/generation/pdf/layout/samples/*.roundtrip.expected.md` (Front Matter mit
   festem `datum`, `code_block_renderers=()`, sonst hängt das Ergebnis von Tag und mmdc ab).
   Ändert der PDF-Generator Layout oder Seitenrahmen, ändern sich diese Rundreisen mit.
+- **HTML-Deck** (E10-S01): `generation/html/` zeichnet nicht aus den Modellen, sondern **die
+  PPTX, die `PptxGenerator` in einen Puffer schreibt** (Teilung passiert im `DeckWriter`, nicht
+  im Parser — ein zweiter Writer hätte Flow, Arten, Fitting doppeln müssen). Folgen: alles, was
+  der PPTX-Writer neu zeichnet (Szenen E09-S04, neue Formen), erscheint im HTML von selbst,
+  solange es Standard-DrawingML ist; neue `prstGeom` in `generation/html/geometry.preset`
+  nachtragen (sonst Rechteck), neue Animationen/Übergänge in `timing.py`. Fehler werden mit
+  Format `html` und gleichem `reason` neu geworfen; die eigenen Schlüssel `fortschritt`/
+  `kapitelanzeige` werden vor dem PPTX-Lauf zu Kommentarzeilen (`# …`), damit Zeilen gleich
+  bleiben — PowerPoint selbst lehnt sie ab. EMF-Logos der Layouts ersetzt `shapes.image_data`
+  durch die SVG-Logos (E01-S04). Eine CSP mit dem SHA-256 von `"\n" + deck.js` erlaubt nur die
+  Laufzeit — wer `deck.js` oder das `<script>`-Gerüst im Writer ändert, ändert den Hash mit
+  (Test). Schnappschuss `tests/generation/html/samples/deck.expected.html` ändert sich bei jeder
+  Änderung an PPTX-Layout oder Writer mit. Playwright ist Extra `preview` (nicht in
+  `./run.sh setup`); `test_browser.py` überspringt ohne. Zum Ansehen: `.tmp/review/*.html`.

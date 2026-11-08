@@ -47,6 +47,11 @@ class Keys:
     TRANSITION: Final = "uebergang"
     """On slides the transition of every slide (E09-S03): ``none`` (the default), ``fade``,
     ``push`` … (``generation.common.slide_transition``)."""
+    PROGRESS: Final = "fortschritt"
+    """Only in the HTML deck (E10-S01): ``ja`` (the default) shows the progress bar."""
+    CHAPTERS: Final = "kapitelanzeige"
+    """Only in the HTML deck (E10-S01): ``ja`` (the default) shows the chapters above the
+    slide, the current one marked."""
     STATUS_PREFIX: Final = "status."
 
 

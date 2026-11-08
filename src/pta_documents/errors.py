@@ -23,6 +23,7 @@ class DocumentFormat(StrEnum):
     TEXT = "text"
     SVG = "svg"
     MARKDOWN = "markdown"
+    HTML = "html"
 
 
 class DocumentConversionError(Exception):

@@ -412,6 +412,73 @@ also vor `p:timing` (Schemareihenfolge, sonst Reparatur).
 
 `none` schreibt nichts. Der PPTX-Konverter liest keine Übergänge.
 
+## Markdown → HTML-Deck (E10-S01)
+
+```python
+from pta_documents.generation.html.generator import HtmlDeckGenerator
+from pta_documents.generation.html.options import HtmlDeckOptions
+
+with open("folien.html", "wb") as output:
+    result = HtmlDeckGenerator().generate(document, output, HtmlDeckOptions())
+```
+
+`./run.sh generate <datei-oder-ordner> --html` schreibt `<name>.html` neben das Markdown (nur
+mit dem Schalter, nie nebenbei). Das HTML-Deck ist eine **Vorschau** der PowerPoint-Präsentation
+im Browser (Entscheidung E10, Frage 2), kein eigenes Zielformat.
+
+**Aufbau.** `HtmlDeckGenerator.generate` liest das Front Matter (`VALID_KEYS` = die des
+PPTX-Generators plus `fortschritt` und `kapitelanzeige`, `Keys.PROGRESS`/`Keys.CHAPTERS`, beide
+`ja`/`nein`, Standard `ja`), lässt dann **`PptxGenerator` das Deck in einen Puffer schreiben**
+(die beiden eigenen Schlüssel als Kommentarzeilen, damit Zeilennummern gleich bleiben) und
+zeichnet dessen Folien mit `HtmlDeckWriter` (`generation/html/writer.py`). Darum hat das
+HTML-Deck dieselben Folien, Titel, Teilungen („(Forts.)"), Fehler und Hinweise wie die PPTX;
+Fehler kommen als `DocumentConversionError` mit Format `html` und dem `reason` der PPTX.
+`GenerationResult` ist das der PPTX. `HtmlDeckOptions` hat die Felder von `PptxOptions` (über
+`slides()` weitergereicht) und `show_progress`, `show_chapters`.
+
+**Zeichnen** (`generation/html/`): `shapes.py` setzt jede Form des Folien-, Layout- und
+Masterbaums absolut auf eine Bühne von 1600 px Breite (1 EMU = 1600 / Folienbreite px, 1 pt =
+1,667 px; Höhe 900 px bei 16:9): Umriss und Füllung als Inline-SVG (`geometry.py`: die
+Voreinstellungen `rect`, `roundRect`, `ellipse`, `line`, `pie`, `chevron`, `homePlate`,
+`triangle`, `wedgeRectCallout` und `a:custGeom`; andere als Rechteck), Text als HTML
+(`text.py`: Vererbung Präsentation → Master-Textstil → Listenstile von Master- und
+Layout-Platzhalter → Form → Absatz → Lauf, `normAutofit` wie PowerPoint, Aufzählungszeichen aus
+Wingdings als Unicode, einfacher Zeilenabstand 1,33 em für Segoe UI/Selawik, 1,17 em für
+Consolas, kein Abstand vor dem ersten Absatz), Bilder als Kasten mit dem Bild als Hintergrund
+(`srcRect` als Ausschnitt, Ellipse rund; `asvg:svgBlip` statt des PNG), Tabellen als
+HTML-Tabelle, native Diagramme als Zeichnung ihrer Daten (`charts.py`: Diagrammteil →
+`ChartSpec` → `charts.drawing.draw` → `to_svg`). Farben aus dem Theme der Vorlage
+(`ooxml.Palette`, mit `clrMap` und `lumMod`/`shade`/`tint`/`alpha`). Die EMF-Logos der Layouts
+zeigt kein Browser: an ihre Stelle tritt das SVG-Logo aus E01-S04 (`Logo.SLIDES`, auf der
+Abschlussfolie `SLIDES_PLAIN`). Jedes Bild steht einmal als CSS-Klasse `imN` mit `data:`-URI im
+Kopf (`ImageStore`).
+
+**Builds und Übergänge** liest `timing.py` aus dem, was der PPTX-Generator schrieb: jede
+Klickgruppe der Hauptsequenz ist ein Schritt (`data-build="n"`, `data-effect` =
+`fade`/`appear`/`fly`/`wipe`/`exit`/`emphasize`, an der Form oder am Absatz), der Übergang aus
+`p:transition` (`data-transition`, `morph` blendet im Browser über). Sprechernotizen stehen
+verborgen in `<aside class="notes">` jeder Folie.
+
+**Seite.** Eine Datei, UTF-8 ohne BOM: Selawik (300/400/700) und Inconsolata (OFL, aus
+`design.fonts`) als `@font-face` mit `data:`-URI — `font-family: "Segoe UI", Selawik,
+sans-serif`, Segoe UI wird nie eingebettet. `runtime/deck.css` und `runtime/deck.js` (Port der
+vt-tools-libs-Laufzeit ohne Szenen) stehen inline; eine Content-Security-Policy
+(`default-src 'none'`, Skript nur mit dem SHA-256 der Laufzeit) lässt kein anderes Skript und
+keinen Abruf zu. Rohes HTML lässt schon der PPTX-Generator weg (Hinweis `raw-html`), Text ist
+escaped, Links nur `http(s):`/`mailto:`, `http(s)` öffnen in neuem Tab. Texte der Laufzeit in
+`design.variants.TEXTS` (`key_hint`, `notes_title`, `slide_announcement`), `lang` aus `sprache`.
+
+**Bedienung:** →/Leertaste/Bild ab/Klick weiter (erst die Schritte, dann die Folie), ←/Bild auf
+zurück, Pos1/Ende, `#12` in der Adresse springt zu Folie 12, Wischen auf Touch-Geräten, `N`
+Notizenpanel mit Uhr, `F` Vollbild, `B` schwarz. Fortschrittsbalken unten, Kapitel (`#`) oben.
+`prefers-reduced-motion` schaltet Übergänge und Aufbauten ab. Drucken (oder „Als PDF
+speichern") ergibt eine Seite je Folie in 16:9, mit allen Aufbauten.
+
+Tests: `tests/generation/html/` (Schnappschuss `samples/deck.expected.html`, Daten-URIs als
+Hash, Schriften und Laufzeit herausgenommen); `test_browser.py` braucht Playwright (Extra
+`preview`, `pip install -e '.[preview]'` und `python -m playwright install chromium`) und wird
+sonst übersprungen.
+
 ## Folien-Syntax (gemeinsam für Word und PowerPoint)
 
 Beide Generatoren lesen und prüfen dieselbe Folien-Syntax aus DocLibs, bevor sie schreiben
@@ -1634,7 +1701,7 @@ ohne Text bleiben leer, OCR gibt es nicht. Jede Seite beginnt mit `## Page n` (e
 `samples/` enthält Beispielinhalte, z. B. `samples/gsb/` (Hauptbeskidenweg, mit CC-Fotos).
 `./run.sh generate-samples [name]` erzeugt daraus DOCX (`*-bericht.md`, `*-dokument.md`) und
 PPTX (`*-praesentation.md`, `*-folien.md`) nach `.tmp/samples/<name>/`. Für beliebige Ordner und
-Dateien gibt es `./run.sh generate <pfad> [--docx|--pptx|--pdf] [--out <ordner>] [--strict]` (siehe
+Dateien gibt es `./run.sh generate <pfad> [--docx|--pptx|--pdf|--html] [--out <ordner>] [--strict]` (siehe
 [anleitung.md](anleitung.md)). Die Beispiele erzeugen ohne Hinweise.
 
 **Funktionsübersicht** (E08-S03): `samples/funktionen/` zeigt jede Funktion; der Word-Bericht

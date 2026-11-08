@@ -74,6 +74,7 @@ YAML, keine Listen). Schlüssel und Werte sind **deutsch**; `ja`/`nein`; Datum `
 | `pruefung` | ✓ | ✓ | nur `check`: `aus` · Liste von `style-…`-Codes, die nicht geprüft werden |
 | `aufbau` | – | ✓ | `listen` (jede Liste Punkt für Punkt) · `nein` (Standard) |
 | `uebergang` | – | ✓ | `none` (Standard) · `fade` · `push`/`wipe` (auch `-left`, `-right`, `-up`, `-down`) · `split` · `cover` · `uncover` · `zoom` · `cut` · `morph` |
+| `fortschritt`, `kapitelanzeige` | – | nur `--html` | `ja` (Standard) · `nein` — nur im HTML-Deck; PowerPoint lehnt sie ab, also **nicht** in eine Präsentation schreiben, die als PPTX erzeugt wird |
 
 `firma`/`inhaltsverzeichnis` in einer Präsentation oder `fusszeile`/`titelfolie` in einem
 Word-Dokument sind Fehler.
@@ -400,6 +401,10 @@ nach den Regeln oben aufbereiten (Front Matter, `#`/`##`-Gliederung) und die Bil
 - [ ] Word: `titel` gesetzt (bei Deckblatt-Vorlagen), Kapitel mit `#`, keine Handnummern.
 - [ ] Präsentation: kein Inhalt unter Kapitel- und Abschluss-`#`, keine „(Forts.)"-Folien, die
       nicht gewollt sind.
+- [ ] Präsentation ansehen, ohne PowerPoint zu haben: `./run.sh generate <datei> --html`
+      schreibt `<name>.html` mit denselben Folien (Anzahl, Titel, Teilung) — im Browser oder
+      mit Playwright als Bild prüfen; die Datei nicht als Ergebnis ausliefern, sie ist nur
+      Vorschau (Weitergabe nur auf Wunsch des Anwenders).
 - [ ] Fremde Bilder: Lizenz und Urheber genannt, `QUELLEN.md` geschrieben.
 - [ ] Dem Anwender die erzeugten Dateien nennen und sagen, dass Word beim Öffnen eines
       Inhaltsverzeichnisses fragt, ob Felder aktualisiert werden sollen („Ja").

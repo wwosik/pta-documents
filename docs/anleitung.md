@@ -11,6 +11,10 @@ in Word; Charts, Mermaid-Diagramme, Zeitstrahl, Schrittfolge und Risikomatrix ze
 scharfe Vektorgrafik, Gantt als Tabelle, Icons wie Word. Ein Zeichen, das der Schrift fehlt
 (etwa ein Emoji oder Griechisch), erscheint als `?` — `check --pdf` nennt es.
 
+Eine Präsentation lässt sich auch **im Browser ansehen**: `./run.sh generate
+folien-praesentation.md --html` schreibt eine einzelne HTML-Datei mit denselben Folien wie die
+PowerPoint-Datei (siehe [Präsentation im Browser](#präsentation-im-browser-ansehen)).
+
 ## 1. Einmal einrichten
 
 Du arbeitest direkt in einem Klon dieses Repos. Voraussetzung ist Python 3.12 oder neuer.
@@ -58,7 +62,9 @@ documents/statusbericht-q3/
 
 Word und PowerPoint entstehen neben den Markdown-Dateien. Die Endung des Dateinamens wählt das
 Format: `…-bericht.md` oder `…-dokument.md` → Word, `…-praesentation.md` oder `…-folien.md` →
-PowerPoint. Andere Namen gehen mit `--docx` bzw. `--pptx`; `--out <ordner>` schreibt woanders hin;
+PowerPoint. Andere Namen gehen mit `--docx` bzw. `--pptx`; `--html` schreibt aus einer
+Präsentation statt der PowerPoint-Datei eine HTML-Datei zum Ansehen im Browser;
+`--out <ordner>` schreibt woanders hin;
 statt eines Ordners kann man auch einzelne Dateien angeben. Bilder werden relativ zur
 Markdown-Datei angegeben: `![Beschreibung](images/foto.jpg "Bildunterschrift")`.
 SVG-Grafiken (`images/plan.svg`) gehen auch: Word und PowerPoint zeigen sie scharf in jeder
@@ -126,6 +132,8 @@ datum: 2026-11-06
 | `pruefung` | ✓ | ✓ | nur für `./run.sh check`: `aus` schaltet die Stilregeln ab, `style-words, style-title` nur diese |
 | `aufbau` | | ✓ | `listen`: jede Liste erscheint beim Vortragen Punkt für Punkt (siehe [Klick für Klick](#klick-für-klick)); `nein` (Standard) |
 | `uebergang` | | ✓ | Übergang jeder Folie: `none` (Standard), `fade`, `push`, `wipe`, `morph` … (siehe [Folienübergänge](#folienübergänge)) |
+| `fortschritt` | | nur HTML | `ja` (Standard) oder `nein`: Fortschrittsbalken unter der Folie im [HTML-Deck](#präsentation-im-browser-ansehen); PowerPoint lehnt den Schlüssel ab |
+| `kapitelanzeige` | | nur HTML | `ja` (Standard) oder `nein`: die Kapitel über der Folie im HTML-Deck, das aktuelle hervorgehoben; PowerPoint lehnt den Schlüssel ab |
 
 Ein falscher Schlüssel oder Wert bricht mit einer Meldung ab, die die gültigen Werte nennt.
 
@@ -606,6 +614,37 @@ Fachbereich, IT und Betrieb
   `rocket`, `target`, `chart-bar`, `currency-euro`, `mail`, `bulb`). Ein Tippfehler meldet die
   ähnlichsten Namen. Die Icons sind [Tabler Icons](https://tabler.io/icons) (MIT-Lizenz) und
   brauchen keinen Eintrag in `QUELLEN.md`.
+
+### Präsentation im Browser ansehen
+
+```sh
+./run.sh generate documents/statusbericht-q3/statusbericht-praesentation.md --html
+```
+
+schreibt `statusbericht-praesentation.html` — **eine** Datei mit denselben Folien wie die
+PowerPoint-Datei: gleiche Anzahl, gleiche Titel, gleiche Teilung, PTA-Layouts, Bilder,
+Diagramme, Notizen, Aufbauten und Übergänge. Sie braucht kein Office und kein Internet;
+doppelklicken öffnet sie im Browser. Sie ist eine **Vorschau**, um ein Deck ohne PowerPoint zu
+prüfen oder schnell zu zeigen — vorgetragen und weitergegeben wird die PowerPoint-Datei.
+
+| Taste | Wirkung |
+| ----- | ------- |
+| → · Leertaste · Bild ab · Klick | weiter (erst die Aufbauten der Folie, dann die nächste Folie) |
+| ← · Bild auf | zurück |
+| Pos1 · Ende | erste · letzte Folie |
+| `N` | Notizen der Folie mit Uhr ein/aus |
+| `F` | Vollbild |
+| `B` | Bild schwarz |
+
+Auf Tablet und Handy wischt man. `#12` am Ende der Adresse öffnet Folie 12. Drucken (oder „Als
+PDF speichern") gibt eine Seite je Folie, mit allem, was sonst erst per Klick erscheint.
+Fortschrittsbalken und Kapitelanzeige schalten `fortschritt: nein` und `kapitelanzeige: nein`
+im Kopf ab — diese beiden Schlüssel kennt nur das HTML-Deck, PowerPoint meldet sie als Fehler.
+
+Unterschiede zu PowerPoint: Ohne Segoe UI (also nicht auf Windows) steht der Text in Selawik,
+das gleich breit ist; der Übergang `morph` blendet nur über; SVG-Bilder zeigen ihre Schrift in
+der Schrift des Browsers. Auf einem PTA-Rechner mit Segoe UI sieht die Folie aus wie in
+PowerPoint.
 
 ## 6. Aus Python aufrufen (optional)
 

@@ -1,12 +1,13 @@
 """Generate PTA documents from Markdown files.
 
-usage: ./run.sh generate <file-or-folder> [...] [--docx | --pptx | --pdf] [--out <folder>]
-                         [--strict]
+usage: ./run.sh generate <file-or-folder> [...] [--docx | --pptx | --pdf | --html]
+                         [--out <folder>] [--strict]
 
 A folder means every ``*.md`` in it. The target format comes from the file name —
 ``…-bericht.md`` / ``…-dokument.md`` → DOCX, ``…-praesentation.md`` / ``…-folien.md`` → PPTX —
 or from ``--docx`` / ``--pptx``; a PDF only with ``--pdf`` (extra ``pdf``; the PDF follows
-the Word templates, ``vorlage:`` as in Word). Images are the image files below the Markdown
+the Word templates, ``vorlage:`` as in Word); an HTML deck only with ``--html`` (the slides of
+the PPTX in one HTML file for the browser, E10-S01). Images are the image files below the Markdown
 file's folder, referenced relative to it (``images/foto.jpg``). The result is written next to
 the Markdown file unless ``--out`` names another folder. Mistakes in a document are reported
 with what to change; the other files are still generated.
@@ -24,6 +25,7 @@ from typing import TYPE_CHECKING
 from pta_documents.errors import DocumentConversionError
 from pta_documents.generation.common.result import GenerationResult
 from pta_documents.generation.docx.generator import DocxGenerator
+from pta_documents.generation.html.generator import HtmlDeckGenerator
 from pta_documents.generation.pptx.generator import PptxGenerator
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
 
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff", ".svg"}
 DOCX_SUFFIXES = ("-bericht", "-dokument")
 PPTX_SUFFIXES = ("-praesentation", "-folien")
-FORMAT_SWITCHES = ("--docx", "--pptx", "--pdf")
+FORMAT_SWITCHES = ("--docx", "--pptx", "--pdf", "--html")
 
 
 def resources(folder: Path) -> list[DocumentResource]:
@@ -56,12 +58,16 @@ def target_format(source: Path, forced: str | None) -> str | None:
     return None
 
 
-def generator_for(format: str) -> DocxGenerator | PptxGenerator | PdfGenerator:
+def generator_for(
+    format: str,
+) -> DocxGenerator | PptxGenerator | HtmlDeckGenerator | PdfGenerator:
     """The generator of ``format``; the PDF one is imported only now (extra ``pdf``)."""
     if format == "docx":
         return DocxGenerator()
     if format == "pptx":
         return PptxGenerator()
+    if format == "html":
+        return HtmlDeckGenerator()
     from pta_documents.generation.pdf import PdfGenerator
 
     return PdfGenerator()
@@ -78,7 +84,7 @@ def generate(source: Path, forced: str | None, out: Path | None, strict: bool = 
     if format is None:
         print(
             f"skipped {source}: name it …-bericht.md or …-praesentation.md, "
-            "or pass --docx / --pptx / --pdf"
+            "or pass --docx / --pptx / --pdf / --html"
         )
         return True
     document = MarkdownDocument(source.read_text(encoding="utf-8"), resources(source.parent))
