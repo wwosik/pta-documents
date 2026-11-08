@@ -27,7 +27,7 @@ from pta_documents.generation.common import (
     layout_syntax,
     layout_tokens,
 )
-from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image
+from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
 from pta_documents.generation.common.renderers import ChartGraphic, ImageGraphic
 from pta_documents.generation.common.result import Notes
 from pta_documents.generation.pptx import flow_parser, kind_parser
@@ -558,13 +558,19 @@ class DeckParser:
         converters = self.options.image_converters
         conversion = convert_image(converters, resource, GENERATOR_SCALE, FORMAT)
         if conversion is None:
-            nobody = ", and no image converter takes it" if converters else ""
+            hint = refusal_hint(resource, converters)
             raise self._error(
                 f"The image '{resource.path}' is a {resource.content_type}; PPTX takes PNG, JPEG, "
-                f"GIF, BMP and TIFF{nobody}",
+                f"GIF, BMP and TIFF{hint}",
                 token,
             )
-        return Image(conversion.image, image.alt, image.line)
+        return Image(
+            conversion.image,
+            image.alt,
+            image.line,
+            natural=(conversion.width, conversion.height),
+            svg=conversion.svg,
+        )
 
     def table(self, tokens: list[Token], i: int, out: list[Item], labels: bool = False) -> int:
         """The table at ``tokens[i]``; with ``labels`` (flow slides), a body cell that is one

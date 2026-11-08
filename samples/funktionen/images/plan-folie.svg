@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="456" height="400" viewBox="0 0 456 400" font-family="Segoe UI, Selawik, sans-serif">
+  <title>Ablauf in drei Schritten</title>
+  <defs>
+    <marker id="pfeil" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#787878"/>
+    </marker>
+  </defs>
+  <rect width="456" height="400" fill="#E6E6E6"/>
+  <text x="228" y="50" font-size="24" font-weight="bold" fill="#404040" text-anchor="middle">Ablauf in drei Schritten</text>
+  <rect x="118" y="80" width="220" height="70" rx="8" fill="#006FB9"/>
+  <rect x="118" y="190" width="220" height="70" rx="8" fill="#004676"/>
+  <rect x="118" y="300" width="220" height="70" rx="8" fill="#9FD8FF"/>
+  <line x1="228" y1="152" x2="228" y2="186" stroke="#787878" stroke-width="3" marker-end="url(#pfeil)"/>
+  <line x1="228" y1="262" x2="228" y2="296" stroke="#787878" stroke-width="3" marker-end="url(#pfeil)"/>
+  <text x="228" y="122" font-size="22" fill="#FFFFFF" text-anchor="middle">Analyse</text>
+  <text x="228" y="232" font-size="22" fill="#FFFFFF" text-anchor="middle">Konzept</text>
+  <text x="228" y="342" font-size="22" fill="#004676" text-anchor="middle">Umsetzung</text>
+</svg>

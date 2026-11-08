@@ -7,6 +7,7 @@ and an image nobody converts stays an error, as without converters.
 
 from __future__ import annotations
 
+import importlib.util
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final, Protocol
@@ -30,16 +31,20 @@ class ConvertedImage:
     """The natural width in pixels: what the image is placed at, before any scaling."""
     height: float
     """The natural height in pixels."""
+    svg: bytes | None = None
+    """The original as a cleaned SVG, for formats that embed it beside the PNG (``asvg:svgBlip``
+    in PowerPoint and Word); None: there is none."""
 
 
 @dataclass(frozen=True, slots=True)
 class Conversion:
-    """What ``convert_image`` returns: the converted image at the original's path and its
-    natural size in pixels (at 96 dpi)."""
+    """What ``convert_image`` returns: the converted image at the original's path, its
+    natural size in pixels (at 96 dpi) and the SVG to embed beside it, if any."""
 
     image: DocumentResource
     width: float
     height: float
+    svg: bytes | None = None
 
 
 class ImageConverter(Protocol):
@@ -60,9 +65,27 @@ class ImageConverter(Protocol):
 
 def default_converters() -> tuple[ImageConverter, ...]:
     """The converters the generators use unless their options say otherwise: every converter of
-    the library that is available. None yet; SVG to PNG (E06-S04) adds itself with the extra
-    ``svg``."""
-    return ()
+    the library that is available — SVG to PNG (``SvgImageConverter``) with the extra ``svg``."""
+    if not svg_available():
+        return ()
+    from pta_documents.svg.image_converter import SvgImageConverter
+
+    return (SvgImageConverter(),)
+
+
+def svg_available() -> bool:
+    """Whether resvg (extra ``svg``) is installed, which SVG to PNG needs."""
+    return importlib.util.find_spec("resvg_py") is not None
+
+
+def refusal_hint(image: DocumentResource, converters: Sequence[ImageConverter]) -> str:
+    """What a generator adds to its error for an image no converter takes: that the extra
+    ``svg`` is missing for an SVG, else that no converter takes it (when there are any)."""
+    from pta_documents.svg.image_converter import is_svg
+
+    if is_svg(image) and not svg_available():
+        return "; SVG images need the extra 'svg' (pip install 'pta-documents[svg]')"
+    return ", and no image converter takes it" if converters else ""
 
 
 def convert_image(
@@ -90,5 +113,6 @@ def convert_image(
                 DocumentResource(image.path, converted.content_type, converted.content),
                 converted.width,
                 converted.height,
+                converted.svg,
             )
     return None

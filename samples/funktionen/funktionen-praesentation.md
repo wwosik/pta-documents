@@ -255,6 +255,24 @@ und wird beschnitten. Dieses Bild hat schon die Proportionen des Rahmens.
 ```
 ::::
 
+## SVG-Grafik
+
+Eine SVG-Grafik füllt ihren Rahmen wie jedes Bild und bleibt in PowerPoint in jeder Größe
+scharf; ältere Versionen zeigen ein Bild in doppelter Auflösung.
+
+![Ablauf in drei Schritten](images/plan-folie.svg)
+
+:::: notes
+```markdown
+## SVG-Grafik
+
+Eine SVG-Grafik füllt ihren Rahmen wie jedes Bild und bleibt in PowerPoint in jeder Größe
+scharf; ältere Versionen zeigen ein Bild in doppelter Auflösung.
+
+![Ablauf in drei Schritten](images/plan-folie.svg)
+```
+::::
+
 ## Bilder nebeneinander
 
 ![Kachel 1](images/kachel-1.png) ![Kachel 2](images/kachel-2.png) ![Kachel 3](images/kachel-3.png)

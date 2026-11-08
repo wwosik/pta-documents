@@ -424,6 +424,7 @@ class DeckWriter:
         placeholder = self.placeholder(slide, idx)
         picture = placeholder.insert_picture(io.BytesIO(resource.content))
         picture._element.nvPicPr.cNvPr.set("descr", image.alt)
+        visuals.attach_svg(picture, image)
         visible_x = 1.0 - float(picture.crop_left) - float(picture.crop_right)
         visible_y = 1.0 - float(picture.crop_top) - float(picture.crop_bottom)
         lost = 1.0 - visible_x * visible_y
@@ -469,7 +470,9 @@ class DeckWriter:
         )
 
     def note_enlarged(self, image: Image, factor: float) -> None:
-        if factor > MAX_ENLARGEMENT:
+        """A note about an image shown much larger than its natural size; never for an SVG,
+        which PowerPoint draws sharp at any size."""
+        if factor > MAX_ENLARGEMENT and image.svg is None:
             self.notes.add(
                 NoteCodes.IMAGE_ENLARGED,
                 image.line,

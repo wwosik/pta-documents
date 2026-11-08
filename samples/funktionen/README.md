@@ -6,15 +6,15 @@ Ergebnis; in der Präsentation steht der Quelltext jeder Folie auf ihrer Notizen
 
 | Datei | Zeigt |
 | ----- | ----- |
-| `funktionen-bericht.md` | Word: alle Front-Matter-Schlüssel, Überschriften 1–6, Zeichenformate, Links, Fußnoten, Typografie, Listen (verschachtelt, Neustart, Aufgaben, Definitionen), Tabellen mit Titel, Ausrichtung und Beschriftung, Status-Labels, markierte Zeile, Abbildungen, Bild im Text, Bildreihe, Code, Zitat, Trennlinie, Inhaltsverzeichnis; die Folien-Syntax in Word: alle Container außer `notes`, Alerts, `==Markierung==`, farbige Wörter |
-| `funktionen-praesentation.md` | PowerPoint: Titel-, Trenn- und Abschlussfolie, Textebenen, nummerierte Listen mit Startwert, Verkleinern, Tabelle im PTA-Stil mit Titelzeile, längere Tabelle, Code, Bild mit Text, Bild allein, Bildreihe, benannte Layouts mit `---`, Sprechernotizen (`::: notes`), Flow-Folien (alle Container, `.dark`, `kicker`, Alerts, Markierung, farbige Wörter, Status-Labels), PTA-Folienarten (`.agenda`, `.interim`, `.quote`, `.contact`) |
+| `funktionen-bericht.md` | Word: alle Front-Matter-Schlüssel, Überschriften 1–6, Zeichenformate, Links, Fußnoten, Typografie, Listen (verschachtelt, Neustart, Aufgaben, Definitionen), Tabellen mit Titel, Ausrichtung und Beschriftung, Status-Labels, markierte Zeile, Abbildungen, Bild im Text, Bildreihe, SVG-Grafik, Code, Zitat, Trennlinie, Inhaltsverzeichnis; die Folien-Syntax in Word: alle Container außer `notes`, Alerts, `==Markierung==`, farbige Wörter |
+| `funktionen-praesentation.md` | PowerPoint: Titel-, Trenn- und Abschlussfolie, Textebenen, nummerierte Listen mit Startwert, Verkleinern, Tabelle im PTA-Stil mit Titelzeile, längere Tabelle, Code, Bild mit Text, Bild allein, SVG-Grafik, Bildreihe, benannte Layouts mit `---`, Sprechernotizen (`::: notes`), Flow-Folien (alle Container, `.dark`, `kicker`, Alerts, Markierung, farbige Wörter, Status-Labels), PTA-Folienarten (`.agenda`, `.interim`, `.quote`, `.contact`) |
 | `varianten-dokument.md` | Word-Variante `quer-ohne-deckblatt` mit `sprache: en` und `firma` |
 | `varianten-hochformat-dokument.md` | Word-Variante `hoch-ohne-deckblatt` mit `inhaltsverzeichnis: nein`, `typografie: nein`, `syntaxhervorhebung: nein` |
 | `varianten-querformat-dokument.md` | Word-Variante `quer` (mit Deckblatt) |
 | `varianten-folien.md` | Schulungsvorlage, `titelfolie: ohne-bild`, `sprache: en` |
 | `varianten-bild-01-folien.md` | `titelfolie: bild-01` |
 | `varianten-branchen-folien.md` | `titelfolie: branchen` |
-| `images/` | selbst erzeugte Bilder in den PTA-Farben (keine fremden Rechte); `*-folie.png` sind dieselben Bilder in den Proportionen der Folien-Bildplatzhalter |
+| `images/` | selbst erzeugte Bilder in den PTA-Farben (keine fremden Rechte), `plan.svg` von Hand gezeichnet; `*-folie.png`/`*-folie.svg` sind dieselben Bilder in den Proportionen der Folien-Bildplatzhalter |
 
 ```sh
 ./run.sh generate samples/funktionen --out documents/funktionen
@@ -33,4 +33,4 @@ ein Test fehl und nennt das Fehlende. Jede Datei muss in der Tabelle oben stehen
 Dokumente liegen danach in `.tmp/review/funktionen/`, ihre Rundreise durch die Konverter in
 `tests/samples/funktionen/*.roundtrip.expected.md`.
 
-Noch nicht enthalten, weil noch nicht umgesetzt: PDF, Mermaid, Charts, SVG-Bilder.
+Noch nicht enthalten, weil noch nicht umgesetzt: PDF, Mermaid, Charts.

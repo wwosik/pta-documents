@@ -362,6 +362,17 @@ Mehrere Bilder in einem Absatz stehen nebeneinander, jedes mit eigener Beschrift
 
 ![Kachel 1](images/kachel-1.png) ![Kachel 2](images/kachel-2.png) ![Kachel 3](images/kachel-3.png)
 
+## SVG-Grafik
+
+Eine SVG-Grafik steht in ihrer natürlichen Größe da und bleibt in Word in jeder Vergrößerung
+scharf (ältere Word-Versionen zeigen ein Bild in doppelter Auflösung):
+
+```markdown
+![Ablauf in drei Schritten](images/plan.svg "Eine SVG-Grafik, in Word scharf in jeder Größe")
+```
+
+![Ablauf in drei Schritten](images/plan.svg "Eine SVG-Grafik, in Word scharf in jeder Größe")
+
 # Code, Zitat und Trennlinie
 
 ## Codeblock

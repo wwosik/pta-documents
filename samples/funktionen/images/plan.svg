@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="200" viewBox="0 0 480 200" font-family="Segoe UI, Selawik, sans-serif">
+  <title>Ablauf in drei Schritten</title>
+  <defs>
+    <marker id="pfeil" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#787878"/>
+    </marker>
+  </defs>
+  <rect x="10" y="60" width="120" height="80" rx="8" fill="#006FB9"/>
+  <rect x="180" y="60" width="120" height="80" rx="8" fill="#004676"/>
+  <rect x="350" y="60" width="120" height="80" rx="8" fill="#9FD8FF"/>
+  <line x1="132" y1="100" x2="176" y2="100" stroke="#787878" stroke-width="3" marker-end="url(#pfeil)"/>
+  <line x1="302" y1="100" x2="346" y2="100" stroke="#787878" stroke-width="3" marker-end="url(#pfeil)"/>
+  <text x="70" y="106" font-size="18" fill="#FFFFFF" text-anchor="middle">Analyse</text>
+  <text x="240" y="106" font-size="18" fill="#FFFFFF" text-anchor="middle">Konzept</text>
+  <text x="410" y="106" font-size="18" fill="#004676" text-anchor="middle">Umsetzung</text>
+  <text x="240" y="30" font-size="20" font-weight="bold" fill="#404040" text-anchor="middle">Ablauf in drei Schritten</text>
+  <text x="240" y="180" font-size="14" fill="#787878" text-anchor="middle">Eine selbst gezeichnete SVG-Grafik in den PTA-Farben</text>
+</svg>

@@ -12,11 +12,14 @@ from typing import Any, Final
 from lxml import etree
 from PIL import Image as PillowImage
 from pptx.enum.shapes import MSO_SHAPE
+from pptx.opc.package import Part
+from pptx.opc.packuri import PackURI
 from pptx.slide import Slide as PptxSlide
 from pptx.util import Emu
 
 from pta_documents.design import colors
 from pta_documents.design import slides as design
+from pta_documents.generation.common import svg_blip
 from pta_documents.generation.common.code_highlight import CodeLine, CodeSpan
 from pta_documents.generation.pptx import fitting
 from pta_documents.generation.pptx.model import Align, Code, Image, Run, Table
@@ -285,9 +288,28 @@ def draw_code(
     return height
 
 
-def picture_size(image: Image) -> tuple[int, int]:
+def picture_size(image: Image) -> tuple[float, float]:
+    """The natural size of ``image`` in pixels: of the original for a converted image."""
+    if image.natural is not None:
+        return image.natural
     with PillowImage.open(io.BytesIO(image.resource.content)) as picture:
         return picture.size
+
+
+def attach_svg(picture: Any, image: Image) -> None:
+    """The SVG of a converted SVG image beside its PNG (``asvg:svgBlip``); else nothing."""
+    if image.svg is not None:
+        part = picture.part
+        svg_blip.attach(picture._element, part, image.svg, _svg_part(part))
+
+
+def _svg_part(owner: Any) -> svg_blip.PartFactory:
+    """Makes SVG parts in the package of ``owner`` (python-pptx: package before blob)."""
+
+    def new_part(partname: str, blob: bytes) -> Part:
+        return Part(PackURI(partname), svg_blip.CONTENT_TYPE, owner.package, blob)
+
+    return new_part
 
 
 EMU_PER_PIXEL: Final = 9525
@@ -317,6 +339,7 @@ def draw_pictures(
                 io.BytesIO(image.resource.content), Emu(x), Emu(top), Emu(w), Emu(h)
             )
             picture._element.nvPicPr.cNvPr.set("descr", image.alt)
+            attach_svg(picture, image)
         x += share + design.PICTURE_GAP
         used = max(used, h)
     return used, factors

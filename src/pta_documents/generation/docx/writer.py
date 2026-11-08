@@ -22,6 +22,7 @@ from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.image.exceptions import UnrecognizedImageError
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
+from docx.opc.packuri import PackURI
 from docx.opc.part import Part
 from docx.shared import Cm, Emu, Pt
 from docx.styles.style import ParagraphStyle
@@ -42,9 +43,10 @@ from pta_documents.generation.common import (
     html,
     layout_syntax,
     layout_tokens,
+    svg_blip,
     text_metrics,
 )
-from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image
+from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
 from pta_documents.generation.common.openxml import R, field_paragraph_runs, w
 from pta_documents.generation.common.renderers import ImageGraphic
 from pta_documents.generation.common.result import NoteCodes, Notes
@@ -640,18 +642,20 @@ class BodyWriter:
         ``max_width``, default the text width)."""
         where = f" (line {line})" if line else ""
         natural: tuple[float, float] | None = None
+        svg: bytes | None = None
         if resource.content_type not in SUPPORTED_IMAGES:
             converters = self.options.image_converters
             conversion = convert_image(converters, resource, GENERATOR_SCALE, FORMAT)
             if conversion is None:
-                nobody = ", and no image converter takes it" if converters else ""
+                hint = refusal_hint(resource, converters)
                 raise DocumentConversionError(
                     FORMAT,
                     f"The image '{source}'{where} is a {resource.content_type}; DOCX takes PNG, "
-                    f"JPEG, GIF, BMP and TIFF{nobody}.",
+                    f"JPEG, GIF, BMP and TIFF{hint}.",
                 )
             resource = conversion.image
             natural = (conversion.width, conversion.height)
+            svg = conversion.svg
         width, height = self._image_size(resource.content, natural, max_width)
         with Image.open(io.BytesIO(resource.content)) as opened:
             factor = width / (opened.size[0] * EMU_PER_PIXEL)
@@ -671,6 +675,8 @@ class BodyWriter:
             run.add_picture(
                 io.BytesIO(_reencode(resource.content)), width=Emu(width), height=Emu(height)
             )
+        if svg is not None:
+            svg_blip.attach(run._r, run.part, svg, _svg_part(run.part))
         for doc_pr in run._r.iter(
             "{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}docPr"
         ):
@@ -1050,6 +1056,15 @@ class BodyWriter:
 
 
 # ---------------------------------------------------------------------- helpers
+
+
+def _svg_part(owner: Any) -> svg_blip.PartFactory:
+    """Makes SVG parts in the package of ``owner`` (python-docx: blob before package)."""
+
+    def new_part(partname: str, blob: bytes) -> Part:
+        return Part(PackURI(partname), svg_blip.CONTENT_TYPE, blob, owner.package)
+
+    return new_part
 
 
 def _reencode(content: bytes) -> bytes:

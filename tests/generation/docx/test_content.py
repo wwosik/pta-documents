@@ -153,13 +153,15 @@ def test_image_fits_the_text_width() -> None:
     ("markdown", "expected"),
     [
         ("![a](images/none.png)", "'images/none.png' (line 4) is not among"),
-        ("![a](images/a.svg)", "is a image/svg+xml"),
+        ("![a](images/a.webp)", "is a image/webp"),
+        ("![a](images/a.svg)", "'images/a.svg' cannot be converted: it has no size"),
     ],
 )
 def test_image_mistakes(markdown: str, expected: str) -> None:
+    webp = DocumentResource("images/a.webp", "image/webp", b"RIFF")
     svg = DocumentResource("images/a.svg", "image/svg+xml", b"<svg/>")
     with pytest.raises(DocumentConversionError) as error:
-        generate(f"---\ntitel: T\n---\n{markdown}\n", resources=(svg,))
+        generate(f"---\ntitel: T\n---\n{markdown}\n", resources=(webp, svg))
     assert expected in error.value.reason
 
 

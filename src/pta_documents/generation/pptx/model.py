@@ -115,6 +115,11 @@ class Image:
     alt: str
     line: int | None = None
     """The line of the image in the Markdown, for notes about it."""
+    natural: tuple[float, float] | None = field(default=None, kw_only=True)
+    """The natural size in pixels of a converted image (its PNG is larger); None: the
+    resource's pixels."""
+    svg: bytes | None = field(default=None, kw_only=True)
+    """The cleaned SVG of a converted SVG image, placed beside the PNG (``asvg:svgBlip``)."""
 
 
 @dataclass(frozen=True)

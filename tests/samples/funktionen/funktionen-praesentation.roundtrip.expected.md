@@ -273,13 +273,32 @@ und wird beschnitten. Dieses Bild hat schon die Proportionen des Rahmens.
 
 :::
 
+## SVG-Grafik
+
+![Ablauf in drei Schritten](images/image12.png)
+
+Eine SVG-Grafik füllt ihren Rahmen wie jedes Bild und bleibt in PowerPoint in jeder Größe scharf; ältere Versionen zeigen ein Bild in doppelter Auflösung.
+
+::: notes
+
+```
+## SVG-Grafik
+
+Eine SVG-Grafik füllt ihren Rahmen wie jedes Bild und bleibt in PowerPoint in jeder Größe
+scharf; ältere Versionen zeigen ein Bild in doppelter Auflösung.
+
+![Ablauf in drei Schritten](images/plan-folie.svg)
+```
+
+:::
+
 ## Bilder nebeneinander
 
-![Kachel 1](images/image12.png)
+![Kachel 1](images/image14.png)
 
-![Kachel 2](images/image13.png)
+![Kachel 2](images/image15.png)
 
-![Kachel 3](images/image14.png)
+![Kachel 3](images/image16.png)
 
 Bis zu vier Bilder stehen nebeneinander; Text danach steht darunter.
 
@@ -329,7 +348,7 @@ Rechte Spalte
 
 ## Jedes PTA-Layout über seinen Namen
 
-![Kachel 2](images/image13.png)
+![Kachel 2](images/image15.png)
 
 Mit {layout="…"} wird jedes der 35 PTA-Layouts gewählt; Text und Bilder füllen dessen Platzhalter der Reihe nach.
 

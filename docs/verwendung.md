@@ -310,16 +310,20 @@ options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgN
 - **Konverter** (`generation/common/images.py`, `ImageConverter`) bekommen jedes Bild, dessen
   Format der Generator nicht setzt (alles außer PNG, JPEG, GIF, BMP, TIFF, z. B. SVG), mit
   `scale = 2`; der erste mit Ergebnis gewinnt. Word setzt das Ergebnis in der natürlichen Größe
-  aus `ConvertedImage` (Pixel bei 96 dpi), PowerPoint wie jedes andere Bild. Nimmt kein Konverter
-  das Bild, bleibt es ein Fehler (`… is a image/svg+xml; …, and no image converter takes it`).
+  aus `ConvertedImage` (Pixel bei 96 dpi), PowerPoint wie jedes andere Bild (Seitenverhältnis
+  aus der natürlichen Größe). Gibt der Konverter in `ConvertedImage.svg` ein SVG mit, legen
+  beide es neben das PNG (`asvg:svgBlip`, siehe [SVG-Bilder](#svg-bilder-e06-s04)). Nimmt kein
+  Konverter das Bild, bleibt es ein Fehler (`… is a image/webp; …, and no image converter takes
+  it`; für ein SVG ohne Extra `svg`: `…; SVG images need the extra 'svg' …`).
 - **Fehler:** wirft ein Renderer oder Konverter eine `DocumentConversionError`, geht sie
   unverändert durch; jede andere Ausnahme wird zu `DocumentConversionError` im Format des
   Generators (Konverter: `The image '…' cannot be converted: …`), die ursprüngliche steht in
   `__cause__`.
 - **Standard:** ohne Angabe nehmen die Optionen alle Renderer und Konverter der Bibliothek, die
-  verfügbar sind (`default_renderers()`, `default_converters()`); `()` schaltet sie ab. Heute
-  sind beide Listen leer — Charts, Mermaid (E06-S01/S03) und SVG → PNG (E06-S04, Extra `svg`)
-  tragen sich dort ein.
+  verfügbar sind (`default_renderers()`, `default_converters()`); `()` schaltet sie ab.
+  `default_converters()` enthält mit dem Extra `svg` den `SvgImageConverter` (E06-S04), sonst
+  nichts; die Renderer-Liste ist noch leer — Charts und Mermaid (E06-S01/S03) tragen sich dort
+  ein.
 
 ## Schriften für PDF und SVG (E01-S03)
 
@@ -421,8 +425,51 @@ svg = to_svg(Drawing(120, 100, (balken, beschriftung, punkt)), SvgOptions(backgr
   zwei Nachkommastellen (nie `-0`); Texte werden XML-sicher (Steuerzeichen außer Tab/LF/CR
   entfallen). Eine Farbe, die nicht `RRGGBB` ist, oder eine nicht endliche Zahl wirft
   `ValueError` (Programmierfehler des Renderers).
-- Ausgabe als PowerPoint-Formen folgt mit E06-S02, als PDF-Vektor mit E05-S04, als PNG mit
-  E06-S04, in Word mit E03-S04, SVG → `Drawing` (Mermaid) mit E06-S03.
+- Ausgabe als PNG über `pta_documents.svg.to_png(to_svg(drawing))` ([SVG-Bilder](#svg-bilder-e06-s04));
+  die Tooltips sind im PNG unsichtbar. Als PowerPoint-Formen folgt mit E06-S02, als PDF-Vektor
+  mit E05-S04, in Word mit E03-S04, SVG → `Drawing` (Mermaid) mit E06-S03.
+
+## SVG-Bilder (E06-S04)
+
+Ein SVG im Markdown (`![Plan](images/plan.svg)`) setzen Word und PowerPoint als **PNG in
+doppelter Größe mit dem SVG daneben**: das PNG im `a:blip`, das SVG als eigener Bildteil
+(`image/svg+xml`, `…/media/imageN.svg`) in der Erweiterung `asvg:svgBlip`
+(`{96DAC541-7B7A-43D3-8B79-37D633B846F1}`). Office 2016 und neuer zeichnet das SVG scharf, ältere
+Programme das PNG. Word setzt das Bild in seiner natürlichen Größe (höchstens Satzspiegelbreite)
+mit „Abbildung n" wie jedes Bild; PowerPoint wie jedes Bild (Platzhalter, Bildreihe), ohne
+Hinweis `image-enlarged`, weil das SVG in jeder Größe scharf ist. Dasselbe SVG steht nur einmal
+in der Datei. Braucht das Extra `svg` (resvg-py, fontTools), das `./run.sh setup` installiert.
+
+```python
+from pta_documents.svg import PngOptions, SvgImageConverter, clean, is_svg, natural_size, to_png
+
+natural_size(svg)  # (Breite, Höhe) in CSS-Pixeln
+png = to_png(svg)  # doppelte Größe, transparent
+png = to_png(svg, PngOptions(scale=3, background=colors.WHITE))
+png = to_png(svg, PngOptions(width=600))  # Breite in Pixeln, Höhe folgt
+```
+
+- **Sicher:** jedes SVG geht vorher durch `clean()` (Port von DocLibs `SvgSanitizer`): entfernt
+  `script`, `foreignObject`, DTD und Entitäten (nie aufgelöst, nichts geladen), Processing
+  Instructions, Kommentare, jedes `href` außer `#…` und `data:`, externe CSS-`url()` (→ `none`)
+  und `@import`. Eingebettet wird ebenfalls das bereinigte SVG. Die Umwandlung braucht kein Netz.
+- **Größe:** `width`/`height` in `px` (oder ohne Einheit), `pt`, `pc`, `mm`, `cm`, `in`; fehlt
+  eines oder ist es relativ (`%`, `em`), kommt es aus der `viewBox` (bzw. aus ihren Proportionen).
+  Ohne Größe ein Fehler `it has no size: give it width and height, or a viewBox`. Höchstens
+  `MAX_PIXELS` = 16 384 Pixel je Seite.
+- **Schriften:** resvg lädt keine Systemschriften, sondern genau die mitgelieferten aus
+  `design.fonts` (Selawik, Inconsolata, Gelasio). `sans-serif`, `serif`, Text ohne Familie und
+  jede fehlende Familie (auch „Segoe UI", „Arial") werden Selawik, `monospace` Inconsolata — so
+  ergibt dasselbe SVG auf jedem Rechner dasselbe PNG. `PngOptions(system_fonts=True)` bzw.
+  `SvgImageConverter(system_fonts=True)` lädt zusätzlich die Systemschriften (z. B. Segoe UI
+  unter Windows); das PNG hängt dann vom Rechner ab.
+- **Erkennung** (`is_svg`): Typ `image/svg+xml`, Endung `.svg` oder Inhalt, der mit `<svg` bzw.
+  `<?xml … <svg` beginnt.
+- **Fehler:** `DocumentConversionError` mit Format `svg`; `to_png` meldet `The SVG cannot be
+  converted: …`, der Konverter im Generator `The image 'images/plan.svg' cannot be converted: …`.
+  Ein Maßstab ≤ 0 oder ein Hintergrund, der nicht `RRGGBB` ist, wirft `ValueError`.
+- **PDF** (E05) wird das PNG in dreifacher Größe (≈ 288 dpi) setzen (Antwort in E06-S04); den
+  PDF-Generator gibt es noch nicht.
 
 ## Logos als SVG und PNG (E01-S04)
 

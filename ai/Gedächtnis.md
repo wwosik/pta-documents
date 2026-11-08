@@ -219,3 +219,15 @@ eigenen Formatvorlagen. Bedienung:
   importiert auch `drawing` und `design.logos`). `DrawingGraphic.drawing`/`ChartGraphic.drawing`
   sind jetzt `Drawing`. Im Paket `drawing/` darf keine Hex-Farbe stehen, auch nicht in
   Kommentaren (eigener, strengerer Test). Zum Ansehen: `.tmp/review/drawing.html` (Tooltips).
+- **SVG-Bilder** (E06-S04): Paket `pta_documents.svg` (`sanitizer.clean`, `converter.to_png`/
+  `natural_size`, `SvgImageConverter`, `is_svg`); resvg und `design.fonts` werden erst in
+  `to_png` importiert. `images.default_converters()` trägt `SvgImageConverter` ein, wenn
+  `find_spec("resvg_py")` etwas findet; `refusal_hint` nennt sonst das Extra. `ConvertedImage`/
+  `Conversion` haben `svg` (das bereinigte SVG) — DOCX (`place_picture`) und PPTX
+  (`visuals.attach_svg`, aus `draw_pictures` und `fill_picture`) hängen es über
+  `generation/common/svg_blip.attach` als `asvg:svgBlip` an das PNG; das PPTX-`Image` trägt dazu
+  `natural` und `svg` (kw-only), `picture_size` liefert die natürliche Größe. Neue Bildwege in
+  PowerPoint müssen `attach_svg` aufrufen. resvg setzt **fehlende Schriftfamilien in `serif`** —
+  darum zeigen `serif`, `sans-serif` und der Standard auf Selawik (Test vergleicht PNG-Bytes).
+  Keine `image-enlarged`-Hinweise für SVG in PowerPoint. Samples: `images/plan.svg`,
+  `images/plan-folie.svg`.

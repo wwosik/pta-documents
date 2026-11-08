@@ -42,7 +42,8 @@ documents/<thema>/
   images/…                  → Bilder, im Markdown relativ: images/foto.jpg
 ```
 
-Bilder: PNG, JPEG, GIF, BMP, TIFF. **SVG wird abgelehnt** — vorher nach PNG wandeln. Andere
+Bilder: PNG, JPEG, GIF, BMP, TIFF und **SVG** (wird scharf eingebettet; braucht `width`/`height`
+oder eine `viewBox`, lädt nichts von außen, Text erscheint in der PTA-Schrift). Andere
 Dateinamen mit `--docx`/`--pptx`; Ausgabe woanders mit `--out <ordner>`.
 
 Vollständige, funktionierende Beispiele: `samples/gsb/gsb-bericht.md` und

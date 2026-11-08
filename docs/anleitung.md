@@ -6,7 +6,7 @@ PTA-Vorlagen** — mit Deckblatt, Logo, Kopf- und Fußzeile, PTA-Formatvorlagen 
 Umgekehrt macht es aus vorhandenen Word- und PowerPoint-Dateien Markdown.
 
 Noch nicht möglich (geplant): PDF, Diagramme (Mermaid), Charts, farbige Hinweisboxen und
-Kartenlayouts auf Folien, SVG-Bilder.
+Kartenlayouts auf Folien.
 
 ## 1. Einmal einrichten
 
@@ -43,7 +43,7 @@ im Repo, und `git pull` stört ihn nicht. Ein Thema, ein Ordner:
 documents/statusbericht-q3/
   statusbericht-bericht.md        → Word
   statusbericht-praesentation.md  → PowerPoint
-  images/                         → Bilder (PNG, JPEG, GIF)
+  images/                         → Bilder (PNG, JPEG, GIF, SVG)
 ```
 
 ```sh
@@ -55,6 +55,10 @@ Format: `…-bericht.md` oder `…-dokument.md` → Word, `…-praesentation.md`
 PowerPoint. Andere Namen gehen mit `--docx` bzw. `--pptx`; `--out <ordner>` schreibt woanders hin;
 statt eines Ordners kann man auch einzelne Dateien angeben. Bilder werden relativ zur
 Markdown-Datei angegeben: `![Beschreibung](images/foto.jpg "Bildunterschrift")`.
+SVG-Grafiken (`images/plan.svg`) gehen auch: Word und PowerPoint zeigen sie scharf in jeder
+Größe (ältere Office-Versionen ein Bild in doppelter Auflösung). Das SVG braucht eine Größe
+(`width`/`height` oder `viewBox`); Verweise auf andere Dateien oder Web-Adressen darin werden
+nicht geladen, und Text erscheint in der PTA-Schrift.
 
 Ein Fehler in einer Datei wird gemeldet, die anderen Dateien werden trotzdem erzeugt.
 
@@ -340,7 +344,9 @@ Fehler im Dokument melden sich als `DocumentConversionError` mit einem Satz, der
   oder `vorlage: hoch-ohne-deckblatt`.
 - `The image 'images/foto.png' … is not among the document's resources` → Datei fehlt in
   `images/` oder der Pfad ist falsch geschrieben.
-- `… is a image/svg+xml` → SVG geht noch nicht; als PNG exportieren.
+- `The image 'images/plan.svg' cannot be converted: it has no size …` → dem SVG `width` und
+  `height` oder eine `viewBox` geben (im Grafikprogramm mit fester Größe exportieren).
+- `… SVG images need the extra 'svg'` → `./run.sh setup` ausführen.
 - `The PTA layout of a chapter slide has no place for content` → Inhalt unter ein `##`.
 
 Neben Fehlern gibt es **Hinweise**: das Dokument wurde geschrieben, aber der Generator musste
