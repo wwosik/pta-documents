@@ -737,3 +737,65 @@ Zeilen in der Hervorhebungsfarbe brauchen einen Menschen. Stand heute: im Plan, 
 | Umsetzung | PTA |  | ■ | ■ | ■ | ■ | ■ |  |
 | Abnahme | Kunde |  |  |  |  |  |  | ■ |
 | Go-live | PTA |  |  |  |  |  |  | ◆ |
+
+## Schrittfolge
+
+::: steps macht aus einem ### je Schritt (mit höchstens einem Absatz darunter) eine Reihe von Pfeilen in Satzspiegelbreite; {.current} hebt den aktuellen Schritt in PTA-Blau hervor, die Schritte davor sind grau. Passen die Texte nicht unter die Pfeile, folgen sie als Liste:
+
+```markdown
+::: steps
+### Analyse
+Interviews und Ist-Aufnahme
+### Konzept
+Soll-Bild und Varianten
+### Umsetzung {.current}
+In Sprints
+### Abnahme
+Test mit dem Fachbereich
+### Betrieb
+:::
+```
+
+![1. Analyse: Interviews und Ist-Aufnahme; 2. Konzept: Soll-Bild und Varianten; 3. Umsetzung: In Sprints; 4. Abnahme: Test mit dem Fachbereich; 5. Betrieb](images/image12.png)
+
+## Bewertungsmatrix
+
+Eine Tabellenzelle, die genau \[n/4] enthält (n von 0 bis 4), wird ein Harvey Ball in PTA-Blau — Kriterien in Zeilen, Optionen in Spalten:
+
+```markdown
+| Kriterium       | Option A | Option B | Option C |
+| --------------- | -------- | -------- | -------- |
+| Kosten          | [3/4]    | [1/4]    | [4/4]    |
+| Einführungszeit | [2/4]    | [4/4]    | [0/4]    |
+| Risiko          | [1/4]    | [3/4]    | [2/4]    |
+```
+
+| Kriterium | Option A | Option B | Option C |
+| --- | --- | --- | --- |
+| Kosten | ◕ | ◔ | ● |
+| Einführungszeit | ◑ | ● | ○ |
+| Risiko | ◔ | ◕ | ◑ |
+
+## Risikomatrix
+
+::: riskmatrix macht aus einer Tabelle (Nr, Risiko, Wahrscheinlichkeit und Auswirkung von 1 bis 5, wahlweise Maßnahme) die 5 × 5-Matrix als Grafik mit nummerierten Punkten, darunter die Legende als Tabelle. Bis Produkt green ist eine Zelle grün, bis yellow gelb, darüber rot:
+
+```markdown
+::: riskmatrix green=4 yellow=12
+| Nr | Risiko                       | Wahrscheinlichkeit | Auswirkung | Maßnahme              |
+| -- | ---------------------------- | ------------------ | ---------- | --------------------- |
+| 1  | Schlüsselperson fällt aus    | 2                  | 4          | Vertretung benennen   |
+| 2  | Daten unvollständig          | 4                  | 4          | Früh Stichproben      |
+| 3  | Schnittstelle verspätet      | 4                  | 4          | Mit Mock beginnen     |
+| 4  | Geringe Akzeptanz            | 3                  | 2          | Schulung und Lotsen   |
+:::
+```
+
+![1 Schlüsselperson fällt aus: Wahrscheinlichkeit 2, Auswirkung 4; 2 Daten unvollständig: Wahrscheinlichkeit 4, Auswirkung 4; 3 Schnittstelle verspätet: Wahrscheinlichkeit 4, Auswirkung 4; 4 Geringe Akzeptanz: Wahrscheinlichkeit 3, Auswirkung 2](images/image13.png)
+
+| Nr | Risiko | Maßnahme |
+| --- | --- | --- |
+| 1 | Schlüsselperson fällt aus | Vertretung benennen |
+| 2 | Daten unvollständig | Früh Stichproben |
+| 3 | Schnittstelle verspätet | Mit Mock beginnen |
+| 4 | Geringe Akzeptanz | Schulung und Lotsen |

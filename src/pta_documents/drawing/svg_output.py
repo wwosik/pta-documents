@@ -155,7 +155,7 @@ def _shape(shape: DrawingShape) -> str:
                 f'<ellipse cx="{number(x + w / 2)}" cy="{number(y + h / 2)}"'
                 f' rx="{number(w / 2)}" ry="{number(h / 2)}"{attributes}/>'
             )
-        case ShapeKind.PATH:
+        case ShapeKind.PATH | ShapeKind.CHEVRON | ShapeKind.HOME_PLATE | ShapeKind.PIE:
             return f'<path d="{path_data(shape.path)}"{attributes}/>'
 
 

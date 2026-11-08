@@ -22,7 +22,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E03-S04](../60-prüfung/E03-S04-diagramme-und-charts-im-docx.md) | Diagramme und Charts im DOCX | in Prüfung |
 | [E11-S04](../60-prüfung/E11-S04-qr-codes.md) | QR-Codes aus Links | in Prüfung |
 | [E15-S01](../60-prüfung/E15-S01-zeitstrahl-und-gantt.md) | Zeitstrahl und Gantt | in Prüfung |
-| [E15-S02](../55-in-arbeit/docs-2/E15-S02-schritte-bewertungen-risikomatrix.md) | Schrittfolge, Harvey Balls und Risikomatrix | in Bearbeitung (docs-2) |
+| [E15-S02](../60-prüfung/E15-S02-schritte-bewertungen-risikomatrix.md) | Schrittfolge, Harvey Balls und Risikomatrix | in Prüfung |
 | [E15-S03](E15-S03-icons.md) | Icons | Entwurf |
 | [E15-S04](E15-S04-bild-fokus-und-stile.md) | Bild-Fokus und Bildstile | Entwurf |
 

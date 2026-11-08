@@ -246,7 +246,7 @@ def _months(year: int, first: int, count: int) -> DateSpan:
 def _date(text: str, today: dt.date, format: DocumentFormat, line: int | None) -> DateSpan:
     span = parse_date(text, today)
     if span is None:
-        raise _error(format, line, f"'{text.strip()}' is no date. Write a date as {DATE_FORMS}.")
+        raise error_at(format, line, f"'{text.strip()}' is no date. Write a date as {DATE_FORMS}.")
     return span
 
 
@@ -327,25 +327,25 @@ def read_timeline(
     """The timeline of the ``::: timeline`` at ``tokens[i]``: one list of 2 to 8 entries
     ``date: text``, dates in order, ``{.done}`` at the end of an entry marks it done."""
     start_line = line_of(tokens[i], line_offset)
-    kids = _children(tokens, i)
+    kids = child_blocks(tokens, i)
     lists = ("bullet_list_open", "ordered_list_open")
     if len(kids) != 1 or tokens[kids[0]].type not in lists:
-        raise _error(
+        raise error_at(
             format,
             start_line,
             "A '::: timeline' holds one list of dates, each with its text: '- 2026-03: Kick-off'.",
         )
     entries: list[TimelineEntry] = []
-    for item in _children(tokens, kids[0]):
+    for item in child_blocks(tokens, kids[0]):
         line = line_of(tokens[item], line_offset)
-        content = _children(tokens, item)
+        content = child_blocks(tokens, item)
         if len(content) != 1 or tokens[content[0]].type != "paragraph_open":
-            raise _error(
+            raise error_at(
                 format, line, "A timeline entry is one line: its date, a colon and its text."
             )
         entries.append(_entry(plain_text(tokens[content[0] + 1]), line, format, today))
     if not MIN_ENTRIES <= len(entries) <= MAX_ENTRIES:
-        raise _error(
+        raise error_at(
             format,
             start_line,
             f"A '::: timeline' has {MIN_ENTRIES} to {MAX_ENTRIES} entries, not {len(entries)}; "
@@ -353,7 +353,7 @@ def read_timeline(
         )
     for before, entry in itertools.pairwise(entries):
         if entry.when.start < before.when.start:
-            raise _error(
+            raise error_at(
                 format,
                 entry.line,
                 f"The timeline goes from early to late: '{entry.label}' comes before "
@@ -365,13 +365,13 @@ def read_timeline(
 def _entry(text: str, line: int | None, format: DocumentFormat, today: dt.date) -> TimelineEntry:
     label, colon, rest = text.partition(":")
     if not colon:
-        raise _error(
+        raise error_at(
             format, line, f"A timeline entry starts with its date and a colon: '2026-03: {text}'."
         )
     done = False
     if match := _ATTRIBUTES.search(rest):
         if match.group(1) != "." + DONE:
-            raise _error(
+            raise error_at(
                 format,
                 line,
                 f"Unknown attribute '{{{match.group(1)}}}' of a timeline entry. "
@@ -381,7 +381,7 @@ def _entry(text: str, line: int | None, format: DocumentFormat, today: dt.date) 
         rest = rest[: match.start()]
     rest = rest.strip()
     if not rest:
-        raise _error(format, line, f"The timeline entry '{label.strip()}' has no text.")
+        raise error_at(format, line, f"The timeline entry '{label.strip()}' has no text.")
     return TimelineEntry(_date(label, today, format, line), label.strip(), rest, done, line)
 
 
@@ -399,27 +399,27 @@ def read_gantt(
     try:
         forced = grid_argument(container(tokens[i])[1], format)
     except DocumentConversionError as error:
-        raise _error(format, start_line, error.reason) from None
-    kids = _children(tokens, i)
+        raise error_at(format, start_line, error.reason) from None
+    kids = child_blocks(tokens, i)
     if len(kids) != 1 or tokens[kids[0]].type != "table_open":
-        raise _error(
+        raise error_at(
             format,
             start_line,
             "A '::: gantt' holds one table with the columns Vorgang, Start and Ende, and "
             "optionally a fourth such as Wer.",
         )
-    table = _table(tokens, kids[0], line_offset)
+    table = table_rows(tokens, kids[0], line_offset)
     header, body = table[0], table[1:]
     columns = len(header[1])
     if columns not in (3, 4):
-        raise _error(
+        raise error_at(
             format,
             header[0],
             f"The table of a '::: gantt' has 3 or 4 columns (Vorgang, Start, Ende and optionally "
             f"Wer), not {columns}.",
         )
     if not 1 <= len(body) <= MAX_ROWS:
-        raise _error(
+        raise error_at(
             format,
             start_line,
             f"A '::: gantt' has 1 to {MAX_ROWS} tasks, not {len(body)}; split a longer plan "
@@ -429,13 +429,13 @@ def read_gantt(
     for line, cells in body:
         name, first, last = cells[0], cells[1], cells[2]
         if not name:
-            raise _error(format, line, "Every task of a '::: gantt' has a name.")
+            raise error_at(format, line, "Every task of a '::: gantt' has a name.")
         if not first or not last:
-            raise _error(format, line, f"The task '{name}' needs a start and an end.")
+            raise error_at(format, line, f"The task '{name}' needs a start and an end.")
         start = _date(first, today, format, line).start
         end = _date(last, today, format, line).end
         if end < start:
-            raise _error(format, line, f"The task '{name}' ends before it starts.")
+            raise error_at(format, line, f"The task '{name}' ends before it starts.")
         owner = (cells[3] or None) if columns == 4 else None
         rows.append(GanttRow(name, start, end, owner, line))
     first_day = min(r.start for r in rows)
@@ -452,7 +452,7 @@ def read_gantt(
             if coarser is not None
             else "split the plan into two charts"
         )
-        raise _error(
+        raise error_at(
             format,
             start_line,
             f"The grid of the '::: gantt' has {len(grid_units)} columns ({grid.value}), "
@@ -462,7 +462,9 @@ def read_gantt(
     return Gantt(tuple(rows), grid, grid_units, today, header[1][0], owner_heading)
 
 
-def _table(tokens: Sequence[Token], i: int, line_offset: int) -> list[tuple[int | None, list[str]]]:
+def table_rows(
+    tokens: Sequence[Token], i: int, line_offset: int
+) -> list[tuple[int | None, list[str]]]:
     """The rows of the table at ``tokens[i]``: their line and the plain text of their cells."""
     rows: list[tuple[int | None, list[str]]] = []
     j = i + 1
@@ -490,7 +492,7 @@ def plain_text(inline: Token) -> str:
     return "".join(parts)
 
 
-def _children(tokens: Sequence[Token], i: int) -> list[int]:
+def child_blocks(tokens: Sequence[Token], i: int) -> list[int]:
     """Where the child blocks of the block at ``tokens[i]`` start."""
     result: list[int] = []
     j = i + 1
@@ -509,7 +511,7 @@ def _end(tokens: Sequence[Token], i: int) -> int:
     return j + 1
 
 
-def _error(format: DocumentFormat, line: int | None, reason: str) -> DocumentConversionError:
+def error_at(format: DocumentFormat, line: int | None, reason: str) -> DocumentConversionError:
     where = f"Line {line}: " if line is not None else ""
     return DocumentConversionError(format, where + reason)
 

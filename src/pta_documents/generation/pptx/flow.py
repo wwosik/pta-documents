@@ -20,7 +20,9 @@ from pptx.util import Emu
 
 from pta_documents.design import colors
 from pta_documents.design import slides as design
+from pta_documents.drawing import riskmatrix as risk_drawing
 from pta_documents.drawing import schedule as schedule_drawing
+from pta_documents.drawing import steps as steps_drawing
 from pta_documents.generation.common import text_metrics
 from pta_documents.generation.pptx import drawing, fitting, visuals
 from pta_documents.generation.pptx.model import (
@@ -38,10 +40,12 @@ from pta_documents.generation.pptx.model import (
     LabelledTagsBlock,
     PanelBlock,
     Paragraph,
+    RiskMatrixBlock,
     RowsBlock,
     Run,
     ScheduleBlock,
     StatementBlock,
+    StepsBlock,
     TableBlock,
     TagsBlock,
     TextBlock,
@@ -216,6 +220,10 @@ class FlowWriter:
                 return 0
             case ScheduleBlock():
                 return self.schedule(block, box, look)
+            case StepsBlock():
+                return self.steps(block, box, look)
+            case RiskMatrixBlock():
+                return self.risk_matrix(block, box, look)
 
     # ------------------------------------------------------------------ text and visuals
 
@@ -302,6 +310,36 @@ class FlowWriter:
             alt = block.schedule.alt
             drawing.place(self.slide, picture, box.x, box.y, box.w, height, alt, self.deck.lang)
         return height
+
+    def steps(self, block: StepsBlock, box: Box, look: Look) -> int:
+        """A row of chevrons (E15-S02) as a group of shapes as wide as ``box``, the texts below
+        the chevrons; sizes stay as designed, the slide is split or noted instead."""
+        picture = steps_drawing.draw(block.steps, box.w / drawing.EMU_PER_PIXEL, dark=look.dark)
+        height = round(picture.height * drawing.EMU_PER_PIXEL)
+        if self.slide is not None:
+            alt = block.steps.alt
+            drawing.place(self.slide, picture, box.x, box.y, box.w, height, alt, self.deck.lang)
+        return height
+
+    def risk_matrix(self, block: RiskMatrixBlock, box: Box, look: Look) -> int:
+        """A risk matrix (E15-S02): the matrix in its natural size as a group of shapes on the
+        left, its legend as a table to its right — below it when the right has less room than a
+        column of the grid."""
+        picture = risk_drawing.draw(block.matrix, dark=look.dark)
+        width = round(picture.width * drawing.EMU_PER_PIXEL)
+        height = round(picture.height * drawing.EMU_PER_PIXEL)
+        beside = box.w - width - design.COLUMN_GAP >= design.RISK_LEGEND_MIN_WIDTH
+        if self.slide is not None:
+            alt = block.matrix.alt
+            drawing.place(self.slide, picture, box.x, box.y, width, height, alt, self.deck.lang)
+        legend = TableBlock(block.legend)
+        if beside:
+            left = box.x + width + design.COLUMN_GAP
+            room = Box(left, box.y, box.x + box.w - left, box.h)
+            return max(height, self.table(legend, room, look))
+        top = box.y + height + look.gap
+        room = Box(box.x, top, box.w, max(box.h - height - look.gap, 0) if box.h > 0 else 0)
+        return height + look.gap + self.table(legend, room, look)
 
     # ------------------------------------------------------------------ containers
 

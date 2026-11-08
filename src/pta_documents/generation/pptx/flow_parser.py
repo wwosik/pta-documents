@@ -19,9 +19,12 @@ from pta_documents.generation.common import (
     heading_attributes,
     layout_syntax,
     layout_tokens,
+    risks,
     schedule,
+    steps,
 )
 from pta_documents.generation.pptx.model import (
+    Align,
     CalloutBlock,
     Card,
     CardsBlock,
@@ -41,11 +44,13 @@ from pta_documents.generation.pptx.model import (
     LabelledTagsBlock,
     PanelBlock,
     Paragraph,
+    RiskMatrixBlock,
     Row,
     RowsBlock,
     Run,
     ScheduleBlock,
     StatementBlock,
+    StepsBlock,
     Table,
     TableBlock,
     TagsBlock,
@@ -281,6 +286,14 @@ class FlowReader:
                     tokens, i, FORMAT, self.deck.line_offset, self.today, language
                 )
                 target.add(ScheduleBlock(read))
+            case layout_syntax.STEPS:
+                target.add(StepsBlock(steps.read_steps(tokens, i, FORMAT, self.deck.line_offset)))
+            case layout_syntax.RISK_MATRIX:
+                matrix = risks.read_risk_matrix(tokens, i, FORMAT, self.deck.line_offset)
+                legend = matrix.legend()
+                rows = tuple(tuple((Run(text),) for text in row) for row in legend)
+                table = Table(rows, (Align.DEFAULT,) * len(legend[0]), True)
+                target.add(RiskMatrixBlock(matrix, table))
             case _:  # pragma: no cover - layout_syntax.check refused it before
                 layout_syntax.check_container(name, arguments, FORMAT)
 

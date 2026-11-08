@@ -87,9 +87,10 @@ print(result.pages, result)
   Satzspiegel der gewählten Word-Vorlage (Nummerierung, Listen, Tabellen, Bilder, QR-Codes, Code
   mit Hervorhebung, Hinweis-Boxen, Fußnoten, Lesezeichen, Links, Seitenumbruchregeln).
   Deckblatt, Inhaltsverzeichnis, Kopf- und Fußzeile kommen mit E05-S03. Charts, Zeichnungen
-  (Mermaid, Finanzdiagramme), `::: timeline` und `::: gantt` zeichnet das PDF noch nicht
-  (E05-S04): Codeblöcke bleiben Code, Zeitstrahl und Gantt zeigen ihren Inhalt (Liste bzw.
-  Tabelle), jeweils mit dem Hinweis `code-not-drawn`.
+  (Mermaid, Finanzdiagramme), `::: timeline`, `::: gantt`, `::: steps` und `::: riskmatrix`
+  zeichnet das PDF noch nicht (E05-S04): Codeblöcke bleiben Code, die Container zeigen ihren
+  Inhalt (Liste, Überschriften bzw. Tabelle), jeweils mit dem Hinweis `code-not-drawn`. Harvey
+  Balls (`[3/4]` in Tabellen) zeichnet es als kleine Grafik in der Zelle.
 - **Front Matter:** dieselben Schlüssel wie Word: `vorlage` (Hoch- oder Querformat; Vorlagen mit
   Deckblatt brauchen wie in Word einen `titel`), `titel`, `untertitel`, `autor`, `ort`, `datum`
   (auch „heute" in Zeitstrahl und Gantt), `firma`, `sprache`, `typografie`,
@@ -262,7 +263,7 @@ Front Matter mitgezählt).
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
 | Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
-| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt` als Formgruppe; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline` als Bild, `gantt` als Tabelle |
+| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
 | `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen; PowerPoint fett in der Signalfarbe, Word Zeichenvorlage „Status …" |
@@ -738,8 +739,9 @@ page_count)`.
   in Word.
 - **Noch nicht** (spätere Stories): Deckblatt, Kopf-/Fußzeile, Inhaltsverzeichnis (E05-S03),
   Ersetzen fehlender Zeichen (bis dahin `?`), Folien-Syntax als Boxen und Spalten, Charts,
-  Zeichnungen, Zeitstrahl und Gantt (E05-S04; bis dahin bleibt ein `chart`/`mermaid`-Block Code
-  und ein `::: timeline`/`::: gantt` zeigt seinen Inhalt, beide mit Hinweis `code-not-drawn`),
+  Zeichnungen, Zeitstrahl, Gantt, Schrittfolge und Risikomatrix (E05-S04; bis dahin bleibt ein
+  `chart`/`mermaid`-Block Code und ein `::: timeline`/`gantt`/`steps`/`riskmatrix` zeigt seinen
+  Inhalt, beide mit Hinweis `code-not-drawn`),
   Silbentrennung.
 
 ## Zeichenmodell und SVG (E02-S03)
@@ -970,6 +972,85 @@ gantt = schedule.read_gantt(tokens, i, DocumentFormat.DOCX, line_offset, today, 
 picture = drawing.draw(gantt, width=1179)  # Drawing in CSS-Pixeln
 ```
 
+## Schrittfolge, Harvey Balls und Risikomatrix (E15-S02)
+
+Drei Bausteine der Beratungsfolie, in allen Formaten aus demselben Markdown:
+
+```markdown
+::: steps
+### Analyse
+Interviews und Ist-Aufnahme
+### Konzept
+### Umsetzung {.current}
+In Sprints
+:::
+
+| Kriterium | Option A | Option B |
+| --------- | -------- | -------- |
+| Kosten    | [3/4]    | [1/4]    |
+
+::: riskmatrix green=4 yellow=12
+| Nr | Risiko    | Wahrscheinlichkeit | Auswirkung | Maßnahme   |
+| -- | --------- | ------------------ | ---------- | ---------- |
+| 1  | Ausfall   | 2                  | 4          | Vertretung |
+:::
+```
+
+- **Schrittfolge `::: steps`:** ein `###` je Schritt, darunter höchstens ein Absatz (der Text);
+  3 bis 6 Schritte, sonst Fehler (mehr: auf zwei Folien verteilen). Gezeichnet als Pfeile
+  (Chevrons, der erste mit gerader linker Kante) über die volle Breite, 1,6 cm hoch, Titel 16 pt
+  fett im Pfeil (bis zwei Zeilen, längere kleiner bis 70 %), Text 12 pt `404040` darunter.
+  Füllung Hellblau `9FD8FF` mit Titel `004676`; `{.current}` an einem Schritt (höchstens einem)
+  macht ihn PTA-Blau mit weißer Schrift und die Schritte davor Grau `E6E6E6` mit Titel `404040`.
+  Auf dunklen Folien ist der Text weiß. **PowerPoint:** Gruppe mit den Autoformen `homePlate`
+  und `chevron` (Spitze 35 % der Höhe). **Word:** Bild in Satzspiegelbreite (Extra `svg`); die
+  Texte stehen bei 12 pt unter den Pfeilen, sonst bei 10 pt, und passen sie auch so nicht (ein
+  Wort breiter als der Pfeil oder mehr als fünf Zeilen), zeigt das Bild nur die Titel und die
+  Texte folgen als Aufzählung „**Titel**: Text".
+- **Harvey Balls:** eine Tabellenzelle (nicht im Kopf), die genau `[n/4]` enthält (`n` 0 bis 4).
+  **PowerPoint:** über der leeren, zentrierten Zelle eine Gruppe `harvey-n` aus Kreis Ø 0,45 cm
+  mit Rand `004676` 1 pt und PTA-blauer Tortenform (`pie`, ab zwölf Uhr im Uhrzeigersinn),
+  `[4/4]` voll, `[0/4]` leer; der PPTX-Konverter liest die Gruppe wieder als `[n/4]` in ihre
+  Zelle. **Word:** das Zeichen ○ ◔ ◑ ◕ ● in Segoe UI Symbol, 12 pt, PTA-Blau, zentriert; der
+  DOCX-Konverter liest das Zeichen. **PDF:** als kleine Grafik in der Zelle (die PDF-Schriften
+  haben die Zeichen nicht).
+- **Risikomatrix `::: riskmatrix`:** genau eine Tabelle Nr, Risiko, Wahrscheinlichkeit,
+  Auswirkung (je 1 bis 5) und wahlweise Maßnahme, 1 bis 15 Zeilen. Die Nummer ist Pflicht,
+  eindeutig und höchstens drei Zeichen lang (`3`, `R3`). Die Überschriften der Spalten 3 und 4
+  beschriften die Achsen (Wahrscheinlichkeit nach rechts, Auswirkung nach oben, 10 pt fett
+  `787878`, mit Pfeil und den Zahlen 1–5). Zellen 1,6 cm, gefärbt nach dem Produkt W × A: bis
+  `green` (Standard 4) grün, bis `yellow` (Standard 12) gelb-orange, darüber rot — die
+  Signalfarben zu 35 % auf Weiß (`colors.tint`). Jedes Risiko ist ein Kreis Ø 0,6 cm `004676`
+  mit weißer Nummer; mehrere in einer Zelle stehen nebeneinander, bei vielen enger und
+  überlappend. `::: riskmatrix green=… yellow=…` (ganze Zahlen 1–24, `green` < `yellow`) stellt
+  die Schwellen ein. **PowerPoint:** die Matrix als Formgruppe in natürlicher Größe links, die
+  Legende Nr | Risiko | (Maßnahme) als PTA-Tabelle rechts daneben (1 cm Abstand); ist rechts
+  weniger als eine Rasterspalte (7 cm) frei, steht sie darunter. **Word:** die Matrix als Bild in
+  natürlicher Größe, die Legende als Tabelle „PTA" darunter. Rundreise: beide Konverter lesen
+  die Legende als Tabelle; die Matrix ist im DOCX ein Bild, im PPTX entfällt sie.
+- **Fehler mit Zeile** (in allen Formaten gleich, aus `layout_syntax.check`):
+  `… A '::: steps' has 3 to 6 steps, not 7; put the procedure on two slides …`,
+  `… Only one step is {.current} …`, `Unknown attribute '{.x}' of a step. Valid: {.current}.`,
+  `… The Wahrscheinlichkeit of risk 1 is a whole number from 1 to 5, not '6'.`,
+  `… The risk 'Ausfall' has no number …`, `… The number 2 is the risk 'Daten' already.`,
+  `… The container '::: riskmatrix' takes green=… and yellow=… …`.
+
+```python
+from pta_documents.drawing import harvey, riskmatrix, steps as steps_drawing
+from pta_documents.generation.common import risks, steps
+
+read = steps.read_steps(tokens, i, DocumentFormat.PPTX, line_offset)
+picture = steps_drawing.draw(read, width=1179)  # Drawing in CSS-Pixeln
+matrix = risks.read_risk_matrix(tokens, j, DocumentFormat.DOCX, line_offset)
+picture = riskmatrix.draw(matrix)  # natürliche Größe
+ball = harvey.ball(3)  # [3/4]
+```
+
+Das Zeichenmodell kennt dafür die Formarten `ShapeKind.CHEVRON`, `HOME_PLATE` (Feld
+`point_depth`) und `PIE` (Feld `angles`, Grad im Uhrzeigersinn ab drei Uhr); Konstruktoren in
+`drawing.shapes` (`chevron`, `pie`). SVG zeichnet sie als Pfad, PowerPoint als Autoform mit
+`adj`-Werten.
+
 ## Logos als SVG und PNG (E01-S04)
 
 Die Vorlagen tragen das PTA-Logo nur als EMF. `./run.sh prepare-templates` wandelt es einmal in
@@ -1033,7 +1114,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `image-cropped` (`IMAGE_CROPPED`) | PPTX | ein Bildplatzhalter schneidet mehr als ein Viertel der Bildfläche ab |
 | `image-enlarged` (`IMAGE_ENLARGED`) | PPTX, DOCX, PDF | ein Bild wird mehr als doppelt so groß gezeigt wie seine Pixel bei 96 dpi und wirkt unscharf |
 | `raw-html` (`RAW_HTML`) | PPTX, DOCX, PDF | rohes HTML im Markdown; es wird **weggelassen**. HTML-Kommentare `<!-- … -->` fallen ohne Hinweis weg, `<br>` ist ein Zeilenumbruch |
-| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX, PDF | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt). Das PDF zeichnet bis E05-S04 keine Charts und Zeichnungen und zeigt `::: timeline`/`::: gantt` als ihren Inhalt, mit diesem Hinweis |
+| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX, PDF | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt). Das PDF zeichnet bis E05-S04 keine Charts und Zeichnungen und zeigt `::: timeline`/`gantt`/`steps`/`riskmatrix` als ihren Inhalt, mit diesem Hinweis |
 | `character-missing` (`CHARACTER_MISSING`) | PDF | ein Zeichen fehlt in den Schriften; es erscheint als `?` (bis E05-S04 Ersatz vorschlägt) |
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01), PDF | Sprechernotizen fallen im Word-Dokument bzw. PDF weg |
 | `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02), PDF | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |

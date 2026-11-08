@@ -27,6 +27,8 @@ NOTES_SLIDE: Final = f"{RELATIONSHIPS}/notesSlide"
 NOTES_MASTER: Final = f"{RELATIONSHIPS}/notesMaster"
 DRAWING_GROUP: Final = "Drawing"
 """The name start of the shape groups ``generation.pptx.drawing`` writes (``GROUP_NAME``)."""
+HARVEY: Final = re.compile(r"harvey-([0-4])")
+"""The name of a Harvey ball's group over a table cell (``generation.pptx.visuals``)."""
 
 
 def p(name: str) -> str:
@@ -107,6 +109,46 @@ def _is_drawing(group: etree._Element) -> bool:
     return name.startswith(DRAWING_GROUP + " ")
 
 
+def _harvey_balls(tree: etree._Element) -> list[tuple[int, int, int]]:
+    """The Harvey balls the generator drew over table cells (groups ``harvey-3``, E15-S02):
+    their centre in EMU and the quarters filled."""
+    balls: list[tuple[int, int, int]] = []
+    for group in tree.iter(p("grpSp")):
+        properties = group.find(f"{p('nvGrpSpPr')}/{p('cNvPr')}")
+        match = HARVEY.fullmatch(properties.get("name", "")) if properties is not None else None
+        transform = group.find(f"{p('grpSpPr')}/{a('xfrm')}")
+        if match is None or transform is None:
+            continue
+        off, ext = transform.find(a("off")), transform.find(a("ext"))
+        if off is None or ext is None:
+            continue
+        x = int(off.get("x", "0")) + int(ext.get("cx", "0")) // 2
+        y = int(off.get("y", "0")) + int(ext.get("cy", "0")) // 2
+        balls.append((x, y, int(match.group(1))))
+    return balls
+
+
+def _harvey_cells(
+    table: etree._Element, balls: list[tuple[int, int, int]], grid: list[list[str]]
+) -> None:
+    """``[n/4]`` in the empty cells of ``grid`` a Harvey ball lies on."""
+    frame = next(table.iterancestors(p("graphicFrame")), None)
+    off = frame.find(f"{p('xfrm')}/{a('off')}") if frame is not None else None
+    if not balls or off is None:
+        return
+    lefts = [int(off.get("x", "0"))]
+    for column in table.iterfind(f"{a('tblGrid')}/{a('gridCol')}"):
+        lefts.append(lefts[-1] + int(column.get("w", "0")))
+    tops = [int(off.get("y", "0"))]
+    for row in table.iterfind(a("tr")):
+        tops.append(tops[-1] + int(row.get("h", "0")))
+    for x, y, quarters in balls:
+        r = next((n for n in range(len(tops) - 1) if tops[n] <= y < tops[n + 1]), None)
+        c = next((n for n in range(len(lefts) - 1) if lefts[n] <= x < lefts[n + 1]), None)
+        if r is not None and c is not None and c < len(grid[r]) and not grid[r][c]:
+            grid[r][c] = f"[{quarters}/4]"
+
+
 def _render_slide(
     package: OpenXmlPackage,
     part: str,
@@ -131,6 +173,7 @@ def _render_slide(
 
     rels = package.relationships(part)
     content = bool(title)
+    balls = _harvey_balls(tree)
     for element in tree.iter():
         if any(anc.tag in (f"{{{MC}}}Fallback", a("tbl")) for anc in element.iterancestors()):
             continue
@@ -153,6 +196,7 @@ def _render_slide(
                 ["<br>".join(_paragraphs(tc)) for tc in tr.iterfind(a("tc"))]
                 for tr in element.iterfind(a("tr"))
             ]
+            _harvey_cells(element, balls, grid)
             out.append(md.table(grid))
             content = True
         elif element.tag == p("pic") and images is not None:

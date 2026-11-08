@@ -24,6 +24,7 @@ from pta_documents.generation.pdf import EXTRA_MISSING, PdfGenerator, PdfOptions
 from pta_documents.generation.pdf import generator as pdf_generator
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
 from tests.conftest import REPO_ROOT
+from tests.generation.common.visual_blocks import RATING, RISKS, STEPS
 
 CREATED: Final = dt.datetime(2026, 11, 8, 9, 0, tzinfo=dt.UTC)
 OPTIONS: Final = PdfOptions(created=CREATED, system_fonts=False)
@@ -159,6 +160,31 @@ def test_timelines_and_gantt_charts_show_as_their_content_with_a_note() -> None:
     result = PdfGenerator().generate(MarkdownDocument(markdown), output, OPTIONS)
     assert result.codes() == [NoteCodes.CODE_NOT_DRAWN]
     assert "2026-01: Kick-off" in pages_text(output.getvalue())[0]
+
+
+@pytest.mark.parametrize("block", [STEPS, RISKS], ids=["steps", "riskmatrix"])
+def test_steps_and_risk_matrices_show_as_their_content_with_a_note(block: str) -> None:
+    """E15-S02: drawn with E05-S04."""
+    output = io.BytesIO()
+    result = PdfGenerator().generate(MarkdownDocument(NO_COVER + block), output, OPTIONS)
+    assert result.codes() == [NoteCodes.CODE_NOT_DRAWN]
+    assert (
+        "Analyse" in pages_text(output.getvalue())[0]
+        or "Ausfall" in pages_text(output.getvalue())[0]
+    )
+
+
+def test_harvey_balls_are_drawn_in_their_cells() -> None:
+    """E15-S02: the PDF's fonts have no ○ ◔ ◑ ◕ ●, so the balls are drawn as small pictures."""
+    data, _ = generate(NO_COVER + RATING)
+    text = pages_text(data)[0]
+    assert "[3/4]" not in text and "Kosten" in text
+    with pdfplumber.open(io.BytesIO(data)) as pdf:
+        curves = pdf.pages[0].curves
+    # A rim per ball, a fill for three of four, a slice for two of them.
+    assert len(curves) >= 4
+    sizes = {round(float(c["width"]) / POINTS_PER_CM, 2) for c in curves}
+    assert 0.4 <= max(sizes) <= 0.45
 
 
 def test_characters_missing_from_the_code_font_become_question_marks() -> None:

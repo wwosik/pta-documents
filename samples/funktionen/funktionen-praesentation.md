@@ -702,6 +702,92 @@ Termine: Jahr, Monat, Quartal, Tag oder `heute`. Erledigtes (`{.done}`) und alle
 Ein Meilenstein hat Start = Ende; wer nicht wie die erste Zeile heißt, ist hellblau.
 ::::
 
+# Schritte und Bewertungen
+
+## Vorgehen {kicker="Visuelle Bausteine"}
+
+::: steps
+### Analyse
+Interviews und Ist-Aufnahme
+### Konzept
+Soll-Bild und Varianten
+### Umsetzung {.current}
+In Sprints
+### Abnahme
+Test mit dem Fachbereich
+### Betrieb
+:::
+
+:::: notes
+```markdown
+## Vorgehen {kicker="Visuelle Bausteine"}
+
+::: steps
+### Analyse
+Interviews und Ist-Aufnahme
+### Konzept
+Soll-Bild und Varianten
+### Umsetzung {.current}
+In Sprints
+### Abnahme
+Test mit dem Fachbereich
+### Betrieb
+:::
+```
+
+Ein `###` je Schritt, 3 bis 6 Schritte; `{.current}` hebt einen hervor.
+::::
+
+## Bewertung {kicker="Visuelle Bausteine"}
+
+| Kriterium       | Option A | Option B | Option C |
+| --------------- | -------- | -------- | -------- |
+| Kosten          | [3/4]    | [1/4]    | [4/4]    |
+| Einführungszeit | [2/4]    | [4/4]    | [0/4]    |
+| Risiko          | [1/4]    | [3/4]    | [2/4]    |
+
+:::: notes
+```markdown
+## Bewertung {kicker="Visuelle Bausteine"}
+
+| Kriterium       | Option A | Option B | Option C |
+| --------------- | -------- | -------- | -------- |
+| Kosten          | [3/4]    | [1/4]    | [4/4]    |
+| Einführungszeit | [2/4]    | [4/4]    | [0/4]    |
+| Risiko          | [1/4]    | [3/4]    | [2/4]    |
+```
+
+`[0/4]` bis `[4/4]` in einer Zelle werden Harvey Balls.
+::::
+
+## Risiken {kicker="Visuelle Bausteine"}
+
+::: riskmatrix green=4 yellow=12
+| Nr | Risiko                       | Wahrscheinlichkeit | Auswirkung | Maßnahme              |
+| -- | ---------------------------- | ------------------ | ---------- | --------------------- |
+| 1  | Schlüsselperson fällt aus    | 2                  | 4          | Vertretung benennen   |
+| 2  | Daten unvollständig          | 4                  | 4          | Früh Stichproben      |
+| 3  | Schnittstelle verspätet      | 4                  | 4          | Mit Mock beginnen     |
+| 4  | Geringe Akzeptanz            | 3                  | 2          | Schulung und Lotsen   |
+:::
+
+:::: notes
+```markdown
+## Risiken {kicker="Visuelle Bausteine"}
+
+::: riskmatrix green=4 yellow=12
+| Nr | Risiko                       | Wahrscheinlichkeit | Auswirkung | Maßnahme              |
+| -- | ---------------------------- | ------------------ | ---------- | --------------------- |
+| 1  | Schlüsselperson fällt aus    | 2                  | 4          | Vertretung benennen   |
+| 2  | Daten unvollständig          | 4                  | 4          | Früh Stichproben      |
+| 3  | Schnittstelle verspätet      | 4                  | 4          | Mit Mock beginnen     |
+| 4  | Geringe Akzeptanz            | 3                  | 2          | Schulung und Lotsen   |
+:::
+```
+
+Wahrscheinlichkeit und Auswirkung von 1 bis 5; die Legende steht rechts der Matrix.
+::::
+
 # Diagramme
 
 ## Balkendiagramm

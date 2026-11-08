@@ -284,3 +284,42 @@ def picture(
     image.spaceBefore = space_before
     image.spaceAfter = space_after
     return image
+
+
+HARVEY_DIAMETER_PT: Final = 0.45 * 72 / 2.54
+"""A Harvey ball: 0.45 cm, as in PowerPoint (E15-S02)."""
+HARVEY_RIM_PT: Final = 1.0
+
+
+class HarveyBall(Flowable):
+    """A Harvey ball in a table cell (``[3/4]``, E15-S02), drawn on the canvas: the fonts of the
+    PDF have no ○ ◔ ◑ ◕ ●. A circle with a dark blue rim, filled in PTA blue ``quarters``
+    quarters clockwise from twelve o'clock."""
+
+    def __init__(self, quarters: int, fill: Any, rim: Any, ground: Any) -> None:
+        super().__init__()
+        self.quarters = quarters
+        self.fill = fill
+        self.rim = rim
+        self.ground = ground
+        self.width = HARVEY_DIAMETER_PT
+        self.height = HARVEY_DIAMETER_PT
+
+    def wrap(self, aW: float, aH: float) -> tuple[float, float]:
+        return self.width, self.height
+
+    def draw(self) -> None:
+        canvas: Any = self.canv
+        inset = HARVEY_RIM_PT / 2
+        far = HARVEY_DIAMETER_PT - inset
+        canvas.saveState()
+        canvas.setFillColor(self.fill if self.quarters == 4 else self.ground)
+        canvas.ellipse(inset, inset, far, far, stroke=0, fill=1)
+        if 0 < self.quarters < 4:
+            canvas.setFillColor(self.fill)
+            # Angles counter-clockwise from three o'clock: from twelve, clockwise.
+            canvas.wedge(inset, inset, far, far, 90, -90 * self.quarters, stroke=0, fill=1)
+        canvas.setStrokeColor(self.rim)
+        canvas.setLineWidth(HARVEY_RIM_PT)
+        canvas.ellipse(inset, inset, far, far, stroke=1, fill=0)
+        canvas.restoreState()

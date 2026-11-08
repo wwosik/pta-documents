@@ -221,8 +221,8 @@ weil ihm vertraut wird.
   `svg.py` ist dem SVG-Leser von E06-S03 vorbehalten). Frozen-slots-Dataclasses mit Tupeln
   (`__post_init__` wandelt Listen), optionale Felder keyword-only; Segmente und Elemente sind
   Unions (`PathSegment`, `DrawingItem`) — Ausgaben verzweigen per `match`, eine neue Art
-  (E15-S02: `ShapeKind.CHEVRON`/`PIE`) muss in jedem `match` ergänzt werden (pyright meldet
-  fehlende Fälle über den Rückgabetyp). `to_svg` validiert Farben (`RRGGBB`) und Zahlen
+  (seit E15-S02 `ShapeKind.CHEVRON`/`HOME_PLATE`/`PIE`) muss in jedem `match` ergänzt werden
+  (pyright meldet fehlende Fälle über den Rückgabetyp). `to_svg` validiert Farben (`RRGGBB`) und Zahlen
   (endlich) mit `ValueError`. `SvgOptions` holt die CSS-Familien **lazy** aus `design.fonts`,
   damit Kern-Importe `design.fonts` nicht laden (`test_the_core_imports_neither_fonttools_nor…`
   importiert auch `drawing` und `design.logos`). `DrawingGraphic.drawing`/`ChartGraphic.drawing`
@@ -333,6 +333,19 @@ weil ihm vertraut wird.
   DOCX-Konverter liest leere Zellen mit Füllung PTA-Blau/Hellblau als `■`. Das PDF zeigt beide
   bis E05-S04 als ihren Inhalt mit `code-not-drawn` (`StoryBuilder.layout_container`); zeichnen
   muss es sie selbst (E05-S04).
+- **Schritte, Harvey Balls, Risikomatrix** (E15-S02): Container `steps`/`riskmatrix` in
+  `layout_syntax` (`riskmatrix` nimmt `green=… yellow=…`, `risks.thresholds_argument`); Leser
+  `generation/common/steps.py` und `risks.py` (Hilfen `child_blocks`, `table_rows`, `error_at`
+  aus `schedule.py`, früher privat), `layout_syntax.check` liest beide. Zeichnungen
+  `drawing/steps.py` (`draw`, `texts_fit`), `drawing/riskmatrix.py` (natürliche Größe, Achsen =
+  Spaltenköpfe 3/4), `drawing/harvey.py`, Formen in `drawing/shapes.py`; PPTX-`pie` braucht das
+  Quadrat des ganzen Kreises — `_pie_bounds` liest es aus dem Pfad (Start = Mitte). Harvey
+  Balls: `layout_tokens.harvey_cell`; PPTX `Run.harvey` → `visuals.harvey_ball` (Gruppe
+  `harvey-n` über der Zelle, der Konverter schreibt `[n/4]` per Position zurück), Word Zeichen in
+  Segoe UI Symbol, PDF `flowables.HarveyBall`. PPTX-Blöcke `StepsBlock`/`RiskMatrixBlock`
+  (Legende rechts, unter 7 cm Platz darunter); Word `BodyWriter.steps`/`risk_matrix`
+  (`drawing_picture`). Das PDF zeigt beide Container als Inhalt (`DRAWN_CONTAINERS`,
+  `code-not-drawn`). `test_funktionen.py` verlangt `[n/4]` und `::: riskmatrix <thresholds>`.
 - **PDF-Generator** (E05-S01 + E05-S02, zusammengeführt 2026-11-08): `generation/pdf/` ist nur
   mit Extra `pdf` importierbar (`__init__` wirft sonst `ImportError(EXTRA_MISSING)`); `check` und
   die Werkzeuge importieren es erst bei `--pdf`/`DocumentFormat.PDF`, der Kern nie. Ablauf in

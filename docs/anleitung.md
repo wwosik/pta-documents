@@ -7,7 +7,7 @@ Umgekehrt macht es aus vorhandenen Word- und PowerPoint-Dateien Markdown.
 
 PDF gibt es als Vorstufe: `./run.sh generate bericht.md --pdf` schreibt ein PDF/A in den
 Formatvorlagen der PTA-Word-Vorlage, aber noch ohne Deckblatt, Kopf- und Fußzeile; Diagramme,
-Charts, Zeitstrahl und Gantt zeigt es noch als Quelltext bzw. Liste.
+Charts, Zeitstrahl, Gantt, Schrittfolge und Risikomatrix zeigt es noch als Quelltext bzw. Liste.
 
 ## 1. Einmal einrichten
 
@@ -153,6 +153,9 @@ der Generator als Hinweis `code-language-unknown`.
 | `![Zur Umfrage](qr:https://… "https://…")` | QR-Code in PTA-Blau, 3 × 3 cm, mit „Abbildung n: …"; `scale=0.5` im Titel halbiert ihn (siehe [QR-Codes](#qr-codes)) |
 | `::: timeline` mit `- 2026-03: Text` | Zeitstrahl als Bild in Satzspiegelbreite (siehe [Zeitstrahl und Projektplan](#zeitstrahl-und-projektplan)) |
 | `::: gantt` mit Tabelle Vorgang, Start, Ende (, Wer) | Projektplan als Tabelle mit schattierten Monats-/Wochenspalten |
+| `::: steps` mit einem `###` je Schritt | Schrittfolge als Pfeile, Bild in Satzspiegelbreite (siehe [Schrittfolge, Bewertung und Risiken](#schrittfolge-bewertung-und-risiken)) |
+| `[3/4]` allein in einer Tabellenzelle | Harvey Ball ◕ in PTA-Blau |
+| `::: riskmatrix` mit Tabelle Nr, Risiko, Wahrscheinlichkeit, Auswirkung (, Maßnahme) | 5 × 5-Risikomatrix als Bild, darunter die Legende als Tabelle |
 | ```` ``` ```` Codeblock | Formatvorlage Code (Consolas, grau hinterlegt) |
 | ```` ```chart ```` mit Einstellungen und CSV | echtes Word-Diagramm über die Textbreite, darunter „Abbildung n: …" aus `title` (siehe [Diagramme aus Daten](#diagramme-aus-daten)) |
 | ```` ```mermaid ```` oder ```` ```financial-chart ```` | scharfes Bild in natürlicher Größe, höchstens über die Textbreite (siehe [Diagramme mit Mermaid](#diagramme-mit-mermaid), [Finanzdiagramme](#finanzdiagramme)) |
@@ -471,6 +474,42 @@ PowerPoint:
   PowerPoint einzeln verschieben. **Word:** der Zeitstrahl ist ein Bild, der Projektplan eine
   Tabelle, die sich in Word weiter bearbeiten lässt.
 
+### Schrittfolge, Bewertung und Risiken
+
+Ein Vorgehen als Pfeile, eine Bewertungsmatrix mit Harvey Balls und eine Risikomatrix — in Word
+und PowerPoint:
+
+```markdown
+::: steps
+### Analyse
+Interviews und Ist-Aufnahme
+### Konzept
+### Umsetzung {.current}
+In Sprints
+:::
+
+| Kriterium | Option A | Option B |
+| --------- | -------- | -------- |
+| Kosten    | [3/4]    | [1/4]    |
+| Zeit      | [0/4]    | [4/4]    |
+
+::: riskmatrix
+| Nr | Risiko          | Wahrscheinlichkeit | Auswirkung | Maßnahme            |
+| -- | --------------- | ------------------ | ---------- | ------------------- |
+| 1  | Personalausfall | 2                  | 4          | Vertretung benennen |
+| 2  | Datenqualität   | 4                  | 4          | Früh prüfen         |
+:::
+```
+
+- **Schritte:** 3 bis 6, je ein `###` und höchstens ein Absatz darunter; `{.current}` hebt einen
+  in PTA-Blau hervor, die davor werden grau. In Word folgen zu lange Texte unter dem Bild als
+  Aufzählung.
+- **Bewertung:** `[0/4]` bis `[4/4]` allein in einer Zelle; Kriterien in Zeilen, Optionen in
+  Spalten.
+- **Risiken:** Wahrscheinlichkeit und Auswirkung von 1 bis 5, jede Nummer einmal, 1 bis 15
+  Risiken. Grün bis Produkt 4, gelb bis 12, darüber rot; `::: riskmatrix green=6 yellow=15`
+  verschiebt die Grenzen. Auf der Folie steht die Legende rechts der Matrix, in Word darunter.
+
 ## 6. Aus Python aufrufen (optional)
 
 ```python
@@ -514,6 +553,8 @@ Fehler im Dokument melden sich als `DocumentConversionError` mit einem Satz, der
 - `Line 12: 'Mai 2026' is no date. Write a date as …` → Termin wie `2026-05` schreiben;
   `… has 1 to 12 tasks, not 14; split …` → Plan auf zwei `::: gantt` aufteilen;
   `… has 53 columns (woche), 24 at most …` → `raster=monat` nehmen.
+- `Line 12: A '::: steps' has 3 to 6 steps, not 7 …` → auf zwei Folien verteilen;
+  `… The Auswirkung of risk 2 is a whole number from 1 to 5, not 'hoch'` → Zahl eintragen.
 - `The image 'images/plan.svg' cannot be converted: it has no size …` → dem SVG `width` und
   `height` oder eine `viewBox` geben (im Grafikprogramm mit fester Größe exportieren).
 - `… SVG images need the extra 'svg'` oder `… is a drawing, which Word places as an SVG image;

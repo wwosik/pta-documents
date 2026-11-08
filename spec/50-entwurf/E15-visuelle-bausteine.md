@@ -23,7 +23,7 @@ keinen Zeitstrahl, keine Bewertungssymbole) — eigene Idee aus dem Abgleich vom
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
 | [E15-S01](../60-prüfung/E15-S01-zeitstrahl-und-gantt.md) | `::: timeline` aus einer Liste, `::: gantt` aus einer Tabelle: Formen auf Folien, editierbare Tabelle in Word | in Prüfung |
-| [E15-S02](../55-in-arbeit/docs-2/E15-S02-schritte-bewertungen-risikomatrix.md) | `::: steps` als Chevrons, Harvey Balls `[3/4]` in Tabellen, `::: riskmatrix` als 5 × 5-Matrix | in Bearbeitung (docs-2) |
+| [E15-S02](../60-prüfung/E15-S02-schritte-bewertungen-risikomatrix.md) | `::: steps` als Chevrons, Harvey Balls `[3/4]` in Tabellen, `::: riskmatrix` als 5 × 5-Matrix | in Prüfung |
 | [E15-S03](E15-S03-icons.md) | `:icon-name:` aus einem gebündelten Icon-Set in Karten, Listen und Text | Entwurf |
 | [E15-S04](E15-S04-bild-fokus-und-stile.md) | Bildattribute `focus`, `fit` und Stile `.round`, `.grey` | Entwurf |
 

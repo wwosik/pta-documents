@@ -612,6 +612,11 @@ class DeckParser:
             elif t.type == "tr_close":
                 rows.append(tuple(current))
                 highlighted.append(first_cell is not None and layout_tokens.is_marked(first_cell))
+            elif t.type == "td_open" and (
+                (quarters := layout_tokens.harvey_cell(tokens[j + 1])) is not None
+            ):
+                first_cell = first_cell or tokens[j + 1]
+                current.append((Run("", harvey=quarters),))
             elif (
                 t.type == "td_open"
                 and labels

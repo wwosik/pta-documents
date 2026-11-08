@@ -8,7 +8,8 @@ each generator, the template variants, the containers, alerts and heading attrib
 slide syntax, ``==mark==``, coloured words, status labels, the ``chart`` blocks (every kind,
 setting and separator), in the deck the ``financial-chart`` blocks (every type and option), in
 the report one of them and an ``Abbildung: …`` caption after a graphic (E03-S04), and every
-scheme of generated images (``qr:``, E11-S04).
+scheme of generated images (``qr:``, E11-S04), Harvey balls ``[n/4]`` and the thresholds of
+``::: riskmatrix`` (E15-S02).
 When the authoring guides exist (E02-S05), the list comes from their syntax instead.
 """
 
@@ -39,6 +40,7 @@ from pta_documents.generation.common import (
     generated_images,
     heading_attributes,
     layout_syntax,
+    layout_tokens,
     schedule,
 )
 from pta_documents.generation.common.code_blocks import KNOWN_GRAPHIC_LANGUAGES, fence_language
@@ -64,6 +66,7 @@ SOURCE: Final = "markdown"
 FIGURE_CAPTION: Final = "Abbildung: … after a graphic"
 FIGURE_CAPTIONS: Final = ("Abbildung:", "Figure:")
 GENERATED_IMAGE: Final = "![…]({scheme}…)"
+HARVEY_BALL: Final = "[n/4] in a table cell"
 """The language of the fences that show the Markdown source of a feature."""
 DOCX: Final = DocumentFormat.DOCX
 PPTX: Final = DocumentFormat.PPTX
@@ -174,6 +177,8 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
                 shown.add(f"::: {name} <widths>")
             if name == layout_syntax.GANTT and arguments:
                 shown.add(f"::: {name} {arguments.partition('=')[0]}=<grid>")
+            if name == layout_syntax.RISK_MATRIX and arguments:
+                shown.add(f"::: {name} <thresholds>")
         elif token.type == "blockquote_open" and ALERT in token.meta:
             shown.add(f"> [!{token.meta[ALERT]}]")
         elif token.type == "heading_open" and token.tag in ("h1", "h2") and token.level == 0:
@@ -195,6 +200,8 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
                     shown.add(GENERATED_IMAGE.format(scheme=scheme))
             for span in PATTERN.finditer(inline_text(token)):
                 shown.add(f"[words]{{.{span.group('category').lower()}}}")
+            if tokens[i - 1].type == "td_open" and layout_tokens.harvey_cell(token) is not None:
+                shown.add(HARVEY_BALL)
             cell = re.fullmatch(r"`([^`]+)`", token.content.strip())
             if tokens[i - 1].type == "td_open" and cell and cell.group(1) in labels:
                 shown.add(f"status label: status.{labels[cell.group(1)].value}")
@@ -260,6 +267,8 @@ def required(format: DocumentFormat) -> set[str]:
     # The arguments ``check_container`` accepts.
     result |= {f"::: {layout_syntax.PANEL} dark", f"::: {layout_syntax.COLUMNS} <widths>"}
     result.add(f"::: {layout_syntax.GANTT} {schedule.GRID_KEY}=<grid>")
+    result.add(f"::: {layout_syntax.RISK_MATRIX} <thresholds>")
+    result.add(HARVEY_BALL)
     result |= {f"> [!{kind}]" for kind in layout_syntax.ALERT_KINDS}
     result.add("==mark==")
     result |= {GENERATED_IMAGE.format(scheme=scheme) for scheme in generated_images.SCHEMES}

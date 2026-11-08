@@ -14,7 +14,13 @@ from typing import Final
 from markdown_it.token import Token
 
 from pta_documents.errors import DocumentConversionError, DocumentFormat
-from pta_documents.generation.common import coloured_words, heading_attributes, schedule
+from pta_documents.generation.common import (
+    coloured_words,
+    heading_attributes,
+    risks,
+    schedule,
+    steps,
+)
 from pta_documents.markdown.parser import ALERT, CONTAINER_OPEN, child_lines, container, line_of
 
 CARDS: Final = "cards"
@@ -33,6 +39,11 @@ TIMELINE: Final = "timeline"
 GANTT: Final = "gantt"
 """A Gantt chart from a table of tasks (E15-S01): shapes on slides, a table in Word; takes
 ``raster=woche|monat|quartal``."""
+STEPS: Final = "steps"
+"""A procedure as a row of chevrons, a ``###`` per step (E15-S02)."""
+RISK_MATRIX: Final = "riskmatrix"
+"""A 5 × 5 risk matrix with a legend from a table of risks (E15-S02); takes ``green=4
+yellow=12``."""
 
 CONTAINER_NAMES: Final = (
     CARDS,
@@ -45,6 +56,8 @@ CONTAINER_NAMES: Final = (
     NOTES,
     TIMELINE,
     GANTT,
+    STEPS,
+    RISK_MATRIX,
 )
 CONTAINERS: Final = ", ".join(CONTAINER_NAMES)
 """The containers, for error messages."""
@@ -63,7 +76,7 @@ STATUS: Final = "status"
 def check_container(name: str, arguments: str, format: DocumentFormat) -> None:
     """Raise for an unknown container or arguments it does not take: ``panel`` takes ``dark``,
     ``columns`` a ratio of two or three widths (``1:2``), ``gantt`` a grid (``raster=monat``),
-    the others none."""
+    ``riskmatrix`` thresholds (``green=4 yellow=12``), the others none."""
     if name not in CONTAINER_NAMES:
         raise DocumentConversionError(
             format, f"Unknown container '::: {name}'. Valid containers: {CONTAINERS}."
@@ -78,6 +91,9 @@ def check_container(name: str, arguments: str, format: DocumentFormat) -> None:
         return
     if name == GANTT:
         schedule.grid_argument(arguments, format)
+        return
+    if name == RISK_MATRIX:
+        risks.thresholds_argument(arguments, format)
         return
     if arguments and not (name == PANEL and arguments == "dark"):
         but = " but dark" if name == PANEL else ""
@@ -181,7 +197,8 @@ def check(
     front matter before it. A mistake raises ``DocumentConversionError`` whose reason starts
     with its line: ``Line 12: Unknown container '::: card'. …``. A ``::: notes`` before the
     first ``#``/``##`` heading has no slide to belong to. Timelines and Gantt charts are read
-    (``schedule``), ``heute`` in them is ``today`` (default: the day of generating).
+    (``schedule``), ``heute`` in them is ``today`` (default: the day of generating), steps and
+    risk matrices too (``steps``, ``risks``).
     """
     day = schedule.reference_day(today)
     headed = False
@@ -209,6 +226,10 @@ def check(
             schedule.read_timeline(tokens, i, format, line_offset, day)
         elif token.type == CONTAINER_OPEN and container(token)[0] == GANTT:
             schedule.read_gantt(tokens, i, format, line_offset, day)
+        elif token.type == CONTAINER_OPEN and container(token)[0] == STEPS:
+            steps.read_steps(tokens, i, format, line_offset)
+        elif token.type == CONTAINER_OPEN and container(token)[0] == RISK_MATRIX:
+            risks.read_risk_matrix(tokens, i, format, line_offset)
         if token.type == "inline":
             heading_level = (
                 int(tokens[i - 1].tag[1])

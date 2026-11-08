@@ -195,6 +195,15 @@ def test_label_cells_and_marked_rows() -> None:
     assert not shapes.is_marked(inline_of("==a== and ==b==\n"))
 
 
+def test_harvey_cells() -> None:
+    """E15-S02: a cell that is exactly ``[n/4]`` is a Harvey ball filled ``n`` quarters."""
+    row = "| [0/4] | [4/4] | [3/4] | [5/4] | [3/4] gut | **[2/4]** | `[1/4]` |"
+    tokens = parse("| a | b | c | d | e | f | g |\n|-|-|-|-|-|-|-|\n" + row + "\n")
+    cells = [t for t in tokens if t.type == "inline"][7:]
+    assert [shapes.harvey_cell(c) for c in cells] == [0, 4, 3, None, None, None, None]
+    assert shapes.HARVEY_SYMBOLS[3] == "\u25d5"
+
+
 def test_only_images() -> None:
     images = shapes.only_images(inline_of("![A](a.png) ![B](b.png)\n"))
     assert images is not None and [i.attrs["src"] for i in images] == ["a.png", "b.png"]

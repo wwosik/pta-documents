@@ -135,6 +135,12 @@ class ShapeKind(StrEnum):
     """An axis-aligned rectangle with corners of ``corner_radius``."""
     ELLIPSE = "ellipse"
     """An axis-aligned ellipse or circle."""
+    CHEVRON = "chevron"
+    """An arrow pointing right with a notch on its left, ``point_depth`` deep (E15-S02)."""
+    HOME_PLATE = "home-plate"
+    """An arrow pointing right with a straight left side: the first of a row of chevrons."""
+    PIE = "pie"
+    """A slice of a circle from the first to the second of ``angles`` (E15-S02)."""
 
 
 class TextAnchor(StrEnum):
@@ -167,6 +173,11 @@ class DrawingShape:
     kind: ShapeKind = ShapeKind.PATH
     corner_radius: float = 0
     """The corner radius of a ``ShapeKind.ROUNDED_RECTANGLE``, in pixels."""
+    point_depth: float = 0
+    """How deep the point (and notch) of a ``CHEVRON`` or ``HOME_PLATE`` is, in pixels."""
+    angles: tuple[float, float] | None = None
+    """Where a ``PIE`` starts and ends: degrees clockwise from three o'clock (as in
+    PowerPoint), the slice running clockwise from the first to the second."""
     round_joins: bool = False
     """Whether line ends and corners are round rather than butt and mitred."""
     even_odd: bool = False

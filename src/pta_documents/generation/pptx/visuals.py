@@ -19,9 +19,10 @@ from pptx.util import Emu
 
 from pta_documents.design import colors
 from pta_documents.design import slides as design
+from pta_documents.drawing import harvey
 from pta_documents.generation.common import svg_blip
 from pta_documents.generation.common.code_highlight import CodeLine, CodeSpan
-from pta_documents.generation.pptx import fitting
+from pta_documents.generation.pptx import drawing, fitting
 from pta_documents.generation.pptx.model import Align, Code, Image, Run, Table
 
 A: Final = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -137,6 +138,7 @@ def draw_table(
         for c in range(columns):
             cell = graphic_table.cell(r + title_rows, c)
             runs = list(row[c]) if c < len(row) else []
+            align = Align.CENTER if any(run.harvey is not None for run in runs) else alignments[c]
             if header:
                 _cell(
                     cell,
@@ -160,7 +162,7 @@ def draw_table(
                     layout.row_pt,
                     t.row_color if highlighted else row_color,
                     None,
-                    alignments[c],
+                    align,
                     design.FLOW.highlight if highlighted else None,
                     rule,
                     slide,
@@ -168,7 +170,30 @@ def draw_table(
                     lang,
                     first_column=c == 0,
                 )
+            if len(runs) == 1 and runs[0].harvey is not None:
+                x = left + sum(layout.widths[:c]) + layout.widths[c] // 2
+                y = (
+                    top
+                    + sum(layout.heights[: r + title_rows])
+                    + layout.heights[r + title_rows] // 2
+                )
+                harvey_ball(slide, runs[0].harvey, x, y, lang)
     return layout.height
+
+
+HARVEY_NAME: Final = "harvey"
+"""The start of the name of a Harvey ball's group (``harvey-3``); the PPTX converter reads it
+back as ``[3/4]``."""
+
+
+def harvey_ball(slide: PptxSlide, quarters: int, x: int, y: int, lang: str) -> None:
+    """A Harvey ball (E15-S02) as a group of shapes centred on (``x``, ``y``) EMU, over a table
+    cell (cells hold no shapes)."""
+    ball = harvey.ball(quarters)
+    size = round(ball.width * drawing.EMU_PER_PIXEL)
+    alt = f"{quarters}/{harvey.QUARTERS}"
+    name = f"{HARVEY_NAME}-{quarters}"
+    drawing.place(slide, ball, x - size // 2, y - size // 2, size, size, alt, lang, name)
 
 
 def _cell(
@@ -194,6 +219,8 @@ def _cell(
     p_pr.set("algn", "r" if align is Align.RIGHT else "ctr" if align is Align.CENTER else "l")
     size = round(size_pt * 100)
     for run in runs:
+        if run.harvey is not None:
+            continue  # drawn over the cell (harvey_ball)
         if run.is_break:
             etree.SubElement(etree.SubElement(paragraph, a("br")), a("rPr")).set("lang", lang)
             continue

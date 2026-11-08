@@ -112,6 +112,14 @@ Sprache = Hinweis `code-language-unknown`.
   `raster=woche|monat|quartal` nur bei Bedarf) mit einer Tabelle `| Vorgang | Start | Ende | Wer |`
   (vierte Spalte optional; 1–12 Zeilen; Start = Ende = Meilenstein; höchstens 24 Raster-Spalten).
   Auf Folien: eigene `##`-Folie. In Word wird der Gantt eine Tabelle, der Zeitstrahl ein Bild.
+- Schrittfolge, Bewertung, Risiken (Word und Präsentation gleich): `::: steps` mit 3–6
+  Schritten, je `### Titel` und höchstens einem kurzen Absatz darunter, `{.current}` an
+  höchstens einem `###`. Harvey Balls: eine Tabellenzelle genau `[0/4]` … `[4/4]`
+  (Bewertungsmatrix: Kriterien in Zeilen, Optionen in Spalten, `[3/4]` je Zelle). `::: riskmatrix`
+  (Argumente `green=4 yellow=12` nur bei Bedarf) mit einer Tabelle
+  `| Nr | Risiko | Wahrscheinlichkeit | Auswirkung | Maßnahme |` (Maßnahme optional; 1–15
+  Zeilen; Werte ganze Zahlen 1–5; Nummern eindeutig, höchstens 3 Zeichen). Auf Folien je eine
+  eigene `##`-Folie.
 
 ## Präsentation
 

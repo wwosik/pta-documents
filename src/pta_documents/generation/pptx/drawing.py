@@ -7,6 +7,7 @@ left out: slides have no hover. Used by the financial charts (E06-S02) and Merma
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from typing import Final
 
@@ -37,6 +38,9 @@ MIN_TEXT_SCALE: Final = 0.7
 POINTS_PER_PIXEL: Final = 0.75
 MITER_LIMIT: Final = 800_000
 """How far a mitred corner may reach, in thousandths of a percent of the line width."""
+ANGLE_UNIT: Final = 60000
+"""PowerPoint's angles are in 60000ths of a degree."""
+FULL_CIRCLE: Final = 360 * ANGLE_UNIT
 GROUP_NAME: Final = "Drawing"
 """The start of the name of every group this writes (``Drawing 12``); the PPTX converter leaves
 such groups out."""
@@ -69,14 +73,16 @@ def place(
     height: int,
     alt: str,
     lang: str,
+    name: str | None = None,
 ) -> int:
-    """``drawing`` fitted into the box, centred horizontally at its top; returns its height."""
+    """``drawing`` fitted into the box, centred horizontally at its top; returns its height.
+    ``name``: the group's name instead of ``Drawing <id>`` (a Harvey ball, E15-S02)."""
     used_width, used_height, per_pixel = fit(drawing, width, height)
     x = left + (width - used_width) // 2
     tree = slide.shapes._spTree
     ids = [int(e.get("id", "0")) for e in tree.iter(p("cNvPr"))]
     counter = iter(range(max(ids, default=1) + 1, 1 << 31))
-    tree.append(group(drawing, x, top, per_pixel, lambda: next(counter), alt, lang))
+    tree.append(group(drawing, x, top, per_pixel, lambda: next(counter), alt, lang, name))
     return used_height
 
 
@@ -88,9 +94,10 @@ def group(
     next_id: Callable[[], int],
     alt: str,
     lang: str,
+    name: str | None = None,
 ) -> etree._Element:
     """The group of shapes, its top left corner at (``x``, ``y``) EMU, ``per_pixel`` EMU a
-    pixel."""
+    pixel, named ``name`` or ``Drawing <id>``."""
 
     def to_x(px: float) -> int:
         return x + round(px * per_pixel)
@@ -104,7 +111,7 @@ def group(
     element = etree.Element(p("grpSp"), nsmap={"a": A, "p": P})
     properties = etree.SubElement(element, p("nvGrpSpPr"))
     etree.SubElement(
-        properties, p("cNvPr"), id=str(number), name=f"{GROUP_NAME} {number}", descr=alt
+        properties, p("cNvPr"), id=str(number), name=name or f"{GROUP_NAME} {number}", descr=alt
     )
     etree.SubElement(properties, p("cNvGrpSpPr"))
     etree.SubElement(properties, p("nvPr"))
@@ -139,11 +146,11 @@ def _transform(parent: etree._Element, left: int, top: int, width: int, height: 
     etree.SubElement(transform, a("ext"), cx=str(width), cy=str(height))
 
 
-def _preset(parent: etree._Element, name: str, adjust: int | None = None) -> None:
+def _preset(parent: etree._Element, name: str, *adjust: tuple[str, int]) -> None:
     geometry = etree.SubElement(parent, a("prstGeom"), prst=name)
     values = etree.SubElement(geometry, a("avLst"))
-    if adjust is not None:
-        etree.SubElement(values, a("gd"), name="adj", fmla=f"val {adjust}")
+    for guide, value in adjust:
+        etree.SubElement(values, a("gd"), name=guide, fmla=f"val {value}")
 
 
 def _solid(parent: etree._Element, color: str) -> None:
@@ -157,7 +164,7 @@ def _shape(
     to_y: Callable[[float], int],
     per_pixel: float,
 ) -> etree._Element:
-    bx, by, bw, bh = shape.path.bounds
+    bx, by, bw, bh = _pie_bounds(shape) if shape.kind is ShapeKind.PIE else shape.path.bounds
     left, top = to_x(bx), to_y(by)
     width = max(1, to_x(bx + bw) - left)
     height = max(1, to_y(by + bh) - top)
@@ -167,6 +174,9 @@ def _shape(
         ShapeKind.ROUNDED_RECTANGLE: "Rounded Rectangle",
         ShapeKind.ELLIPSE: "Ellipse",
         ShapeKind.PATH: "Freeform",
+        ShapeKind.CHEVRON: "Chevron",
+        ShapeKind.HOME_PLATE: "Pentagon",
+        ShapeKind.PIE: "Pie",
     }
     _properties(element, number, names[shape.kind], text_box=False)
     properties = etree.SubElement(element, p("spPr"))
@@ -178,7 +188,22 @@ def _shape(
             _preset(properties, "ellipse")
         case ShapeKind.ROUNDED_RECTANGLE:
             share = shape.corner_radius / max(min(bw, bh), 0.001) * 100000
-            _preset(properties, "roundRect", int(min(max(share, 0), 50000)))
+            _preset(properties, "roundRect", ("adj", int(min(max(share, 0), 50000))))
+        case ShapeKind.CHEVRON | ShapeKind.HOME_PLATE:
+            # The depth of the point in thousandths of a percent of the shorter side.
+            share = shape.point_depth / max(min(bw, bh), 0.001) * 100000
+            limit = bw / max(min(bw, bh), 0.001) * 100000
+            preset = "chevron" if shape.kind is ShapeKind.CHEVRON else "homePlate"
+            _preset(properties, preset, ("adj", int(min(max(share, 0), limit))))
+        case ShapeKind.PIE:
+            start, end = shape.angles or (0, 0)
+            # Angles in 60000ths of a degree, clockwise from three o'clock.
+            _preset(
+                properties,
+                "pie",
+                ("adj1", round(start * ANGLE_UNIT) % FULL_CIRCLE),
+                ("adj2", round(end * ANGLE_UNIT) % FULL_CIRCLE),
+            )
         case ShapeKind.PATH:
             _custom_geometry(properties, shape, left, top, width, height, to_x, to_y)
     if shape.fill is not None:
@@ -187,6 +212,17 @@ def _shape(
         etree.SubElement(properties, a("noFill"))
     _outline(properties, shape, per_pixel)
     return element
+
+
+def _pie_bounds(shape: DrawingShape) -> tuple[float, float, float, float]:
+    """The square around the whole circle of a pie slice (PowerPoint's ``pie`` is drawn in it):
+    its path starts at the centre and goes to the circle (``drawing.shapes.pie``)."""
+    points = [point for segment in shape.path.segments[:2] for point in segment.points]
+    if len(points) < 2:
+        return shape.path.bounds
+    (cx, cy), (x, y) = points[0], points[1]
+    radius = math.hypot(x - cx, y - cy)
+    return cx - radius, cy - radius, 2 * radius, 2 * radius
 
 
 def _custom_geometry(

@@ -7,7 +7,9 @@ generator finds the same shapes.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
+from typing import Final
 
 from markdown_it.token import Token
 
@@ -79,6 +81,23 @@ def label_cell(inline: Token) -> str | None:
     if len(children) == 1 and children[0].type == "code_inline":
         return children[0].content
     return None
+
+
+HARVEY_QUARTERS: Final = 4
+"""A Harvey ball ``[n/4]`` is filled ``n`` quarters."""
+HARVEY_SYMBOLS: Final = ("\u25cb", "\u25d4", "\u25d1", "\u25d5", "\u25cf")
+"""The Harvey balls as characters, by quarters filled: ○ ◔ ◑ ◕ ● (Word, E15-S02)."""
+_HARVEY: Final = re.compile(r"\[([0-4])/4\]")
+
+
+def harvey_cell(inline: Token) -> int | None:
+    """A table cell that is exactly ``[n/4]`` (``n`` 0 to 4, spaces aside), a Harvey ball
+    (E15-S02): the quarters it is filled, else None."""
+    children = [c for c in inline.children or [] if not _blank(c)]
+    if len(children) != 1 or children[0].type != "text":
+        return None
+    match = _HARVEY.fullmatch(children[0].content.strip())
+    return int(match.group(1)) if match else None
 
 
 def is_marked(inline: Token) -> bool:

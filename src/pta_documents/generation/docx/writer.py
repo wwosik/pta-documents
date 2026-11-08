@@ -35,7 +35,10 @@ from PIL import Image
 from pta_documents.design import colors, word
 from pta_documents.design.colors import STATUS_COLORS, StatusCategory
 from pta_documents.design.variants import GeneratedTexts
+from pta_documents.drawing import riskmatrix as risk_drawing
 from pta_documents.drawing import schedule as schedule_drawing
+from pta_documents.drawing import steps as steps_drawing
+from pta_documents.drawing.model import Drawing
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     block_shapes,
@@ -46,10 +49,12 @@ from pta_documents.generation.common import (
     html,
     layout_syntax,
     layout_tokens,
+    risks,
     schedule,
     svg_blip,
     text_metrics,
 )
+from pta_documents.generation.common import steps as steps_model
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
 from pta_documents.generation.common.openxml import R, field_paragraph_runs, w
 from pta_documents.generation.common.renderers import (
@@ -313,6 +318,14 @@ class BodyWriter:
             offset = self.front.body_line
             self.gantt(schedule.read_gantt(tokens, i, FORMAT, offset, self.today, language))
             return end
+        if name == layout_syntax.STEPS:
+            offset = self.front.body_line
+            self.steps(steps_model.read_steps(tokens, i, FORMAT, offset), tokens[i])
+            return end
+        if name == layout_syntax.RISK_MATRIX:
+            offset = self.front.body_line
+            self.risk_matrix(risks.read_risk_matrix(tokens, i, FORMAT, offset), tokens[i])
+            return end
         if name in (layout_syntax.CONCLUSION, layout_syntax.COMMENT):
             conclusion = name == layout_syntax.CONCLUSION
             label = self.texts.conclusion if conclusion else self.texts.comment
@@ -356,6 +369,70 @@ class BodyWriter:
             natural=(conversion.width, conversion.height),
             svg=conversion.svg,
         )
+
+    def drawing_picture(self, picture: Drawing, name: str, alt: str, token: Token) -> None:
+        """A drawing of the slide-layout syntax as a picture in its own paragraph, drawn like
+        the drawings of the code-block renderers (SVG with a PNG beside it)."""
+        line = self.line(token)
+        self.drawings += 1
+        conversion = docx_drawings.convert(
+            picture, name, line, self.drawings, self.options.image_converters
+        )
+        paragraph = self.paragraph(word.STYLES.normal)
+        self.insert_picture(
+            paragraph,
+            conversion.image,
+            conversion.image.path,
+            alt,
+            "",
+            line,
+            natural=(conversion.width, conversion.height),
+            svg=conversion.svg,
+        )
+
+    def steps(self, steps: steps_model.Steps, token: Token) -> None:
+        """A ``::: steps`` as a picture as wide as the text (E15-S02): the texts below the
+        chevrons at 12 pt, else at 10 pt; when they do not fit even then, the picture shows the
+        titles only and the texts follow as a list."""
+        width = self.text_width / EMU_PER_PIXEL
+        sizes = [size for size in word.STEPS_TEXT_PT if steps_drawing.texts_fit(steps, width, size)]
+        texts = bool(sizes)
+        picture = steps_drawing.draw(steps, width, text_pt=sizes[0] if sizes else None, texts=texts)
+        self.drawing_picture(picture, layout_syntax.STEPS, steps.alt, token)
+        if texts or not any(step.text for step in steps.steps):
+            return
+        style = word.STYLES.list_bullet
+        num_id = self._style_num(style)
+        for step in steps.steps:
+            paragraph = self.paragraph(style)
+            _set_numbering(paragraph, num_id, 0)
+            paragraph.add_run(step.title).bold = True
+            if step.text:
+                paragraph.add_run(f": {step.text}")
+
+    def risk_matrix(self, matrix: risks.RiskMatrix, token: Token) -> None:
+        """A ``::: riskmatrix`` as a picture in its natural size (E15-S02), its legend below
+        as a table in the PTA table style."""
+        picture = risk_drawing.draw(matrix)
+        self.drawing_picture(picture, layout_syntax.RISK_MATRIX, matrix.alt, token)
+        legend = matrix.legend()
+        table = self.document.add_table(rows=len(legend), cols=len(legend[0]))
+        table.style = word.STYLES.table
+        table.autofit = False
+        widths = text_metrics.column_widths(
+            [[[TextRun(text)] for text in row] for row in legend],
+            self.text_width,
+            TABLE_FONT_PT,
+            int(TABLE_CELL_GAP),
+            header=True,
+        )
+        _set_table_width(table, widths)
+        _repeat_header(table, 0)
+        for r, row in enumerate(legend):
+            for c, text in enumerate(row):
+                cell = table.cell(r, c)
+                cell.width = Emu(widths[c])
+                cell.paragraphs[0].add_run(text)
 
     def gantt(self, gantt: schedule.Gantt) -> None:
         """A ``::: gantt`` as a table in the PTA table style (E15-S01): the task, who (if the
@@ -630,7 +707,12 @@ class BodyWriter:
                 elif align == "center":
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 label = layout_tokens.label_cell(content)
-                if label is not None and label in self.labels:
+                quarters = layout_tokens.harvey_cell(content) if r >= header_rows else None
+                if quarters is not None:
+                    # A Harvey ball (E15-S02): the character in PTA blue, centred.
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    _harvey_run(paragraph, quarters)
+                elif label is not None and label in self.labels:
                     # A status label: in the character style of its category, not as code.
                     context = _Inline(paragraph._p, self.document.part, paragraph)
                     context.format.status = self.labels[label]
@@ -1287,6 +1369,20 @@ def _shade(properties: etree._Element, fill: str) -> None:
         width = properties.find(w("tcW"))
         if width is not None:
             width.addnext(shading)
+
+
+def _harvey_run(paragraph: Paragraph, quarters: int) -> None:
+    """A Harvey ball as its character (○ ◔ ◑ ◕ ●) in the symbol font, in PTA blue."""
+    run = paragraph.add_run(layout_tokens.HARVEY_SYMBOLS[quarters])
+    run.font.size = Pt(word.HARVEY_PT)
+    run.font.color.rgb = RGBColor.from_string(colors.PTA_BLUE)
+    r_pr = run._r.get_or_add_rPr()
+    fonts = r_pr.find(w("rFonts"))
+    if fonts is None:
+        fonts = etree.Element(w("rFonts"))
+        r_pr.insert(0, fonts)
+    for attribute in ("ascii", "hAnsi", "cs", "eastAsia"):
+        fonts.set(w(attribute), word.HARVEY_FONT)
 
 
 def _right_rule(properties: etree._Element, color: str) -> None:

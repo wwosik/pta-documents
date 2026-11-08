@@ -208,6 +208,9 @@ ENGLISH_LOGO_AREA: Final = Area(cm(1.40), cm(1.30), cm(6.35), cm(3.59))
 PICTURE_GAP: Final = cm(0.50)
 """Room between pictures side by side on a slide."""
 MAX_PICTURES_PER_ROW: Final = 4
+RISK_LEGEND_MIN_WIDTH: Final = cm(7.00)
+"""A risk matrix's legend goes right of it when it has a column of the grid there, else below
+it (E15-S02); ``COLUMN_GAP`` lies between them."""
 
 COLUMN_GUIDES: Final = (
     (1.33, 8.33),

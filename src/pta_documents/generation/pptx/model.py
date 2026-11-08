@@ -10,7 +10,9 @@ from pta_documents.design.colors import StatusCategory
 from pta_documents.drawing.model import Drawing
 from pta_documents.generation.common.code_highlight import CodeLine
 from pta_documents.generation.common.renderers import ChartGraphic
+from pta_documents.generation.common.risks import RiskMatrix
 from pta_documents.generation.common.schedule import Schedule
+from pta_documents.generation.common.steps import Steps
 from pta_documents.generation.common.text_metrics import TextRun
 from pta_documents.markdown.document import DocumentResource
 
@@ -30,6 +32,9 @@ class Run:
     """``[words]{.success}``: bold in the signal colour; with ``label`` the colour of the dot."""
     label: bool = False
     """The dot "●" of a status label (a table cell that is one code span, on a flow slide)."""
+    harvey: int | None = None
+    """A Harvey ball (a table cell ``[3/4]``, E15-S02): the quarters filled; drawn as shapes
+    over the cell, the run itself has no text."""
 
     def metric(self) -> TextRun:
         if self.is_break:
@@ -413,6 +418,22 @@ class ScheduleBlock:
     schedule: Schedule
 
 
+@dataclass(frozen=True)
+class StepsBlock:
+    """``::: steps`` (E15-S02): a row of chevrons as wide as its place, as a group of shapes."""
+
+    steps: Steps
+
+
+@dataclass(frozen=True)
+class RiskMatrixBlock:
+    """``::: riskmatrix`` (E15-S02): the matrix as a group of shapes, its legend as a table
+    to its right."""
+
+    matrix: RiskMatrix
+    legend: Table
+
+
 FlowBlock = (
     TextBlock
     | CodeLinesBlock
@@ -428,6 +449,8 @@ FlowBlock = (
     | LabelledTagsBlock
     | CommentBlock
     | ScheduleBlock
+    | StepsBlock
+    | RiskMatrixBlock
 )
 
 

@@ -131,3 +131,11 @@ GANTT_MILESTONE: Final = "\u25c6"
 """A milestone in a Gantt table: a diamond (◆) in dark blue."""
 GANTT_TODAY_RULE: Final = 12
 """The width of the rule right of today's column, in eighths of a point."""
+
+
+STEPS_TEXT_PT: Final = (12, 10)
+"""The sizes the texts below the chevrons of a ``::: steps`` are tried at (E15-S02); when they
+fit at neither, they follow the picture as a list."""
+HARVEY_FONT: Final = "Segoe UI Symbol"
+"""The font of a Harvey ball (○ ◔ ◑ ◕ ●) in a table cell (E15-S02)."""
+HARVEY_PT: Final = 12

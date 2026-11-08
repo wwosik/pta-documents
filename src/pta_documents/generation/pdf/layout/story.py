@@ -76,6 +76,13 @@ PILLOW_IMAGES: Final = ("image/gif", "image/bmp", "image/tiff", "image/webp")
 """Formats Pillow reads and the engine turns into PNG."""
 SCALE: Final = re.compile(r"(?:^|\s)scale\s*=\s*([0-9]*\.?[0-9]+)(?=\s|$)")
 """``![alt](bild.png "scale=0.5")``: the image at half its natural size."""
+DRAWN_CONTAINERS: Final = (
+    layout_syntax.TIMELINE,
+    layout_syntax.GANTT,
+    layout_syntax.STEPS,
+    layout_syntax.RISK_MATRIX,
+)
+"""The containers the PDF shows as their content until it draws them (E05-S04)."""
 TABLE_CELL_GAP_PT: Final = 0.3 * word_styles.POINTS_PER_CM
 """Room between columns when sizing them, as in the DOCX writer (``TABLE_CELL_GAP``)."""
 MAX_ENLARGEMENT: Final = 2.0
@@ -374,13 +381,13 @@ class StoryBuilder:
                 "pages of the PowerPoint deck.",
             )
             return end
-        if name in (layout_syntax.TIMELINE, layout_syntax.GANTT):
+        if name in DRAWN_CONTAINERS:
             # Read and checked by layout_syntax.check; drawn in the PDF with E05-S04.
             self.notes.add(
                 NoteCodes.CODE_NOT_DRAWN,
                 self.line(tokens[i]),
-                f"The '::: {name}' shows as its content: the PDF does not draw timelines and "
-                "Gantt charts yet (E05-S04).",
+                f"The '::: {name}' shows as its content: the PDF does not draw timelines, "
+                "Gantt charts, steps and risk matrices yet (E05-S04).",
             )
         if name in (layout_syntax.CONCLUSION, layout_syntax.COMMENT):
             label = (
@@ -572,7 +579,20 @@ class StoryBuilder:
                     alignment = TA_RIGHT if align == "right" else TA_CENTER
                     style = ParagraphStyle(f"{style.name} {align}", style, alignment=alignment)
                 label = layout_tokens.label_cell(content)
-                if label is not None and label in labels:
+                quarters = layout_tokens.harvey_cell(content) if not header else None
+                if quarters is not None:
+                    # A Harvey ball (E15-S02): a small picture, the fonts lack the characters.
+                    line.append(
+                        fl.HarveyBall(
+                            quarters,
+                            color(colors.PTA_BLUE),
+                            color(colors.DARK_BLUE),
+                            color(colors.WHITE),
+                        )
+                    )
+                    commands.append(("ALIGN", (c, r), (c, r), "CENTER"))
+                    commands.append(("VALIGN", (c, r), (c, r), "MIDDLE"))
+                elif label is not None and label in labels:
                     status = colors.STATUS_COLORS[labels[label]]
                     text = self.inline_writer.status(label, status, InlineOptions())
                     line.append(fl.PtaParagraph(text, style))
