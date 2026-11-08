@@ -17,7 +17,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E02-S03](../60-prüfung/E02-S03-zeichenmodell-und-svg.md) | Zeichenmodell `Drawing` und SVG-Ausgabe mit Tooltips | in Prüfung |
 | [E06-S04](../60-prüfung/E06-S04-svg-bilder.md) | SVG → PNG und SVG-Bilder in Folien und Dokumenten | in Prüfung |
 | [E06-S01](../60-prüfung/E06-S01-chart-bloecke.md) | `chart`-Blöcke | in Prüfung |
-| [E06-S02](E06-S02-finanzdiagramme.md) | Finanzdiagramme | Entwurf |
+| [E06-S02](../55-in-arbeit/docs-2/E06-S02-finanzdiagramme.md) | Finanzdiagramme | in Bearbeitung (docs-2) |
 | [E06-S03](E06-S03-mermaid.md) | Mermaid über mermaid-cli | Entwurf |
 | [E03-S04](E03-S04-diagramme-und-charts-im-docx.md) | Diagramme und Charts im DOCX | Entwurf |
 | [E11-S04](E11-S04-qr-codes.md) | QR-Codes aus Links | Entwurf |
