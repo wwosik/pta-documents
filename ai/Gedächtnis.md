@@ -150,3 +150,10 @@ eigenen Formatvorlagen. Bedienung:
   Überschrift; `DeckWriter.new_slide` schreibt sie (`generation/pptx/notes.py`). Wer neue
   Folienarten baut, muss dafür nichts tun, solange er `new_slide` nutzt. Word meldet
   `notes-dropped`.
+- **Formaterkennung und Registry** (E07-S01): `pta_documents.conversions` exportiert `detect`,
+  `ConverterRegistry`, `DocumentConverter` (Protocol), `ConversionOptions`, `convert`. Neue
+  Konverter der Bibliothek in `ConverterRegistry.default()` (`conversions/registry.py`)
+  eintragen; der PDF-Konverter wird über `PDF_CONVERTER_MODULE` lazy geladen und fehlt still,
+  solange Modul oder Extra fehlen. Ablehnungsmeldungen stehen in `ConverterRegistry._rejection`.
+  Die Testbeispiele `sample.doc/.xls/.xlsx/.rtf/.pdf` stammen aus `~/mvv/vt-tools-libs`; der
+  Autor „VT-Tools" ist byte-gleich lang durch „PTA-Docs" ersetzt (OLE/PDF-Offsets bleiben).

@@ -1,8 +1,8 @@
 # E07-S01 Formaterkennung und Registry
 
-> Status: in Bearbeitung (docs-2)
-> Epic: [E07 Konvertierung nach Markdown](../../50-entwurf/E07-konvertierung-nach-markdown.md)
-> Milestone: [M02 Rückmeldung und Folien-Syntax](../../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
+> Status: in Prüfung
+> Epic: [E07 Konvertierung nach Markdown](../50-entwurf/E07-konvertierung-nach-markdown.md)
+> Milestone: [M02 Rückmeldung und Folien-Syntax](../50-entwurf/M02-rueckmeldung-und-folien-syntax.md)
 
 ## Zusammenfassung
 
@@ -63,13 +63,15 @@ unterstützte Formate werden mit einer Meldung abgelehnt, die sagt, was zu tun i
 
 ## Akzeptanzkriterien
 
-- [ ] Alle Beispieldateien werden richtig erkannt, unabhängig von einer irreführenden Endung.
-- [ ] `convert()` gibt PDF, DOCX und PPTX an ihren Konverter und reicht den Dateinamen weiter.
-- [ ] `.doc`, `.xls`, `.ppt`, `.msg` und unbekannte OLE-Dateien werden mit einer Meldung
+- [x] Alle Beispieldateien werden richtig erkannt, unabhängig von einer irreführenden Endung.
+- [x] `convert()` gibt PDF, DOCX und PPTX an ihren Konverter und reicht den Dateinamen weiter
+      (PDF bis E07-S04 nur mit simuliertem Konverter geprüft).
+- [x] `.doc`, `.xls`, `.ppt`, `.msg` und unbekannte OLE-Dateien werden mit einer Meldung
       abgelehnt, die das Speichern im neuen Format nennt.
-- [ ] Ein fehlendes Extra `pdf` ergibt eine Meldung mit dem Installationsbefehl, keinen
+- [x] Ein fehlendes Extra `pdf` ergibt eine Meldung mit dem Installationsbefehl, keinen
       `ImportError`.
-- [ ] Die übernommenen DocLibs-Tests sind grün.
+- [x] Die übernommenen DocLibs-Tests sind grün (der PDF-Fall von
+      `WithoutImages_NothingIsExtractedOrReferenced` folgt mit E07-S04).
 
 ## Offene Fragen
 
@@ -85,3 +87,43 @@ unterstützte Formate werden mit einer Meldung abgelehnt, die sagt, was zu tun i
   (`ResourceCollector`); hier kommt nichts hinzu.
 - Abhängig von E07-S04 nur für den PDF-Teil der Registry; bis dahin enthält `default()` DOCX und
   PPTX, und PDF wird mit der Extra-Meldung abgelehnt.
+
+## Implementierungsnotizen
+
+- `conversions/detect.py` (`detect`), `conversions/registry.py` (`DocumentConverter`,
+  `ConverterRegistry`, `convert`, `pdf_extra_available`); `conversions/__init__.py` exportiert
+  `detect`, `ConverterRegistry`, `DocumentConverter`, `ConversionOptions`, `convert`. Tests
+  `tests/conversions/test_detect.py`, `test_registry.py` (435 → 485 Tests).
+- **PDF-Registrierung vorbereitet:** `default()` lädt `pta_documents.conversions.pdf`
+  (`PDF_CONVERTER_MODULE`) per `importlib` und registriert `PdfConverter()` an erster Stelle,
+  wenn `pdfplumber` und `pikepdf` (`PDF_EXTRA_MODULES`) per `find_spec` gefunden werden und das
+  Modul existiert. Fehlt nur das Modul selbst, wird still übersprungen; jeder andere
+  `ModuleNotFoundError` wird weitergereicht, damit ein Fehler in E07-S04 nicht verschluckt wird.
+  Notiz in E07-S04 ergänzt.
+- **Warnung (PDF-Meldung):** Ist das Extra installiert (wie in `.venv`), aber der Konverter noch
+  nicht da, lautet die Ablehnung „No converter is registered for this format." mit der Liste —
+  die Extra-Meldung kommt nur, wenn das Extra wirklich fehlt (Test per `monkeypatch`).
+- **Warnung (Meldungstexte):** Der Plan nennt für DOC/XLS/PPT/MSG/OLE eine gemeinsame Meldung
+  „Save the file as .docx, .xlsx or .pptx". Da `.xlsx` selbst abgelehnt wird, nennt jede Art ihr
+  eigenes Ziel: `.doc` → `.docx`, `.ppt` → `.pptx`, `.xls` → Tabellen nach Word kopieren und als
+  `.docx` speichern, `.msg` → Anhänge bzw. Nachricht als `.docx`/`.pptx`, OLE → `.docx`/`.pptx`.
+  Alle beginnen mit „Legacy binary Office files (…) are not supported." RTF, XLSX und TEXT haben
+  eigene Sätze und hängen wie ZIP/UNKNOWN die unterstützten Formate an
+  („Supported formats: docx, pptx.").
+- `TEXT` wird abgelehnt (Antwort 2026-11-07).
+- `detect` auf einem Stream liest ab der aktuellen Position; liegt sie nicht bei 0, wird für
+  ZIP-Inhalte der Rest in Bytes gelesen (zipfile sucht relativ zum Dateiende). Die Position wird
+  immer wiederhergestellt; nicht suchbare Streams → `ValueError`. Kaputte ZIPs → `unknown`.
+- `ConverterRegistry.convert` liest die Eingabe einmal (`read_input`) und gibt den Konvertern
+  Bytes; `file_name` überschreibt `options.file_name` per `dataclasses.replace`, die übrigen
+  Optionen bleiben. Zusätzlich `ConverterRegistry.formats` (Formate, die ein Konverter annimmt).
+- **Beispieldateien:** `sample.pdf/.txt/.zip` aus `DocumentConversions.Tests/Samples`,
+  `sample.doc/.xls/.xlsx/.rtf` aus `DocumentConversions.WindowsOnly.Tests/Samples` von
+  `~/mvv/vt-tools-libs`. Für Neutralität ist der Autor „VT-Tools" byte-gleich lang durch
+  „PTA-Docs" ersetzt (in OLE auch UTF-16; XLSX neu gepackt); PDF öffnet mit pdfplumber weiter.
+  `sample.docx`/`.pptx` sind die vorhandenen des Repos.
+- Doku: `docs/verwendung.md` Abschnitt „Beliebiges Dokument → Markdown", `docs/ki-anleitung.md`
+  nutzt jetzt `convert(...)` und nennt die abgelehnten Formate. `ai/Gedächtnis.md` ergänzt.
+- **Prüfpunkte:** Formulierung der Ablehnungsmeldungen; ob ein Stream mit Position ≠ 0 so
+  behandelt werden soll.
+- **Offen:** PDF-Teil (echter Konverter, `WithoutImages`-Fall für PDF) mit E07-S04.

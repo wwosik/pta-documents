@@ -308,6 +308,44 @@ Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;
 `./run.sh generate-samples` endet mit Code 1, sobald ein Beispiel Hinweise hat.
 
+## Beliebiges Dokument → Markdown
+
+```python
+from pta_documents.conversions import ConversionOptions, ConverterRegistry, convert, detect
+
+with open("eingang/datei.docx", "rb") as datei:
+    document = convert(datei, "datei.docx")  # Format am Inhalt erkannt
+detect(daten, "brief.doc")  # nur erkennen: DocumentFormat.DOC
+
+registry = ConverterRegistry.default(mein_konverter)  # eigene Konverter hinten anhängen
+registry.convert(daten, options=ConversionOptions(include_images=False))
+```
+
+`convert(data, file_name=None, options=None)` liest die Eingabe (Bytes oder Stream, auch nicht
+suchbar) einmal, erkennt das Format am Inhalt und gibt sie an den ersten Konverter, der es
+annimmt; der Dateiname landet in `options.file_name`. `ConverterRegistry.default()` enthält PDF
+(sobald der PDF-Konverter aus E07-S04 da ist und das Extra `pdf` installiert ist), DOCX und
+PPTX, danach die übergebenen Konverter. Ein eigener Konverter braucht nur
+`can_convert(format) -> bool` und `convert(data, options=None) -> MarkdownDocument`
+(Protocol `DocumentConverter`).
+
+Erkennung (`detect`, erste 8 KB): ZIP mit `word/document.xml` → `docx`, `xl/workbook.xml` →
+`xlsx`, `ppt/presentation.xml` → `pptx`, sonst `zip`; OLE-Signatur → nach Endung `doc`
+(`.doc`, `.dot`), `xls` (`.xls`, `.xlt`, `.xla`), `ppt` (`.ppt`, `.pps`, `.pot`), `msg`, sonst
+`ole`; `%PDF` → `pdf`; `{\rtf` → `rtf`; ohne NUL-Byte → `text`; sonst `unknown`. Der Inhalt
+gewinnt immer über die Endung. Ein Stream für `detect` muss suchbar sein, seine Position bleibt.
+
+Abgelehnt wird mit `DocumentConversionError(format, reason)`, die Meldung sagt, was zu tun ist:
+
+| Format | Meldung (gekürzt) |
+| ------ | ----------------- |
+| `doc`, `ppt`, `xls`, `msg`, `ole` | „Legacy binary Office files (…) are not supported." + Speichern als `.docx`/`.pptx` |
+| `rtf`, `xlsx` | nicht unterstützt, als `.docx` speichern (Excel: Tabellen nach Word kopieren) |
+| `pdf` ohne Extra | „PDF needs the optional extra 'pdf' (pip install -e '.[pdf]')." |
+| `zip`, `text`, `unknown` | „No converter is registered for this format." + unterstützte Formate |
+
+Markdown- und Textdateien werden nicht konvertiert (Entscheidung zu E07-S01).
+
 ## Word/PowerPoint → Markdown
 
 ```python

@@ -83,3 +83,11 @@ und Fußzeilen sowie Bilder auf jeder Seite fallen weg, übrige Bilder werden Re
 - Gescannte Seiten ohne Textschicht ergeben leere Seiten; OCR ist nicht vorgesehen.
 - Der PDF-Generator (E05-S02) braucht diesen Konverter für seine Rundreise-Tests; er sollte
   daher vor oder mit E05-S02 umgesetzt werden.
+- (E07-S01, docs-2) Die Registry ist vorbereitet: `ConverterRegistry.default()` importiert
+  `pta_documents.conversions.pdf` (`registry.PDF_CONVERTER_MODULE`) und registriert
+  `PdfConverter()` an erster Stelle, sobald das Modul existiert und `pdfplumber`/`pikepdf`
+  (`registry.PDF_EXTRA_MODULES`) importierbar sind — nichts weiter zu tun, außer ggf. den Import
+  direkt zu schreiben. `sample.pdf` liegt schon in `tests/conversions/samples/` (Autor
+  „VT-Tools" byte-gleich lang durch „PTA-Docs" ersetzt). Der Test
+  `test_the_pdf_converter_is_registered_first_when_it_can_be_imported` simuliert das Modul;
+  dazu ein echter Test mit `convert(sample.pdf)`.

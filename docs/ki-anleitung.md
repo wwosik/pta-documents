@@ -200,12 +200,17 @@ Matter hat aber Vorrang — im Zweifel nur Front Matter verwenden.
 Um eine Word- oder PowerPoint-Datei des Anwenders zu verstehen oder zu überarbeiten:
 
 ```python
-from pta_documents.conversions.docx import DocxConverter  # bzw. conversions.pptx.PptxConverter
+from pta_documents.conversions import convert  # erkennt Word/PowerPoint am Inhalt
 
-document = DocxConverter().convert(open("documents/x/alt.docx", "rb"))
+with open("documents/x/alt.docx", "rb") as datei:
+    document = convert(datei, "alt.docx")
 document.text  # Markdown
 document.resources  # Bilder: .path (images/image1.png), .content (bytes)
 ```
+
+Alte Binärformate (`.doc`, `.xls`, `.ppt`, `.msg`), RTF und Excel lehnt `convert` mit einer
+Meldung ab (`DocumentConversionError`): den Anwender bitten, die Datei als `.docx` bzw. `.pptx`
+zu speichern. Markdown- und Textdateien direkt lesen, nicht konvertieren.
 
 Sprechernotizen einer Folie kommen als `::: notes` … `:::` nach ihrem Inhalt
 (`ConversionOptions(notes=False)` lässt sie weg). Das Ergebnis ist ein Lesestand, kein verlustfreies Abbild: Folien verlieren Ebenen und
