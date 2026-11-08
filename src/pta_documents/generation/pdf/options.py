@@ -6,6 +6,7 @@ import datetime as dt
 from dataclasses import dataclass, field
 
 from pta_documents.design.variants import DEFAULT_WORD_VARIANT, Language, Marking, WordVariant
+from pta_documents.generation.common.audience import Audience
 from pta_documents.generation.common.images import ImageConverter, default_converters
 from pta_documents.generation.common.renderers import CodeBlockRenderer, default_renderers
 from pta_documents.generation.pdf.layout.fonts import Replacement, question_mark
@@ -33,6 +34,9 @@ class PdfOptions:
     marking: Marking = Marking.NONE
     """``kennzeichnung:``: „VERTRAULICH" (…) below the rule of every header and on the cover;
     ``entwurf`` adds the watermark „ENTWURF" behind the text (E12-S03), as in Word."""
+    audience: Audience | None = None
+    """The version (E16-S01): ``kunde``, ``intern`` or ``trainer``; it wins over ``fassung:`` in
+    the front matter (``--audience``). None: ``fassung:``, else ``kunde``."""
     replace_unsupported: Replacement | None = question_mark
     """Asked once per grapheme cluster the fonts lack (an emoji such as ``👍🏽`` is one) for
     what to show instead; the replacement must be in the fonts too (E05-S04). The default

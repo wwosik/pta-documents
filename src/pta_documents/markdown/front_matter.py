@@ -52,6 +52,9 @@ class Keys:
     CHAPTERS: Final = "kapitelanzeige"
     """Only in the HTML deck (E10-S01): ``ja`` (the default) shows the chapters above the
     slide, the current one marked."""
+    AUDIENCE: Final = "fassung"
+    """``kunde`` (the default), ``intern`` or ``trainer``: the version of the document
+    (E16-S01, ``generation.common.audience``); ``--audience`` overrides it."""
     STATUS_PREFIX: Final = "status."
 
 

@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 
 from pta_documents.design.slides import DEFAULT_TITLE_SLIDE
 from pta_documents.design.variants import DEFAULT_SLIDES_VARIANT, Language, Marking, SlidesVariant
+from pta_documents.generation.common.audience import Audience
 from pta_documents.generation.common.images import ImageConverter, default_converters
 from pta_documents.generation.common.renderers import CodeBlockRenderer, default_renderers
 from pta_documents.generation.common.slide_transition import SlideTransition
@@ -22,6 +23,9 @@ class PptxOptions:
     marking: Marking | None = None
     """``kennzeichnung:`` — the sticker top right on the master; None takes the template's
     (``basis``: none, ``schulung``: ``intern``, which cannot be removed)."""
+    audience: Audience | None = None
+    """The version (E16-S01): ``kunde``, ``intern`` or ``trainer``; it wins over ``fassung:`` in
+    the front matter (``--audience``). None: ``fassung:``, else ``kunde``."""
     footer: str | None = None
     """``fusszeile:`` — the footer reads "PTA – <footer>"; defaults to the presentation title."""
     title_slide: str = DEFAULT_TITLE_SLIDE

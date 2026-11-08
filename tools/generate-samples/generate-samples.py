@@ -4,8 +4,10 @@ usage: ./run.sh generate-samples <name> [<name> ...]   (no name: all samples)
 
 ``*-bericht.md`` / ``*-dokument.md`` becomes a DOCX, ``*-praesentation.md`` / ``*-folien.md`` a
 PPTX (the names ``./run.sh generate`` knows); images are taken from the
-sample's ``images/`` folder as document resources. The notes of each file follow it; samples
-are meant to produce none, so any note makes the exit code 1.
+sample's ``images/`` folder as document resources. A file with ``fassung: intern`` or
+``trainer`` (E16-S01) gets ``-intern``/``-trainer`` in its name, as with ``./run.sh generate``.
+The notes of each file follow it; samples are meant to produce none, so any note makes the exit
+code 1.
 """
 
 from __future__ import annotations
@@ -13,6 +15,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from pta_documents.errors import DocumentFormat
+from pta_documents.generation.common import audience
 from pta_documents.generation.docx.generator import DocxGenerator
 from pta_documents.generation.pptx.generator import PptxGenerator
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
@@ -46,11 +50,13 @@ def generate(name: str) -> bool:
     for source in sorted(folder.glob("*.md")):
         document = MarkdownDocument(source.read_text(encoding="utf-8"), images)
         if source.stem.endswith(DOCX_SUFFIXES):
-            out = target / (source.stem + ".docx")
+            suffix = audience.of(document.text, DocumentFormat.DOCX).suffix
+            out = target / (source.stem + suffix + ".docx")
             with out.open("wb") as stream:
                 result = DocxGenerator().generate(document, stream)
         elif source.stem.endswith(PPTX_SUFFIXES):
-            out = target / (source.stem + ".pptx")
+            suffix = audience.of(document.text, DocumentFormat.PPTX).suffix
+            out = target / (source.stem + suffix + ".pptx")
             with out.open("wb") as stream:
                 result = PptxGenerator().generate(document, stream)
         else:

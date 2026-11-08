@@ -17,6 +17,7 @@ from lxml import etree
 from pta_documents.design import templates, word
 from pta_documents.design.variants import TEXTS, GeneratedTexts, Language, Marking, WordVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.common import audience
 from pta_documents.generation.common.openxml import (
     field_paragraph_runs,
     paragraph_text,
@@ -47,6 +48,7 @@ VALID_KEYS: Final = (
     Keys.CHECK,
     Keys.TOC,
     Keys.MARKING,
+    Keys.AUDIENCE,
 )
 TEMPLATE_COMPANY: Final = word.COMPANY_PLACEHOLDER
 HEADER_CONTENT_TYPE: Final = (
@@ -86,7 +88,7 @@ class DocxGenerator:
         front = FrontMatter.read(document.text, FORMAT)
         front.check_keys(VALID_KEYS, allow_status=True)
         front.status_labels()  # raises for an unknown category or a label in two
-        options = apply_front_matter(front, options or DocxOptions())
+        options = apply_audience(front, apply_front_matter(front, options or DocxOptions()))
         info = DocumentInfo(
             title=front.get(Keys.TITLE) or document.metadata.get(MetadataKeys.TITLE),
             subtitle=front.get(Keys.SUBTITLE),
@@ -138,6 +140,16 @@ def apply_front_matter(front: FrontMatter, options: DocxOptions) -> DocxOptions:
         options = replace(options, toc=value)
     if (value := front.get(Keys.MARKING)) is not None:
         options = replace(options, marking=Marking.parse(value, FORMAT))
+    return options
+
+
+def apply_audience(front: FrontMatter, options: DocxOptions) -> DocxOptions:
+    """The version for ``options.audience`` or ``fassung:``, marked ``intern`` unless it is the
+    customer's or the front matter marks it otherwise (E16-S01)."""
+    chosen = audience.resolve(front, options.audience)
+    options = replace(options, audience=chosen)
+    if audience.needs_marking(chosen, front) and options.marking is Marking.NONE:
+        options = replace(options, marking=Marking.INTERNAL)
     return options
 
 

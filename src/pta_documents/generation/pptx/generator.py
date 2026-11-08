@@ -13,6 +13,7 @@ from pta_documents.design import slides as design
 from pta_documents.design import templates
 from pta_documents.design.variants import TEXTS, Language, Marking, SlidesVariant
 from pta_documents.errors import DocumentFormat
+from pta_documents.generation.common import audience
 from pta_documents.generation.common.result import GenerationResult, Notes
 from pta_documents.generation.common.slide_transition import SlideTransition
 from pta_documents.generation.pptx import sticker
@@ -40,6 +41,7 @@ VALID_KEYS: Final = (
     Keys.MARKING,
     Keys.BUILD,
     Keys.TRANSITION,
+    Keys.AUDIENCE,
 )
 
 
@@ -60,7 +62,7 @@ class PptxGenerator:
         front = FrontMatter.read(document.text, FORMAT)
         front.check_keys(VALID_KEYS, allow_status=True)
         labels = front.status_labels()  # raises for an unknown category or a label in two
-        options = apply_front_matter(front, options or PptxOptions())
+        options = apply_audience(front, apply_front_matter(front, options or PptxOptions()))
         marking = sticker.resolve(options.variant, options.marking)
         slides = DeckParser(document, front.body, front.body_line, notes, options, labels).parse()
 
@@ -108,6 +110,16 @@ class PptxGenerator:
         properties.modified = now
         presentation.save(output)
         return GenerationResult(notes.to_tuple(), slides=len(presentation.slides))
+
+
+def apply_audience(front: FrontMatter, options: PptxOptions) -> PptxOptions:
+    """The version for ``options.audience`` or ``fassung:``, with the sticker ``intern`` unless
+    it is the customer's or the front matter sets a marking (E16-S01)."""
+    chosen = audience.resolve(front, options.audience)
+    options = replace(options, audience=chosen)
+    if audience.needs_marking(chosen, front) and options.marking in (None, Marking.NONE):
+        options = replace(options, marking=Marking.INTERNAL)
+    return options
 
 
 def apply_front_matter(front: FrontMatter, options: PptxOptions) -> PptxOptions:

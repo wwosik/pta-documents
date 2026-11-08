@@ -15,6 +15,7 @@ from markdown_it.token import Token
 
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
+    audience,
     coloured_words,
     heading_attributes,
     icons,
@@ -50,6 +51,12 @@ yellow=12``."""
 SCENE: Final = scene.SCENE
 """Named shapes on the grid of a slide, which Morph moves (E09-S04): only under a ``##``, alone
 with its notes; a still picture in the PDF, left out of Word."""
+INTERNAL: Final = audience.INTERNAL
+"""Only in the internal and the trainer version (E16-S01); every format."""
+EXERCISE: Final = audience.EXERCISE
+"""An exercise, in every version (E16-S01)."""
+SOLUTION: Final = audience.SOLUTION
+"""The solution of the exercise before it, only in the trainer version (E16-S01)."""
 
 CONTAINER_NAMES: Final = (
     CARDS,
@@ -65,6 +72,9 @@ CONTAINER_NAMES: Final = (
     STEPS,
     RISK_MATRIX,
     SCENE,
+    INTERNAL,
+    EXERCISE,
+    SOLUTION,
 )
 CONTAINERS: Final = ", ".join(CONTAINER_NAMES)
 """The containers, for error messages."""
@@ -207,7 +217,9 @@ def check(
     (``schedule``), ``heute`` in them is ``today`` (default: the day of generating), steps and
     risk matrices too (``steps``, ``risks``). Icons must be bundled ones (``icons.check``).
     Block markers (``{.build}`` …, E09-S02) must be known ones before a block. A scene must
-    stand alone under a ``##`` and its shapes be right (``scene``, E09-S04).
+    stand alone under a ``##`` and its shapes be right (``scene``, E09-S04). The audience
+    syntax (``::: internal``, ``::: solution`` after ``::: exercise``, ``{.internal}``, E16-S01)
+    is checked for every version (``audience.check``).
     """
     day = schedule.reference_day(today)
     headed = False
@@ -252,6 +264,7 @@ def check(
             )
             _check_coloured_words(token, heading_level, format, line_offset)
             icons.check(token, format, line_offset)
+    audience.check(tokens, format, line_offset)
 
 
 def _check_coloured_words(

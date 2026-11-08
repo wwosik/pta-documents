@@ -19,7 +19,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 | [E09-S04](../60-prüfung/E09-S04-szenen.md) | Szenen: benannte Formen, die Morph bewegt | in Prüfung |
 | [E10-S01](../60-prüfung/E10-S01-html-deck-generator.md) | HTML-Deck-Generator | in Prüfung |
 | [E10-S02](../60-prüfung/E10-S02-vorschau-als-bilder.md) | Vorschau als Bilder | in Prüfung |
-| [E16-S01](../55-in-arbeit/docs-2/E16-S01-zielgruppenfassungen.md) | Zielgruppenfassungen | in Bearbeitung (docs-2) |
+| [E16-S01](../60-prüfung/E16-S01-zielgruppenfassungen.md) | Zielgruppenfassungen | in Prüfung |
 | [E16-S02](E16-S02-schulungs-zeitplan.md) | Schulungs-Zeitplan aus Foliendauern | Entwurf |
 | [E16-S03](E16-S03-teilnehmerhandout.md) | Teilnehmerhandout | Entwurf |
 | [E16-S04](E16-S04-backup-folien-und-anhang.md) | Backup-Folien und Anhang | Entwurf |

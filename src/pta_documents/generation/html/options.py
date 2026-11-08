@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 
 from pta_documents.design.slides import DEFAULT_TITLE_SLIDE
 from pta_documents.design.variants import DEFAULT_SLIDES_VARIANT, Language, Marking, SlidesVariant
+from pta_documents.generation.common.audience import Audience
 from pta_documents.generation.common.images import ImageConverter, default_converters
 from pta_documents.generation.common.renderers import CodeBlockRenderer, default_renderers
 from pta_documents.generation.common.slide_transition import SlideTransition
@@ -23,6 +24,9 @@ class HtmlDeckOptions:
     """``sprache:`` — also the language of the page (``lang``) and of its key hint."""
     marking: Marking | None = None
     """``kennzeichnung:`` — as in PowerPoint."""
+    audience: Audience | None = None
+    """As in PowerPoint, the version (E16-S01): ``kunde``, ``intern`` or ``trainer``; it wins
+    over ``fassung:`` in the front matter (``--audience``). None: ``fassung:``, else ``kunde``."""
     footer: str | None = None
     """``fusszeile:`` — the footer reads "PTA – <footer>"; defaults to the presentation title."""
     title_slide: str = DEFAULT_TITLE_SLIDE
@@ -53,6 +57,7 @@ class HtmlDeckOptions:
             variant=self.variant,
             language=self.language,
             marking=self.marking,
+            audience=self.audience,
             footer=self.footer,
             title_slide=self.title_slide,
             date=self.date,

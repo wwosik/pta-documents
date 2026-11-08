@@ -55,6 +55,7 @@ umgehen musste, ohne dass es ein Fehler ist, steht im Rückgabewert (siehe
 | `sprache` | `de` (Standard), `en` | erzeugte Texte: Seite/Page, Stand/As of, Tabelle/Table, Abbildung/Figure, Inhalt/Contents |
 | `inhaltsverzeichnis` | `ja`, `nein` | Inhaltsverzeichnis nach dem Deckblatt (Word füllt es beim Öffnen) |
 | `kennzeichnung` | `vertraulich`, `intern`, `entwurf`, `kein` (Standard) | Text unter dem Logo jeder Seite und auf dem Deckblatt, bei `entwurf` zusätzlich Wasserzeichen, siehe [Kennzeichnung in Word und PDF](#kennzeichnung-in-word-und-pdf-e12-s03) |
+| `fassung` | `kunde` (Standard), `intern`, `trainer` | welche Fassung entsteht; `DocxOptions.audience` geht vor, siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01) |
 | `typografie` | `ja` (Standard), `nein` | deutsche (bzw. englische) Typografie, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
 | `syntaxhervorhebung` | `ja` (Standard), `nein` | Codeblöcke mit Sprache farbig |
 | `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | nur für `./run.sh check`: Stilregeln abschalten, siehe [Prüfen ohne Erzeugen](#prüfen-ohne-erzeugen-check) |
@@ -198,6 +199,7 @@ result.slides  # Zahl der erzeugten Folien
 | `fusszeile` | Text | Fußzeile „PTA – …" (sonst der Titel) |
 | `sprache` | `de`, `en` | `en`: englisches Logo auf der Titelfolie (in `basis` und `schulung`), „(cont.)" statt „(Forts.)" |
 | `kennzeichnung` | `vertraulich`, `intern`, `entwurf`, `kein` | Sticker oben rechts auf dem Master, siehe [Kennzeichnung](#kennzeichnung-e04-s05); in Word und PDF siehe [dort](#kennzeichnung-in-word-und-pdf-e12-s03) |
+| `fassung` | `kunde` (Standard), `intern`, `trainer` | welche Fassung entsteht; `PptxOptions.audience` geht vor, siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01) |
 | `typografie`, `syntaxhervorhebung` | `ja` (Standard), `nein` | wie in Word, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
 | `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | wie in Word |
 | `aufbau` | `listen`, `nein` (Standard) | `listen`: jede äußere Liste Punkt für Punkt, siehe [Builds](#builds-e09-s02) |
@@ -604,11 +606,12 @@ Front Matter mitgezählt).
 
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
-| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`, `uebergang="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, `uebergang="…"` (siehe [Folienübergänge](#folienübergänge-e09-s03)), PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
-| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)); `scene` (siehe [Szenen](#szenen-e09-s04)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); `scene` als benannte Formen auf `Nur Titel`; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle, `scene` entfällt; PDF wie Word, die Grafiken als Vektoren, `scene` als Standbild |
+| Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`, `uebergang="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, `uebergang="…"` (siehe [Folienübergänge](#folienübergänge-e09-s03)), PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`); beide: `.internal` (siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01)) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
+| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)); `scene` (siehe [Szenen](#szenen-e09-s04)); `internal`, `exercise`, `solution` (siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01)) | alle Formate: `internal`/`exercise`/`solution` werden je Fassung weggelassen oder ohne Rahmen gezeigt; PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); `scene` als benannte Formen auf `Nur Titel`; Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle, `scene` entfällt; PDF wie Word, die Grafiken als Vektoren, `scene` als Standbild |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
 | Zeile aus nur `{.build}`, `{.frag}`, `{.exit}`, `{.emphasize}` vor einem Block | `{.build}`/`{.frag}` mit `=fade`, `=appear`, `=fly`, `=wipe` (siehe [Builds](#builds-e09-s02)) | PowerPoint: der Block erscheint (verschwindet, wird blau) Klick für Klick; Word/PDF: die Zeile entfällt |
+| Zeile aus nur `{.internal}` vor einem Block | auch vor `::: notes` (siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01)) | alle Formate: der Block fehlt in der Kundenfassung |
 | Bildattribute `{…}` direkt nach einem Bild | `focus=…`, `fit=cover\|contain`, `scale=N`, `.round`, `.grey` (siehe [Bildattribute](#bildattribute-e15-s04)) | PowerPoint: Ausschnitt im Bildplatzhalter, rund als Ellipse; Word/PDF: kein Beschnitt, rund/grau als PNG |
 | Icon `:icon-name:` | die gebündelten Namen (siehe [Icons](#icons-e15-s03)) | PowerPoint: am Anfang eines Kartentitels die Figur der Karte, vor jedem Punkt einer Liste das Aufzählungssymbol, sonst Fehler; Word und PDF: Bild im Text, vor jedem Punkt einer Liste statt des Aufzählungszeichens |
 | `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen; PowerPoint fett in der Signalfarbe, Word Zeichenvorlage „Status …" |
@@ -1611,6 +1614,51 @@ logos.drawing(Logo.WORD, width=120)  # auf 120 CSS-Pixel Breite skaliert
 - Das englische Logo gibt es weiter nur als PNG (`templates.ENGLISH_LOGO`).
 - Die PNGs rastert resvg (Extra `svg`) beim Vorbereiten; `--check` vergleicht PNGs nach Pixeln.
 
+## Zielgruppenfassungen (E16-S01)
+
+Eine Quelle, drei Fassungen (`generation/common/audience.py`, `Audience`):
+
+| Fassung | interne Blöcke | Lösungen |
+| ------- | :------------: | :------: |
+| `kunde` (Standard) | – | – |
+| `intern` | ✓ | – |
+| `trainer` | ✓ | ✓ |
+
+Syntax, in allen Formaten gleich:
+
+- `::: internal` … `:::` — nur intern und beim Trainer.
+- `{.internal}` als Zeile vor einem Block (Blockmarker wie `{.build}`, E09-S02) — der Block nur
+  intern; auch vor `::: notes` erlaubt, nicht vor einer `#`/`##`-Überschrift.
+- `{.internal}` als Überschriftenattribut an `#` (ganzes Kapitel bis zum nächsten `#`) und `##`
+  (die Folie bzw. der Abschnitt bis zum nächsten `#`/`##`), Sprechernotizen eingeschlossen. Nicht
+  an der ersten `#` einer Präsentation (Titelfolie) und nicht an Überschriften in Containern
+  oder Zitaten.
+- `::: exercise` — steht in jeder Fassung; `::: solution` — nur beim Trainer, steht direkt
+  nach einem `::: exercise` oder darin, sonst `Line N: A '::: solution' needs a '::: exercise'
+  right before it (or around it).`
+- In den drei Containern keine `#`/`##`-Überschrift; ein anderer Blockmarker als `{.internal}`
+  kann sie nicht markieren (er gehört hinein, vor den Block).
+
+Die Fassung wählt `DocxOptions`/`PptxOptions`/`PdfOptions`/`HtmlDeckOptions(audience=…)` — sie
+**geht dem Front Matter `fassung:` vor** (anders als die übrigen Optionen, damit
+`--audience` wirkt); `None` (Standard) nimmt `fassung:`, sonst `kunde`. Ist die Fassung nicht
+`kunde` und setzt das Front Matter kein `kennzeichnung:`, wird die Kennzeichnung `intern`
+(Word/PDF statt `kein`, PowerPoint statt der Vorgabe der Vorlage).
+
+Umsetzung: jeder Generator ruft nach `layout_syntax.check` (das die Syntax für alle Fassungen
+prüft, `audience.check`) `audience.filter_tokens(tokens, audience, notes, format, line_offset)`
+auf und arbeitet mit dem Rest weiter. Weggelassene Blöcke sind nicht im Dokument; die drei
+Container selbst werden entfernt, ihr Inhalt steht eine Ebene höher, als wäre er ohne Container
+geschrieben — Übung und Lösung bekommen **keinen eigenen Kasten**. `{.internal}` wird nach dem
+Filtern aus `meta` genommen. Folgen: Kapitelnummern der Trennfolien und Foliennummern zählen
+lückenlos, Konverter lesen nur, was da ist. Ein Hinweis `audience-omitted` nennt die Zahl der
+weggelassenen Blöcke (ein Kapitel zählt als ein Block).
+
+Werkzeug: `./run.sh generate … --audience kunde|intern|trainer|alle` schreibt `<name>.<format>`
+für `kunde`, `<name>-intern.<format>` und `<name>-trainer.<format>` sonst (auch ohne
+`--audience`, wenn `fassung:` es sagt; ebenso `generate-samples`); `alle` erzeugt jede Fassung,
+deren Token-Strom sich von den vorigen unterscheidet (`audience.versions`), mindestens `kunde`.
+
 ## Hinweise (`GenerationResult`)
 
 `generate()` beider Generatoren gibt ein `GenerationResult` zurück (`pta_documents.GenerationResult`,
@@ -1641,6 +1689,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02), PDF | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |
 | `image-scale-in-title` (`IMAGE_SCALE_IN_TITLE`) | PPTX, DOCX (E15-S04) | `scale=N` steht im Bildtitel; wirkt bis 2027-11, gehört aber als `{scale=N}` hinter das Bild |
 | `scene-dropped` (`SCENE_DROPPED`) | DOCX (E09-S04) | eine Szene (`::: scene`) fällt im Word-Dokument weg; PowerPoint zeigt sie als Formen, das PDF als Standbild |
+| `audience-omitted` (`AUDIENCE_OMITTED`) | PPTX, DOCX, PDF (E16-S01) | die Fassung hat interne Blöcke oder Lösungen weggelassen; **ein** Hinweis ohne Zeile mit den Zahlen („4 internal blocks and 1 solution were left out for the audience 'kunde'; …"), siehe [Zielgruppenfassungen](#zielgruppenfassungen-e16-s01) |
 
 Die Codes sind stabil; neue kommen mit neuen Funktionen dazu. `./run.sh generate` zeigt die
 Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 1;
@@ -1649,7 +1698,7 @@ Hinweise unter jeder Datei und endet mit `--strict` auch bei Hinweisen mit Code 
 ## Prüfen ohne Erzeugen (`check`)
 
 ```sh
-./run.sh check <datei-oder-ordner> [...] [--docx | --pptx | --pdf] [--strict] [--skip <code>,…] [--sources] [--json]
+./run.sh check <datei-oder-ordner> [...] [--docx | --pptx | --pdf] [--strict] [--skip <code>,…] [--sources] [--json] [--audience kunde|intern|trainer|alle]
 ```
 
 prüft Markdown-Dateien, **ohne eine Datei zu schreiben**. Dateiauswahl und Formatwahl wie bei
@@ -1657,6 +1706,10 @@ prüft Markdown-Dateien, **ohne eine Datei zu schreiben**. Dateiauswahl und Form
 `OK <datei>` bzw. `ERROR <datei>: <grund>`, dann die Hinweise (`  - line 12: … [code]`), dann zwei Zeilen Statistik. Exit-Code 1 bei Fehlern, mit `--strict`
 auch bei Hinweisen; `--json` gibt dasselbe als ein JSON-Objekt aus
 (`{"ok": …, "files": [{"file", "ok", "errors", "notes": [{"code", "line", "message"}], "stats"}]}`).
+
+`--audience` prüft diese Fassung (E16-S01) statt der aus `fassung:`; `alle` prüft jede Fassung,
+die sich unterscheidet, mit eigener Statistik (`OK <datei> (fassung: intern)`, im JSON
+`"audience"`); aus Python `CheckOptions(audience=Audience.TRAINER)`.
 
 Aus Python: `pta_documents.generation.common.check.check(document, format, CheckOptions(...))`
 → `CheckResult(errors, notes, stats)`. Fehler und Hinweise stammen aus einem Probelauf des
