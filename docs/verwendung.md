@@ -582,12 +582,18 @@ Foliennummer (Selawik 18 px), Hintergrund `GREY_LIGHT`, Rahmen `GREY_DARK`; PNG 
 
 Tests: `tests/preview/` — ohne Browser Kontaktbogen, Vorschau-Stil, Meldung ohne Playwright,
 Schalter des Werkzeugs; mit Browser (sonst übersprungen) Anzahl und Maße, Auswahl mit
-`--scale 2`, Wiederholbarkeit, Aufbauten im Endzustand, Werkzeug am Ordner und der Vergleich
-von `samples/funktionen/funktionen-praesentation.md` (Diagramme nur mit `ChartRenderer`, ohne
-Mermaid) mit `tests/preview/expected/funktionen-praesentation/folie-NN.png`: Referenzen in halber
-Größe (800 × 450, ~6 MB statt 14), ein Pixel weicht ab, wenn ein Kanal um mehr als 16 abweicht;
-weniger als 0,5 % abweichende Pixel je Folie. Neu schreiben mit
-`PTA_DOCUMENTS_UPDATE_EXPECTED=1` und das Ergebnis in `.tmp/review/preview/` ansehen.
+`--scale 2`, Wiederholbarkeit, Aufbauten im Endzustand und Werkzeug am Ordner. Der Vergleich
+mit Referenzbildern läuft am kleinen, festen Test-Deck `tests/preview/samples/vorschau-referenz.md`
+(sieben Folien: Titel, Text mit Liste, Karten, Spalten mit Fazit, Diagramm, dunkle Folie,
+Schlussfolie; Diagramme nur mit `ChartRenderer`, ohne Mermaid) gegen
+`tests/preview/expected/vorschau-referenz/folie-NN.png`: Referenzen in halber Größe (800 × 450,
+zusammen ~0,6 MB), ein Pixel weicht ab, wenn ein Kanal um mehr als 16 abweicht; weniger als
+0,5 % abweichende Pixel je Folie. Neu schreiben mit `PTA_DOCUMENTS_UPDATE_EXPECTED=1` und das
+Ergebnis in `.tmp/review/preview/` ansehen. Die Funktionsübersicht
+`samples/funktionen/funktionen-praesentation.md` wächst mit jeder Story und hat deshalb keine
+eingecheckten Bilder, nur einen Rauchtest: ein Bild je Folie der PPTX, jedes 1600 × 900, erste
+und letzte Folie bei einem zweiten Lauf byte-gleich (Bilder in
+`.tmp/review/preview/funktionen-praesentation/`).
 
 ## Folien-Syntax (gemeinsam für Word und PowerPoint)
 

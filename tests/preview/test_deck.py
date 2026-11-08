@@ -1,9 +1,11 @@
 """E10-S02: an HTML deck as one PNG per slide and a contact sheet.
 
 The browser tests need Playwright (extra ``preview``) and its Chromium and are skipped without
-them. ``samples/funktionen/funktionen-praesentation.md`` is compared with reference pictures in
-``tests/preview/expected/funktionen-praesentation/`` (renew with PTA_DOCUMENTS_UPDATE_EXPECTED=1
-and look at the diff before committing it). The pictures land in ``.tmp/review/preview/``.
+them. The small, stable deck ``tests/preview/samples/vorschau-referenz.md`` is compared with
+reference pictures in ``tests/preview/expected/vorschau-referenz/`` (renew with
+PTA_DOCUMENTS_UPDATE_EXPECTED=1 and look at the diff before committing it). The feature tour
+``samples/funktionen/funktionen-praesentation.md`` grows with every story, so it only gets a smoke
+test without committed pictures. The pictures land in ``.tmp/review/preview/``.
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ from PIL import Image, ImageChops
 from pta_documents.charts.renderer import ChartRenderer
 from pta_documents.generation.html.generator import HtmlDeckGenerator
 from pta_documents.generation.html.options import HtmlDeckOptions
+from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
 from pta_documents.preview import (
     PreviewUnavailableError,
@@ -31,13 +34,16 @@ from pta_documents.preview import (
 from pta_documents.preview import deck as preview_deck
 from tests.conftest import REPO_ROOT, REVIEW_DIR
 from tests.expected import UPDATE_VARIABLE
+from tests.generation.pptx.conftest import generate as pptx_generate
+from tests.generation.pptx.conftest import open_pptx
 
 PPTX_SAMPLES: Final = REPO_ROOT / "tests" / "generation" / "pptx" / "samples"
 FUNKTIONEN: Final = REPO_ROOT / "samples" / "funktionen"
-EXPECTED: Final = Path(__file__).parent / "expected" / "funktionen-praesentation"
+REFERENCE_DECK: Final = Path(__file__).parent / "samples" / "vorschau-referenz.md"
+EXPECTED: Final = Path(__file__).parent / "expected" / REFERENCE_DECK.stem
 REVIEW: Final = REVIEW_DIR / "preview"
 REFERENCE_SIZE: Final = (800, 450)
-"""The reference pictures are the 1600 × 900 slides at half size: a few MB instead of 14."""
+"""The reference pictures are the 1600 × 900 slides at half size."""
 PIXEL_TOLERANCE: Final = 16
 """A pixel differs when one of its channels differs by more than this (of 255)."""
 SHARE_TOLERANCE: Final = 0.005
@@ -45,6 +51,8 @@ SHARE_TOLERANCE: Final = 0.005
 IMAGE_SUFFIXES: Final = {".png", ".jpg", ".jpeg", ".gif", ".svg"}
 THRESHOLD: Final = [255 if v > PIXEL_TOLERANCE else 0 for v in range(256)]
 STEPS: Final = "# Deck\n\n## Eins\n\n{marker}- a\n- b\n- c\n"
+CHARTS_ONLY: Final = (ChartRenderer(),)
+"""Charts are drawn by the library itself; Mermaid would depend on the machine."""
 
 
 def deck_html(
@@ -183,8 +191,8 @@ def test_a_slide_with_builds_shows_every_step() -> None:
     assert built[0].png == still[0].png
 
 
-def funktionen_html() -> bytes:
-    resources = tuple(
+def funktionen_resources() -> tuple[DocumentResource, ...]:
+    return tuple(
         DocumentResource(
             path.relative_to(FUNKTIONEN).as_posix(), content_type_of(path.name), path.read_bytes()
         )
@@ -193,12 +201,26 @@ def funktionen_html() -> bytes:
         and path.suffix.lower() in IMAGE_SUFFIXES
         and "vorschau" not in path.relative_to(FUNKTIONEN).parts
     )
-    return deck_html(
-        (FUNKTIONEN / "funktionen-praesentation.md").read_text(encoding="utf-8"),
+
+
+@pytest.mark.usefixtures("browser")
+def test_the_feature_tour_renders_a_picture_per_pptx_slide() -> None:
+    markdown = (FUNKTIONEN / "funktionen-praesentation.md").read_text(encoding="utf-8")
+    resources = funktionen_resources()
+    html = deck_html(
+        markdown,
         resources,
-        # Charts are drawn by the library itself; Mermaid would depend on the machine.
-        HtmlDeckOptions(code_block_renderers=(ChartRenderer(),), date=dt.date(2026, 11, 6)),
+        HtmlDeckOptions(code_block_renderers=CHARTS_ONLY, date=dt.date(2026, 11, 6)),
     )
+    pptx = pptx_generate(markdown, PptxOptions(code_block_renderers=CHARTS_ONLY), resources)
+    pictures = render_deck(html)
+    save_review("funktionen-praesentation", pictures)
+    assert [p.number for p in pictures] == list(range(1, len(open_pptx(pptx).slides) + 1))
+    for picture in pictures:
+        assert image(picture.png).size == (1600, 900), picture.number
+    last = pictures[-1].number
+    again = render_deck(html, slides={1, last})
+    assert [p.png for p in again] == [pictures[0].png, pictures[-1].png]
 
 
 def reference(png: bytes) -> Image.Image:
@@ -214,9 +236,13 @@ def differing_share(actual: Image.Image, expected: Image.Image) -> float:
 
 
 @pytest.mark.usefixtures("browser")
-def test_the_feature_tour_looks_like_its_reference_pictures() -> None:
-    pictures = render_deck(funktionen_html())
-    save_review("funktionen-praesentation", pictures)
+def test_the_reference_deck_looks_like_its_reference_pictures() -> None:
+    html = deck_html(
+        REFERENCE_DECK.read_text(encoding="utf-8"),
+        options=HtmlDeckOptions(code_block_renderers=CHARTS_ONLY, date=dt.date(2026, 11, 6)),
+    )
+    pictures = render_deck(html)
+    save_review(REFERENCE_DECK.stem, pictures)
     names = [f"folie-{p.number:02d}.png" for p in pictures]
     if os.environ.get(UPDATE_VARIABLE) == "1":
         EXPECTED.mkdir(parents=True, exist_ok=True)
@@ -235,6 +261,6 @@ def test_the_feature_tour_looks_like_its_reference_pictures() -> None:
         if share >= SHARE_TOLERANCE:
             worse.append(f"{name}: {share:.2%} of the pixels differ")
     assert worse == [], (
-        "\n".join(worse) + f"\nsee .tmp/review/preview/funktionen-praesentation/; "
+        "\n".join(worse) + f"\nsee .tmp/review/preview/{REFERENCE_DECK.stem}/; "
         f"if the change is meant, run with {UPDATE_VARIABLE}=1"
     )

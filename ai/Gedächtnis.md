@@ -538,7 +538,11 @@ weil ihm vertraut wird.
   Seite um die Bühne, Animationen und Übergänge ab; Builds im Endzustand. Seit E10-S02 installiert
   `./run.sh setup` das Extra `preview` und — nur wenn `preview --check-browser` scheitert —
   `playwright install chromium` (Fehler nur als Meldung). Playwright startet Chromium von sich
-  aus ohne Sandbox. **Referenzbilder** `tests/preview/expected/funktionen-praesentation/`
-  (halbe Größe, ~6 MB) ändern sich bei jeder sichtbaren Änderung an Folien der
-  Funktionsübersicht, an PPTX-Layout oder HTML-Writer: mit `PTA_DOCUMENTS_UPDATE_EXPECTED=1`
-  neu schreiben und `.tmp/review/preview/` ansehen. `samples/*/vorschau/` ist git-ignoriert.
+  aus ohne Sandbox. **Referenzbilder** nur vom kleinen Test-Deck
+  `tests/preview/samples/vorschau-referenz.md` in `tests/preview/expected/vorschau-referenz/`
+  (halbe Größe, ~0,6 MB); sie ändern sich bei sichtbaren Änderungen an PPTX-Layout oder
+  HTML-Writer: mit `PTA_DOCUMENTS_UPDATE_EXPECTED=1` neu schreiben und `.tmp/review/preview/`
+  ansehen. Die Funktionsübersicht bekommt **keine** eingecheckten Bilder (sie wächst mit jeder
+  Story, das Repo würde jedes Mal um MB wachsen), nur einen Rauchtest (Folienzahl = PPTX, Maße,
+  Wiederholbarkeit). Das Test-Deck nur ändern, wenn es nötig ist. `samples/*/vorschau/` ist
+  git-ignoriert.

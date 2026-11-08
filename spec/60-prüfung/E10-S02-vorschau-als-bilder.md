@@ -140,8 +140,9 @@ Damit sehen Anwender ohne PowerPoint und eine KI, die das Deck geschrieben hat, 
 - **Kontaktbogen:** Kacheln 400 px breit, vier je Zeile, 16 px Abstand, Foliennummer darunter in
   Selawik, Hintergrund `GREY_LIGHT`; bei weniger Bildern nur so breit wie nötig.
 - `.gitignore`: `samples/*/vorschau/`.
-- E08-S03 Punkt 5 erledigt sich mit: der Referenztest rendert die Funktionen-Präsentation, und
-  `./run.sh preview samples/funktionen` zeigt sie ohne Office (in `docs/anleitung.md` genannt).
+- E08-S03 Punkt 5 erledigt sich mit: der Rauchtest rendert die Funktionen-Präsentation (siehe
+  Nachtrag), und `./run.sh preview samples/funktionen` zeigt sie ohne Office (in
+  `docs/anleitung.md` genannt).
 
 ### Abweichungen vom Plan
 
@@ -161,14 +162,27 @@ Damit sehen Anwender ohne PowerPoint und eine KI, die das Deck geschrieben hat, 
   Rechner ab).
 - Tests in `tests/preview/test_deck.py` und `tests/preview/test_preview_tool.py` (Werkzeug
   per Pfad geladen wie in `test_funktionen.py`); Bilder zum Ansehen in `.tmp/review/preview/`.
+- **Nachtrag 2026-11-08 — Referenzbilder aus kleinem Test-Deck:** Die Referenzbilder der ganzen
+  Funktionsübersicht (69 Folien, 5,8 MB) sind wieder entfernt. Jede spätere Story muss Folien in
+  `samples/funktionen/` ergänzen (Vollständigkeitstest aus E08-S03), die Bilder wären also immer
+  wieder neu zu schreiben und einzuchecken — das Repo wüchse jedes Mal um Megabytes. Verglichen
+  wird jetzt das feste Test-Deck `tests/preview/samples/vorschau-referenz.md` (sieben Folien:
+  Titel ohne Bild, Text mit Liste, Karten, Spalten mit Tabelle und Fazit, Balkendiagramm,
+  dunkle Aussage, Schlussfolie) mit `tests/preview/expected/vorschau-referenz/` (halbe Größe,
+  zusammen ~0,6 MB; Schwellen unverändert). Die Funktionsübersicht hat nur noch einen Rauchtest
+  ohne eingecheckte Bilder: ein Bild je Folie der PPTX (gleiche Folienzahl), jedes
+  1600 × 900, erste und letzte Folie bei einem zweiten Lauf byte-gleich. Die alten Bilder
+  bleiben in der lokalen Historie; die Historie wird nicht umgeschrieben.
 
 ### Warnungen
 
-- **Warnung:** Die Referenzbilder sind ~5,8 MB Binärdaten im Repo und ändern sich bei jeder
-  sichtbaren Änderung an PPTX-Layout, HTML-Writer oder der Funktionsübersicht (dann mit
+- **Warnung:** Die Referenzbilder des Test-Decks sind ~0,6 MB Binärdaten im Repo (siehe
+  Nachtrag; anfangs waren es 5,8 MB für die ganze Funktionsübersicht) und ändern sich bei jeder
+  sichtbaren Änderung an PPTX-Layout oder HTML-Writer (dann mit
   `PTA_DOCUMENTS_UPDATE_EXPECTED=1` neu schreiben) — jede Erneuerung lässt das Repo um bis zu
-  diese Größe wachsen. Vorsichtigste Wahl zwischen „14 MB" und „nur Struktur" war halbe Größe;
-  reicht das nicht, wäre eine Auswahl von Folien der nächste Schritt (Frage an den Menschen).
+  diese Größe wachsen. Die Funktionsübersicht selbst ist dadurch nur noch strukturell geprüft;
+  eine sichtbare Verschiebung auf einer ihrer Folien fällt nur beim Ansehen von
+  `.tmp/review/preview/funktionen-praesentation/` auf.
 - **Warnung:** „< 0,5 % auf einer anderen Maschine" (AK 3) ist nur auf dieser Maschine (Linux,
   Playwright 1.64.1, chrome-headless-shell) geprüft. Eine andere Chromium-Version oder ein
   anderes Betriebssystem kann bei Kantenglättung und Fotos stärker abweichen; dann schlägt der
@@ -188,7 +202,7 @@ Damit sehen Anwender ohne PowerPoint und eine KI, die das Deck geschrieben hat, 
   ansehen; einzelne Folien mit dem HTML-Deck im Browser vergleichen (AK 1).
 - `./run.sh preview samples/funktionen` auf einem Windows-Rechner mit Segoe UI: Bilder müssen
   Selawik zeigen und mit `.tmp/review/preview/funktionen-praesentation/` übereinstimmen; der
-  Referenztest `./run.sh test tests/preview` dort grün (AK 3).
+  Referenztest (Test-Deck `vorschau-referenz`) `./run.sh test tests/preview` dort grün (AK 3).
 - `.\run.ps1 setup` auf Windows: installiert Playwright und Chromium, ohne bei einem Fehler
   abzubrechen.
 - Eine KI mit `docs/ki-anleitung.md` (Grundregel 3 und Checkliste) eine Präsentation schreiben
