@@ -224,6 +224,6 @@ neue Abhängigkeit: xlsxwriter kommt mit python-pptx.
 ### Offene Punkte
 
 - **PDF** (Plan Punkt 5): die Zeichnung ist fertig und getestet (Titel als Text im SVG); setzen
-  wird sie der PDF-Generator mit E05-S04.
+  wird sie der PDF-Generator mit E05-S04. — *(2026-11-08) Erledigt in E05-S04.*
 - Der Test „Pdfs_DrawTheChart" aus `ChartTests.cs` folgt mit E05; „OpenXmlValidator" hat in
   Python kein Gegenstück.

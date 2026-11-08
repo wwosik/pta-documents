@@ -190,6 +190,7 @@ als Aufzählung, als Kartenfigur (Deck) und im Text (Bericht). Beispiele: Abschn
 
 - **PDF (E05-S04):** Icons im Text als kleine Vektorgrafik (z. B. eigenes Flowable bzw.
   `loader.drawing` auf dem Canvas) und als Aufzählungszeichen; danach den Hinweis in
-  `layout/inline.py` entfernen.
+  `layout/inline.py` entfernen. — *(2026-11-08) Erledigt in E05-S04 (als PNG wie in Word,
+  nicht als Vektor: reportlabs Absätze setzen Bilder, keine Zeichnungen).*
 - Icons in Word-Fußnoten.
 - Wird der Authoring Guide (E04-S06) gebaut, übernimmt er die Namensliste (und den Test).

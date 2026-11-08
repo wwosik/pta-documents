@@ -109,7 +109,7 @@ def test_numbers_are_written_in_the_document_language(
 def test_the_text_colour_can_be_the_slides(review_dir: Path) -> None:
     drawing = draw(parse(ORDERS), Language.DE, ChartColors(text=colors.TEXT_SLIDES))
     assert {i.color for i in drawing.items if isinstance(i, DrawingText)} == {colors.TEXT_SLIDES}
-    # PDF (E05-S04) draws the drawing; until then the SVG shows the title as text.
+    # The PDF draws the drawing (E05-S04); the SVG shows the title as text too.
     svg = to_svg(drawing)
     assert "Orders by month" in svg
     pages = [

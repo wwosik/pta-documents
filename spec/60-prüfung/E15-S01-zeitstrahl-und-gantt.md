@@ -207,7 +207,8 @@ Container. Beispiele: Abschnitte „Zeitstrahl"/„Projektplan" in `funktionen-b
 
 - **PDF (E05-S04):** der PDF-Generator muss `::: timeline` und `::: gantt` selbst setzen —
   beide als Grafik über `drawing.schedule.draw(…, width)` in Satzspiegelbreite;
-  `layout_syntax.check(…, today=schedule.reference_day(datum))` aufrufen.
+  `layout_syntax.check(…, today=schedule.reference_day(datum))` aufrufen. — *(2026-11-08)
+  Erledigt in E05-S04 (Zeitstrahl als Vektoren, Gantt als Tabelle wie Word).*
 - E15-S02 (Schritte, Risikomatrix) kann den Weg `ScheduleBlock` → `FlowWriter` und die
   Word-Tabelle mit Schattierung (`_shade`, `_right_rule`) übernehmen.
 - Abhängigkeiten zwischen Vorgängen gibt es bewusst nicht (Antwort zu Frage 1).

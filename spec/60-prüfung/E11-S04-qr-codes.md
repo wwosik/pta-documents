@@ -173,7 +173,9 @@ Fehler), `docs/ki-anleitung.md`; `ai/Gedächtnis.md` (Eintrag „QR-Codes", Stac
 
 - **PDF** (E05-S04): das PNG wie jedes Bild setzen; `add_generated` muss der PDF-Generator nach
   `layout_syntax.check` ebenso aufrufen, und `scale_of` für die Größe lesen (3 cm aus der
-  Auflösung). Später SVG aus segno als Vektor (Notiz im Plan).
+  Auflösung). Später SVG aus segno als Vektor (Notiz im Plan). — *(2026-11-08) Das PNG setzt
+  das PDF seit E05-S01/E05-S02, `scale_of` gilt; QR als Vektor bleibt offen (E05-S04 hat es
+  nicht übernommen).*
 - **E15-S04** (Bildattribute): `scale=` für alle Bilder; dann die QR-Sonderregel in
   `generated_images._take_scale` dorthin verlagern.
 - Die Rundreise gibt `images/imageN.png` statt `qr:…` zurück (Akzeptanzkriterium,

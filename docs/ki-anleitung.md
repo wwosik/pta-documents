@@ -90,6 +90,9 @@ Sprache = Hinweis `code-language-unknown`.
   ohne eigene Nummern schreiben (Word nummeriert selbst).
 - Absätze, `-`/`1.`-Listen (bis drei Ebenen), Tabellen, `> Zitat`, Codeblöcke, Links, Fußnoten
   `[^1]`, **fett**, *kursiv*, ~~durchgestrichen~~, `code` gehen.
+- Derselbe Bericht geht mit `--pdf` (bei `generate` und `check`) auch als PDF: gleiche Syntax,
+  Grafiken als Vektoren, Gantt als Tabelle. Zeichen, die der Schrift fehlen (Emoji, Griechisch,
+  Kyrillisch ohne Segoe UI), werden `?` mit Hinweis `character-missing` — in Worten schreiben.
 - Tabellenbeschriftung: direkt unter der Tabelle ein Absatz `Tabelle: Beschreibung` →
   „Tabelle n: Beschreibung". Tabellentitel: ein Absatz nur aus `**Titel**` direkt davor.
 - Abbildung: Bild allein im Absatz, Unterschrift als Bildtitel:
@@ -232,10 +235,9 @@ Bilddatei, keine Quelle in `QUELLEN.md`.
 - **Karte** (PowerPoint): `### :icon-rocket: Start` in `::: cards` (oder
   `- :icon-rocket: **Start** – Text`) → Icon als Figur über dem Titel. Icon und `**Kennzahl**` in derselben Karte = Fehler.
 - **Aufzählung**: beginnt **jeder** Punkt einer `-`-Liste mit einem Icon, wird es das
-  Aufzählungssymbol (Word und PowerPoint). Sonst steht es im Text.
-- **Im Text**: nur Word (so hoch wie die Schrift). Auf Folien ist ein Icon im Text, in Titeln,
-  Tabellen oder Notizen ein Fehler — dort nur Karten und Listen. Das PDF lässt Icons noch weg
-  (Hinweis `code-not-drawn`).
+  Aufzählungssymbol (Word, PowerPoint und PDF). Sonst steht es im Text.
+- **Im Text**: Word und PDF (so hoch wie die Schrift). Auf Folien ist ein Icon im Text, in
+  Titeln, Tabellen oder Notizen ein Fehler — dort nur Karten und Listen.
 - Nur diese Namen; ein anderer ist ein Fehler mit den drei ähnlichsten:
 
 `access-point` `adjustments` `alert-circle` `alert-triangle` `api` `arrow-down` `arrow-left`

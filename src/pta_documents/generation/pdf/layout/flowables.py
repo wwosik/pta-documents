@@ -6,15 +6,24 @@ page.
 
 from __future__ import annotations
 
+import io
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Final
+from functools import cache
+from typing import Any, Final, cast
 
 from reportlab.lib import colors as rl_colors
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Flowable, Image, Paragraph, Table
+from reportlab.platypus import paragraph as rl_paragraph
 from reportlab.platypus.flowables import CondPageBreak
+from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_config import paraFontSizeHeightOffset
+
+from pta_documents.design import word
+from pta_documents.design.icons import raster as icon_raster
+from pta_documents.generation.common import icons
 
 SQUARE_SHARE: Final = 0.45
 """The side of the bullet square as a share of the font size (Wingdings ``n`` in Word)."""
@@ -24,6 +33,34 @@ BOX_SHARE: Final = 0.7
 """The side of a task-list box as a share of the font size."""
 START_LINES: Final = 2
 """What has to fit below a heading: two lines of a paragraph (a single one may not stay)."""
+ICON_SOURCE: Final = "pta-icon:"
+"""``<img src="pta-icon:rocket"/>`` in paragraph markup: the bundled icon (E15-S03, E05-S04)."""
+
+
+@cache
+def icon_png(name: str) -> bytes:
+    """The icon ``name`` in PTA blue as a PNG of ``word.ICON_PIXELS``, as Word places it (cached:
+    the result depends on the name only)."""
+    return icon_raster.png(name, icons.COLOR, word.ICON_PIXELS)
+
+
+def icon_image(name: str, size_pt: float) -> str:
+    """Markup of the icon ``name`` within text: ``size_pt`` high, standing on the baseline."""
+    return (
+        f'<img src="{ICON_SOURCE}{name}" width="{size_pt}" height="{size_pt}" valign="baseline"/>'
+    )
+
+
+class _Parser(ParaParser):
+    """reportlab's parser, reading ``pta-icon:`` images from the bundled icons: its own
+    ``<img>`` takes file names and URLs only."""
+
+    def end_img(self) -> None:
+        frag: Any = self._stack[-1]  # pyright: ignore[reportUnknownMemberType]
+        source = getattr(frag, "src", None)
+        if isinstance(source, str) and source.startswith(ICON_SOURCE):
+            frag.src = io.BytesIO(icon_png(source.removeprefix(ICON_SOURCE)))
+        super().end_img()
 
 
 class MarkerKind(StrEnum):
@@ -32,6 +69,8 @@ class MarkerKind(StrEnum):
     DASH = "dash"
     BOX = "box"
     CHECKED_BOX = "checked-box"
+    ICON = "icon"
+    """A bundled icon (``text`` is its name) as the bullet of a list item (E15-S03)."""
 
 
 @dataclass(frozen=True)
@@ -97,6 +136,23 @@ class PtaParagraph(Paragraph):
         self.rule = rule
         self.anchor = anchor
         self.outline = outline
+
+    def _setup(self, text: Any, style: Any, bulletText: Any, frags: Any, cleaner: Any) -> None:
+        if frags is None:
+            # As reportlab's own, with the parser that knows the icons.
+            text = cleaner(text)
+            parser = _Parser()
+            parser.caseSensitive = self.caseSensitive
+            style, frags, bullet_frags = parser.parse(text, style)
+            if frags is None:
+                errors: Any = parser.errors
+                raise ValueError(
+                    f"xml parser error ({errors[0]}) in paragraph beginning\n'{text[:30]}'"
+                )
+            cast(Any, rl_paragraph).textTransformFrags(frags, style)
+            if bullet_frags:
+                bulletText = bullet_frags
+        cast(Any, Paragraph)._setup(self, text, style, bulletText, frags, cleaner)
 
     def split(self, availWidth: float, availHeight: float) -> list[Flowable]:
         parts: list[Flowable] = super().split(availWidth, availHeight)
@@ -166,6 +222,10 @@ class PtaParagraph(Paragraph):
                     inset = side * 0.2
                     canvas.line(x + inset, bottom + inset, x + side - inset, bottom + side - inset)
                     canvas.line(x + inset, bottom + side - inset, x + side - inset, bottom + inset)
+            case MarkerKind.ICON:
+                side = word.ICON_BULLET_PT
+                reader = ImageReader(io.BytesIO(icon_png(marker.text)))
+                canvas.drawImage(reader, x, y - side * 0.15, side, side, mask="auto")
         canvas.restoreState()
 
 

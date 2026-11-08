@@ -5,10 +5,11 @@ bekommst daraus ein Word-Dokument oder eine PowerPoint-Präsentation **auf den o
 PTA-Vorlagen** — mit Deckblatt, Logo, Kopf- und Fußzeile, PTA-Formatvorlagen und PTA-Layouts.
 Umgekehrt macht es aus vorhandenen Word- und PowerPoint-Dateien Markdown.
 
-PDF gibt es als Vorstufe: `./run.sh generate bericht.md --pdf` schreibt ein PDF/A in den
+PDF gibt es auch: `./run.sh generate bericht.md --pdf` schreibt ein PDF/A in den
 Formatvorlagen der PTA-Word-Vorlage, mit Deckblatt, Inhaltsverzeichnis, Kopf- und Fußzeile wie
-in Word; Diagramme, Charts, Zeitstrahl, Gantt, Schrittfolge und Risikomatrix zeigt es noch als
-Quelltext bzw. Liste.
+in Word; Charts, Mermaid-Diagramme, Zeitstrahl, Schrittfolge und Risikomatrix zeichnet es als
+scharfe Vektorgrafik, Gantt als Tabelle, Icons wie Word. Ein Zeichen, das der Schrift fehlt
+(etwa ein Emoji oder Griechisch), erscheint als `?` — `check --pdf` nennt es.
 
 ## 1. Einmal einrichten
 
@@ -534,9 +535,8 @@ Fachbereich, IT und Betrieb
 
 - **Am Anfang eines Kartentitels** (PowerPoint) wird das Icon die Figur der Karte, über dem
   Titel; auf dunklen Folien weiß. Icon und Kennzahl zugleich gehen nicht.
-- **Vor jedem Punkt einer Liste** ersetzt es das Aufzählungszeichen, in Word und PowerPoint.
-- **Im Text** zeigt es nur Word. Auf Folien ist ein Icon an anderer Stelle ein Fehler; das PDF
-  lässt Icons vorerst weg.
+- **Vor jedem Punkt einer Liste** ersetzt es das Aufzählungszeichen, in Word, PowerPoint und PDF.
+- **Im Text** zeigen es Word und PDF. Auf Folien ist ein Icon an anderer Stelle ein Fehler.
 - Die Namen stehen in [ki-anleitung.md](ki-anleitung.md#icons-icon-name-word-und-powerpoint)
   (etwa 160, z. B. `check`, `x`, `alert-triangle`, `users`, `server`, `cloud`, `lock`,
   `rocket`, `target`, `chart-bar`, `currency-euro`, `mail`, `bulb`). Ein Tippfehler meldet die

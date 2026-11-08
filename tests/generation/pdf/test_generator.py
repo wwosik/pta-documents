@@ -24,7 +24,8 @@ from pta_documents.generation.pdf import EXTRA_MISSING, PdfGenerator, PdfOptions
 from pta_documents.generation.pdf import generator as pdf_generator
 from pta_documents.markdown import DocumentResource, MarkdownDocument, content_type_of
 from tests.conftest import REPO_ROOT
-from tests.generation.common.visual_blocks import RATING, RISKS, STEPS
+from tests.diagrams.support import drawable
+from tests.generation.common.visual_blocks import RATING
 from tests.generation.pdf.support import body_texts, type_area
 
 CREATED: Final = dt.datetime(2026, 11, 8, 9, 0, tzinfo=dt.UTC)
@@ -156,26 +157,6 @@ def test_a_qr_code_is_three_centimetres_wide_as_in_word() -> None:
     assert widths == [3.0, 6.0]
 
 
-def test_timelines_and_gantt_charts_show_as_their_content_with_a_note() -> None:
-    markdown = NO_COVER + "::: timeline\n- 2026-01: Kick-off\n- 2027: Betrieb\n:::\n"
-    output = io.BytesIO()
-    result = PdfGenerator().generate(MarkdownDocument(markdown), output, OPTIONS)
-    assert result.codes() == [NoteCodes.CODE_NOT_DRAWN]
-    assert "2026-01: Kick-off" in pages_text(output.getvalue())[0]
-
-
-@pytest.mark.parametrize("block", [STEPS, RISKS], ids=["steps", "riskmatrix"])
-def test_steps_and_risk_matrices_show_as_their_content_with_a_note(block: str) -> None:
-    """E15-S02: drawn with E05-S04."""
-    output = io.BytesIO()
-    result = PdfGenerator().generate(MarkdownDocument(NO_COVER + block), output, OPTIONS)
-    assert result.codes() == [NoteCodes.CODE_NOT_DRAWN]
-    assert (
-        "Analyse" in pages_text(output.getvalue())[0]
-        or "Ausfall" in pages_text(output.getvalue())[0]
-    )
-
-
 def test_harvey_balls_are_drawn_in_their_cells() -> None:
     """E15-S02: the PDF's fonts have no ○ ◔ ◑ ◕ ●, so the balls are drawn as small pictures."""
     data, _ = generate(NO_COVER + RATING)
@@ -194,9 +175,9 @@ def test_characters_missing_from_the_code_font_become_question_marks() -> None:
     assert pages_text(data)[0].split("\n") == ["?????? und", "? = 1"]
 
 
-def test_the_report_samples_generate_with_only_what_is_not_drawn_yet(review_dir: Path) -> None:
-    """Every Word sample is a PDF too; charts, drawings, timelines and Gantt charts stay their
-    source with ``code-not-drawn`` until E05-S04."""
+def test_the_report_samples_generate_without_notes(review_dir: Path) -> None:
+    """Every Word sample is a PDF too, every graphic drawn (E05-S04); samples with Mermaid only
+    where mermaid-cli works."""
     for folder in ("gsb", "funktionen"):
         root = REPO_ROOT / "samples" / folder
         images = tuple(
@@ -204,10 +185,13 @@ def test_the_report_samples_generate_with_only_what_is_not_drawn_yet(review_dir:
             for p in sorted((root / "images").glob("*"))
         )
         for source in sorted(root.glob("*-bericht.md")) + sorted(root.glob("*-dokument.md")):
+            markdown = source.read_text(encoding="utf-8")
+            if not drawable(markdown):
+                continue
             output = io.BytesIO()
-            document = MarkdownDocument(source.read_text(encoding="utf-8"), images)
+            document = MarkdownDocument(markdown, images)
             result = PdfGenerator().generate(document, output, OPTIONS)
-            assert set(result.codes()) <= {NoteCodes.CODE_NOT_DRAWN}, f"{source.name}:\n{result}"
+            assert result.notes == (), f"{source.name}:\n{result}"
             assert result.pages and result.pages >= 1
             (review_dir / f"pdf-{source.stem}.pdf").write_bytes(output.getvalue())
 

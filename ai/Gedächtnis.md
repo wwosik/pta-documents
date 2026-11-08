@@ -29,7 +29,8 @@ weil ihm vertraut wird.
 - **Stand 2026-11-06:** M01 umgesetzt (alle Stories in `spec/60-prüfung/`): DOCX- und
   PPTX-Generator auf den PTA-Vorlagen, DOCX-/PPTX-Konverter, Front Matter, Designmodell,
   eingebettete Vorlagen. Seit E05-S01/E05-S02 ein PDF-Generator (Rumpf im Word-Design, PDF/A-2b;
-  seit E05-S03 mit Seitenrahmen, noch ohne Grafiken), der PDF-Konverter ist nur geplant; die
+  seit E05-S03 mit Seitenrahmen, seit E05-S04 mit allen Grafiken), der PDF-Konverter ist nur
+  geplant; die
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
   Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
   Diagrammlayouts (`chart`-Blöcke seit E06-S01, auch nativ in Word; Finanzdiagramme seit
@@ -203,7 +204,8 @@ weil ihm vertraut wird.
   `selawkl.ttf` des Releases ersetzt, die SHA-256 in `tests/design/test_fonts.py` und im
   Modul-Docstring nachziehen. Selawik hat **kein U+00A0** (Typografie setzt es!): der
   PDF-Generator weicht aus (seit E05-S02 leiht U+00A0 beim Registrieren die Glyphe des
-  Leerzeichens, `truetype.with_aliases`; andere fehlende Zeichen werden `?`, Ersatz: E05-S04).
+  Leerzeichens, `truetype.with_aliases`; andere fehlende Zeichen gehen seit E05-S04 an
+  `replace_unsupported`, Standard `?`).
   Segoe UI wird nur mit allen fünf
   Dateien (inkl. `segoeuil.ttf`) übernommen.
 - **Logos** (E01-S04): `pta_documents.design.logos` (Unterpaket; SVG/PNG als Paketdaten daneben)
@@ -330,9 +332,9 @@ weil ihm vertraut wird.
   Gruppe `Drawing <n>`, Breite des Platzes, nie geschrumpft). Word: `BodyWriter.timeline` (Bild
   über `docx_drawings.convert`, Extra `svg`) und `BodyWriter.gantt` (Tabelle „PTA",
   Schattierung, `tcBorders` **nach** `w:shd` anlegen, sonst falsche Schema-Reihenfolge). Der
-  DOCX-Konverter liest leere Zellen mit Füllung PTA-Blau/Hellblau als `■`. Das PDF zeigt beide
-  bis E05-S04 als ihren Inhalt mit `code-not-drawn` (`StoryBuilder.layout_container`); zeichnen
-  muss es sie selbst (E05-S04).
+  DOCX-Konverter liest leere Zellen mit Füllung PTA-Blau/Hellblau als `■`. Das PDF (E05-S04)
+  zeichnet den Zeitstrahl als Vektoren und setzt den Gantt als Tabelle wie Word
+  (`StoryBuilder.layout_container` → `drawing`/`gantt`; „heute" = `LayoutSettings.today`).
 - **Schritte, Harvey Balls, Risikomatrix** (E15-S02): Container `steps`/`riskmatrix` in
   `layout_syntax` (`riskmatrix` nimmt `green=… yellow=…`, `risks.thresholds_argument`); Leser
   `generation/common/steps.py` und `risks.py` (Hilfen `child_blocks`, `table_rows`, `error_at`
@@ -344,13 +346,15 @@ weil ihm vertraut wird.
   `harvey-n` über der Zelle, der Konverter schreibt `[n/4]` per Position zurück), Word Zeichen in
   Segoe UI Symbol, PDF `flowables.HarveyBall`. PPTX-Blöcke `StepsBlock`/`RiskMatrixBlock`
   (Legende rechts, unter 7 cm Platz darunter); Word `BodyWriter.steps`/`risk_matrix`
-  (`drawing_picture`). Das PDF zeigt beide Container als Inhalt (`DRAWN_CONTAINERS`,
-  `code-not-drawn`). `test_funktionen.py` verlangt `[n/4]` und `::: riskmatrix <thresholds>`.
+  (`drawing_picture`). Das PDF zeichnet beide wie Word, als Vektoren (`StoryBuilder.steps`/
+  `risk_matrix`, E05-S04). `test_funktionen.py` verlangt `[n/4]` und
+  `::: riskmatrix <thresholds>`.
 - **PDF-Generator** (E05-S01 + E05-S02, zusammengeführt 2026-11-08): `generation/pdf/` ist nur
   mit Extra `pdf` importierbar (`__init__` wirft sonst `ImportError(EXTRA_MISSING)`); `check` und
   die Werkzeuge importieren es erst bei `--pdf`/`DocumentFormat.PDF`, der Kern nie. Ablauf in
   `PdfGenerator.generate`: Front Matter (`VALID_KEYS` = die von DOCX) → `create_parser().parse` +
-  `layout_syntax.check(…, today)` → `generated_images.add_generated` → `typeset` (und die
+  `layout_syntax.check(…, today)` → `generated_images.add_generated(…, notes)` → `typeset` (und
+  die
   Status-Labels) → `design.fonts.resolve` → `Notes.characters` (`character-missing`) →
   **`frame.lay_out(tokens, document, LayoutSettings, FrameInfo, notes, PdfInfo)`** (seit
   E05-S03; ohne Rahmen `layout.layout`) → `pdfa.to_pdfa`
@@ -360,17 +364,18 @@ weil ihm vertraut wird.
   E05-S01 sind entfallen (Stand in Commit 175e572); E05-S03 zeichnet den Seitenrahmen über
   `render(…, decorate, page_count, first_top_pt)`, E05-S04 Zeichnungen als eigene Flowables auf
   dem reportlab-Canvas.
-  Fehlende Zeichen werden in `InlineWriter.text` zu `?` (`PdfFonts.shown`; Text: Regular+Bold,
-  Code: Mono; `ALIASES` zählen als vorhanden) — PDF/A verbietet `.notdef`. QR-Codes sind 3 cm
+  Fehlende Zeichen gehen durch `PdfFonts.shown` (Text: Regular+Bold, Code: Mono; `ALIASES`
+  zählen als vorhanden) — PDF/A verbietet `.notdef`; siehe den Eintrag E05-S04. **Jeder** Text,
+  der auf den Canvas kommt (auch Seitenrahmen, Deckblatt, Zeichnungen), muss durch `shown`.
+  QR-Codes sind 3 cm
   (× `scale_of`) wie in Word (`StoryBuilder.picture`). Pillows sRGB-Profil trägt die aktuelle
   Uhrzeit — `pdfa.srgb_profile` setzt sie fest, sonst sind Dateien nicht byte-gleich. Selawik hat
   **weder Griechisch noch Kyrillisch**; ohne Segoe UI werden solche Zeichen `?`. Tests mit
   `PdfOptions(created=…, system_fonts=False)`, damit sie nicht vom Rechner abhängen; veraPDF ist
   hier nicht installiert (Test wird übersprungen). Präsentationen gibt es nicht als PDF
   (`fusszeile` u. a. sind keine gültigen Schlüssel). Jedes Word-Beispiel in `samples/` muss als
-  PDF entstehen und darf nur `code-not-drawn` melden
-  (`tests/generation/pdf/test_generator.py`); wer E05-S04 umsetzt, verschärft das auf „keine
-  Hinweise".
+  PDF ohne Hinweise entstehen (`tests/generation/pdf/test_generator.py`; Mermaid-Beispiele nur,
+  wo mermaid-cli läuft).
 - **PDF-Seitenrahmen** (E05-S03): `design/word_frame.read(variant)` liest Kopf-/Fußzeilen der
   Vorlage (`PageFrame` → `PageKind` → `Band` mit `FrameTable`/`FrameParagraph`, Logo-`Box`,
   `FrameRule`), `generation/pdf/frame.py` zeichnet sie (`PageDecorator`) und setzt Deckblatt und
@@ -410,15 +415,18 @@ weil ihm vertraut wird.
   nur Bullet-Listen, **jeder** Punkt mit Icon). PPTX: `Card.icon` → `FlowWriter.icon` (Gruppe
   `icon:<name>`), `Paragraph.icon` → `DeckWriter.icon_bullet` (`a:buBlip`); jedes andere Icon
   in Folientext wirft in `DeckParser.runs`. Word: `BodyWriter.icon_picture`/`icon_bullet`
-  (`numId 0`, hängender Einzug, `w:tab` im Bild-Run); PDF: `InlineWriter` lässt Icons mit
-  `code-not-drawn` weg (bis E05-S04). Konverter: DOCX über `docPr/@descr`, PPTX über Gruppenname
+  (`numId 0`, hängender Einzug, `w:tab` im Bild-Run); PDF (E05-S04): `InlineWriter` schreibt
+  `<img src="pta-icon:name"/>`, das `PtaParagraph` über einen eigenen `ParaParser` liest
+  (`flowables._Parser`, reportlabs `<img>` kennt nur Dateien/URLs, `data:` sperrt rl_config),
+  Aufzählungszeichen `MarkerKind.ICON`. Konverter: DOCX über `docPr/@descr`, PPTX über
+  Gruppenname
   und PNG-Textfeld. `docs/ki-anleitung.md` muss jeden Namen nennen (Test
   `tests/design/icons/test_icons.py`).
 - **Bildattribute** (E15-S04): `{…}` direkt nach einem Bild ist eine eigene Inline-Regel
   (`markdown/image_attributes.py`, Rohtext in `Token.meta[ATTRIBUTES]`) — **nicht**
   `mdit_py_plugins.attrs` (dort beginnt `%` einen Kommentar, `{focus=30%,20%}` bliebe Text).
   Gelesen und geprüft (Fehler `Line N: …`) wird in `generation/common/image_attributes.take`,
-  aufgerufen aus `generated_images.add_generated` für **alle** Bilder (auch PDF, ohne `notes`);
+  aufgerufen aus `generated_images.add_generated` für **alle** Bilder (auch PDF, mit `notes`);
   Ergebnis in `Token.meta[KEY]`, Abruf mit `of(token)`. `scale=` im Titel: noch bis 2027-11, mit
   Hinweis `image-scale-in-title`. `.grey`/`.round` macht `image_styles.apply` als neue
   PNG-Ressource (`<name>-grey.png`, `-round.png`) und **schreibt `src` des Tokens um** —
@@ -452,3 +460,17 @@ weil ihm vertraut wird.
   `frame.Watermark` über `render(…, underlay=…)` (`onPage`, vor dem Inhalt), Farbe gegen Weiß
   gemischt statt Alpha (PDF/A ohne Soft-Mask). pdfplumber hält 45°-Text für `upright` — Tests
   erkennen das Wasserzeichen an `matrix[1]`.
+- **Grafiken und fehlende Zeichen im PDF** (E05-S04): Zeichnungen (`DrawingGraphic`,
+  `ChartGraphic.drawing`, Zeitstrahl, Schritte, Risikomatrix, Gantt-Raute) sind
+  `generation/pdf/layout/drawings.DrawingFlowable` (Pfade/Text direkt auf dem Canvas, y nur dort
+  gespiegelt; Texte werden im Konstruktor gemessen, damit fehlende Zeichen beim Bauen der Story
+  werfen). Größe/Schrumpfen in `StoryBuilder.drawing_flowable`, Beschriftung aus
+  `Abbildung: …` nach dem Zaun in `graphic_figure` (Charts sonst ohne, der Titel steht in der
+  Zeichnung). SVG-Bilder wandelt das PDF mit `story.IMAGE_SCALE = 3`. Fehlende Zeichen:
+  `generation/common/graphemes.clusters` (ohne `regex`), `PdfFonts.replace`
+  (= `PdfOptions.replace_unsupported`/`LayoutSettings.replace_unsupported`, Standard
+  `fonts.question_mark`, `None` = Fehler) mit Antwort-Cache je Dokument (`PdfFonts.replaced`;
+  `prepare` legt `PdfFonts` je Dokument an). Lesezeichen/Inhaltsverzeichnis zeigen den Ersatz
+  (`Outline.text` ist schon ersetzt), Anker bleiben aus dem Original. `layouts.md` und die
+  Fehlerfälle der Folien-Syntax laufen in `tests/generation/common/test_layout_syntax.py` auch
+  für PDF (`GENERATORS`; die farbigen Wörter nur `OFFICE`).

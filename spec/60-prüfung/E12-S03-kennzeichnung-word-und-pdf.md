@@ -186,4 +186,4 @@ Rundreise-Erwartungen. Doku: `docs/verwendung.md` (Abschnitt „Kennzeichnung in
 
 - Ein Wasserzeichen, das über einem Bild liegen soll, gibt es nicht (Word und PDF: dahinter).
 - Fehlende Zeichen in der Kennzeichnung (nur bei eigenen Texten denkbar) würden im PDF `?`, ohne
-  Hinweis — wie Titel und Firma im Seitenrahmen (Warnung aus E05-S03).
+  Hinweis — wie Titel und Firma im Seitenrahmen (Warnung aus E05-S03). — *(2026-11-08) Erledigt in E05-S04.*

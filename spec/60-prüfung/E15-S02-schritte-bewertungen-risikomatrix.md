@@ -191,5 +191,6 @@ Tests: `tests/generation/common/test_steps.py`, `test_risks.py`, `test_layout_pa
 - **PDF (E05-S04):** `::: steps` über `drawing.steps.draw(…, Satzspiegelbreite)` mit derselben
   Text-Regel wie Word (`word.STEPS_TEXT_PT`, Liste als Rückfall), `::: riskmatrix` über
   `drawing.riskmatrix.draw` plus Legende als Tabelle; danach `DRAWN_CONTAINERS` in
-  `layout/story.py` leeren.
+  `layout/story.py` leeren. — *(2026-11-08) Erledigt in E05-S04; `DRAWN_CONTAINERS` ist
+  entfallen.*
 - Der DOCX-Konverter könnte ◕ & Co. in Tabellenzellen wieder zu `[n/4]` machen (heute: Zeichen).

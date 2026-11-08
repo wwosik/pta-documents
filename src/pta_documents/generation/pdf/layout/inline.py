@@ -1,7 +1,8 @@
 """Inline Markdown as reportlab paragraph markup, formatted as the DOCX writer formats runs.
 
 Bold, italic, strikethrough, inline code in the code font, ``==mark==`` on PTA yellow, coloured
-words bold in their status colour, links in the colour and underline of the ``Hyperlink`` style.
+words bold in their status colour, icons as small pictures on the baseline, links in the colour
+and underline of the ``Hyperlink`` style.
 Links go out only to absolute URLs and in only to anchors of headings of the document; any other
 target leaves the text without a link, as in DocLibs.
 """
@@ -20,7 +21,8 @@ from pta_documents.design import word
 from pta_documents.design.colors import STATUS_COLORS
 from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common import html, layout_syntax
-from pta_documents.generation.common.result import NoteCodes, Notes
+from pta_documents.generation.common.result import Notes
+from pta_documents.generation.pdf.layout.flowables import icon_image
 from pta_documents.generation.pdf.layout.styles import PdfStyles
 from pta_documents.markdown.parser import child_lines
 
@@ -117,13 +119,8 @@ class InlineWriter:
                 case "image":
                     parts.append(self.text(child.content, options))
                 case "icon":
-                    # Drawn in the PDF with E05-S04; Word and PowerPoint show it.
-                    self.notes.add(
-                        NoteCodes.CODE_NOT_DRAWN,
-                        line,
-                        f"The icon ':icon-{child.meta['name']}:' is left out: the PDF does not "
-                        "draw icons yet (E05-S04).",
-                    )
+                    # A small picture standing on the baseline, as in Word (E15-S03, E05-S04).
+                    parts.append(icon_image(child.meta["name"], word.ICON_PT))
                 case "footnote_ref":
                     options.footnotes.append(child)
                     parts.append(f"<super>{self.footnote_number(child)}</super>")
@@ -147,6 +144,15 @@ class InlineWriter:
     def text(self, text: str, options: InlineOptions, *, code: bool = False) -> str:
         """``text`` escaped for paragraph markup, characters the faces lack as ``?``."""
         return escape(self.styles.fonts.shown(text.upper() if options.caps else text, code))
+
+    def markup_text(self, text: str, options: InlineOptions) -> str:
+        """Plain ``text`` as markup, bold and italic as ``options`` say (generated cells)."""
+        body = self.text(text, options)
+        if options.italic:
+            body = f"<i>{body}</i>"
+        if options.bold:
+            body = f"<b>{body}</b>"
+        return body
 
     def status(self, text: str, color: str, options: InlineOptions) -> str:
         return f"<font color={hex_attribute(color)}><b>{self.text(text, options)}</b></font>"

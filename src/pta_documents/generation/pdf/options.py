@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from pta_documents.design.variants import DEFAULT_WORD_VARIANT, Language, Marking, WordVariant
 from pta_documents.generation.common.images import ImageConverter, default_converters
 from pta_documents.generation.common.renderers import CodeBlockRenderer, default_renderers
+from pta_documents.generation.pdf.layout.fonts import Replacement, question_mark
 
 
 @dataclass(frozen=True)
@@ -32,8 +33,11 @@ class PdfOptions:
     marking: Marking = Marking.NONE
     """``kennzeichnung:``: „VERTRAULICH" (…) below the rule of every header and on the cover;
     ``entwurf`` adds the watermark „ENTWURF" behind the text (E12-S03), as in Word."""
-    replace_unsupported: bool = True
-    """Characters the fonts lack are replaced (E05-S04); PDF/A allows no ``.notdef``."""
+    replace_unsupported: Replacement | None = question_mark
+    """Asked once per grapheme cluster the fonts lack (an emoji such as ``👍🏽`` is one) for
+    what to show instead; the replacement must be in the fonts too (E05-S04). The default
+    shows ``?``; None makes every such character an error naming it, its code point and the
+    font. PDF/A allows no ``.notdef``."""
     system_fonts: bool = True
     """Take Segoe UI, Consolas and Georgia from the system when installed
     (``design.fonts.resolve``); ``False`` always embeds the bundled fonts."""

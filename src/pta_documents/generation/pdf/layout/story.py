@@ -12,6 +12,7 @@ their first line, tables repeat their header, images never split and only shrink
 
 from __future__ import annotations
 
+import datetime as dt
 import io
 import math
 import re
@@ -37,6 +38,17 @@ from pta_documents.design.variants import (
     Language,
     WordVariant,
 )
+from pta_documents.drawing import riskmatrix as risk_drawing
+from pta_documents.drawing import schedule as schedule_drawing
+from pta_documents.drawing import steps as steps_drawing
+from pta_documents.drawing.model import (
+    ClosePath,
+    Drawing,
+    DrawingPath,
+    DrawingShape,
+    LineTo,
+    MoveTo,
+)
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import (
     block_shapes,
@@ -44,19 +56,33 @@ from pta_documents.generation.common import (
     code_highlight,
     generated_images,
     html,
+    icons,
     layout_syntax,
     layout_tokens,
+    risks,
+    schedule,
 )
+from pta_documents.generation.common import steps as steps_model
 from pta_documents.generation.common.images import (
-    GENERATOR_SCALE,
     ImageConverter,
     convert_image,
     refusal_hint,
 )
-from pta_documents.generation.common.renderers import CodeBlockRenderer, ImageGraphic
+from pta_documents.generation.common.renderers import (
+    ChartGraphic,
+    CodeBlockRenderer,
+    DrawingGraphic,
+    ImageGraphic,
+)
 from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.pdf.layout import flowables as fl
-from pta_documents.generation.pdf.layout.fonts import PdfFonts, register
+from pta_documents.generation.pdf.layout.drawings import DrawingFlowable
+from pta_documents.generation.pdf.layout.fonts import (
+    PdfFonts,
+    Replacement,
+    question_mark,
+    register,
+)
 from pta_documents.generation.pdf.layout.inline import InlineOptions, InlineWriter, hex_attribute
 from pta_documents.generation.pdf.layout.styles import (
     FOOTNOTE_RULE_PT,
@@ -76,13 +102,11 @@ PILLOW_IMAGES: Final = ("image/gif", "image/bmp", "image/tiff", "image/webp")
 """Formats Pillow reads and the engine turns into PNG."""
 SCALE: Final = re.compile(r"(?:^|\s)scale\s*=\s*([0-9]*\.?[0-9]+)(?=\s|$)")
 """``![alt](bild.png "scale=0.5")``: the image at half its natural size."""
-DRAWN_CONTAINERS: Final = (
-    layout_syntax.TIMELINE,
-    layout_syntax.GANTT,
-    layout_syntax.STEPS,
-    layout_syntax.RISK_MATRIX,
-)
-"""The containers the PDF shows as their content until it draws them (E05-S04)."""
+IMAGE_SCALE: Final = 3.0
+"""The scale images in other formats (SVG) are converted at: three times their natural size,
+about 288 dpi, sharp in print (E06-S04; Word and PowerPoint take ``GENERATOR_SCALE``)."""
+MILESTONE_PX: Final = 10.0
+"""The diamond of a milestone in a Gantt table (Word: ◆, which the PDF fonts lack)."""
 TABLE_CELL_GAP_PT: Final = 0.3 * word_styles.POINTS_PER_CM
 """Room between columns when sizing them, as in the DOCX writer (``TABLE_CELL_GAP``)."""
 MAX_ENLARGEMENT: Final = 2.0
@@ -109,6 +133,10 @@ class LayoutSettings:
     status_labels: Mapping[str, StatusCategory] = field(default_factory=dict[str, StatusCategory])
     """Status labels of the front matter (``FrontMatter.status_labels``, typeset like the
     text): table cells of exactly such a code span are bold in the colour of the category."""
+    replace_unsupported: Replacement | None = question_mark
+    """What a character the fonts lack becomes (``PdfOptions.replace_unsupported``)."""
+    today: dt.date | None = None
+    """„Heute" in timelines and Gantt charts (``schedule.reference_day``); None: today."""
 
 
 @dataclass(frozen=True)
@@ -137,7 +165,7 @@ class LayoutContext:
 def prepare(settings: LayoutSettings) -> LayoutContext:
     """Read the template's design and register the fonts."""
     design = word_styles.read(settings.variant)
-    fonts = register(settings.fonts or bundled())
+    fonts = register(settings.fonts or bundled(), settings.replace_unsupported)
     styles = PdfStyles(design, fonts, settings.justify)
     return LayoutContext(settings, design, fonts, styles, TEXTS[settings.language])
 
@@ -278,7 +306,8 @@ class StoryBuilder:
         number = ".".join(str(n) for n in self.numbers[:level])
         style = self.styles.headings[level - 1]
         level_format = self.styles.design.level(self.styles.format(style.style.name))
-        text = _plain_text(inline)
+        # Bookmarks and the table of contents show what the text shows (replace_unsupported).
+        text = self.styles.fonts.shown(_plain_text(inline))
         outline_level = min(level - 1, (self.outline[-1].level + 1) if self.outline else 0)
         outline = fl.Outline(
             f"{number} {text}".strip(),
@@ -375,9 +404,8 @@ class StoryBuilder:
         return j
 
     def layout_container(self, tokens: list[Token], i: int) -> int:
-        """A ``:::`` container shown plainly, as in Word (the slide-layout syntax in PDF comes
-        with E05-S04): its content as ordinary blocks, speaker notes left out, timelines and
-        Gantt charts as their lists with a ``code-not-drawn`` note."""
+        """A ``:::`` container shown as in Word: its content as ordinary blocks, speaker notes
+        left out; timelines, steps and risk matrices drawn, Gantt charts as tables (E05-S04)."""
         name, _ = container(tokens[i])
         end = _block_end(tokens, i)
         if name == layout_syntax.NOTES:
@@ -388,14 +416,22 @@ class StoryBuilder:
                 "pages of the PowerPoint deck.",
             )
             return end
-        if name in DRAWN_CONTAINERS:
-            # Read and checked by layout_syntax.check; drawn in the PDF with E05-S04.
-            self.notes.add(
-                NoteCodes.CODE_NOT_DRAWN,
-                self.line(tokens[i]),
-                f"The '::: {name}' shows as its content: the PDF does not draw timelines, "
-                "Gantt charts, steps and risk matrices yet (E05-S04).",
-            )
+        offset = self.settings.line_offset
+        today = self.settings.today or schedule.reference_day(None)
+        if name == layout_syntax.TIMELINE:
+            timeline = schedule.read_timeline(tokens, i, FORMAT, offset, today)
+            self.drawing(schedule_drawing.timeline(timeline, self._width_px()), name)
+            return end
+        if name == layout_syntax.GANTT:
+            language = self.settings.language
+            self.gantt(schedule.read_gantt(tokens, i, FORMAT, offset, today, language))
+            return end
+        if name == layout_syntax.STEPS:
+            self.steps(steps_model.read_steps(tokens, i, FORMAT, offset))
+            return end
+        if name == layout_syntax.RISK_MATRIX:
+            self.risk_matrix(risks.read_risk_matrix(tokens, i, FORMAT, offset))
+            return end
         if name in (layout_syntax.CONCLUSION, layout_syntax.COMMENT):
             label = (
                 self.texts.conclusion if name == layout_syntax.CONCLUSION else self.texts.comment
@@ -404,11 +440,18 @@ class StoryBuilder:
             return end
         self.container_depth += 1
         j = i + 1
+        first = True
         while j < end - 1:
             if name == layout_syntax.COLUMNS and tokens[j].type == "hr":
-                j += 1
+                j += 1  # the line between two columns
                 continue
-            j = self.block(tokens, j)
+            if name == layout_syntax.STATEMENT and first and tokens[j].type == "paragraph_open":
+                # The statement itself in bold, as in Word.
+                self.paragraph(tokens[j + 1], self.styles.normal_bold)
+                j += 3
+            else:
+                j = self.block(tokens, j)
+            first = False
         self.container_depth -= 1
         return end
 
@@ -454,6 +497,7 @@ class StoryBuilder:
         level = self.styles.level(list_style, depth)
         style = self.styles.list_style(list_style, depth)
         hanging = level.hanging_pt if level is not None else 0.0
+        bullets = icons.list_icons(tokens, i)
         counter = 0
         j = i + 1
         while tokens[j].type != close:
@@ -469,9 +513,13 @@ class StoryBuilder:
                     inline = tokens[j + 1]
                     if first:
                         box = _checkbox(inline)
-                        marker = self._marker(
-                            level, counter, float(style.leftIndent) - hanging, box
-                        )
+                        x = float(style.leftIndent) - hanging
+                        marker = self._marker(level, counter, x, box)
+                        if bullets is not None:
+                            # Every item starts with an icon: it is the bullet (E15-S03).
+                            icon = bullets[counter - 1]
+                            marker = fl.Marker(fl.MarkerKind.ICON, color(None), x=x, text=icon)
+                            inline = icons.without_leading(inline)
                         self.paragraph(
                             inline,
                             list_style,
@@ -554,22 +602,10 @@ class StoryBuilder:
             j += 1
         columns = max(len(r) for r in rows)
         widths = self.column_widths(rows, columns, header_rows)
-        table_format = self.styles.design.table
         labels = self.settings.status_labels
         cell_footnotes: list[Token] = []
         cells: list[list[Any]] = []
-        commands: list[tuple[Any, ...]] = [
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING", (0, 0), (-1, -1), table_format.cell_left_pt),
-            ("RIGHTPADDING", (0, 0), (-1, -1), table_format.cell_right_pt),
-            ("TOPPADDING", (0, 0), (-1, -1), self.styles.cell_padding[0]),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), self.styles.cell_padding[1]),
-            ("LINEBELOW", (0, 0), (-1, -1), table_format.rule_pt, color(table_format.rule_color)),
-        ]
-        if header_rows:
-            commands.append(
-                ("BACKGROUND", (0, 0), (-1, header_rows - 1), color(table_format.header_fill))
-            )
+        commands = self.table_commands(header_rows)
         for r, row in enumerate(rows):
             header = r < header_rows
             base = self.styles.table_header if header else self.styles.table_cell
@@ -609,6 +645,39 @@ class StoryBuilder:
                     line.append(fl.PtaParagraph(markup, style))
                     cell_footnotes.extend(options.footnotes)
             cells.append(line)
+        table = self.pta_table(cells, widths, header_rows, commands)
+        if cell_footnotes:
+            # Footnotes of cells go to the foot of the page the table starts on.
+            self.add(fl.FootnoteAnchor(self.area, self._footnotes(cell_footnotes), table))
+        self.add(table)
+        return j + 1
+
+    def table_commands(self, header_rows: int) -> list[tuple[Any, ...]]:
+        """The look of a table in the PTA table style: rules below the rows, the header rows
+        on the header fill."""
+        table_format = self.styles.design.table
+        commands: list[tuple[Any, ...]] = [
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), table_format.cell_left_pt),
+            ("RIGHTPADDING", (0, 0), (-1, -1), table_format.cell_right_pt),
+            ("TOPPADDING", (0, 0), (-1, -1), self.styles.cell_padding[0]),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), self.styles.cell_padding[1]),
+            ("LINEBELOW", (0, 0), (-1, -1), table_format.rule_pt, color(table_format.rule_color)),
+        ]
+        if header_rows:
+            commands.append(
+                ("BACKGROUND", (0, 0), (-1, header_rows - 1), color(table_format.header_fill))
+            )
+        return commands
+
+    def pta_table(
+        self,
+        cells: list[list[Any]],
+        widths: list[float],
+        header_rows: int,
+        commands: list[tuple[Any, ...]],
+    ) -> Table:
+        """A table in the spacing of the Normal paragraph, its header repeated on every page."""
         table = Table(
             cells,
             colWidths=widths,
@@ -621,14 +690,17 @@ class StoryBuilder:
         normal = self.styles.normal.style
         table.spaceBefore = float(normal.spaceBefore)
         table.spaceAfter = float(normal.spaceAfter)
-        if cell_footnotes:
-            # Footnotes of cells go to the foot of the page the table starts on.
-            self.add(fl.FootnoteAnchor(self.area, self._footnotes(cell_footnotes), table))
-        self.add(table)
-        return j + 1
+        return table
 
     def column_widths(
         self, rows: list[list[tuple[Token, str | None]]], columns: int, header_rows: int
+    ) -> list[float]:
+        """The widths of ``column_widths_of`` for the cells of a Markdown table."""
+        texts = [[_plain_text(content) for content, _ in row] for row in rows]
+        return self.column_widths_of(texts, columns, header_rows)
+
+    def column_widths_of(
+        self, rows: list[list[str]], columns: int, header_rows: int
     ) -> list[float]:
         """Every column at least as wide as its longest word; the rest goes by longest text
         (the rule of ``text_metrics.column_widths``, measured with the real font)."""
@@ -638,7 +710,7 @@ class StoryBuilder:
 
         def words(r: int, c: int) -> list[str]:
             row = rows[r]
-            return _plain_text(row[c][0]).split() if c < len(row) else []
+            return row[c].split() if c < len(row) else []
 
         def longest(r: int, c: int) -> float:
             face = (
@@ -659,7 +731,7 @@ class StoryBuilder:
             float(
                 min(
                     max(
-                        max((len(_plain_text(row[c][0])) if c < len(row) else 0) for row in rows),
+                        max((len(row[c]) if c < len(row) else 0) for row in rows),
                         3,
                     ),
                     60,
@@ -796,7 +868,7 @@ class StoryBuilder:
             content = _as_png(content)
         elif resource.content_type not in DIRECT_IMAGES:
             converters = self.settings.image_converters
-            conversion = convert_image(converters, resource, GENERATOR_SCALE, FORMAT)
+            conversion = convert_image(converters, resource, IMAGE_SCALE, FORMAT)
             if conversion is None:
                 hint = refusal_hint(resource, converters)
                 raise DocumentConversionError(
@@ -861,26 +933,179 @@ class StoryBuilder:
                 FORMAT,
                 self.settings.language,
             )
-            if isinstance(graphic, ImageGraphic):
-                room = self.context.frame_height - self._keep_height()
-                picture = self.place(
-                    graphic.image,
-                    graphic.image.path,
-                    self.line(token),
-                    self.context.frame_width,
-                    room,
-                )
-                self.add(picture)
-                return i + 1
             if graphic is not None:
-                code_blocks.note_not_drawn(
-                    self.notes,
-                    token.info,
-                    self.line(token),
-                    "the PDF does not draw charts and drawings yet (E05-S04).",
-                )
+                return self.graphic_figure(graphic, tokens, i)
         self.code_block(token)
         return i + 1
+
+    def graphic_figure(
+        self, graphic: ImageGraphic | DrawingGraphic | ChartGraphic, tokens: list[Token], i: int
+    ) -> int:
+        """The graphic of a code-block renderer (E05-S04): a chart or drawing as vectors, an
+        image as a picture; an ``Abbildung: …`` paragraph right after the block becomes its
+        caption "Abbildung n: …" and stays with it. Charts carry their title and source in
+        the drawing, so without such a paragraph they have no caption (Word: the title)."""
+        token = tokens[i]
+        line = self.line(token)
+        end = i + 1
+        caption: Token | None = None
+        if (
+            end + 2 < len(tokens)
+            and tokens[end].type == "paragraph_open"
+            and tokens[end].level == token.level
+            and block_shapes.is_figure_caption(tokens[end + 1], self.texts)
+        ):
+            caption, end = tokens[end + 1], end + 3
+        caption_height = 0.0
+        if caption is not None:
+            caption_style = self.styles.caption.style
+            caption_height = float(caption_style.leading) + float(caption_style.spaceBefore)
+        room = self.context.frame_height - self._keep_height() - caption_height
+        match graphic:
+            case ImageGraphic(image=image):
+                figure = self.place(image, image.path, line, self.context.frame_width, room)
+            case DrawingGraphic(drawing=drawing) | ChartGraphic(drawing=drawing):
+                figure = self.drawing_flowable(drawing, token.info.strip(), room)
+        if caption is None:
+            self.add(figure)
+            return end
+        paragraph = self.caption(self.texts.figure, caption)
+        self.out.pop()
+        self.add(KeepTogether([figure, paragraph]))
+        return end
+
+    def drawing_flowable(self, drawing: Drawing, name: str, room: float) -> DrawingFlowable:
+        """``drawing`` at its natural size (0.75 pt a pixel), shrunk to the width of the text
+        and to the share of the page Word gives figures (and to ``room``), never enlarged."""
+        width = drawing.width * POINTS_PER_PIXEL
+        height = drawing.height * POINTS_PER_PIXEL
+        highest = min(room, self.context.frame_height * word.FIGURE_HEIGHT_SHARE)
+        shrink = 1.0
+        if width > 0 and height > 0:
+            shrink = min(1.0, self.context.frame_width / width, max(highest, 1.0) / height)
+        normal = self.styles.normal.style
+        return DrawingFlowable(
+            drawing,
+            self.styles.fonts,
+            shrink,
+            space_before=float(normal.spaceBefore),
+            space_after=float(normal.spaceAfter),
+            name=name,
+        )
+
+    def drawing(self, drawing: Drawing, name: str) -> None:
+        """A drawing of the slide-layout syntax in its own paragraph (timeline, steps, risk
+        matrix), as Word places it."""
+        room = self.context.frame_height - self._keep_height()
+        self.add(self.drawing_flowable(drawing, name, room))
+
+    def _width_px(self) -> float:
+        """The width of the text in pixels: the room drawings are made for."""
+        return self.context.frame_width / POINTS_PER_PIXEL
+
+    def steps(self, steps: steps_model.Steps) -> None:
+        """A ``::: steps`` as a drawing as wide as the text (E15-S02), as in Word: the texts
+        below the chevrons at 12 pt, else at 10 pt; when they do not fit even then, the
+        drawing shows the titles only and the texts follow as a list."""
+        width = self._width_px()
+        sizes = [size for size in word.STEPS_TEXT_PT if steps_drawing.texts_fit(steps, width, size)]
+        texts = bool(sizes)
+        picture = steps_drawing.draw(steps, width, text_pt=sizes[0] if sizes else None, texts=texts)
+        self.drawing(picture, layout_syntax.STEPS)
+        if texts or not any(step.text for step in steps.steps):
+            return
+        list_style = self.styles.list_bullet
+        level = self.styles.level(list_style, 0)
+        style = self.styles.list_style(list_style, 0)
+        hanging = level.hanging_pt if level is not None else 0.0
+        plain = InlineOptions()
+        for n, step in enumerate(steps.steps, start=1):
+            marker = self._marker(level, n, float(style.leftIndent) - hanging, None)
+            markup = f"<b>{self.inline_writer.text(step.title, plain)}</b>"
+            if step.text:
+                markup += self.inline_writer.text(f": {step.text}", plain)
+            self.add(fl.PtaParagraph(markup, style, marker=marker))
+
+    def risk_matrix(self, matrix: risks.RiskMatrix) -> None:
+        """A ``::: riskmatrix`` as a drawing in its natural size (E15-S02), its legend below
+        as a table in the PTA table style, as in Word."""
+        self.drawing(risk_drawing.draw(matrix), layout_syntax.RISK_MATRIX)
+        legend = [list(row) for row in matrix.legend()]
+        columns = max(len(row) for row in legend)
+        widths = self.column_widths_of(legend, columns, 1)
+        cells: list[list[Any]] = []
+        for r, row in enumerate(legend):
+            block = self.styles.table_header if r == 0 else self.styles.table_cell
+            options = InlineOptions(bold=block.bold, italic=block.italic)
+            cells.append(
+                [
+                    fl.PtaParagraph(self.inline_writer.markup_text(t, options), block.style)
+                    for t in row
+                ]
+            )
+        self.add(self.pta_table(cells, widths, 1, self.table_commands(1)))
+
+    def gantt(self, gantt: schedule.Gantt) -> None:
+        """A ``::: gantt`` as a table in the PTA table style, as in Word (E15-S01): the task,
+        who (if the Markdown has the column), then a narrow column per week, month or quarter;
+        the columns a task runs in are shaded (light blue for another owner than the first), a
+        milestone is a dark blue diamond, the column of today has a dark blue rule on its
+        right."""
+        owner = gantt.owner_heading is not None
+        units = gantt.units
+        total = self.context.frame_width
+        name_width = total * word.GANTT_NAME_SHARE
+        owner_width = total * word.GANTT_OWNER_SHARE if owner else 0.0
+        unit_width = (total - name_width - owner_width) / len(units)
+        widths = [name_width] + ([owner_width] if owner else []) + [unit_width] * len(units)
+        first = 1 + int(owner)
+        heads = [gantt.name_heading] + ([gantt.owner_heading or ""] if owner else [])
+        heads += [unit.label for unit in units]
+        commands = self.table_commands(1)
+        header = self.styles.table_header
+        cell = self.styles.table_cell
+        centred = ParagraphStyle(f"{header.style.name} center", header.style, alignment=TA_CENTER)
+
+        def text(value: str, block: BlockStyle, style: ParagraphStyle | None = None) -> Any:
+            options = InlineOptions(bold=block.bold, italic=block.italic)
+            return fl.PtaParagraph(
+                self.inline_writer.markup_text(value, options), style or block.style
+            )
+
+        cells: list[list[Any]] = [
+            [text(h, header, centred if c >= first else None) for c, h in enumerate(heads)]
+        ]
+        for r, row in enumerate(gantt.rows, start=1):
+            line: list[Any] = [text(row.name, cell)]
+            if owner:
+                line.append(text(row.owner or "", cell))
+            for c, unit in enumerate(units, start=first):
+                if not gantt.covers(row, unit):
+                    line.append("")
+                elif row.is_milestone:
+                    line.append(self._milestone())
+                    commands.append(("ALIGN", (c, r), (c, r), "CENTER"))
+                    commands.append(("VALIGN", (c, r), (c, r), "MIDDLE"))
+                else:
+                    fill = colors.LIGHT_BLUE if gantt.is_secondary(row) else colors.PTA_BLUE
+                    commands.append(("BACKGROUND", (c, r), (c, r), color(fill)))
+                    line.append("")
+            cells.append(line)
+        today = gantt.today_unit
+        if today is not None:
+            column = first + today
+            rule = word.GANTT_TODAY_RULE / 8
+            commands.append(("LINEAFTER", (column, 0), (column, -1), rule, color(colors.DARK_BLUE)))
+        self.add(self.pta_table(cells, widths, 1, commands))
+
+    def _milestone(self) -> DrawingFlowable:
+        side = MILESTONE_PX
+        half = side / 2
+        diamond = DrawingPath(
+            (MoveTo(half, 0), LineTo(side, half), LineTo(half, side), LineTo(0, half), ClosePath())
+        )
+        drawing = Drawing(side, side, (DrawingShape(diamond, colors.DARK_BLUE, None, 0),))
+        return DrawingFlowable(drawing, self.styles.fonts, name=layout_syntax.GANTT)
 
     def code_block(self, token: Token) -> None:
         """Code in the code font on grey, line by line; with a known language in the PTA

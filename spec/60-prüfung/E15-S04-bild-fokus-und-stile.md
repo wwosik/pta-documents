@@ -196,7 +196,7 @@ PDF-Bilder), `docs/anleitung.md` (Abschnitt „Bildausschnitt und Bildstile", Ta
 ### Offene Punkte
 
 - **PDF-Generator** (nach E05-S03): `notes` an `add_generated` übergeben, damit auch das PDF
-  `image-scale-in-title` meldet (eine Zeile in `generation/pdf/generator.py`).
+  `image-scale-in-title` meldet (eine Zeile in `generation/pdf/generator.py`). — *(2026-11-08) Erledigt in E05-S04.*
 - 2027-11: `scale=` im Titel entfernen (`image_attributes._title_scale`, Hinweis, Doku).
 - Authoring Guides (E04-S06, E03-S05) übernehmen den Abschnitt „Bilder".
 - Bildreihen mit festen Zellenmaßen (E03-S03) können `focus` für ihren Beschnitt nutzen, sobald

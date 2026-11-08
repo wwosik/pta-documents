@@ -220,7 +220,8 @@ Fehler), `docs/ki-anleitung.md`; `ai/Standards.md` (Extras, npm-Lockfile), `ai/G
 ### Offene Punkte
 
 - **Word** (E03-S04) und **PDF** (E05-S04): `DrawingGraphic` setzen; dann den Word-Zweig von
-  `MermaidRenderer.render` entfernen und die Beispiele um einen Bericht ergänzen.
+  `MermaidRenderer.render` entfernen und die Beispiele um einen Bericht ergänzen. —
+  *(2026-11-08) PDF erledigt in E05-S04 (Vektoren).*
 - Je Block startet ein Chromium (~0,7 s); ein Lauf je Dokument (`mmdc -i doc.md`) wäre erst bei
   vielen Diagrammen zu messen (Notiz des Plans).
 - Ob `--no-sandbox` dauerhaft gewollt ist oder Chromium per AppArmor-Profil ordentlich

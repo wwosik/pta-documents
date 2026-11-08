@@ -264,7 +264,9 @@ Die Einbindung in `PdfGenerator.generate` geschieht bei der Zusammenführung mit
 - **E05-S03:** Kopf-/Fußzeile über `decorate`, Deckblatt und Inhaltsverzeichnis vor die Story;
   bei den Varianten mit Deckblatt hat die erste Seite eigene Ränder.
 - **E05-S04:** Folien-Syntax als Boxen/Spalten, Charts/Zeichnungen (bis dahin Code mit
-  `code-not-drawn`), `replace_unsupported`.
+  `code-not-drawn`), `replace_unsupported`. — *(2026-11-08) Charts, Zeichnungen und
+  `replace_unsupported` erledigt in E05-S04; die Folien-Syntax zeigt wie in Word ihren Inhalt
+  nacheinander (keine Boxen/Spalten).*
 - Silbentrennung (siehe Warnung).
 
 ### Zusammenführung mit E05-S01 (2026-11-08)

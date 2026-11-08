@@ -200,4 +200,6 @@ korrigiert). Keine neue Abhängigkeit.
   Korrektur in `fill_headers_and_footers`.
 - Eine Fußzeile, die über den unteren Rand hinausreicht, schiebt den Text in Word nach oben;
   das modelliert `word_frame` nicht (die Vorlagen brauchen es nicht: 19 pt < unterer Rand).
-- Silbentrennung, `replace_unsupported`, Grafiken: E05-S04 bzw. Warnung aus E05-S02.
+- Silbentrennung, `replace_unsupported`, Grafiken: E05-S04 bzw. Warnung aus E05-S02. —
+  *(2026-11-08) `replace_unsupported` (auch für Deckblatt, Kopf- und Fußzeile) und Grafiken
+  erledigt in E05-S04; Silbentrennung bleibt offen.*

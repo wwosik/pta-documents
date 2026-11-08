@@ -205,7 +205,7 @@ README und erneuerter Rundreise; Eintrag in `ai/Gedächtnis.md`. Keine neue Abh�
 - **Word** (E03-S04): `DrawingGraphic` als SVG-Bild mit PNG-Ersatz; bis dahin bricht Word mit
   „… does not support yet" ab, darum stehen die Beispiele nur in der Präsentation.
 - **PDF** (E05-S04): Zeichnung und Texte sind fertig, das Setzen folgt mit dem PDF-Generator;
-  dort auch der Test „InAPdf_TheChartIsDrawnWithItsText".
+  dort auch der Test „InAPdf_TheChartIsDrawnWithItsText". — *(2026-11-08) Erledigt in E05-S04.*
 - Der Formenschreiber `generation/pptx/drawing.py` ist für Mermaid (E06-S03) bereit
   (`round_joins`, `even_odd` wird von PowerPoint-`custGeom` nicht unterschieden — für
   Mermaid-Pfade mit Löchern dort prüfen).

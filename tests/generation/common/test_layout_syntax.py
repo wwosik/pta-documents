@@ -2,7 +2,8 @@
 
 Ports of DocLibs ``SlideLayoutTests.Mistakes_Throw``, ``LabelMistakes_Throw``,
 ``Braces_ThatAreNoAttributes_StayInTheTitle``, ``ColouredWordsTests`` and
-``SlideLayoutSyntaxTests.Mistakes_Throw_LikeInDecks`` — each for DOCX and PPTX.
+``SlideLayoutSyntaxTests.Mistakes_Throw_LikeInDecks`` — each for DOCX and PPTX, and since
+E05-S04 for PDF.
 """
 
 from __future__ import annotations
@@ -19,9 +20,11 @@ from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common.result import GenerationResult
 from pta_documents.generation.docx.generator import DocxGenerator
 from pta_documents.generation.docx.options import DocxOptions
+from pta_documents.generation.pdf import PdfGenerator, PdfOptions
 from pta_documents.generation.pptx.generator import PptxGenerator
 from pta_documents.markdown import MarkdownDocument
 from tests.generation.docx.conftest import open_docx
+from tests.generation.pdf.support import body_texts
 from tests.generation.pptx.conftest import open_pptx
 
 SAMPLES = Path(__file__).parent / "samples"
@@ -43,10 +46,26 @@ def generate_pptx(markdown: str) -> tuple[GenerationResult, bytes]:
     return result, output.getvalue()
 
 
-GENERATORS = pytest.mark.parametrize(
+def generate_pdf(markdown: str) -> tuple[GenerationResult, bytes]:
+    output = io.BytesIO()
+    options = PdfOptions(variant=WordVariant.PORTRAIT_NO_COVER, system_fonts=False)
+    result = PdfGenerator().generate(MarkdownDocument(markdown), output, options)
+    return result, output.getvalue()
+
+
+OFFICE = pytest.mark.parametrize(
     ("generate", "format"),
     [(generate_docx, DocumentFormat.DOCX), (generate_pptx, DocumentFormat.PPTX)],
     ids=["docx", "pptx"],
+)
+GENERATORS = pytest.mark.parametrize(
+    ("generate", "format"),
+    [
+        (generate_docx, DocumentFormat.DOCX),
+        (generate_pptx, DocumentFormat.PPTX),
+        (generate_pdf, DocumentFormat.PDF),
+    ],
+    ids=["docx", "pptx", "pdf"],
 )
 
 
@@ -85,6 +104,8 @@ def runs(data: bytes, format: DocumentFormat) -> list[tuple[str, bool]]:
 def texts(data: bytes, format: DocumentFormat) -> str:
     if format is DocumentFormat.DOCX:
         return "\n".join(docx_paragraphs(data))
+    if format is DocumentFormat.PDF:
+        return " ".join(" ".join(body_texts(data)).split())
     return "".join(text for text, _ in pptx_runs(data))
 
 
@@ -167,7 +188,7 @@ def test_heading_attributes_are_left_out(generate: Generate, format: DocumentFor
     assert ("Warum" in text) is (format is DocumentFormat.PPTX)
 
 
-@GENERATORS
+@OFFICE
 def test_coloured_words_lose_their_brackets_and_are_bold(
     generate: Generate, format: DocumentFormat
 ) -> None:

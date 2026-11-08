@@ -7,7 +7,9 @@ seit E06-S03 Mermaid-Diagramme (`mermaid`, über mermaid-cli) als Formengruppe i
 seit E03-S04 beide auch in Word als Abbildung (SVG mit PNG-Ersatz). Seit E05-S01/E05-S02 der
 PDF-Generator (PDF/A-2b im Design der Word-Vorlage, siehe
 [Markdown → PDF](#markdown--pdf-e05-s01-e05-s02)), seit E05-S03 mit Deckblatt,
-Inhaltsverzeichnis, Kopf- und Fußzeile ([PTA-Seitenrahmen](#pta-seitenrahmen-im-pdf-e05-s03)).
+Inhaltsverzeichnis, Kopf- und Fußzeile ([PTA-Seitenrahmen](#pta-seitenrahmen-im-pdf-e05-s03)),
+seit E05-S04 mit allen Grafiken als Vektoren und Ersatz fehlender Zeichen
+([Grafiken und fehlende Zeichen](#grafiken-und-fehlende-zeichen-im-pdf-e05-s04)).
 
 ## Einrichten
 
@@ -123,11 +125,11 @@ print(result.pages, result)
   Satzspiegel der gewählten Word-Vorlage (Nummerierung, Listen, Tabellen, Bilder, QR-Codes, Code
   mit Hervorhebung, Hinweis-Boxen, Fußnoten, Lesezeichen, Links, Seitenumbruchregeln), im
   [PTA-Seitenrahmen](#pta-seitenrahmen-im-pdf-e05-s03) mit Deckblatt, Inhaltsverzeichnis, Kopf-
-  und Fußzeile (seit E05-S03). Charts, Zeichnungen
-  (Mermaid, Finanzdiagramme), `::: timeline`, `::: gantt`, `::: steps` und `::: riskmatrix`
-  zeichnet das PDF noch nicht (E05-S04): Codeblöcke bleiben Code, die Container zeigen ihren
-  Inhalt (Liste, Überschriften bzw. Tabelle), jeweils mit dem Hinweis `code-not-drawn`. Harvey
-  Balls (`[3/4]` in Tabellen) zeichnet es als kleine Grafik in der Zelle.
+  und Fußzeile (seit E05-S03). Seit E05-S04 zeichnet es jede Grafik:
+  [Zeichnungen und Charts als Vektoren](#grafiken-und-fehlende-zeichen-im-pdf-e05-s04)
+  (`chart`, `financial-chart`, Mermaid, `::: timeline`, `::: steps`, `::: riskmatrix` mit der
+  Legende als Tabelle), `::: gantt` als Tabelle wie Word, Icons als kleine Bilder, SVG-Bilder
+  über die Bildkonverter; Harvey Balls (`[3/4]` in Tabellen) als kleine Grafik in der Zelle.
 - **Front Matter:** dieselben Schlüssel wie Word: `vorlage` (Hoch- oder Querformat; Vorlagen mit
   Deckblatt brauchen wie in Word einen `titel`), `titel`, `untertitel`, `autor`, `ort`, `datum`
   (auch „heute" in Zeitstrahl und Gantt), `firma`, `sprache`, `typografie`,
@@ -141,12 +143,27 @@ print(result.pages, result)
   und Consolas aus dem System, wenn vollständig installiert, sonst Selawik und Inconsolata, siehe
   [Schriften](#schriften-für-pdf-und-svg-e01-s03)); `code_block_renderers`, `image_converters`
   wie in Word (Bilder, die nicht PNG, JPEG, GIF, BMP, TIFF oder WebP sind, z. B. SVG, gehen über
-  die Bildkonverter); `replace_unsupported` (für E05-S04, noch ohne Wirkung).
-- **Fehlende Zeichen:** Selawik hat weder Griechisch noch Kyrillisch. Ein Zeichen, das der
-  Schrift fehlt (Text: Regular und Bold, Code: die Codeschrift), wird `?` (Leerraum ein
-  Leerzeichen), mit dem Hinweis `character-missing` an seiner ersten Zeile — PDF/A erlaubt kein
+  die Bildkonverter, im PDF in dreifacher Größe); `replace_unsupported` (Ersatz fehlender
+  Zeichen, siehe unten).
+- **Fehlende Zeichen:** Selawik hat weder Griechisch noch Kyrillisch, keine der Schriften hat
+  Emoji. Ein Zeichen, das der Schrift fehlt (Text: Regular und Bold, Code: die Codeschrift),
+  geht als **Graphem-Cluster** (`👍🏽`, `❤️`, `👨‍👩‍👧` je eines; `generation/common/graphemes.py`)
+  an `PdfOptions.replace_unsupported` — einmal je Cluster und Dokument; was die Funktion
+  zurückgibt, steht an seiner Stelle und muss selbst in der Schrift stehen, sonst
+  `DocumentConversionError`. Standard ist `question_mark` (`?`, mit dem Hinweis
+  `character-missing` an der ersten Zeile); `replace_unsupported=None` macht jedes solche Zeichen
+  zum Fehler mit Zeichen, Codepunkt und Schrift: `The character 'Δ' (U+0394) is not in the font
+  (Selawik). …` (außerhalb der BMP ein Codepunkt: `U+1F600`). Das gilt für Text, Überschriften
+  (Lesezeichen und Inhaltsverzeichnis zeigen den Ersatz, der Anker bleibt), Tabellen, Code,
+  Deckblatt, Kopf- und Fußzeile, Kennzeichnung und die Beschriftungen von Zeichnungen;
+  Leerraum wird ein Leerzeichen, unsichtbare Format- und Steuerzeichen (U+200B …) entfallen,
+  Variationsselektoren und ZWJ an sonst vorhandenen Zeichen auch. PDF/A erlaubt kein
   `.notdef`. U+00A0, U+202F und U+2011 leihen sich die Glyphe von Leerzeichen bzw. Bindestrich
-  und zählen nicht als fehlend.
+  und zählen nicht als fehlend. Die Metadaten (Titel, Autor) bleiben unverändert Unicode.
+
+  ```python
+  PdfOptions(replace_unsupported=lambda cluster: {"✓": "ja", "👍": "(+)"}.get(cluster, "?"))
+  ```
 - **PDF/A-2b:** XMP mit `pdfaid:part` 2 / `conformance` B, Titel, Autor, Sprache, Producer
   „PTA Documents" und Zeitstempel gleich im Info-Dictionary; OutputIntent `GTS_PDFA1` mit
   sRGB-Profil (aus Pillow); `/F 4` auf jeder Annotation; `/Lang` (`de-DE`/`en`); PDF 1.7;
@@ -333,11 +350,11 @@ Front Matter mitgezählt).
 | Syntax | Gültig | Heute in Word und PowerPoint |
 | ------ | ------ | ---------------------------- |
 | Heading-Attribute `{…}` am Ende von `#`/`##` | `#`: `.closing`, `layout="…"`; `##`: `.dark`, `kicker="…"`, `layout="…"`, PTA: `.agenda`, `.interim`, `.quote`, `.contact` (eine davon, nicht mit `.dark`/`kicker`) | PowerPoint: alle wirken (s. o., Flow-Folien, PTA-Folienarten); Word: entfernt, die Folienarten schlicht (s. u.) |
-| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle |
+| Container `::: name argumente` … `:::`, verschachtelt mit längeren Zäunen (`::::` außen) | `cards`, `rows`, `panel` (Argument `dark`), `statement`, `columns` (Argument `1:2` oder `1:1:2`), PTA: `conclusion`, `comment`; `notes` (Sprechernotizen); `timeline`, `gantt` (Argument `raster=woche\|monat\|quartal`, siehe [Zeitstrahl und Gantt](#zeitstrahl-und-gantt-e15-s01)); `steps`, `riskmatrix` (Argumente `green=4 yellow=12`, siehe [Schrittfolge, Harvey Balls und Risikomatrix](#schrittfolge-harvey-balls-und-risikomatrix-e15-s02)) | PowerPoint: Flow-Folien, `notes` auf die Notizenseite, `timeline`/`gantt`/`steps`/`riskmatrix` als Formgruppe (die Legende der Risikomatrix als Tabelle daneben); Word: Inhalt nacheinander, Fazit/Kommentar als „Hinweis", `notes` entfällt, `timeline`/`steps`/`riskmatrix` als Bild (Legende als Tabelle darunter), `gantt` als Tabelle; PDF wie Word, die Grafiken als Vektoren |
 | Alerts `> [!NOTE]` (erste Zeile des Zitats) | `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` | PowerPoint: Fläche mit Balken; Word: „Hinweis" bzw. „Hinweis wichtig" mit fetter Art am Anfang |
 | `==Markierung==` | – | PowerPoint: fett auf `FDDC35`; Word: Zeichenvorlage „Markierung" |
 | Bildattribute `{…}` direkt nach einem Bild | `focus=…`, `fit=cover\|contain`, `scale=N`, `.round`, `.grey` (siehe [Bildattribute](#bildattribute-e15-s04)) | PowerPoint: Ausschnitt im Bildplatzhalter, rund als Ellipse; Word/PDF: kein Beschnitt, rund/grau als PNG |
-| Icon `:icon-name:` | die gebündelten Namen (siehe [Icons](#icons-e15-s03)) | PowerPoint: am Anfang eines Kartentitels die Figur der Karte, vor jedem Punkt einer Liste das Aufzählungssymbol, sonst Fehler; Word: Bild im Text, vor jedem Punkt einer Liste statt des Aufzählungszeichens; PDF: entfällt mit `code-not-drawn` |
+| Icon `:icon-name:` | die gebündelten Namen (siehe [Icons](#icons-e15-s03)) | PowerPoint: am Anfang eines Kartentitels die Figur der Karte, vor jedem Punkt einer Liste das Aufzählungssymbol, sonst Fehler; Word und PDF: Bild im Text, vor jedem Punkt einer Liste statt des Aufzählungszeichens |
 | `[Wörter]{.success}` | `.success`, `.warning`, `.danger`, `.info`, `.neutral` | Klammern entfallen; PowerPoint fett in der Signalfarbe, Word Zeichenvorlage „Status …" |
 | Front Matter `status.<kategorie>: Text; Text` | dieselben fünf Kategorien, jeder Text nur einmal | geprüft; PowerPoint: Status-Labels in Tabellen auf Flow-Folien; Word: Label-Zellen in der Zeichenvorlage „Status …" |
 
@@ -813,12 +830,51 @@ Seite, also hinter dem Inhalt (Wasserzeichen, E12-S03).
 - **Seitenrahmen:** Deckblatt, Kopf-/Fußzeile und Inhaltsverzeichnis setzt `frame.lay_out`
   (E05-S03, unten) um die Engine herum; `render(…, first_top_pt=…)` lässt die erste Seite tiefer
   beginnen, `RenderedPdf.heading_pages` nennt die Seite jeder Überschrift 1–3 (nach Anker).
-- **Noch nicht** (spätere Stories):
-  Ersetzen fehlender Zeichen (bis dahin `?`), Folien-Syntax als Boxen und Spalten, Charts,
-  Zeichnungen, Zeitstrahl, Gantt, Schrittfolge und Risikomatrix (E05-S04; bis dahin bleibt ein
-  `chart`/`mermaid`-Block Code und ein `::: timeline`/`gantt`/`steps`/`riskmatrix` zeigt seinen
-  Inhalt, beide mit Hinweis `code-not-drawn`),
-  Silbentrennung.
+- **Grafiken und fehlende Zeichen** seit E05-S04, siehe
+  [unten](#grafiken-und-fehlende-zeichen-im-pdf-e05-s04).
+- **Noch nicht:** Silbentrennung; die Folien-Syntax (`cards`, `columns` …) zeigt wie in Word
+  ihren Inhalt nacheinander, nicht als Boxen und Spalten.
+
+## Grafiken und fehlende Zeichen im PDF (E05-S04)
+
+- **Zeichnungen** (`DrawingGraphic` und `ChartGraphic` der Code-Block-Renderer, `::: timeline`,
+  `::: steps`, `::: riskmatrix`) setzt `layout/drawings.DrawingFlowable` als Vektoren auf den
+  reportlab-Canvas: Formen als Pfade (Kurven, Strichmuster, runde Ecken und Enden, Füllregel
+  `evenodd`), Texte als echter, durchsuchbarer Text in der Schrift des Dokuments (Segoe UI bzw.
+  Selawik, fette Spans fett, `mono` in der Codeschrift). Eine Zeile mit `max_width` wird mit der
+  echten Schrift gemessen, bis auf 70 % verkleinert und dann nach ihrem `anchor` gesetzt.
+  Tooltips und Hotspots gibt es nur im SVG. Größe: 0,75 pt je Pixel, nur verkleinert — auf die
+  Satzspiegelbreite, auf 80 % der Satzspiegelhöhe und so, dass die Zeichnung mit den
+  Überschriften davor (und ihrer Beschriftung) auf eine Seite passt; links wie ein Bild in Word,
+  nie geteilt.
+- **Charts** (`chart`) zeichnet das PDF aus `ChartGraphic.drawing` (`charts/drawing.py`) mit
+  Titel, Einheit, Achsen, Legende und Quelle in der Zeichnung; **Finanzdiagramme** und
+  **Mermaid** sind `DrawingGraphic`. Ein Absatz `Abbildung: …` direkt nach dem Codeblock (gleiche
+  Ebene) wird die Beschriftung „Abbildung n: …" und bleibt bei der Grafik; ohne ihn hat ein
+  Chart keine Beschriftung (der Titel steht schon in der Zeichnung — Word nimmt den Titel).
+  Ein `ImageGraphic` wird wie ein Bild gesetzt.
+- **Zeitstrahl** über `drawing.schedule.timeline(…, Satzspiegelbreite)`, „heute" ist
+  `LayoutSettings.today` (Front Matter `datum`, sonst heute). **Gantt** als Tabelle im
+  PTA-Tabellenstil wie in Word: Spaltenanteile `word.GANTT_NAME_SHARE`/`GANTT_OWNER_SHARE`,
+  Laufzeit PTA-Blau (anderer Verantwortlicher Hellblau), Meilenstein als dunkelblaue Raute
+  (gezeichnet — ◆ fehlt den Schriften), die Spalte von heute mit 1,5 pt Linie rechts.
+- **Schrittfolge** wie Word: Texte unter den Pfeilen in 12 pt, sonst 10 pt, passen sie auch so
+  nicht, zeigt die Zeichnung nur die Titel und die Texte folgen als Liste („**Titel**: Text").
+  **Risikomatrix** in natürlicher Größe, die Legende darunter als PTA-Tabelle.
+- **Icons:** im Text ein PNG (`word.ICON_PIXELS`, PTA-Blau) 10 pt hoch auf der Grundlinie;
+  beginnt jeder Punkt einer Liste mit einem Icon, ist es das Aufzählungszeichen (11 pt,
+  `MarkerKind.ICON`). Die Absätze lesen `<img src="pta-icon:name"/>` über einen eigenen
+  reportlab-Parser (`flowables._Parser`), weil reportlabs `<img>` nur Dateien und URLs nimmt.
+- **Bilder anderer Formate** (SVG) wandelt das PDF in **dreifacher** natürlicher Größe
+  (`story.IMAGE_SCALE`, ≈ 288 dpi) und setzt sie in natürlicher Größe; ohne passenden Konverter
+  ein Fehler mit Pfad und Hinweis auf das Extra.
+- **Folien-Syntax:** `layouts.md` (`tests/generation/common/samples/`) erzeugt auch als PDF ohne
+  Hinweise; falsche Container, Alerts und Attribute werfen dieselben Fehler wie in Word und
+  PowerPoint (`tests/generation/common/test_layout_syntax.py`, parametrisiert für alle drei).
+- **Fehlende Zeichen:** siehe [Markdown → PDF](#markdown--pdf-e05-s01-e05-s02).
+- Ein PDF meldet damit keinen `code-not-drawn` mehr außer für einen `mermaid`-Block ohne
+  eingerichtetes mermaid-cli (wie Word); `samples/` erzeugt als PDF ohne Hinweise
+  (`tests/generation/pdf/test_generator.py`).
 
 ## PTA-Seitenrahmen im PDF (E05-S03)
 
@@ -926,7 +982,7 @@ svg = to_svg(Drawing(120, 100, (balken, beschriftung, punkt)), SvgOptions(backgr
   `ValueError` (Programmierfehler des Renderers).
 - Ausgabe als PNG über `pta_documents.svg.to_png(to_svg(drawing))` ([SVG-Bilder](#svg-bilder-e06-s04));
   die Tooltips sind im PNG unsichtbar. Als PowerPoint-Formen seit E06-S02, in Word als Bild seit
-  E03-S04, SVG → `Drawing` (Mermaid) seit E06-S03; als PDF-Vektor folgt mit E05-S04.
+  E03-S04, SVG → `Drawing` (Mermaid) seit E06-S03, als PDF-Vektor seit E05-S04.
 
 ## SVG-Bilder (E06-S04)
 
@@ -1121,8 +1177,8 @@ einen Projektplan — ohne Extra (außer dem Bild des Zeitstrahls in Word) und i
 - **Rundreise:** der PPTX-Konverter lässt die Formgruppe weg (wie alle `Drawing`-Gruppen), der
   DOCX-Konverter liest den Zeitstrahl als Bild und den Gantt als Markdown-Tabelle, gefüllte
   Zellen als `■`, Meilensteine als `◆`.
-- **PDF** zeigt bis E05-S04 den Inhalt (Liste bzw. Tabelle) mit dem Hinweis `code-not-drawn`;
-  zeichnen soll es beide mit E05-S04.
+- **PDF** (seit E05-S04): der Zeitstrahl als Vektorgrafik in Satzspiegelbreite, der Gantt als
+  Tabelle wie in Word (Meilenstein als gezeichnete Raute).
 
 ```python
 from pta_documents.drawing import schedule as drawing
@@ -1167,7 +1223,8 @@ In Sprints
   und `chevron` (Spitze 35 % der Höhe). **Word:** Bild in Satzspiegelbreite (Extra `svg`); die
   Texte stehen bei 12 pt unter den Pfeilen, sonst bei 10 pt, und passen sie auch so nicht (ein
   Wort breiter als der Pfeil oder mehr als fünf Zeilen), zeigt das Bild nur die Titel und die
-  Texte folgen als Aufzählung „**Titel**: Text".
+  Texte folgen als Aufzählung „**Titel**: Text". **PDF** (seit E05-S04) wie Word, die Zeichnung
+  als Vektoren.
 - **Harvey Balls:** eine Tabellenzelle (nicht im Kopf), die genau `[n/4]` enthält (`n` 0 bis 4).
   **PowerPoint:** über der leeren, zentrierten Zelle eine Gruppe `harvey-n` aus Kreis Ø 0,45 cm
   mit Rand `004676` 1 pt und PTA-blauer Tortenform (`pie`, ab zwölf Uhr im Uhrzeigersinn),
@@ -1187,7 +1244,8 @@ In Sprints
   die Schwellen ein. **PowerPoint:** die Matrix als Formgruppe in natürlicher Größe links, die
   Legende Nr | Risiko | (Maßnahme) als PTA-Tabelle rechts daneben (1 cm Abstand); ist rechts
   weniger als eine Rasterspalte (7 cm) frei, steht sie darunter. **Word:** die Matrix als Bild in
-  natürlicher Größe, die Legende als Tabelle „PTA" darunter. Rundreise: beide Konverter lesen
+  natürlicher Größe, die Legende als Tabelle „PTA" darunter; **PDF** ebenso, die Matrix als
+  Vektoren (seit E05-S04). Rundreise: beide Konverter lesen
   die Legende als Tabelle; die Matrix ist im DOCX ein Bild, im PPTX entfällt sie.
 - **Fehler mit Zeile** (in allen Formaten gleich, aus `layout_syntax.check`):
   `… A '::: steps' has 3 to 6 steps, not 7; put the procedure on two slides …`,
@@ -1247,7 +1305,8 @@ Der Server :icon-server: meldet sich stündlich.
   Nummerierung des Absatzes ausgeschaltet (`numId 0`). Sonst steht das Icon im Text.
 - **Im Text:** Word setzt das Icon als Bild 10 pt hoch auf die Grundlinie. Auf Folien ist ein
   Icon im Text (Absatz, Titel, Tabelle, Notizen) ein Fehler mit Hinweis auf Karten und Listen;
-  das PDF lässt es bis E05-S04 mit Hinweis `code-not-drawn` weg, Word ebenso in Fußnoten.
+  das PDF setzt es wie Word als Bild 10 pt hoch auf die Grundlinie (seit E05-S04); Word lässt
+  Icons in Fußnoten mit Hinweis `code-not-drawn` weg.
 - **Bilder:** `design.icons.loader.drawing(name, farbe, größe)` liest ein Icon als `Drawing`
   (nur `<path>`, Bögen werden Béziers; das unsichtbare Quadrat jedes Tabler-Icons entfällt),
   `design.icons.raster.png(name, farbe, pixel)` zeichnet es ohne Extra mit Pillow (Béziers in
@@ -1320,8 +1379,8 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `image-cropped` (`IMAGE_CROPPED`) | PPTX | ein Bildplatzhalter schneidet mehr als ein Viertel der Bildfläche ab |
 | `image-enlarged` (`IMAGE_ENLARGED`) | PPTX, DOCX, PDF | ein Bild wird mehr als doppelt so groß gezeigt wie seine Pixel bei 96 dpi und wirkt unscharf |
 | `raw-html` (`RAW_HTML`) | PPTX, DOCX, PDF | rohes HTML im Markdown; es wird **weggelassen**. HTML-Kommentare `<!-- … -->` fallen ohne Hinweis weg, `<br>` ist ein Zeilenumbruch |
-| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX, PDF | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt). Das PDF zeichnet bis E05-S04 keine Charts und Zeichnungen und zeigt `::: timeline`/`gantt`/`steps`/`riskmatrix` als ihren Inhalt, mit diesem Hinweis |
-| `character-missing` (`CHARACTER_MISSING`) | PDF | ein Zeichen fehlt in den Schriften; es erscheint als `?` (bis E05-S04 Ersatz vorschlägt) |
+| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX, PDF | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` und `financial-chart` zeichnet der `ChartRenderer`, `mermaid` der `MermaidRenderer`, wenn mermaid-cli eingerichtet ist — sonst nennt der Hinweis, was fehlt). Word lässt damit auch Icons in Fußnoten weg |
+| `character-missing` (`CHARACTER_MISSING`) | PDF | ein Zeichen fehlt in den Schriften; es erscheint als `?` bzw. als das, was `PdfOptions.replace_unsupported` daraus macht (mit `replace_unsupported=None` ist es ein Fehler) |
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01), PDF | Sprechernotizen fallen im Word-Dokument bzw. PDF weg |
 | `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02), PDF | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |
 | `image-scale-in-title` (`IMAGE_SCALE_IN_TITLE`) | PPTX, DOCX (E15-S04) | `scale=N` steht im Bildtitel; wirkt bis 2027-11, gehört aber als `{scale=N}` hinter das Bild |

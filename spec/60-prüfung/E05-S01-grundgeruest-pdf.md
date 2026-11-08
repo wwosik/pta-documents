@@ -227,7 +227,7 @@ und `test_generator.py` (12 Fälle); Ansicht `.tmp/review/pdf-grundgeruest.pdf`.
   ihre Erwähnung in `docs/verwendung.md` entfernen; `typografie`/`syntaxhervorhebung` in
   `VALID_KEYS`, `PdfOptions` und `apply_front_matter` ergänzen; Lesezeichen (`Bookmark`, Ebene
   1–3), Anker (`Anchor`) und Links (`LinkItem`) liefert die Engine, der Renderer kann sie schon.
-- Das Ersetzen fehlender Zeichen (`replace_unsupported`) ist E05-S04; bis dahin `?`.
+- Das Ersetzen fehlender Zeichen (`replace_unsupported`) ist E05-S04; bis dahin `?`. — *(2026-11-08) Erledigt in E05-S04.*
 - `style_rules` nennt in Docstrings nur PPTX/DOCX; für PDF gelten die Word-Regeln (nicht
   geändert, um die Story klein zu halten).
 

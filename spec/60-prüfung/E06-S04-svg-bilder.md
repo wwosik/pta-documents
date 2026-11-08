@@ -178,7 +178,7 @@ resvg-py und fontTools stehen schon im Extra `svg`.
 - **PDF** (Plan Punkt 8, Akzeptanzkriterium „im PDF in natürlicher Größe"): den PDF-Generator
   gibt es noch nicht (E05). Er nutzt denselben Konverterweg; nach der Antwort auf die offene
   Frage soll er mit **dreifacher** Größe (`scale = 3`, ≈ 288 dpi) statt `GENERATOR_SCALE`
-  umwandeln — in E05-S04 umzusetzen.
+  umwandeln — in E05-S04 umzusetzen. *(2026-11-08) Erledigt in E05-S04 (`story.IMAGE_SCALE`).*
 - Zeichnungen in Word (Plan Punkt 9) über `to_svg` → `SvgImageConverter`-Weg folgen mit E03-S04;
   `DrawingGraphic` wirft bis dahin weiter.
 - Die Konverter DOCX/PPTX → Markdown lesen nur das PNG (`images/imageN.png`); das SVG neben dem

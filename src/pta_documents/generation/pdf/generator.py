@@ -21,7 +21,7 @@ from pta_documents.generation.common import generated_images, layout_syntax, sch
 from pta_documents.generation.common.result import GenerationResult, Notes
 from pta_documents.generation.pdf.frame import FrameInfo, lay_out
 from pta_documents.generation.pdf.layout import LayoutSettings
-from pta_documents.generation.pdf.layout.fonts import ALIASES
+from pta_documents.generation.pdf.layout.fonts import ALIASES, question_mark
 from pta_documents.generation.pdf.metadata import PdfInfo
 from pta_documents.generation.pdf.options import PdfOptions
 from pta_documents.generation.pdf.pdfa import to_pdfa
@@ -47,6 +47,7 @@ VALID_KEYS: Final = (
     Keys.MARKING,
 )
 MISSING_EFFECT: Final = "shows as '?' in the PDF"
+REPLACED_EFFECT: Final = "is replaced in the PDF (replace_unsupported)"
 
 
 class PdfGenerator:
@@ -75,8 +76,9 @@ class PdfGenerator:
                 f"add '{Keys.TITLE}: …' to the front matter.",
             )
         tokens = create_parser().parse(front.body)
-        layout_syntax.check(tokens, FORMAT, front.body_line, schedule.reference_day(options.date))
-        document = generated_images.add_generated(document, tokens, FORMAT, front.body_line)
+        today = schedule.reference_day(options.date)
+        layout_syntax.check(tokens, FORMAT, front.body_line, today)
+        document = generated_images.add_generated(document, tokens, FORMAT, front.body_line, notes)
         if options.typography:
             typeset(tokens, options.language)
             # Label cells are typeset like any text, so the labels must be too.
@@ -88,13 +90,15 @@ class PdfGenerator:
             code = ord(char)
             return code in ALIASES or all(fonts.has_glyph(code, face) for face in faces)
 
-        notes.characters(
-            front.body,
-            front.body_line,
-            lambda c: shown(c, FontFace.REGULAR, FontFace.BOLD),
-            lambda c: shown(c, FontFace.MONO),
-            MISSING_EFFECT,
-        )
+        if options.replace_unsupported is not None:
+            # Without a replacement the layout stops at the first such character instead.
+            notes.characters(
+                front.body,
+                front.body_line,
+                lambda c: shown(c, FontFace.REGULAR, FontFace.BOLD),
+                lambda c: shown(c, FontFace.MONO),
+                MISSING_EFFECT if options.replace_unsupported is question_mark else REPLACED_EFFECT,
+            )
         settings = LayoutSettings(
             variant=options.variant,
             language=options.language,
@@ -104,6 +108,8 @@ class PdfGenerator:
             code_block_renderers=options.code_block_renderers,
             line_offset=front.body_line,
             status_labels=labels,
+            replace_unsupported=options.replace_unsupported,
+            today=today,
         )
         subtitle = front.get(Keys.SUBTITLE)
         info = PdfInfo(

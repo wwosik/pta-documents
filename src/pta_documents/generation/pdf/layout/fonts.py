@@ -5,7 +5,9 @@ reportlab keeps registered fonts in a process-wide table. Each face is registere
 the same file always has the same name and two font sets never clash: the table never changes
 what a document looks like. Registering a face twice is a no-op.
 
-Before registering, ``ALIASES`` lend missing characters the glyph of a similar one. Faces with
+Before registering, ``ALIASES`` lend missing characters the glyph of a similar one. Characters
+the faces lack all the same go to ``PdfFonts.replace`` grapheme cluster by grapheme cluster
+(``replace_unsupported``, E05-S04); without it they are an error. Faces with
 ``synthetic_italic`` (Selawik has no italics) are slanted by
 ``SYNTHETIC_ITALIC_ANGLE`` with ``truetype.slanted``, because reportlab's paragraphs cannot slant
 text themselves.
@@ -15,8 +17,9 @@ from __future__ import annotations
 
 import hashlib
 import io
-from collections.abc import Mapping
-from dataclasses import dataclass
+import unicodedata
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 from functools import cache
 from typing import Final
 
@@ -25,11 +28,23 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 from pta_documents.design.fonts import SYNTHETIC_ITALIC_ANGLE, FontFace, FontFile, FontSet, truetype
+from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.generation.common.graphemes import clusters, code_points
+
+type Replacement = Callable[[str], str]
+"""Takes a grapheme cluster the fonts lack (``👍🏽`` is one) and returns what to show instead."""
 
 PREFIX: Final = "PTA-"
 MISSING: Final = "?"
-"""What a character the faces lack becomes: PDF/A forbids ``.notdef`` (the generator notes
-it, ``character-missing``; E05-S04 brings ``replace_unsupported``)."""
+"""What a character the faces lack becomes by default: PDF/A forbids ``.notdef`` (the generator
+notes it, ``character-missing``)."""
+
+
+def question_mark(cluster: str) -> str:
+    """The default ``replace_unsupported``: every cluster the fonts lack is ``MISSING``."""
+    return MISSING
+
+
 TEXT_FACES: Final = (FontFace.REGULAR, FontFace.BOLD)
 CODE_FACES: Final = (FontFace.MONO,)
 ALIASES: Final = {0x00A0: 0x0020, 0x202F: 0x0020, 0x2011: 0x002D}
@@ -47,6 +62,12 @@ class PdfFonts:
     names: Mapping[FontFace, str]
     text: str
     mono: str
+    replace: Replacement | None = question_mark
+    """Asked once per grapheme cluster the faces lack; None: such a cluster is an error."""
+    replaced: dict[tuple[str, bool], str] = field(
+        default_factory=dict[tuple[str, bool], str], compare=False, repr=False
+    )
+    """The answers of ``replace`` so far (one document: the hook is asked once per cluster)."""
 
     def name(self, face: FontFace) -> str:
         return self.names[face]
@@ -63,22 +84,70 @@ class PdfFonts:
         return code_point in ALIASES or self.fonts.has_glyph(code_point, face)
 
     def shown(self, text: str, code: bool = False) -> str:
-        """``text`` with every character the text faces (``code``: the code face) lack as
-        ``MISSING``, white space as a space."""
+        """``text`` with every grapheme cluster the text faces (``code``: the code face) lack
+        replaced (``replace``), white space as a space, invisible format characters left out.
+
+        Raises ``DocumentConversionError`` naming the character, its code points and the font
+        when there is no ``replace`` or its replacement is not in the faces either."""
         faces = CODE_FACES if code else TEXT_FACES
         if all(self._has(c, faces) for c in text):
             return text
-        return "".join(
-            c if self._has(c, faces) else (" " if c.isspace() else MISSING) for c in text
-        )
+        parts: list[str] = []
+        for cluster in clusters(text):
+            needed = [c for c in cluster if not _ignorable(c)]
+            if needed and all(self._has(c, faces) for c in needed):
+                parts.append("".join(c for c in cluster if self._has(c, faces)))
+            elif cluster.isspace():
+                parts.append(" ")
+            elif not needed or all(unicodedata.category(c) in ("Cc", "Cf") for c in cluster):
+                continue  # invisible: a control or format character
+            else:
+                parts.append(self._replacement(cluster, code))
+        return "".join(parts)
+
+    def family(self, code: bool = False) -> str:
+        """The family name of the text faces (``code``: of the code face)."""
+        return self.fonts.file(FontFace.MONO).family if code else self.fonts.name
+
+    def _replacement(self, cluster: str, code: bool) -> str:
+        key = (cluster, code)
+        known = self.replaced.get(key)
+        if known is not None:
+            return known
+        where = f"'{cluster}' ({code_points(cluster)})"
+        if self.replace is None:
+            raise DocumentConversionError(
+                DocumentFormat.PDF,
+                f"The character {where} is not in the font ({self.family(code)}). Leave it out, "
+                "write it in words or pass replace_unsupported to PdfOptions.",
+            )
+        value = self.replace(cluster)
+        faces = CODE_FACES if code else TEXT_FACES
+        if not all(c.isspace() or self._has(c, faces) for c in value):
+            raise DocumentConversionError(
+                DocumentFormat.PDF,
+                f"The replacement '{value}' of the character {where} is not in the font "
+                f"({self.family(code)}) either.",
+            )
+        value = "".join(" " if c.isspace() else c for c in value)
+        self.replaced[key] = value
+        return value
 
     def _has(self, char: str, faces: tuple[FontFace, ...]) -> bool:
         code = ord(char)
         return all(self.has_glyph(code, face) for face in faces)
 
 
-def register(fonts: FontSet) -> PdfFonts:
-    """Register every face of ``fonts`` (and the families) with reportlab."""
+def _ignorable(char: str) -> bool:
+    """Characters that only modify how the cluster looks: variation selectors and the
+    zero-width joiner. A cluster the faces have but for them shows without them."""
+    code = ord(char)
+    return 0xFE00 <= code <= 0xFE0F or 0xE0100 <= code <= 0xE01EF or code == 0x200D
+
+
+def register(fonts: FontSet, replace: Replacement | None = question_mark) -> PdfFonts:
+    """Register every face of ``fonts`` (and the families) with reportlab; ``replace`` takes
+    the characters they lack (``PdfFonts.replace``)."""
     names = {face: _register(fonts.file(face)) for face in FontFace}
     text = names[FontFace.REGULAR]
     mono = names[FontFace.MONO]
@@ -89,7 +158,7 @@ def register(fonts: FontSet) -> PdfFonts:
     # Inconsolata has no italic: italic code stays upright.
     addMapping(mono, 0, 1, names[FontFace.MONO])
     addMapping(mono, 1, 1, names[FontFace.MONO_BOLD])
-    return PdfFonts(fonts, names, text, mono)
+    return PdfFonts(fonts, names, text, mono, replace)
 
 
 def _family(family: str, regular: str, bold: str) -> None:

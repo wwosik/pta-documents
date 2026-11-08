@@ -165,20 +165,21 @@ def cover(context: LayoutContext, frame_info: FrameInfo) -> list[Flowable]:
     DOCX generator."""
     s = word.STYLES
     styles = context.styles
-    result: list[Flowable] = [_plain(styles.block(s.title), frame_info.title or "")]
+    result: list[Flowable] = [_plain(context.fonts, styles.block(s.title), frame_info.title or "")]
     if frame_info.subtitle:
-        result.append(_plain(styles.block(s.subtitle), frame_info.subtitle))
+        result.append(_plain(context.fonts, styles.block(s.subtitle), frame_info.subtitle))
     date = format_date(frame_info.date) if frame_info.date else None
     byline = ", ".join(p for p in (frame_info.author, frame_info.location, date) if p)
     if byline:
-        result.append(_plain(styles.block(s.author), byline))
+        result.append(_plain(context.fonts, styles.block(s.author), byline))
     if frame_info.marking is not Marking.NONE:
         block = styles.block(s.author)
         style = ParagraphStyle(
             f"{block.style.name} marking", block.style, textColor=color(word.MARKING.color)
         )
         text = context.texts.marking(frame_info.marking)
-        result.append(PtaParagraph(escape(text.upper() if word.MARKING.caps else text), style))
+        shown = context.fonts.shown(text.upper() if word.MARKING.caps else text)
+        result.append(PtaParagraph(escape(shown), style))
     result.append(PageBreak())
     return result
 
@@ -188,7 +189,7 @@ def contents(
 ) -> list[Flowable]:
     """„Inhalt" in „Zwischenüberschrift" and an entry per heading of ``TOC_LEVELS``."""
     styles = context.styles
-    result: list[Flowable] = [_plain(styles.sub_heading, context.texts.contents)]
+    result: list[Flowable] = [_plain(context.fonts, styles.sub_heading, context.texts.contents)]
     for entry in outline:
         if entry.heading not in TOC_LEVELS or entry.anchor is None:
             continue
@@ -209,9 +210,9 @@ def contents(
     return result
 
 
-def _plain(block: BlockStyle, text: str) -> PtaParagraph:
+def _plain(fonts: PdfFonts, block: BlockStyle, text: str) -> PtaParagraph:
     """A paragraph of plain ``text`` in ``block`` (bold and capitals as the style says)."""
-    markup = escape(text.upper() if block.caps else text)
+    markup = escape(fonts.shown(text.upper() if block.caps else text))
     if block.bold:
         markup = f"<b>{markup}</b>"
     if block.italic:
