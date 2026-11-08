@@ -1,7 +1,8 @@
 # Verwendung
 
 Stand nach Meilenstein M01: Markdown → Word und PowerPoint auf den PTA-Vorlagen, Word und
-PowerPoint → Markdown. PDF, Diagramme und Charts folgen (E05, E06).
+PowerPoint → Markdown; seit E06-S01 native Diagramme aus `chart`-Blöcken in beiden Formaten.
+PDF, Mermaid und Finanzdiagramme folgen (E05, E06).
 
 ## Einrichten
 
@@ -150,9 +151,10 @@ ohne anderes (auch als einzige Teile eines `::: columns`) → `Titel und zwei Di
 `ChartSpec.title`/`unit`/`source` stehen in den Platzhaltern Diagrammtitel/Werteinheit/
 Quellenangabe (leere entfallen), der Titel nicht zusätzlich im Diagramm. Ein Chart neben einer
 Tabelle oder einem Bild bekommt eine eigene Folie; auf einer Flow-Folie ist er ein Fehler. Mit
-`layout="…"` geht ein Chart in den nächsten Diagrammplatzhalter des Layouts. Den
-`chart`-Renderer und den PTA-Diagrammstil liefert E06-S01; Word wirft für Charts bis dahin
-„does not support yet", Zeichnungen (`DrawingGraphic`) in beiden Formaten bis E06-S02/E03-S04.
+`layout="…"` geht ein Chart in den nächsten Diagrammplatzhalter des Layouts, dann mit Titel und
+Einheit im Diagramm selbst. Renderer und PTA-Diagrammstil: [Charts](#charts-e06-s01);
+Zeichnungen (`DrawingGraphic`) werfen in beiden Formaten „does not support yet" bis
+E06-S02/E03-S04.
 
 ### Sprechernotizen (E09-S01)
 
@@ -304,9 +306,9 @@ options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgN
   Markdown-Bild, mit dem Info-String als Alt-Text — in Word ohne „Abbildung n"-Beschriftung, in
   PowerPoint wie ein Bild allein auf einer Folie. `DrawingGraphic(drawing)` und
   `ChartGraphic(chart, drawing)` (Daten in `pta_documents.charts.ChartSpec`, `drawing` ist ein
-  `Drawing` aus [`pta_documents.drawing`](#zeichenmodell-und-svg-e02-s03)) sind vorgesehen,
-  werden aber noch nicht gezeichnet: sie ergeben einen Fehler „… does not support yet"
-  (Zeichnen folgt mit E03-S04, E04-S04 und E06).
+  `Drawing` aus [`pta_documents.drawing`](#zeichenmodell-und-svg-e02-s03)): Charts setzen
+  beide Generatoren nativ ([Charts](#charts-e06-s01)); Zeichnungen ergeben noch einen Fehler
+  „… does not support yet" (Zeichnen folgt mit E03-S04 und E06-S02).
 - **Konverter** (`generation/common/images.py`, `ImageConverter`) bekommen jedes Bild, dessen
   Format der Generator nicht setzt (alles außer PNG, JPEG, GIF, BMP, TIFF, z. B. SVG), mit
   `scale = 2`; der erste mit Ergebnis gewinnt. Word setzt das Ergebnis in der natürlichen Größe
@@ -322,8 +324,54 @@ options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgN
 - **Standard:** ohne Angabe nehmen die Optionen alle Renderer und Konverter der Bibliothek, die
   verfügbar sind (`default_renderers()`, `default_converters()`); `()` schaltet sie ab.
   `default_converters()` enthält mit dem Extra `svg` den `SvgImageConverter` (E06-S04), sonst
-  nichts; die Renderer-Liste ist noch leer — Charts und Mermaid (E06-S01/S03) tragen sich dort
-  ein.
+  nichts; `default_renderers()` enthält den `ChartRenderer` (E06-S01, Kern), Mermaid (E06-S03)
+  trägt sich dort ein.
+
+## Charts (E06-S01)
+
+Ein ```` ```chart ````-Block (Sprache ohne Groß/Klein, nichts dahinter) wird über den
+`ChartRenderer` (`pta_documents.charts.renderer`, in `default_renderers()`) ein
+`ChartGraphic(chart, drawing)`. Syntax für Schreiber: [anleitung.md](anleitung.md#diagramme-aus-daten);
+`ChartRenderer().authoring_guide` liefert denselben Abschnitt als `## Charts`.
+
+```python
+from pta_documents.charts import parse, draw, scale, format_number
+from pta_documents.charts.renderer import ChartRenderer
+
+spec = parse("type: line\n---\nx; a\n1; 2,5\n", line=10)  # ChartSpec; ChartBlockError bei Fehlern
+drawing = draw(spec)  # Drawing 640 × 380 px, Zahlen deutsch („1.250,5")
+```
+
+- **Parser** (`charts/parser.py`, Port von `ChartParser.cs`): Einstellungen `type`, `title`,
+  `unit`, `source`, `stacked` bis zur Zeile `---` (Schlüssel ohne Groß/Klein, doppelt =
+  Fehler, Kommentar nach `` # `` oder als ganze Zeile `#…`), dann CSV. Die Kopfzeile entscheidet
+  das Trennzeichen: enthält sie außerhalb von Anführungszeichen ein `;`, gilt `;` mit
+  Dezimalkomma, sonst `,` mit Dezimalpunkt. Zahlen nur als `[+-]Ziffern[.,Ziffern][e±n]`, kein
+  Tausendertrennzeichen, kein `nan`/`inf`; leere Zellen sind `None` (Lücke), fehlende Zellen am
+  Zeilenende auch. Linien stapeln nie. Jeder Fehler ist `ChartBlockError` (`ValueError`) und
+  beginnt mit `Line N: The chart block cannot be drawn: …` — N ist die Zeile im Dokument, in der
+  der Fehler steht (Einstellung, Kopf- oder Datenzeile), sonst die des Zauns; die Generatoren
+  machen daraus `DocumentConversionError` (Ursache in `__cause__`).
+- **Zeichnung** (`charts/drawing.py`, Port von `ChartDrawing.cs`, für PDF/SVG): Titel, Einheit,
+  Werteachse mit runden Schritten (`scale()`: 0 bzw. Minimum bis Maximum bzw. größte Summe in
+  etwa sechs Schritten aus 1, 2, 2,5, 5, 10 × 10ⁿ), Kategorien, Legende, Quelle. Farben nur aus
+  `design.colors`: Reihen `ChartSpec.colors` (Akzente der Reihe nach), Text `TEXT_WORD`,
+  `TEXT_SLIDES` (PPTX) oder `WHITE` (`{.dark}`), Gitter `GREY_LIGHT`, Nulllinie `GREY_MID`;
+  überlappende Flächen `colors.tint(farbe, 0.55)`. Zahlen in der Dokumentsprache
+  (`format_number`).
+- **Nativ** (`generation/common/native_chart.py`): Typ (`COLUMN_CLUSTERED`/`COLUMN_STACKED`,
+  `LINE_MARKERS`, `AREA`/`AREA_STACKED`), Daten (`CategoryChartData`) und Stil für beide
+  Generatoren: Lücke 60 %, keine Teilstriche, Kategorienachse 0,5 pt `GREY_MID`, Gitter 0,5 pt
+  `GREY_LIGHT`, keine Werteachsenlinie, Werteachse ab 0 (Balken, Flächen), Legende unten ab zwei
+  Reihen, kein Rahmen, Linien 2,25 pt mit Kreismarken. PowerPoint
+  (`generation/pptx/chart.py`): 14 pt Segoe UI Light `TEXT_SLIDES`, Platzierung siehe
+  [Diagramm-Layouts](#pta-folienarten-und-diagramm-layouts-e04-s04). Word
+  (`generation/docx/chart.py`): Chart-XML von python-pptx als Teil `word/charts/chartN.xml`,
+  Arbeitsmappe `word/embeddings/Microsoft_Excel_WorksheetN.xlsx` (`c:externalData`), inline
+  über die Satzspiegelbreite im Verhältnis 640:380, 10 pt Segoe UI `TEXT_WORD`, Einheit als
+  Titel der Werteachse; mit `title` danach „Abbildung n: Titel", `source` als Absatz in
+  „Beschriftung" ohne Nummer. Die Konverter (Word/PowerPoint → Markdown) lassen Diagramme bisher
+  weg.
 
 ## Schriften für PDF und SVG (E01-S03)
 
@@ -534,7 +582,7 @@ ist geschrieben und brauchbar. Wer Hinweise wie Fehler behandeln will, prüft `r
 | `image-cropped` (`IMAGE_CROPPED`) | PPTX | ein Bildplatzhalter schneidet mehr als ein Viertel der Bildfläche ab |
 | `image-enlarged` (`IMAGE_ENLARGED`) | PPTX, DOCX | ein Bild wird mehr als doppelt so groß gezeigt wie seine Pixel bei 96 dpi und wirkt unscharf |
 | `raw-html` (`RAW_HTML`) | PPTX, DOCX | rohes HTML im Markdown; es wird **weggelassen**. HTML-Kommentare `<!-- … -->` fallen ohne Hinweis weg, `<br>` ist ein Zeilenumbruch |
-| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (die Renderer der Bibliothek folgen mit E06) |
+| `code-not-drawn` (`CODE_NOT_DRAWN`) | PPTX, DOCX | ein Codeblock in `mermaid`, `chart` oder `financial-chart` wurde von keinem Renderer gezeichnet und steht als Code da (`chart` zeichnet der `ChartRenderer`, wenn die Renderer nicht abgeschaltet sind; Mermaid und Finanzdiagramme folgen mit E06) |
 | `character-missing` (`CHARACTER_MISSING`) | PDF (E05-S04) | ein Zeichen fehlt in den Schriften |
 | `notes-dropped` (`NOTES_DROPPED`) | DOCX (E09-S01) | Sprechernotizen fallen im Word-Dokument weg |
 | `code-language-unknown` (`CODE_LANGUAGE_UNKNOWN`) | PPTX, DOCX (E17-S02) | die Sprache eines Codeblocks ist unbekannt; er steht einfarbig da |

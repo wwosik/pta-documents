@@ -58,3 +58,12 @@ STATUS_COLORS: Final = {
     StatusCategory.INFO: PTA_BLUE,
     StatusCategory.NEUTRAL: GREY_MID,
 }
+
+
+def tint(color: str, share: float) -> str:
+    """``color`` mixed with white: ``share`` of the colour (0 … 1), the rest white — for areas
+    that must let what lies behind them show (overlapping chart areas)."""
+    if not 0 <= share <= 1:
+        raise ValueError(f"share must be between 0 and 1, not {share}")
+    channels = (int(color[i : i + 2], 16) for i in (0, 2, 4))
+    return "".join(f"{round(255 - (255 - c) * share):02X}" for c in channels)

@@ -32,6 +32,7 @@ from lxml import etree
 from markdown_it.token import Token
 from PIL import Image
 
+from pta_documents.charts.spec import ChartSpec
 from pta_documents.design import word
 from pta_documents.design.colors import STATUS_COLORS, StatusCategory
 from pta_documents.design.variants import GeneratedTexts
@@ -48,9 +49,10 @@ from pta_documents.generation.common import (
 )
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
 from pta_documents.generation.common.openxml import R, field_paragraph_runs, w
-from pta_documents.generation.common.renderers import ImageGraphic
+from pta_documents.generation.common.renderers import ChartGraphic, ImageGraphic
 from pta_documents.generation.common.result import NoteCodes, Notes
 from pta_documents.generation.common.text_metrics import TextRun
+from pta_documents.generation.docx import chart as docx_chart
 from pta_documents.generation.docx.options import DocxOptions
 from pta_documents.markdown.document import DocumentResource, MarkdownDocument
 from pta_documents.markdown.front_matter import FrontMatter
@@ -202,7 +204,9 @@ class BodyWriter:
                 return self.table_block(tokens, i)
             case "fence" | "code_block":
                 graphic = self.draw(token) if token.type == "fence" else None
-                if graphic is not None:
+                if isinstance(graphic, ChartGraphic):
+                    self.chart_figure(graphic.chart, token.info.strip())
+                elif graphic is not None:
                     paragraph = self.paragraph(word.STYLES.normal)
                     self.place_picture(
                         paragraph,
@@ -241,17 +245,23 @@ class BodyWriter:
     def line(self, token: Token) -> int | None:
         return line_of(token, self.front.body_line)
 
-    def draw(self, fence: Token) -> ImageGraphic | None:
-        """The image the code-block renderers make of ``fence``; None: it stays code."""
-        return code_blocks.draw(
+    def draw(self, fence: Token) -> ImageGraphic | ChartGraphic | None:
+        """The image or chart the code-block renderers make of ``fence``; None: it stays code.
+        Drawings raise until Word places them (E03-S04)."""
+        info = fence.info
+        line = self.line(fence)
+        graphic = code_blocks.render_graphic(
             self.options.code_block_renderers,
             self.notes,
-            fence.info,
+            info,
             fence.content,
-            self.line(fence),
+            line,
             FORMAT,
             self.options.language,
         )
+        if graphic is None or isinstance(graphic, ImageGraphic | ChartGraphic):
+            return graphic
+        raise code_blocks.unsupported(graphic, info, line, FORMAT)
 
     def container(self, tokens: list[Token], i: int, close: str, style: str | None) -> int:
         depth = 0
@@ -587,6 +597,18 @@ class BodyWriter:
         if text:
             paragraph.paragraph_format.keep_with_next = True
             self.caption(self.texts.figure, None, text=text)
+
+    def chart_figure(self, spec: ChartSpec, info: str) -> None:
+        """A native chart over the text width; below it "Abbildung n: <title>" when the chart
+        has a title, and its source in the caption style without a number."""
+        paragraph = self.paragraph(word.STYLES.normal)
+        docx_chart.add_chart(paragraph, spec, self.text_width, spec.title or info)
+        if spec.title or spec.source:
+            paragraph.paragraph_format.keep_with_next = True
+        if spec.title:
+            self.caption(self.texts.figure, None, text=spec.title)
+        if spec.source:
+            _append_text(self.paragraph(word.STYLES.caption)._p, spec.source)
 
     def caption(
         self,

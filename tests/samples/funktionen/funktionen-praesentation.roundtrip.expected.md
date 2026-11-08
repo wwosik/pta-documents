@@ -684,9 +684,146 @@ Die Texte stehen im Front Matter: status.success: Erledigt usw.
 
 :::
 
-## PTA-Folienarten
+## Diagramme
 
 06
+
+## Balkendiagramm
+
+Aufträge je Quartal
+
+Mio. EUR
+
+Quelle: Vertrieb, Beispielzahlen
+
+::: notes
+
+````
+## Balkendiagramm
+
+```chart
+type: bar
+title: Aufträge je Quartal
+unit: Mio. EUR
+source: Quelle: Vertrieb, Beispielzahlen
+---
+Quartal, Plan, Ist
+Q1, 12.5, 13.2
+Q2, 11.8, 12.1
+Q3, 12.5, 14
+Q4, 13, 13.6
+```
+````
+
+:::
+
+## Linien mit Text davor
+
+Antwortzeit
+
+ms
+
+Ein chart-Block wird ein echtes Diagramm; „Daten bearbeiten“ öffnet seine Tabelle.
+
+::: notes
+
+````
+## Linien mit Text davor
+
+Ein `chart`-Block wird ein echtes Diagramm; „Daten bearbeiten“ öffnet seine Tabelle.
+
+```chart
+type: line
+title: Antwortzeit
+unit: ms
+---
+Monat; Median; 95. Perzentil
+Jan; 120,5; 310
+Feb; 118; 295,5
+Mär; 101; 260
+Apr; 96,5;
+Mai; 92; 230
+```
+````
+
+:::
+
+## Gestapelte Flächen mit Text danach
+
+Fahrten je Tag
+
+Tsd.
+
+Mit stacked: true liegen Flächen oder Balken übereinander.
+
+::: notes
+
+````
+## Gestapelte Flächen mit Text danach
+
+```chart
+type: area
+stacked: true
+title: Fahrten je Tag
+unit: Tsd.
+---
+Tag, Bus, Bahn
+Mo, 41, 55
+Di, 43, 57
+Mi, 42, 58
+Do, 44, 60
+Fr, 47, 63
+```
+
+Mit `stacked: true` liegen Flächen oder Balken übereinander.
+````
+
+:::
+
+## Zwei Diagramme
+
+Umsatz
+
+Mio. EUR
+
+Marge
+
+%
+
+:::: notes
+
+````
+## Zwei Diagramme
+
+::: columns
+```chart
+title: Umsatz
+unit: Mio. EUR
+---
+Jahr, Umsatz
+2024, 41
+2025, 45
+```
+
+---
+
+```chart
+type: line
+title: Marge
+unit: %
+---
+Jahr, Marge
+2024, 8.5
+2025, 9.1
+```
+:::
+````
+
+::::
+
+## PTA-Folienarten
+
+07
 
 ## Agenda
 

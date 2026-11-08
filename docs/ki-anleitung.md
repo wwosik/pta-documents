@@ -94,8 +94,8 @@ Sprache = Hinweis `code-language-unknown`.
 - Abbildung: Bild allein im Absatz, Unterschrift als Bildtitel:
   `![Alt-Text](images/a.jpg "Unterschrift (Foto: Name, CC BY 4.0)")` → „Abbildung n: …".
 - Kein HTML (wird weggelassen, Hinweis `raw-html`; nur `<br>` in Tabellenzellen ist ein
-  Zeilenumbruch), keine Diagramme/Mermaid/`chart`-Blöcke (werden als Code gezeigt, Hinweis
-  `code-not-drawn`).
+  Zeilenumbruch), keine Mermaid-Diagramme (werden als Code gezeigt, Hinweis `code-not-drawn`).
+  Diagramme aus Zahlen: `chart`-Blöcke, siehe unten.
 - Folien-Syntax (`:::`-Container, Alerts `> [!NOTE]`, `==Markierung==`, `[Wörter]{.success}`)
   wird angenommen und schlicht gezeigt: Container-Inhalt nacheinander (`###` in Containern wird
   fett, keine Überschrift), Alerts/`conclusion`/`comment` als Hinweisabsatz mit fetter Art,
@@ -190,6 +190,37 @@ eigenen Formatvorlagen (siehe *Word-Bericht*).
 Andere Namen sind Fehler; die Meldung listet die gültigen. Klammern, die nicht genau so aussehen
 (`[a] {.success}`, `## Mengen {a, b}`), bleiben Text.
 - Text vor dem ersten `#` wird ignoriert; Fußnoten werden auf Folien weggelassen.
+
+## Diagramme aus Daten (`chart`, Word und PowerPoint)
+
+Zahlen als Diagramm: ein Codeblock `chart` mit Einstellungen, einer Zeile `---` und den Daten
+als CSV (Kopfzeile: Kategorienspalte, dann je Reihe ein Name; eine Zeile je Kategorie):
+
+````markdown
+```chart
+type: bar
+title: Aufträge je Quartal
+unit: Mio. EUR
+source: Quelle: Vertrieb
+---
+Quartal, Plan, Ist
+Q1, 12.5, 13.2
+Q2, 11.8, 12.1
+```
+````
+
+- Einstellungen sind **englisch** und freiwillig: `type: bar|line|area` (Standard `bar`),
+  `stacked: true|false` (Linien stapeln nie), `title`, `unit`, `source`. Andere Schlüssel sind
+  ein Fehler. Nichts hinter ```` ```chart ```` schreiben.
+- Zahlen: Trennzeichen `,` → Dezimalpunkt (`12.5`); Trennzeichen `;` → Dezimalkomma (`12,5`).
+  Keine Tausenderpunkte, keine Einheiten in den Zellen. Leeres Feld = Lücke. Höchstens etwa
+  zwölf Kategorien und fünf Reihen.
+- Word: Diagramm über die Textbreite, mit `title` darunter „Abbildung n: Titel", `source`
+  darunter, `unit` an der Werteachse. PowerPoint: ein Chart je Folie (`Titel und Diagramm`),
+  Text davor oder danach → `Titel, Text und Diagramm` bzw. `Titel, Diagramm und Text`, zwei
+  Charts (gern in `::: columns`) → `Titel und zwei Diagramme`; Titel, Einheit, Quelle in den
+  Platzhaltern. Kein Chart auf Folien mit Hinweisboxen, Karten oder `.dark`.
+- Ein Fehler im Block bricht mit der Zeilennummer ab — die Meldung sagt, was zu ändern ist.
 
 ## Aus Python statt per Befehl
 

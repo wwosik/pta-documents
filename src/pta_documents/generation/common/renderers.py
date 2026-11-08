@@ -77,8 +77,11 @@ class CodeBlockRenderer(Protocol):
 
 def default_renderers() -> tuple[CodeBlockRenderer, ...]:
     """The renderers the generators use unless their options say otherwise: every renderer of
-    the library that is available. None yet; the chart and Mermaid renderers (E06) add theirs."""
-    return ()
+    the library that is available: the chart renderer (E06-S01, core); Mermaid (E06-S03) adds
+    its own."""
+    from pta_documents.charts.renderer import ChartRenderer
+
+    return (ChartRenderer(),)
 
 
 def render(

@@ -64,9 +64,9 @@ def test_html_in_tables_lists_and_footnotes_is_noted() -> None:
 
 
 def test_a_diagram_block_is_noted_as_not_drawn() -> None:
-    result = run(FRONT + "# K\n\n```chart\ntype: bar\n```\n\n```json\n{}\n```\n")
+    result = run(FRONT + "# K\n\n```mermaid\ngraph TD\n```\n\n```json\n{}\n```\n")
     assert [(n.code, n.line) for n in result.notes] == [(NoteCodes.CODE_NOT_DRAWN, 6)]
-    assert "`chart`" in result.notes[0].message
+    assert "`mermaid`" in result.notes[0].message
 
 
 def test_an_image_far_below_96_dpi_is_noted_as_enlarged() -> None:

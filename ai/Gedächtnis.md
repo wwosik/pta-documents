@@ -30,8 +30,8 @@ weil ihm vertraut wird.
   eingebettete Vorlagen. PDF, Diagramme/Charts und PDF-Konverter sind nur geplant; die
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
   Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
-  Diagrammlayouts (ohne `chart`-Renderer bis E06-S01); Word zeigt sie seit E03-S03 schlicht in
-eigenen Formatvorlagen. Bedienung:
+  Diagrammlayouts (`chart`-Blöcke seit E06-S01, auch nativ in Word); Word zeigt sie seit
+  E03-S03 schlicht in eigenen Formatvorlagen. Bedienung:
   `docs/verwendung.md`.
 - **Zweite Referenz:** `~/mvv/vt-tools-libs` (Schwesterbibliothek von DocLibs für die MVV,
   .NET) ist seit DocLibs `2610.28.22` weitergegangen — Hinweise an den Schreiber
@@ -137,7 +137,8 @@ eigenen Formatvorlagen. Bedienung:
 - **Charts auf Folien** (E04-S04): PPTX nimmt Fences über `code_blocks.render_graphic` (alle
   Grafikarten) statt `draw`; `ChartGraphic` wird `model.Chart` und landet über
   `generation/pptx/chart.insert_chart` nativ im Diagrammplatzhalter. Zeichnungen werfen weiter
-  (`code_blocks.unsupported`). Word nutzt noch `draw` (wirft für Charts bis E06-S01).
+  (`code_blocks.unsupported`). Word nimmt seit E06-S01 ebenfalls `render_graphic`
+  (`BodyWriter.draw`) und setzt Charts über `generation/docx/chart.add_chart`.
 - **Folien-Syntax in Word** (E03-S03): `BodyWriter` legt eigene Vorlagen bei Bedarf an
   (`design/word.STYLES`: `Hinweis`, `Hinweis wichtig`, `Markierung`, `Status …`, Tabellenvorlage
   `Bildreihe`); Runs bekommen höchstens eine `rStyle` (Hyperlink vor Status vor Markierung).
@@ -231,3 +232,18 @@ eigenen Formatvorlagen. Bedienung:
   darum zeigen `serif`, `sans-serif` und der Standard auf Selawik (Test vergleicht PNG-Bytes).
   Keine `image-enlarged`-Hinweise für SVG in PowerPoint. Samples: `images/plan.svg`,
   `images/plan-folie.svg`.
+- **Charts** (E06-S01): `pta_documents.charts` (`parser.parse` → `ChartSpec`, Fehler
+  `ChartBlockError(ValueError)` mit `Line N: ` der fehlerhaften Zeile; `drawing.draw`/`scale`/
+  `format_number`). Der `ChartRenderer` liegt in `charts/renderer.py` und wird **nicht** aus
+  `charts/__init__` importiert (Zirkel mit `generation.common.renderers`, das `charts.spec`
+  importiert); `default_renderers()` importiert ihn in der Funktion. Er ist ein frozen
+  Dataclass, damit `DocxOptions() == …` vergleicht. Einstellungen englisch (`type`, `title`,
+  `unit`, `source`, `stacked`, Liste `parser.SETTINGS`); `;` in der Kopfzeile = Dezimalkomma.
+  Typ, Daten und PTA-Stil der nativen Diagramme für **beide** Formate in
+  `generation/common/native_chart.py` (`apply_style` auf einem python-pptx-`Chart`); Word baut
+  das Chart-XML mit python-pptx (`pptx.oxml.parse_xml` + `Chart(chart_space, None)`) und hängt
+  Teil und Arbeitsmappe selbst an (`generation/docx/chart.py`). Abgeleitete Farben nur über
+  `colors.tint` (überlappende Flächen). Die Konverter lassen Diagramme weg (kein Rückweg zum
+  `chart`-Block). `test_funktionen.py` verlangt jede Art, jede Einstellung und beide
+  Trennzeichen in `samples/funktionen/`. Wer einen Test mit ```` ```chart ```` ohne gültige
+  Daten schreibt, muss die Renderer abschalten (`code_block_renderers=()`).

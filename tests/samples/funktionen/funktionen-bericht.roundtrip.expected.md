@@ -359,6 +359,61 @@ Eine SVG-Grafik steht in ihrer natürlichen Größe da und bleibt in Word in jed
 
 Abbildung 6: Eine SVG-Grafik, in Word scharf in jeder Größe
 
+## Diagramme aus Daten
+
+Ein chart-Block wird ein echtes Word-Diagramm in den PTA-Farben, dessen Tabelle sich mit „Daten bearbeiten“ ändern lässt; der Titel wird die Beschriftung, die Quelle steht darunter:
+
+````markdown
+```chart
+type: bar
+title: Aufträge je Quartal
+unit: Mio. EUR
+source: Quelle: Vertrieb, Beispielzahlen
+---
+Quartal, Plan, Ist
+Q1, 12.5, 13.2
+Q2, 11.8, 12.1
+Q3, 12.5, 14
+Q4, 13, 13.6
+```
+````
+
+Abbildung 7: Aufträge je Quartal
+
+Quelle: Vertrieb, Beispielzahlen
+
+Mit ; als Trennzeichen haben Zahlen ein Dezimalkomma; stacked: true stapelt:
+
+````markdown
+```chart
+type: area
+stacked: true
+title: Fahrten je Tag
+unit: Tsd.
+---
+Tag; Bus; Bahn
+Mo; 41,5; 55
+Di; 43; 57
+Mi; 42; 58,5
+```
+````
+
+Abbildung 8: Fahrten je Tag
+
+Linien (type: line) stapeln nie; ein leeres Feld lässt eine Lücke, ohne Titel gibt es keine Beschriftung:
+
+````markdown
+```chart
+type: line
+---
+Monat, Median
+Jan, 120.5
+Feb, 118
+Mär,
+Apr, 96.5
+```
+````
+
 # Code, Zitat und Trennlinie
 
 ## Codeblock

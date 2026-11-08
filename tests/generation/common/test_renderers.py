@@ -17,7 +17,6 @@ from pta_documents.charts import ChartKind, ChartSeries, ChartSpec
 from pta_documents.design.variants import Language
 from pta_documents.drawing import Drawing
 from pta_documents.generation.common.renderers import (
-    ChartGraphic,
     CodeBlockGraphic,
     CodeBlockRenderer,
     CodeBlockRequest,
@@ -196,25 +195,19 @@ def test_a_document_conversion_error_passes_unchanged(
     assert error.value is original
 
 
-CHART = ChartGraphic(
-    ChartSpec(ChartKind.BAR, ("a",), (ChartSeries("s", (1.0,)),)), Drawing(1, 1, ())
-)
-
-
 @pytest.mark.parametrize(
     ("generate", "format", "graphic"),
     [
         (generate_docx, DocumentFormat.DOCX, DrawingGraphic(Drawing(1, 1, ()))),
         (generate_pptx, DocumentFormat.PPTX, DrawingGraphic(Drawing(1, 1, ()))),
-        (generate_docx, DocumentFormat.DOCX, CHART),
     ],
-    ids=["docx-drawing", "pptx-drawing", "docx-chart"],
+    ids=["docx-drawing", "pptx-drawing"],
 )
-def test_drawings_and_charts_are_not_supported_yet(
+def test_drawings_are_not_supported_yet(
     generate: Generate, format: DocumentFormat, graphic: CodeBlockGraphic
 ) -> None:
-    """Placing drawings follows with E06-S02 (PowerPoint) and E03-S04 (Word), charts in Word with
-    E06-S01; PowerPoint places charts since E04-S04 (``tests/generation/pptx/test_kinds.py``)."""
+    """Placing drawings follows with E06-S02 (PowerPoint) and E03-S04 (Word); charts are placed
+    natively in both (``tests/charts/test_native.py``)."""
     with pytest.raises(DocumentConversionError) as error:
         generate(DECK, (Recorder(graphic=graphic),))
     assert error.value.format is format

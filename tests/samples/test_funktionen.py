@@ -5,7 +5,8 @@ round trip through the converter is committed as ``funktionen/<file>.roundtrip.e
 (renew with PTA_DOCUMENTS_UPDATE_EXPECTED=1), and the documents land in
 ``.tmp/review/funktionen/``. What has to be shown comes from the code: the front matter keys of
 each generator, the template variants, the containers, alerts and heading attributes of the
-slide syntax, ``==mark==``, coloured words and status labels. When the authoring guides exist
+slide syntax, ``==mark==``, coloured words, status labels and the ``chart`` blocks (every kind,
+setting and separator). When the authoring guides exist
 (E02-S05), the list comes from their syntax instead.
 """
 
@@ -22,6 +23,8 @@ from typing import Final
 import pytest
 from markdown_it.token import Token
 
+from pta_documents.charts import ChartKind
+from pta_documents.charts import parser as chart_parser
 from pta_documents.conversions.docx import DocxConverter
 from pta_documents.conversions.pptx import PptxConverter
 from pta_documents.design.colors import StatusCategory
@@ -29,6 +32,7 @@ from pta_documents.design.slides import TITLE_SLIDES
 from pta_documents.design.variants import Language, SlidesVariant, WordVariant
 from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common import heading_attributes, layout_syntax
+from pta_documents.generation.common.code_blocks import fence_language
 from pta_documents.generation.common.coloured_words import PATTERN
 from pta_documents.generation.docx import generator as docx_generator
 from pta_documents.generation.docx.generator import DocxGenerator
@@ -44,6 +48,7 @@ REPO: Final = Path(__file__).resolve().parents[2]
 FOLDER: Final = REPO / "samples" / "funktionen"
 EXPECTED: Final = Path(__file__).parent / "funktionen"
 NOT_SAMPLES: Final = ("readme.md", "quellen.md")
+CHART: Final = "chart"
 SOURCE: Final = "markdown"
 """The language of the fences that show the Markdown source of a feature."""
 DOCX: Final = DocumentFormat.DOCX
@@ -158,6 +163,8 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
             for entry in heading_attributes.VALID.split(", "):
                 if attributes is not None and attribute_used(attributes, entry):
                     shown.add("{" + entry + "}")
+        elif token.type == "fence" and fence_language(token.info) == CHART:
+            shown_in_chart(token.content, shown)
         elif token.type == "inline":
             if any(child.type == "mark_open" for child in token.children or ()):
                 shown.add("==mark==")
@@ -166,6 +173,19 @@ def shown_in(text: str, format: DocumentFormat, shown: set[str]) -> None:
             cell = re.fullmatch(r"`([^`]+)`", token.content.strip())
             if tokens[i - 1].type == "td_open" and cell and cell.group(1) in labels:
                 shown.add(f"status label: status.{labels[cell.group(1)].value}")
+
+
+def shown_in_chart(code: str, shown: set[str]) -> None:
+    """The settings, kind and separator a ``chart`` block shows."""
+    spec = chart_parser.parse(code)
+    shown.add(f"```{CHART} type: {spec.kind.value}")
+    settings, separator, data = code.partition(f"\n{chart_parser.SEPARATOR_LINE}\n")
+    for line in settings.splitlines() if separator else ():
+        key = line.partition(":")[0].strip().lower()
+        if key in chart_parser.SETTINGS:
+            shown.add(f"```{CHART} {key}:")
+    header = (data if separator else code).strip().splitlines()[0]
+    shown.add(f"```{CHART} separator {';' if ';' in header else ','}")
 
 
 def required(format: DocumentFormat) -> set[str]:
@@ -188,6 +208,9 @@ def required(format: DocumentFormat) -> set[str]:
     result |= {f"::: {layout_syntax.PANEL} dark", f"::: {layout_syntax.COLUMNS} <widths>"}
     result |= {f"> [!{kind}]" for kind in layout_syntax.ALERT_KINDS}
     result.add("==mark==")
+    result |= {f"```{CHART} type: {kind.value}" for kind in ChartKind}
+    result |= {f"```{CHART} {key}:" for key in chart_parser.SETTINGS}
+    result |= {f"```{CHART} separator ,", f"```{CHART} separator ;"}
     if format is PPTX:
         # Word drops the heading attributes; they are slide syntax.
         result |= {"{" + entry + "}" for entry in heading_attributes.VALID.split(", ")}

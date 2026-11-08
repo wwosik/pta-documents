@@ -5,8 +5,8 @@ bekommst daraus ein Word-Dokument oder eine PowerPoint-Präsentation **auf den o
 PTA-Vorlagen** — mit Deckblatt, Logo, Kopf- und Fußzeile, PTA-Formatvorlagen und PTA-Layouts.
 Umgekehrt macht es aus vorhandenen Word- und PowerPoint-Dateien Markdown.
 
-Noch nicht möglich (geplant): PDF, Diagramme (Mermaid), Charts, farbige Hinweisboxen und
-Kartenlayouts auf Folien.
+Noch nicht möglich (geplant): PDF, Diagramme aus Mermaid, Finanzdiagramme, farbige
+Hinweisboxen und Kartenlayouts auf Folien.
 
 ## 1. Einmal einrichten
 
@@ -147,6 +147,7 @@ der Generator als Hinweis `code-language-unknown`.
 | `Tabelle: Text` direkt unter der Tabelle | Beschriftung „Tabelle 1: Text" |
 | Bild allein im Absatz | Bild in Satzspiegelbreite, darunter „Abbildung 1: …" aus dem Bildtitel (in `"…"`) oder dem Alt-Text |
 | ```` ``` ```` Codeblock | Formatvorlage Code (Consolas, grau hinterlegt) |
+| ```` ```chart ```` mit Einstellungen und CSV | echtes Word-Diagramm über die Textbreite, darunter „Abbildung n: …" aus `title` (siehe [Diagramme aus Daten](#diagramme-aus-daten)) |
 | `> Zitat` | eingerücktes Zitat |
 | `[Text](https://…)` | Hyperlink |
 | `Text[^1]` und `[^1]: Erklärung` | Word-Fußnote |
@@ -303,8 +304,44 @@ erika.mustermann@pta.de
   Funktion, E-Mail und Telefon (Reihenfolge egal); ein bis fünf Personen. Bei genau einer
   Person darf danach noch Text oder eine Liste folgen. Ohne Foto bleibt keine graue Fläche.
 - `layout="Zwischenfazit 02"` bzw. `layout="Zitat 02"` wählt die zweite Variante.
-- Diagramme aus `chart`-Blöcken kommen auf die PTA-Diagrammlayouts, sobald der Chart-Renderer
-  da ist (E06-S01).
+- Diagramme aus `chart`-Blöcken kommen auf die PTA-Diagrammlayouts (siehe
+  [Diagramme aus Daten](#diagramme-aus-daten)).
+
+### Diagramme aus Daten
+
+Ein Codeblock mit der Sprache `chart` wird ein Balken-, Linien- oder Flächendiagramm in den
+PTA-Farben — in Word wie in PowerPoint ein echtes Office-Diagramm: Rechtsklick → „Daten
+bearbeiten" öffnet seine Tabelle. Oben stehen Einstellungen, dann eine Zeile `---`, dann die
+Daten als CSV:
+
+````markdown
+```chart
+type: bar
+title: Aufträge je Quartal
+unit: Mio. EUR
+source: Quelle: Vertrieb
+---
+Quartal, Plan, Ist
+Q1, 12.5, 13.2
+Q2, 11.8, 12.1
+Q3, 12.5, 14
+```
+````
+
+- `type`: `bar` (Balken, Standard), `line` (Linien) oder `area` (Flächen); `stacked: true`
+  stapelt Balken oder Flächen. `title`, `unit` und `source` sind freiwillig. Die Namen der
+  Einstellungen sind englisch, wie die übrige Markdown-Syntax; ` # ` leitet einen Kommentar ein.
+- Die erste Datenzeile nennt die Kategorienspalte und je Reihe einen Namen. Mit `,` als
+  Trennzeichen schreibt man Zahlen mit Punkt (`12.5`), mit `;` mit Komma (`12,5`) — die
+  Kopfzeile entscheidet. Keine Tausenderpunkte; ein leeres Feld lässt eine Lücke.
+- **Folien:** ein Chart allein → `Titel und Diagramm`; Text davor → `Titel, Text und Diagramm`,
+  Text danach → `Titel, Diagramm und Text`; zwei Charts (auch in `::: columns`) →
+  `Titel und zwei Diagramme`. Titel, Einheit und Quelle stehen in den Feldern des Layouts.
+- **Word:** das Diagramm steht über die Textbreite; mit `title` folgt „Abbildung n: Titel",
+  darunter die Quelle, die Einheit steht an der Werteachse.
+- Ein Fehler (unbekannte Einstellung, Text statt Zahl, zu viele Werte in einer Zeile) bricht mit
+  der Zeilennummer ab, z. B. `Line 12: The chart block cannot be drawn: 'viel' in row 3 of the
+  data is not a number; …`.
 
 ## 6. Aus Python aufrufen (optional)
 
@@ -361,8 +398,7 @@ wrote documents/kunde/kunde-praesentation.pptx
 
 Hinweise sind keine Fehler, aber fast immer ein Grund, das Markdown zu ändern: eine
 „(Forts.)"-Folie heißt meist zu viel Inhalt — besser selbst auf zwei Folien mit eigenen Titeln
-aufteilen. Rohes HTML wird weggelassen, `mermaid`- und `chart`-Blöcke erscheinen (noch) als
-Code, beschnittene oder stark vergrößerte Bilder besser in passender Größe und passenden
+aufteilen. Rohes HTML wird weggelassen, `mermaid`-Blöcke erscheinen (noch) als Code, beschnittene oder stark vergrößerte Bilder besser in passender Größe und passenden
 Proportionen ablegen. `--strict` lässt den Befehl bei Hinweisen wie bei Fehlern mit Code 1
 enden. Alle Codes: [verwendung.md](verwendung.md#hinweise-generationresult).
 

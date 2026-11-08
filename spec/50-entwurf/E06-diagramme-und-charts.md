@@ -17,7 +17,7 @@ der C#-Bibliothek Mermaider, für die es kein Python-Gegenstück gibt.
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| [E06-S01](../55-in-arbeit/docs-2/E06-S01-chart-bloecke.md) | `chart`-Blöcke: Parser, `ChartSpec`, Zeichnung; native Diagramme in PPTX (python-pptx) und DOCX | in Bearbeitung (docs-2) |
+| [E06-S01](../60-prüfung/E06-S01-chart-bloecke.md) | `chart`-Blöcke: Parser, `ChartSpec`, Zeichnung; native Diagramme in PPTX (python-pptx) und DOCX | in Prüfung |
 | [E06-S02](E06-S02-finanzdiagramme.md) | Finanzdiagramme (Entwicklung, Wachstum je Zeile, Ist vs. Referenz, Trend, zwei Jahre, Übersichtstabelle), auch als SVG | Entwurf |
 | [E06-S03](E06-S03-mermaid.md) | Mermaid über mermaid-cli (Extra `[diagrams]`, Node.js + Chromium, lokal), SVG → `Drawing`, editierbare Formen in Folien | Entwurf |
 | [E06-S04](../60-prüfung/E06-S04-svg-bilder.md) | SVG → PNG (resvg) und SVG-Bilder in Folien (`asvg:svgBlip`) und Dokumenten | in Prüfung |

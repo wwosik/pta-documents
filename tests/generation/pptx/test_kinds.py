@@ -17,7 +17,7 @@ from pta_documents.charts import ChartKind, ChartSeries, ChartSpec
 from pta_documents.conversions.pptx import PptxConverter
 from pta_documents.design import slides as design
 from pta_documents.drawing import Drawing
-from pta_documents.errors import DocumentConversionError, DocumentFormat
+from pta_documents.errors import DocumentConversionError
 from pta_documents.generation.common.renderers import (
     ChartGraphic,
     CodeBlockGraphic,
@@ -436,17 +436,5 @@ def test_a_chart_needs_no_note() -> None:
 
 
 def test_a_chart_without_renderer_stays_code() -> None:
-    data = generate(f"# D\n\n## Z\n\n{CHART}")
+    data = generate(f"# D\n\n## Z\n\n{CHART}", PptxOptions(code_block_renderers=()))
     assert layout_names(data)[1] == LAY.title_only
-
-
-def test_charts_in_word_follow_with_e06() -> None:
-    from pta_documents.generation.docx.options import DocxOptions
-
-    with pytest.raises(DocumentConversionError) as error:
-        DocxGenerator().generate(
-            MarkdownDocument(f"# D\n\n## Z\n\n{CHART}"),
-            io.BytesIO(),
-            DocxOptions(code_block_renderers=(ChartRenderer(),)),
-        )
-    assert error.value.format is DocumentFormat.DOCX
