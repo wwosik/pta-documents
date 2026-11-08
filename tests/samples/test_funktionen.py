@@ -12,7 +12,9 @@ scheme of generated images (``qr:``, E11-S04), Harvey balls ``[n/4]`` and the th
 ``::: riskmatrix`` (E15-S02), icons as bullets, before a card title (deck) and in text (report,
 E15-S03), the image attributes ``.round``, ``.grey`` and (report) ``scale=``, (deck) ``focus=`` and
 ``fit=contain`` (E15-S04), in the deck every block marker and entrance (E09-S02).
-When the authoring guides exist (E02-S05), the list comes from their syntax instead.
+Since E02-S05 the samples also show everything the shared sections of the authoring guides name
+(``authoring_guides.named_syntax``: guide, code and samples cannot drift apart); once a generator
+has its own guide (E03-S05, E04-S06), that test reads the whole guide instead.
 """
 
 from __future__ import annotations
@@ -32,6 +34,7 @@ from pta_documents.charts import ChartKind
 from pta_documents.charts import parser as chart_parser
 from pta_documents.charts.financial import CHART_TYPES
 from pta_documents.charts.financial import json_block as financial_block
+from pta_documents.charts.renderer import ChartRenderer
 from pta_documents.conversions.docx import DocxConverter
 from pta_documents.conversions.pptx import PptxConverter
 from pta_documents.design.colors import StatusCategory
@@ -39,6 +42,7 @@ from pta_documents.design.slides import TITLE_SLIDES
 from pta_documents.design.variants import Language, SlidesVariant, WordVariant
 from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common import (
+    authoring_guides,
     generated_images,
     heading_attributes,
     icons,
@@ -361,6 +365,28 @@ def test_the_samples_show_every_syntax_key_and_variant(format: DocumentFormat) -
     assert missing == [], (
         f"samples/funktionen/ has no {format.value} example of: {', '.join(missing)}"
     )
+
+
+def guide_syntax(format: DocumentFormat) -> str:
+    """What the authoring guide of ``format`` says about syntax: for now its shared sections
+    (E02-S05); E03-S05 and E04-S06 replace this with the generator's ``authoring_guide()``,
+    without the section of examples of mistakes."""
+    return authoring_guides.layout_syntax_section(format) + authoring_guides.renderers_section(
+        (ChartRenderer(),)
+    )
+
+
+@pytest.mark.parametrize("format", [DOCX, PPTX], ids=lambda f: f.value)
+def test_the_samples_show_the_syntax_the_guide_names(format: DocumentFormat) -> None:
+    """Port of vt-tools-libs ``TourTests.TheTour_ShowsEverythingTheGuidesName``: every syntax
+    element the guide names is in the samples of ``format``, verbatim."""
+    samples = "\n".join(
+        p.read_text(encoding="utf-8") for p in sample_files() if format_of(p) is format
+    )
+    syntax = authoring_guides.named_syntax(guide_syntax(format))
+    assert len(syntax) >= 20, syntax
+    missing = [element for element in syntax if element not in samples]
+    assert missing == [], f"samples/funktionen/ has no {format.value} example of: {missing}"
 
 
 def test_a_missing_example_is_named() -> None:

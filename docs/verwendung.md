@@ -2111,3 +2111,45 @@ denselben Text als Ergebnis, die Präsentation hat den Quelltext jeder `##`-Foli
   Syntax, einen Schlüssel oder eine Variante einführt, ergänzt die Beispiele;
 - Bericht und Präsentation: jede `##`-Funktion hat ihren Quelltext, und jeder Quelltext steht
   außerhalb seines Zauns wortgleich als Ergebnis.
+- **Guide ↔ Beispiele** (E02-S05): was die gemeinsamen Abschnitte der Authoring Guides an Syntax
+  nennen (`authoring_guides.named_syntax`: `::: name`, `[!KIND]`, `{.attribut`, ```` ```chart ````
+  …), muss wortgleich in den Beispielen des Formats stehen
+  (`test_the_samples_show_the_syntax_the_guide_names`), siehe
+  [Authoring Guides](#authoring-guides-e02-s05).
+
+## Authoring Guides (E02-S05)
+
+Ein Authoring Guide ist die deutsche Anleitung für Schreiber (Menschen und KI-Agenten), wie man
+Markdown für einen Generator schreibt — Markdown ab `##`, damit ein Aufrufer ihn unter eine eigene
+Überschrift setzen kann, höchstens 2 500 Wörter. Jeder Generator erzeugt ihn aus seinen Optionen
+(Word E03-S05, PowerPoint E04-S06, PDF E05-S05; bis dahin bietet noch keiner einen an):
+
+```bash
+./run.sh authoring-guide docx      # bzw. pptx, pdf — schreibt den Guide auf die Standardausgabe
+./run.sh authoring-guide pptx > guide-praesentation.md
+```
+
+Ohne Guide endet das Werkzeug mit Code 1 und einer Meldung, bei falschen Argumenten mit Code 2;
+das PDF braucht das Extra `pdf`.
+
+Die gemeinsamen Bausteine in `pta_documents.generation.common.authoring_guides` (kein Extra
+nötig) entstehen aus den Listen im Code, damit Guide, Prüfung und Code nicht auseinanderlaufen:
+
+| Baustein | Inhalt |
+| -------- | ------ |
+| `template(package, name)` | die Vorlage `<package>/authoring_guide/<name>.md` (Paketdaten) |
+| `fill(template, values)` | ersetzt `{{name}}`; ein fehlender Wert ist ein `KeyError`, ein leerer Platzhalter allein in seiner Zeile hinterlässt keine Leerzeile; das Ergebnis endet mit genau einem Zeilenumbruch |
+| `front_matter_section(keys, valid, example)` | „Front Matter": Syntax mit Beispiel, je `GuideKey(key, values, meaning)` eine Tabellenzeile und `status.<kategorie>`; `keys` muss genau `valid` (die `VALID_KEYS` des Generators) beschreiben, sonst `ValueError`. `common_keys()` liefert die Zeilen, die in allen Formaten gleich sind (`datum`, `sprache`, `typografie`, `syntaxhervorhebung`, `pruefung`, `fassung`) |
+| `layout_syntax_section(format, effect)` | „Folien-Syntax": Container, Alerts, `==…==`, farbige Wörter, Status-Labels, Überschriftenattribute (`#`/`##` aus `heading_attributes`), Blockmarker; `effect` ist der eigene Absatz des Guides. Word und PDF nennen, was nur für Folien gilt, als bloße Namen |
+| `icons_section(format)`, `notes_section(format)`, `typography_section()` | alle Icon-Namen; die Hinweis-Codes des Formats mit „Was tun"; Typografie und Codefarben |
+| `renderers_section(renderers)` | die Abschnitte der Code-Block-Renderer (`CodeBlockRenderer.authoring_guide`), z. B. „Charts" |
+| `image_formats(native, converters)` | die Bildformate eines Generators, die der Konverter (`ImageConverter.format`) eingeschlossen |
+| `characters_section(text, code, intro)` | nur PDF: die `SYMBOLS` (✓, →, ● …), die den Schriften fehlen, mit dem ersten Ersatz, den alle Schriften haben |
+| `words(guide)`, `named_syntax(guide)`, `named_keys(guide)` | Wörter zählen; die Syntax bzw. die Front-Matter-Schlüssel, die ein Guide nennt |
+
+Testhilfen für die Guides der Generatoren in `tests/generation/guides.py`: `examples`,
+`assert_examples_generate`, `assert_names_everything`, `assert_under`; den Abgleich mit
+`*.expected.md` macht `tests/expected.assert_matches_expected`. Wer einen Container, ein Alert,
+ein Überschriftenattribut, einen Blockmarker oder einen Hinweis-Code einführt, trägt seinen Text
+in `CONTAINER_TEXTS`, `ALERT_TEXTS`, `ATTRIBUTE_TEXTS`, `MARKER_TEXTS` bzw. `NOTE_TEXTS` ein —
+die Tests nennen, was fehlt.

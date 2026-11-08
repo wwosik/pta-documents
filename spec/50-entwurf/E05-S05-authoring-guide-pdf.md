@@ -83,3 +83,8 @@ nicht haben, und Fehler. Sie wird aus den Optionen erzeugt, damit sie nie vom Ge
 
 - Abhängig von E02-S05 (Bausteine), E05-S02 bis E05-S04 (was beschrieben wird); Renderer-
   Abschnitte aus E06, sobald es sie gibt.
+- (2026-11-08, E02-S05) Die Vorlage liegt nach dem gemeinsamen Muster in
+  `generation/pdf/authoring_guide/<name>.md` (`authoring_guides.template`), nicht in
+  `generation/pdf/authoring_guide.md`. `characters_section(text, code, intro)` nimmt
+  Code-Point-Funktionen (`lambda c: fonts.has_glyph(c, face)`); `SYMBOLS` ist portiert (`↑`/`↓`
+  mit `hoch`/`runter` statt `up`/`down`).

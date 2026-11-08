@@ -598,3 +598,24 @@ weil ihm vertraut wird.
   in der Trainerfassung. Ohne Playwright: Text-Handout und Hinweis `handout-without-pictures`.
   Werkzeug `./run.sh handout`; `./run.sh preview` kennt seitdem `--audience`
   (`vorschau/<name>-trainer/`).
+- **Authoring Guides** (E02-S05): Bausteine in `generation/common/authoring_guides.py`, Vorlagen
+  je Generator in `<paket>/authoring_guide/<name>.md` (Paketdaten, `template(package, name)`;
+  E05-S05 nannte noch `generation/pdf/authoring_guide.md` — dem gemeinsamen Ort folgen). Ein
+  Guide entsteht aus `fill(template(…), {…})` mit den Abschnitten (`front_matter_section`,
+  `layout_syntax_section`, `icons_section`, `notes_section`, `typography_section`,
+  `renderers_section`, für das PDF `characters_section`); `front_matter_section` wirft
+  `ValueError`, wenn die `GuideKey`-Zeilen nicht genau `VALID_KEYS` beschreiben. Werkzeug
+  `./run.sh authoring-guide docx|pptx|pdf` ruft `<Generator>().authoring_guide()`, sobald es die
+  Methode gibt (sonst Code 1). Testhilfen `tests/generation/guides.py`. **Regel für spätere
+  Stories:** neue Container, Alerts, Überschriftenattribute, Blockmarker, Hinweis-Codes brauchen
+  einen Text in `CONTAINER_TEXTS`/`ALERT_TEXTS`/`ATTRIBUTE_TEXTS`/`MARKER_TEXTS`/`NOTE_TEXTS`
+  (Tests vergleichen mit den Code-Listen; was nur für Folien bzw. nur für Word/PDF gilt, über
+  `DOCUMENT_ATTRIBUTES`, `DOCUMENT_ONLY_ATTRIBUTES`, `DOCUMENT_MARKERS`, `LEFT_OUT_CONTAINERS`);
+  ein neuer Front-Matter-Schlüssel braucht eine `GuideKey`-Zeile im Guide des Generators, ein
+  neuer Renderer sein `authoring_guide`. Was ein Guide an Syntax nennt (`named_syntax`, Regex
+  `SYNTAX_PATTERN` wie vt-tools-libs), muss wortgleich in `samples/funktionen/` des Formats stehen
+  (`test_the_samples_show_the_syntax_the_guide_names`, heute aus den gemeinsamen Abschnitten;
+  E03-S05/E04-S06 stellen `guide_syntax` auf den ganzen Guide um, ohne die Fehlerbeispiele). Im
+  Word-Guide stehen `.agenda`/`.interim`/`.quote`/`.contact` nur als bloße Namen, weil der
+  Word-Bericht sie nicht zeigt. Die Icon-Liste steht weiter in `docs/ki-anleitung.md` (Test
+  E15-S03), bis die Guides sie übernehmen.
