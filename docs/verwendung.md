@@ -139,7 +139,8 @@ result.slides  # Zahl der erzeugten Folien
 | `titel` | Text | Präsentationstitel (Eigenschaften, Fußzeile); sonst das erste `#` |
 | `untertitel`, `autor`, `ort`, `datum` | Text | Titelfolie |
 | `fusszeile` | Text | Fußzeile „PTA – …" (sonst der Titel) |
-| `sprache` | `de`, `en` | `en`: englische Titelfolie mit englischem Logo, „(cont.)" statt „(Forts.)" |
+| `sprache` | `de`, `en` | `en`: englisches Logo auf der Titelfolie (in `basis` und `schulung`), „(cont.)" statt „(Forts.)" |
+| `kennzeichnung` | `vertraulich`, `intern`, `entwurf`, `kein` | Sticker oben rechts auf dem Master, siehe [Kennzeichnung](#kennzeichnung-e04-s05) |
 | `typografie`, `syntaxhervorhebung` | `ja` (Standard), `nein` | wie in Word, siehe [Typografie und Code](#typografie-und-code-e17-s02) |
 | `pruefung` | `aus`, `an` (Standard) oder Liste von Codes | wie in Word |
 
@@ -150,6 +151,36 @@ Absätze sind Textebene 2, `###` Ebene 1, Listen Ebenen 3–5. Eine Tabelle, ein
 eine Bildreihe bekommt eine eigene Folie (Text davor oben, danach unten); ein Bild mit Text
 kommt auf `Titel, Text und Bild 01`. Zu viel Inhalt wird bis 12 pt verkleinert und sonst auf
 „(Forts.)"-Folien fortgesetzt.
+
+### Kennzeichnung (E04-S05)
+
+`kennzeichnung:` (`PptxOptions.marking`, `design.variants.Marking`) setzt einen Sticker nach dem
+Muster der Schulungsvorlage oben rechts vor die Eckklammer — **auf den Master** des erzeugten
+Decks (`generation/pptx/sticker.py`), also auf jede Folie, deren Layout die Mastergrafiken zeigt;
+auf Layouts ohne Mastergrafiken (`Titelfolie ohne Bild` der Schulungsvorlage, `Titel und Bild 02`,
+`Zwischenfazit 01/02`, `Zitat 01/02` u. a.) fehlt er wie in der Vorlage. Auf den Titelfolien mit
+Bild liegt das Foto des Layouts über ihm.
+
+| Wert | Text (`sprache: de` / `en`) |
+| ---- | --------------------------- |
+| `vertraulich` | VERTRAULICH / CONFIDENTIAL |
+| `intern` | Für den internen Gebrauch / For internal use only |
+| `entwurf` | ENTWURF / DRAFT |
+| `kein` | kein Sticker |
+
+Ohne Angabe: `basis` → `kein`, `schulung` → `intern` (wie die Vorlage). Die Schulungsvorlage
+behält ihre Form „Rectangle 7", nur der Text wird ersetzt; `schulung` + `kein` ist ein Fehler
+(PTA-Regel: Schulungsfolien sind als „nur für den internen Gebrauch" gekennzeichnet). Im
+Basis-Master entsteht dieselbe Form neu (`design.slides.STICKER`: 28,48/0,38 cm,
+5,01 × 0,95 cm, Ränder 0,20/0,20/0,30/0,20 cm, Verlauf Akzent 6 transparent → Akzent 6 → Text 2,
+Text 10 pt Akzent 4 in der Überschriftenschrift, rechtsbündig — nur Schemafarben).
+Der PPTX-Konverter liest den Master nicht; der Sticker kommt nicht ins Markdown zurück.
+
+**Englisch:** `sprache: en` nimmt für `basis` die englische Titelfolie (`slides-basis-en.pptx`),
+für `schulung` die Schulungsvorlage, deren vier Titellayouts `prepare-templates` das deutsche
+Logo nimmt (`slides-schulung-en.pptx`, `SLIDES_WITHOUT_TITLE_LOGO`); der Generator setzt auf
+jede Titelfolie das englische Logo (`ENGLISH_LOGO_AREA`, Name `PTA-Logo EN`, den der Konverter
+überspringt).
 
 ### Flow-Folien (E04-S03)
 

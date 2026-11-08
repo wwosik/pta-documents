@@ -115,9 +115,10 @@ datum: 2026-11-06
 | `autor`, `ort`, `datum` | ✓ | ✓ | Zeile „Autor, Ort, Datum" auf Deckblatt bzw. Titelfolie |
 | `firma` | ✓ | | ersetzt „PTA IT-Beratung" in der Word-Fußzeile |
 | `inhaltsverzeichnis` | ✓ | | `ja`: Inhaltsverzeichnis nach dem Deckblatt |
-| `sprache` | ✓ | ✓ | `de` (Standard) oder `en` — z. B. „Page"/„Table"/„Figure", englische Titelfolie |
+| `sprache` | ✓ | ✓ | `de` (Standard) oder `en` — z. B. „Page"/„Table"/„Figure", englisches Logo auf der Titelfolie (auch in der Schulungsvorlage) |
 | `fusszeile` | | ✓ | Text der Fußzeile „PTA – …" (sonst der Titel) |
 | `titelfolie` | | ✓ | `bild-02` (Standard), `bild-01`, `branchen`, `ohne-bild` |
+| `kennzeichnung` | | ✓ | Sticker oben rechts auf jeder Folie: `vertraulich` („VERTRAULICH"), `intern` („Für den internen Gebrauch"), `entwurf` („ENTWURF"), `kein`. Standard: `basis` ohne, `schulung` `intern` — dort ist `kein` nicht erlaubt |
 | `typografie` | ✓ | ✓ | `ja` (Standard) oder `nein`: Anführungszeichen, Gedankenstriche, geschützte Leerzeichen (siehe unten) |
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) oder `nein`: Codeblöcke mit Sprache farbig |
 | `pruefung` | ✓ | ✓ | nur für `./run.sh check`: `aus` schaltet die Stilregeln ab, `style-words, style-title` nur diese |

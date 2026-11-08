@@ -12,11 +12,22 @@ from pathlib import Path
 import docx
 import pptx
 import pytest
+from lxml import etree
 
+from pta_documents.design import slides as design
 from pta_documents.design import templates
-from pta_documents.design.variants import SLIDES_SOURCES, Language, SlidesVariant, WordVariant
+from pta_documents.design.variants import (
+    SLIDES_SOURCES,
+    SLIDES_WITHOUT_TITLE_LOGO,
+    Language,
+    SlidesVariant,
+    WordVariant,
+)
 from tests.conftest import REPO_ROOT, SOURCE_TEMPLATES
 
+A = "http://schemas.openxmlformats.org/drawingml/2006/main"
+P = "http://schemas.openxmlformats.org/presentationml/2006/main"
+R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PERSON_NAMES = ("Robert Fischer", "Ines Erdmann", "Oliver Henkel")
 WORD = [(v.package_file, v.source_file) for v in WordVariant]
 SLIDES = list(SLIDES_SOURCES.items())
@@ -81,8 +92,11 @@ def test_slides_template(embedded: str, source: str) -> None:
         if re.fullmatch(r"ppt/(slideMasters|slideLayouts|theme)/[^/]+\.xml", n)
         and n != "ppt/theme/theme4.xml"
     ]
+    title_layouts = title_layout_parts(content)
     for name in kept:
-        if name in content:
+        if name in content and not (
+            embedded in SLIDES_WITHOUT_TITLE_LOGO and name in title_layouts
+        ):
             assert content[name] == original[name], name
     for name in original:
         if re.fullmatch(r"ppt/(slideMasters|slideLayouts)/[^/]+\.xml", name):
@@ -90,6 +104,53 @@ def test_slides_template(embedded: str, source: str) -> None:
     types = content["[Content_Types].xml"].decode()
     assert "presentationml.presentation.main+xml" in types
     assert "template.main" not in types
+
+
+def title_layout_parts(content: dict[str, bytes]) -> set[str]:
+    """The part names of the four title layouts."""
+    wanted = set(design.TITLE_SLIDES.values())
+    result: set[str] = set()
+    for name, data in content.items():
+        if not re.fullmatch(r"ppt/slideLayouts/[^/]+\.xml", name):
+            continue
+        match = re.search(rb'<p:cSld name="([^"]+)"', data)
+        if match is not None and match.group(1).decode() in wanted:
+            result.add(name)
+    return result
+
+
+def emf_targets(content: dict[str, bytes], layout: str) -> list[str]:
+    directory, file = layout.rsplit("/", 1)
+    rels = content[f"{directory}/_rels/{file}.rels"].decode()
+    return re.findall(r'Target="([^"]+\.emf)"', rels)
+
+
+@pytest.mark.parametrize("embedded", SLIDES_WITHOUT_TITLE_LOGO)
+def test_title_layouts_lose_only_the_german_logo(embedded: str) -> None:
+    content = parts(templates.read(embedded))
+    original = source_parts(SLIDES_SOURCES[embedded])
+    layouts = title_layout_parts(content)
+    assert len(layouts) == 4
+    for name in layouts:
+        assert emf_targets(original, name), name
+        assert not emf_targets(content, name), name
+        # The source layout without the shapes that show an EMF is the embedded one.
+        before = etree.fromstring(original[name])
+        directory, file = name.rsplit("/", 1)
+        rels = original[f"{directory}/_rels/{file}.rels"].decode()
+        emf_ids = set(re.findall(r'Id="(rId\d+)"[^>]*Target="[^"]+\.emf"', rels))
+        tree = before.find(f"{{{P}}}cSld/{{{P}}}spTree")
+        assert tree is not None and emf_ids
+        logos = [
+            shape
+            for shape in tree
+            if any(blip.get(f"{{{R}}}embed") in emf_ids for blip in shape.iter(f"{{{A}}}blip"))
+        ]
+        assert len(logos) == 1, name
+        tree.remove(logos[0])
+        assert etree.tostring(before, method="c14n") == etree.tostring(
+            etree.fromstring(content[name]), method="c14n"
+        ), name
 
 
 def test_slide_templates_for_variants() -> None:

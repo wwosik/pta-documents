@@ -27,7 +27,8 @@ from lxml import etree
 from PIL import Image
 
 from pta_documents.design import colors
-from pta_documents.design.variants import SLIDES_SOURCES, WordVariant
+from pta_documents.design.slides import TITLE_SLIDES
+from pta_documents.design.variants import SLIDES_SOURCES, SLIDES_WITHOUT_TITLE_LOGO, WordVariant
 
 REPO = Path(__file__).resolve().parents[2]
 SOURCE = REPO / "source-templates"
@@ -232,11 +233,15 @@ def prepare_word(source: Path) -> bytes:
     return package.write()
 
 
-def prepare_slides(source: Path) -> tuple[bytes, list[tuple[str, bytes]]]:
+def prepare_slides(
+    source: Path, without_title_logo: bool = False
+) -> tuple[bytes, list[tuple[str, bytes]]]:
     """Returns the template and the pictures placed on its sample slides (by part name)."""
     package = Package.read(source)
     pictures = slide_pictures(package)
     drop_relationships(package)
+    if without_title_logo:
+        remove_title_logos(package)
     presentation = package.xml("ppt/presentation.xml")
     for tag in ("sldIdLst", "custShowLst"):
         element = presentation.find(f"{{{P}}}{tag}")
@@ -264,6 +269,44 @@ def prepare_slides(source: Path) -> tuple[bytes, list[tuple[str, bytes]]]:
         ),
     )
     return package.write(), pictures
+
+
+def remove_title_logos(package: Package) -> None:
+    """Remove the German logo from the title layouts (E04-S05), as the English title slide
+    template has it: every shape there that shows an EMF picture — "Picture 7", and on
+    "Titelfolie Branchen" the picture placeholder idx 36 — and its relationship."""
+    wanted = set(TITLE_SLIDES.values())
+    found: set[str] = set()
+    for name in sorted(n for n in package.parts if re.fullmatch(r"ppt/slideLayouts/[^/]+\.xml", n)):
+        layout = package.xml(name)
+        c_sld = layout.find(f"{{{P}}}cSld")
+        if c_sld is None or c_sld.get("name") not in wanted:
+            continue
+        found.add(str(c_sld.get("name")))
+        rels = package.xml(rels_name(name))
+        emf_ids = {
+            str(rel.get("Id")) for rel in rels if str(rel.get("Target")).lower().endswith(".emf")
+        }
+        removed = 0
+        for blip in list(layout.iterfind(f".//{{{A}}}blip")):
+            if blip.get(f"{{{R}}}embed") not in emf_ids:
+                continue
+            shape = next(
+                e for e in blip.iterancestors() if etree.QName(e).localname in ("pic", "sp")
+            )
+            parent = shape.getparent()
+            assert parent is not None
+            parent.remove(shape)
+            removed += 1
+        if removed != 1:
+            raise SystemExit(f"{name}: expected one EMF logo on the title layout, found {removed}")
+        for rel in list(rels):
+            if str(rel.get("Id")) in emf_ids:
+                rels.remove(rel)
+        package.put_xml(name, layout)
+        package.put_xml(rels_name(name), rels)
+    if found != wanted:
+        raise SystemExit(f"title layouts not found: {', '.join(sorted(wanted - found))}")
 
 
 def slide_pictures(package: Package) -> list[tuple[str, bytes]]:
@@ -382,7 +425,7 @@ def build() -> dict[str, bytes]:
     for variant in WordVariant:
         files[variant.package_file] = prepare_word(SOURCE / variant.source_file)
     for package_file, source in SLIDES_SOURCES.items():
-        data, pictures = prepare_slides(SOURCE / source)
+        data, pictures = prepare_slides(SOURCE / source, package_file in SLIDES_WITHOUT_TITLE_LOGO)
         files[package_file] = data
         if package_file == "slides-basis-en.pptx":
             # The English logo is only on the sample title slide; keep it for the generator.

@@ -25,6 +25,20 @@ class Language(StrEnum):
         return _parse(cls, value, format, "sprache")
 
 
+class Marking(StrEnum):
+    """How confidential a document is (``kennzeichnung:``); on slides a sticker on the master
+    (E04-S05), in Word and PDF a text in the header (E12-S03)."""
+
+    CONFIDENTIAL = "vertraulich"
+    INTERNAL = "intern"
+    DRAFT = "entwurf"
+    NONE = "kein"
+
+    @classmethod
+    def parse(cls, value: str, format: DocumentFormat) -> Marking:
+        return _parse(cls, value, format, "kennzeichnung")
+
+
 @dataclass(frozen=True)
 class GeneratedTexts:
     """Words the generators write into documents."""
@@ -42,6 +56,18 @@ class GeneratedTexts:
     caution: str = ""
     conclusion: str = ""
     comment: str = ""
+    confidential: str = ""
+    internal: str = ""
+    draft: str = ""
+
+    def marking(self, marking: Marking) -> str:
+        """The text of the sticker (``kennzeichnung:``); empty for ``kein``."""
+        return {
+            Marking.CONFIDENTIAL: self.confidential,
+            Marking.INTERNAL: self.internal,
+            Marking.DRAFT: self.draft,
+            Marking.NONE: "",
+        }[marking]
 
     def alert(self, kind: str) -> str:
         """The word an alert of ``kind`` (``NOTE`` …) starts with."""
@@ -63,6 +89,9 @@ TEXTS: Final = {
         caution="Vorsicht",
         conclusion="Fazit",
         comment="Kommentar",
+        confidential="VERTRAULICH",
+        internal="Für den internen Gebrauch",
+        draft="ENTWURF",
     ),
     Language.EN: GeneratedTexts(
         page="Page",
@@ -78,6 +107,9 @@ TEXTS: Final = {
         caution="Caution",
         conclusion="Conclusion",
         comment="Comment",
+        confidential="CONFIDENTIAL",
+        internal="For internal use only",
+        draft="DRAFT",
     ),
 }
 
@@ -136,10 +168,16 @@ class SlidesVariant(StrEnum):
         return _parse(cls, value, DocumentFormat.PPTX, "vorlage")
 
     def package_file(self, language: Language) -> str:
-        """The embedded template; English basic decks use the English title slide template."""
-        if self is SlidesVariant.BASIC and language is Language.EN:
-            return "slides-basis-en.pptx"
+        """The embedded template; English decks use one without the German logo on the title
+        layouts (the English title slide template for ``basis``, E04-S05 for ``schulung``)."""
+        if language is Language.EN:
+            return f"slides-{self.value}-en.pptx"
         return f"slides-{self.value}.pptx"
+
+    @property
+    def default_marking(self) -> Marking:
+        """The sticker without ``kennzeichnung:`` — the training template carries one."""
+        return Marking.INTERNAL if self is SlidesVariant.TRAINING else Marking.NONE
 
 
 DEFAULT_SLIDES_VARIANT: Final = SlidesVariant.BASIC
@@ -148,8 +186,13 @@ SLIDES_SOURCES: Final = {
     "slides-basis.pptx": "PTA-Powerpoint-Basisvorlage.potx",
     "slides-schulung.pptx": "PTA-Powerpoint-Schulungsvorlage.potx",
     "slides-basis-en.pptx": "PTA-Powerpoint-Titelfolie EN.pptx",
+    "slides-schulung-en.pptx": "PTA-Powerpoint-Schulungsvorlage.potx",
 }
 """Embedded slide template -> file in ``source-templates/``."""
+
+SLIDES_WITHOUT_TITLE_LOGO: Final = ("slides-schulung-en.pptx",)
+"""Embedded slide templates whose title layouts lose the German logo when they are prepared —
+the generator puts the English one there (E04-S05)."""
 
 
 def _parse[E: StrEnum](cls: type[E], value: str, format: DocumentFormat, key: str) -> E:

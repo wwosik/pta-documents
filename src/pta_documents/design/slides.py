@@ -204,6 +204,40 @@ FOOTER_PREFIX: Final = "PTA – "
 
 ENGLISH_LOGO_AREA: Final = Area(cm(1.40), cm(1.30), cm(6.35), cm(3.59))
 """Where the English title slide template places the English logo (its sample slide)."""
+ENGLISH_LOGO_NAME: Final = "PTA-Logo EN"
+"""The name of the English logo the generator puts on English title slides; the PPTX converter
+leaves it out like the layout's German logo (E04-S05)."""
+
+
+@dataclass(frozen=True)
+class StickerStyle:
+    """The sticker top right before the corner bracket (``kennzeichnung:``, E04-S05), after
+    "Rectangle 7" on the master of the training template: a gradient from transparent accent 6
+    to accent 6 to text 2, the text right-aligned in accent 4 in the heading font. Colours are
+    scheme colours, so the sticker follows the theme like the template's."""
+
+    shape_name: str = "Rectangle 7"
+    """The name of the sticker on the master — the training template's, and the one the
+    generator gives the sticker it draws on the basic master."""
+    area: Area = Area(10_252_364, 136_799, 1_802_836, 340_397)
+    """28.48/0.38 cm, 5.01 × 0.95 cm — the training master's, to the EMU."""
+    inset_left: int = cm(0.20)
+    inset_top: int = cm(0.20)
+    inset_right: int = cm(0.30)
+    inset_bottom: int = cm(0.20)
+    gradient: tuple[tuple[int, str, bool], ...] = (
+        (1_770, "accent6", True),
+        (31_000, "accent6", False),
+        (100_000, "tx2", False),
+    )
+    """(position in 1/1000 %, scheme colour, transparent) of the gradient stops, left to
+    right."""
+    text_size_pt: float = 10
+    text_color: str = "accent4"
+    """A scheme colour."""
+
+
+STICKER: Final = StickerStyle()
 
 PICTURE_GAP: Final = cm(0.50)
 """Room between pictures side by side on a slide."""

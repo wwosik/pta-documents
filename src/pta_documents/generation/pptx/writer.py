@@ -18,7 +18,7 @@ from pptx.util import Emu
 from pta_documents.design import colors, templates
 from pta_documents.design import slides as design
 from pta_documents.design.icons import raster as icon_raster
-from pta_documents.design.variants import GeneratedTexts, Language, SlidesVariant
+from pta_documents.design.variants import GeneratedTexts, Language
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common import icons
 from pta_documents.generation.common.result import NoteCodes, Notes
@@ -151,19 +151,19 @@ class DeckWriter:
             self.set_paragraphs(target, ph.subtitle, [_flat(p) for p in slide.subtitle])
         if self.info.byline:
             self.set_text(target, ph.byline, self.info.byline)
-        if (
-            self.options.language is Language.EN
-            and self.options.variant is SlidesVariant.BASIC
-            and layout in design.TITLE_SLIDES.values()
-        ):
+        if self.options.language is Language.EN and layout in design.TITLE_SLIDES.values():
             area = design.ENGLISH_LOGO_AREA
-            target.shapes.add_picture(
+            logo = target.shapes.add_picture(
                 io.BytesIO(templates.read(templates.ENGLISH_LOGO)),
                 Emu(area.left),
                 Emu(area.top),
                 Emu(area.width),
                 Emu(area.height),
             )
+            logo.name = design.ENGLISH_LOGO_NAME
+            c_nv_pr = logo._element.find(f"{p('nvPicPr')}/{p('cNvPr')}")
+            if c_nv_pr is not None:
+                c_nv_pr.set("descr", "PTA")
         self.finish(target)
 
     def content_slide(self, slide: ContentSlide) -> None:

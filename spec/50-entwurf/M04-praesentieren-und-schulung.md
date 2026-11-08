@@ -12,7 +12,7 @@ Reihenfolge = vorgeschlagene Umsetzungsreihenfolge (aus den Verweisen zwischen d
 
 | Story | Inhalt | Status |
 | ----- | ------ | ------ |
-| [E04-S05](../55-in-arbeit/docs-2/E04-S05-schulungsvorlage-und-sticker.md) | Schulungsvorlage, englische Titelfolie, Sticker „VERTRAULICH" | in Bearbeitung (docs-2) |
+| [E04-S05](../60-prüfung/E04-S05-schulungsvorlage-und-sticker.md) | Schulungsvorlage, englische Titelfolie, Sticker „VERTRAULICH" | in Prüfung |
 | [E12-S03](E12-S03-kennzeichnung-word-und-pdf.md) | Kennzeichnung „Vertraulich" und „Entwurf" in Word und PDF | Entwurf |
 | [E09-S02](E09-S02-builds.md) | Builds: Inhalte erscheinen Klick für Klick | Entwurf |
 | [E09-S03](E09-S03-uebergaenge.md) | Folienübergänge | Entwurf |

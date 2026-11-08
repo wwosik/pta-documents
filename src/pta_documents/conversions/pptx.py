@@ -11,7 +11,7 @@ from lxml import etree
 from pta_documents.conversions.openxml import OpenXmlPackage, guard, read_input
 from pta_documents.conversions.options import ConversionOptions, ResourceCollector
 from pta_documents.design.icons import raster as icon_raster
-from pta_documents.design.slides import CODE_FONT
+from pta_documents.design.slides import CODE_FONT, ENGLISH_LOGO_NAME
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.markdown import text as md
 from pta_documents.markdown import typography
@@ -238,7 +238,7 @@ def _render_slide(
             _harvey_cells(element, balls, grid)
             out.append(md.table(grid))
             content = True
-        elif element.tag == p("pic") and images is not None:
+        elif element.tag == p("pic") and images is not None and not _is_english_logo(element):
             picture = _picture(element, package, rels, images)
             if picture is not None:
                 out.append(picture + "\n\n")
@@ -336,6 +336,13 @@ def _is_code(paragraph: etree._Element) -> bool:
 
 ROUND_GEOMETRY: Final = "ellipse"
 """The preset geometry of a round picture (``generation.pptx.visuals.round_picture``)."""
+
+
+def _is_english_logo(picture: etree._Element) -> bool:
+    """The logo of an English title slide (``generation.pptx.writer``): part of the design,
+    like the German one of the layout, not of the content."""
+    properties = picture.find(f"{p('nvPicPr')}/{p('cNvPr')}")
+    return properties is not None and properties.get("name") == ENGLISH_LOGO_NAME
 
 
 def _picture(

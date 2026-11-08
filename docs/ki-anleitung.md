@@ -68,12 +68,13 @@ YAML, keine Listen). Schlüssel und Werte sind **deutsch**; `ja`/`nein`; Datum `
 | `inhaltsverzeichnis` | ✓ | – | `ja` · `nein` |
 | `fusszeile` | – | ✓ | Fußzeilentext nach „PTA – " |
 | `titelfolie` | – | ✓ | `bild-02` (Standard) · `bild-01` · `branchen` · `ohne-bild` |
+| `kennzeichnung` | – | ✓ | `vertraulich` · `intern` · `entwurf` · `kein`; Standard `basis` ohne, `schulung` `intern` (dort ist `kein` ein Fehler) — Kundendecks mit vertraulichem Inhalt: `vertraulich` |
 | `typografie` | ✓ | ✓ | `ja` (Standard) · `nein` — gerade Zeichen behalten |
 | `syntaxhervorhebung` | ✓ | ✓ | `ja` (Standard) · `nein` — Codeblöcke einfarbig |
 | `pruefung` | ✓ | ✓ | nur `check`: `aus` · Liste von `style-…`-Codes, die nicht geprüft werden |
 
-`firma`/`inhaltsverzeichnis` in einer Präsentation oder `fusszeile`/`titelfolie` in einem
-Word-Dokument sind Fehler.
+`firma`/`inhaltsverzeichnis` in einer Präsentation oder `fusszeile`/`titelfolie`/`kennzeichnung`
+in einem Word-Dokument sind Fehler.
 
 **Typografie:** Gerade Anführungszeichen (`"…"`, `'…'`), ` - ` und `...` schreiben — die
 Generatoren setzen daraus „…“, ‚…‘, –, … und geschützte Leerzeichen in `z. B.`, `u. a.`,

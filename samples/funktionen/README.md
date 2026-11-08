@@ -13,9 +13,10 @@ Ergebnis; in der Präsentation steht der Quelltext jeder Folie auf ihrer Notizen
 | `varianten-dokument.md` | Word-Variante `quer-ohne-deckblatt` mit `sprache: en` und `firma` |
 | `varianten-hochformat-dokument.md` | Word-Variante `hoch-ohne-deckblatt` mit `inhaltsverzeichnis: nein`, `typografie: nein`, `syntaxhervorhebung: nein` |
 | `varianten-querformat-dokument.md` | Word-Variante `quer` (mit Deckblatt) |
-| `varianten-folien.md` | Schulungsvorlage, `titelfolie: ohne-bild`, `sprache: en` |
+| `varianten-folien.md` | Schulungsvorlage mit Sticker „For internal use only“, `titelfolie: ohne-bild`, `sprache: en` (englisches Logo) |
 | `varianten-bild-01-folien.md` | `titelfolie: bild-01` |
 | `varianten-branchen-folien.md` | `titelfolie: branchen` |
+| `varianten-vertraulich-folien.md` | `kennzeichnung: vertraulich` (Sticker „VERTRAULICH“ oben rechts auf dem Master) |
 | `images/` | selbst erzeugte Bilder in den PTA-Farben (keine fremden Rechte), `plan.svg` von Hand gezeichnet; `*-folie.png`/`*-folie.svg` sind dieselben Bilder in den Proportionen der Folien-Bildplatzhalter |
 
 ```sh

@@ -6,7 +6,7 @@ import datetime as dt
 from dataclasses import dataclass, field
 
 from pta_documents.design.slides import DEFAULT_TITLE_SLIDE
-from pta_documents.design.variants import DEFAULT_SLIDES_VARIANT, Language, SlidesVariant
+from pta_documents.design.variants import DEFAULT_SLIDES_VARIANT, Language, Marking, SlidesVariant
 from pta_documents.generation.common.images import ImageConverter, default_converters
 from pta_documents.generation.common.renderers import CodeBlockRenderer, default_renderers
 
@@ -16,7 +16,11 @@ class PptxOptions:
     variant: SlidesVariant = DEFAULT_SLIDES_VARIANT
     """``vorlage:`` — ``basis`` or ``schulung``."""
     language: Language = Language.DE
-    """``sprache:`` — ``en`` takes the English title slide and English generated texts."""
+    """``sprache:`` — ``en`` takes the English logo on the title slide and English generated
+    texts."""
+    marking: Marking | None = None
+    """``kennzeichnung:`` — the sticker top right on the master; None takes the template's
+    (``basis``: none, ``schulung``: ``intern``, which cannot be removed)."""
     footer: str | None = None
     """``fusszeile:`` — the footer reads "PTA – <footer>"; defaults to the presentation title."""
     title_slide: str = DEFAULT_TITLE_SLIDE

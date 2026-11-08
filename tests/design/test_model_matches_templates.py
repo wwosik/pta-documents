@@ -19,7 +19,7 @@ W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 NS = {"a": A, "p": P, "w": W}
 
 WORD_FILES = [SOURCE_TEMPLATES / v.source_file for v in WordVariant]
-SLIDE_FILES = [SOURCE_TEMPLATES / name for name in SLIDES_SOURCES.values()]
+SLIDE_FILES = [SOURCE_TEMPLATES / name for name in sorted(set(SLIDES_SOURCES.values()))]
 
 
 def xml(path: Path, part: str) -> etree._Element:
@@ -176,6 +176,39 @@ def test_content_area_is_the_body_of_title_and_text() -> None:
     assert abs(int(off.get("y", "0")) - area.top) <= tolerance
     assert abs(int(ext.get("cx", "0")) - area.width) <= tolerance
     assert abs(int(ext.get("cy", "0")) - area.height) <= tolerance
+
+
+def test_sticker_is_the_one_of_the_training_master() -> None:
+    master = xml(
+        SOURCE_TEMPLATES / "PTA-Powerpoint-Schulungsvorlage.potx",
+        "ppt/slideMasters/slideMaster1.xml",
+    )
+    style = slides.STICKER
+    found = master.xpath(
+        f"p:cSld/p:spTree/p:sp[p:nvSpPr/p:cNvPr/@name='{style.shape_name}']", namespaces=NS
+    )
+    assert isinstance(found, list) and len(found) == 1
+    shape = found[0]
+    assert isinstance(shape, etree._Element)
+    off, ext = shape.find("p:spPr/a:xfrm/a:off", NS), shape.find("p:spPr/a:xfrm/a:ext", NS)
+    assert off is not None and ext is not None
+    area = style.area
+    assert (int(off.get("x", "")), int(off.get("y", ""))) == (area.left, area.top)
+    assert (int(ext.get("cx", "")), int(ext.get("cy", ""))) == (area.width, area.height)
+    body = shape.find("p:txBody/a:bodyPr", NS)
+    assert body is not None
+    insets = tuple(int(body.get(k, "")) for k in ("lIns", "tIns", "rIns", "bIns"))
+    assert insets == (style.inset_left, style.inset_top, style.inset_right, style.inset_bottom)
+    stops = [
+        (int(gs.get("pos", "")), gs[0].get("val"), gs[0].find("a:alpha", NS) is not None)
+        for gs in shape.iterfind("p:spPr/a:gradFill/a:gsLst/a:gs", NS)
+    ]
+    assert tuple(stops) == style.gradient
+    r_pr = shape.find(".//a:r/a:rPr", NS)
+    assert r_pr is not None
+    assert int(r_pr.get("sz", "")) == style.text_size_pt * 100
+    color = r_pr.find("a:solidFill/a:schemeClr", NS)
+    assert color is not None and color.get("val") == style.text_color
 
 
 def test_master_text_level_sizes() -> None:

@@ -11,9 +11,10 @@ import pptx
 
 from pta_documents.design import slides as design
 from pta_documents.design import templates
-from pta_documents.design.variants import TEXTS, Language, SlidesVariant
+from pta_documents.design.variants import TEXTS, Language, Marking, SlidesVariant
 from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common.result import GenerationResult, Notes
+from pta_documents.generation.pptx import sticker
 from pta_documents.generation.pptx.model import Run, TitleSlide, plain_text
 from pta_documents.generation.pptx.options import PptxOptions
 from pta_documents.generation.pptx.parser import DeckParser
@@ -35,6 +36,7 @@ VALID_KEYS: Final = (
     Keys.CHECK,
     Keys.FOOTER,
     Keys.TITLE_SLIDE,
+    Keys.MARKING,
 )
 
 
@@ -56,6 +58,7 @@ class PptxGenerator:
         front.check_keys(VALID_KEYS, allow_status=True)
         labels = front.status_labels()  # raises for an unknown category or a label in two
         options = apply_front_matter(front, options or PptxOptions())
+        marking = sticker.resolve(options.variant, options.marking)
         slides = DeckParser(document, front.body, front.body_line, notes, options, labels).parse()
 
         first = next((s for s in slides if isinstance(s, TitleSlide)), None)
@@ -88,7 +91,9 @@ class PptxGenerator:
         presentation = pptx.Presentation(
             io.BytesIO(templates.slides_template(options.variant, options.language))
         )
-        DeckWriter(presentation, options, TEXTS[options.language], info, notes).write(slides)
+        texts = TEXTS[options.language]
+        sticker.apply(presentation, marking, texts, options.language)
+        DeckWriter(presentation, options, texts, info, notes).write(slides)
 
         properties = presentation.core_properties
         now = dt.datetime.now(dt.UTC).replace(microsecond=0, tzinfo=None)
@@ -120,6 +125,8 @@ def apply_front_matter(front: FrontMatter, options: PptxOptions) -> PptxOptions:
                 Keys.TITLE_SLIDE, value, ((name, name) for name in design.TITLE_SLIDES)
             ),
         )
+    if (value := front.get(Keys.MARKING)) is not None:
+        options = replace(options, marking=Marking.parse(value, FORMAT))
     if (value := front.date()) is not None:
         options = replace(options, date=value)
     return options

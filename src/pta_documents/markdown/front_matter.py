@@ -34,6 +34,9 @@ class Keys:
     TITLE_SLIDE: Final = "titelfolie"
     TYPOGRAPHY: Final = "typografie"
     HIGHLIGHT: Final = "syntaxhervorhebung"
+    MARKING: Final = "kennzeichnung"
+    """``vertraulich``, ``intern``, ``entwurf`` or ``kein`` (``design.variants.Marking``); on
+    slides the sticker (E04-S05)."""
     CHECK: Final = "pruefung"
     """``./run.sh check``: ``aus`` turns the style rules off, a list of ``style-…`` codes only
     those (E08-S02); the generators accept and ignore it."""
