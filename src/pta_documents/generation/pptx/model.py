@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Final
 
 from pta_documents.design.colors import StatusCategory
+from pta_documents.drawing.model import Drawing
 from pta_documents.generation.common.code_highlight import CodeLine
 from pta_documents.generation.common.renderers import ChartGraphic
 from pta_documents.generation.common.text_metrics import TextRun
@@ -138,7 +139,18 @@ class Code:
         return Code(self.lines[start:stop], self.spans[start:stop])
 
 
-Visual = Table | Images | Code
+@dataclass(frozen=True)
+class Diagram:
+    """A drawing a code-block renderer made (a financial chart, E06-S02): a group of editable
+    shapes in the content area."""
+
+    drawing: Drawing
+    alt: str
+    """The info string of its fence, as the group's alternative text."""
+    line: int | None = None
+
+
+Visual = Table | Images | Code | Diagram
 
 
 @dataclass(frozen=True)
@@ -154,7 +166,7 @@ class Chart:
     line: int | None = None
 
 
-Item = Paragraph | Table | Images | Code | Chart | Separator
+Item = Paragraph | Table | Images | Code | Diagram | Chart | Separator
 
 
 @dataclass(frozen=True)

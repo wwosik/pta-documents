@@ -95,7 +95,7 @@ Sprache = Hinweis `code-language-unknown`.
   `![Alt-Text](images/a.jpg "Unterschrift (Foto: Name, CC BY 4.0)")` → „Abbildung n: …".
 - Kein HTML (wird weggelassen, Hinweis `raw-html`; nur `<br>` in Tabellenzellen ist ein
   Zeilenumbruch), keine Mermaid-Diagramme (werden als Code gezeigt, Hinweis `code-not-drawn`).
-  Diagramme aus Zahlen: `chart`-Blöcke, siehe unten.
+  Diagramme aus Zahlen: `chart`-Blöcke, siehe unten (`financial-chart` nur in PowerPoint).
 - Folien-Syntax (`:::`-Container, Alerts `> [!NOTE]`, `==Markierung==`, `[Wörter]{.success}`)
   wird angenommen und schlicht gezeigt: Container-Inhalt nacheinander (`###` in Containern wird
   fett, keine Überschrift), Alerts/`conclusion`/`comment` als Hinweisabsatz mit fetter Art,
@@ -221,6 +221,22 @@ Q2, 11.8, 12.1
   Charts (gern in `::: columns`) → `Titel und zwei Diagramme`; Titel, Einheit, Quelle in den
   Platzhaltern. Kein Chart auf Folien mit Hinweisboxen, Karten oder `.dark`.
 - Ein Fehler im Block bricht mit der Zeilennummer ab — die Meldung sagt, was zu ändern ist.
+
+## Finanzdiagramme (`financial-chart`, nur PowerPoint)
+
+Für Ergebnisübersichten: ein Codeblock `financial-chart` mit **einem JSON-Objekt**. `type` ist
+`development`, `growth-by-row`, `actual-vs-reference`, `growth-trend`, `two-year` oder
+`summary-table`; die übrigen Schlüssel sind englisch in camelCase. Vorlage für jeden Typ (alle
+Felder): `samples/funktionen/funktionen-praesentation.md`, Kapitel „Finanzdiagramme".
+
+- Raten und Anteile als Bruch (`0.052` = 5,2 %), Beträge als Zahl (mit `"options": {"scale":
+  1000000, "unit": "Mio. EUR"}` in Millionen gezeigt), `lastActual` ist der Index des letzten
+  Ist-Monats ab 0, ein Monat ohne Wert ist `null`.
+- Nur bekannte Schlüssel; Tippfehler, Text statt Zahl oder fehlende Pflichtfelder sind Fehler mit
+  Zeilennummer. `"options"`: `culture`, `scale`, `unit`, `labels`, `tolerance`, `restShare`,
+  `width`.
+- Eine Folie je Diagramm, Text davor oder danach geht; nicht auf Flow-Folien (`.dark`, Container)
+  und nicht in Word (Fehler).
 
 ## Aus Python statt per Befehl
 

@@ -7,7 +7,7 @@ Ergebnis; in der Präsentation steht der Quelltext jeder Folie auf ihrer Notizen
 | Datei | Zeigt |
 | ----- | ----- |
 | `funktionen-bericht.md` | Word: alle Front-Matter-Schlüssel, Überschriften 1–6, Zeichenformate, Links, Fußnoten, Typografie, Listen (verschachtelt, Neustart, Aufgaben, Definitionen), Tabellen mit Titel, Ausrichtung und Beschriftung, Status-Labels, markierte Zeile, Abbildungen, Bild im Text, Bildreihe, SVG-Grafik, Diagramme aus `chart`-Blöcken (Balken, gestapelte Flächen, Linie mit Lücke, `;` mit Dezimalkomma), Code, Zitat, Trennlinie, Inhaltsverzeichnis; die Folien-Syntax in Word: alle Container außer `notes`, Alerts, `==Markierung==`, farbige Wörter |
-| `funktionen-praesentation.md` | PowerPoint: Titel-, Trenn- und Abschlussfolie, Textebenen, nummerierte Listen mit Startwert, Verkleinern, Tabelle im PTA-Stil mit Titelzeile, längere Tabelle, Code, Bild mit Text, Bild allein, SVG-Grafik, Bildreihe, benannte Layouts mit `---`, Sprechernotizen (`::: notes`), Flow-Folien (alle Container, `.dark`, `kicker`, Alerts, Markierung, farbige Wörter, Status-Labels), Diagramme aus `chart`-Blöcken auf allen vier Diagrammlayouts, PTA-Folienarten (`.agenda`, `.interim`, `.quote`, `.contact`) |
+| `funktionen-praesentation.md` | PowerPoint: Titel-, Trenn- und Abschlussfolie, Textebenen, nummerierte Listen mit Startwert, Verkleinern, Tabelle im PTA-Stil mit Titelzeile, längere Tabelle, Code, Bild mit Text, Bild allein, SVG-Grafik, Bildreihe, benannte Layouts mit `---`, Sprechernotizen (`::: notes`), Flow-Folien (alle Container, `.dark`, `kicker`, Alerts, Markierung, farbige Wörter, Status-Labels), Diagramme aus `chart`-Blöcken auf allen vier Diagrammlayouts, alle sechs Finanzdiagramme (`financial-chart`, mit Text davor und danach, alle `options`), PTA-Folienarten (`.agenda`, `.interim`, `.quote`, `.contact`) |
 | `varianten-dokument.md` | Word-Variante `quer-ohne-deckblatt` mit `sprache: en` und `firma` |
 | `varianten-hochformat-dokument.md` | Word-Variante `hoch-ohne-deckblatt` mit `inhaltsverzeichnis: nein`, `typografie: nein`, `syntaxhervorhebung: nein` |
 | `varianten-querformat-dokument.md` | Word-Variante `quer` (mit Deckblatt) |
@@ -33,4 +33,4 @@ ein Test fehl und nennt das Fehlende. Jede Datei muss in der Tabelle oben stehen
 Dokumente liegen danach in `.tmp/review/funktionen/`, ihre Rundreise durch die Konverter in
 `tests/samples/funktionen/*.roundtrip.expected.md`.
 
-Noch nicht enthalten, weil noch nicht umgesetzt: PDF, Mermaid, Finanzdiagramme.
+Noch nicht enthalten, weil noch nicht umgesetzt: PDF, Mermaid, Finanzdiagramme in Word.

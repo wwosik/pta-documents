@@ -20,7 +20,7 @@ from pta_documents.design import slides as design
 from pta_documents.design.variants import GeneratedTexts, Language, SlidesVariant
 from pta_documents.errors import DocumentConversionError, DocumentFormat
 from pta_documents.generation.common.result import NoteCodes, Notes
-from pta_documents.generation.pptx import chart, fitting, flow, kinds, visuals
+from pta_documents.generation.pptx import chart, drawing, fitting, flow, kinds, visuals
 from pta_documents.generation.pptx import notes as speaker_notes
 from pta_documents.generation.pptx.model import (
     AgendaSlide,
@@ -31,6 +31,7 @@ from pta_documents.generation.pptx.model import (
     Code,
     ContactSlide,
     ContentSlide,
+    Diagram,
     FlowSlide,
     Image,
     Images,
@@ -219,7 +220,8 @@ class DeckWriter:
         self.visual_on_content_area(slide)
 
     def visual_on_content_area(self, slide: VisualSlide) -> None:
-        """Table, code or a row of pictures in the content area, text above and below.
+        """Table, code, a drawing or a row of pictures in the content area, text above and
+        below.
 
         What does not fit at the smallest size is split: table rows (header repeated), code
         lines, pictures beyond four; the text above goes on the first part, below on the last.
@@ -248,6 +250,8 @@ class DeckWriter:
                 parts = [visual.part(0, first)]
                 for start in range(first, len(lines), rest):
                     parts.append(visual.part(start, start + rest))
+        elif isinstance(visual, Diagram):
+            parts = [visual]
         elif isinstance(visual, Images):
             per_row = design.MAX_PICTURES_PER_ROW
             parts = [
@@ -309,6 +313,11 @@ class DeckWriter:
                 self.note_overfull(slide)
                 size = fitting.CODE_SIZES[-1]
             used = visuals.draw_code(target, visual, size, area.left, y, area.width, self.lang)
+        elif isinstance(visual, Diagram):
+            # Fitted like a picture: scaled down, never up (DocLibs DeckWriter.Drawing).
+            used = drawing.place(
+                target, visual.drawing, area.left, y, area.width, room, visual.alt, self.lang
+            )
         else:
             used, factors = visuals.draw_pictures(
                 target, list(visual.images), area.left, y, area.width, room

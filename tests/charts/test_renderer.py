@@ -30,7 +30,7 @@ def request(
 def test_only_chart_blocks_without_regard_to_case() -> None:
     renderer = ChartRenderer()
     assert renderer.render(request("mermaid", "graph TD")) is None
-    assert renderer.render(request("financial-chart", "{}")) is None
+    assert renderer.render(request("plantuml", "a -> b")) is None
     graphic = renderer.render(request("Chart"))
     assert isinstance(graphic, ChartGraphic)
     assert graphic.chart.colors == colors.ACCENTS

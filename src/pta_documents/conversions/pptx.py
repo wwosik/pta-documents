@@ -25,6 +25,8 @@ PRESENTATION_PART: Final = "ppt/presentation.xml"
 RELATIONSHIPS: Final = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 NOTES_SLIDE: Final = f"{RELATIONSHIPS}/notesSlide"
 NOTES_MASTER: Final = f"{RELATIONSHIPS}/notesMaster"
+DRAWING_GROUP: Final = "Drawing"
+"""The name start of the shape groups ``generation.pptx.drawing`` writes (``GROUP_NAME``)."""
 
 
 def p(name: str) -> str:
@@ -98,6 +100,13 @@ def _is_footer(shape: etree._Element) -> bool:
     return _placeholder_type(shape) in ("sldNum", "dt", "ftr")
 
 
+def _is_drawing(group: etree._Element) -> bool:
+    """Whether a group is a drawing the generator wrote (``generation.pptx.drawing``)."""
+    properties = group.find(f"{p('nvGrpSpPr')}/{p('cNvPr')}")
+    name = properties.get("name", "") if properties is not None else ""
+    return name.startswith(DRAWING_GROUP + " ")
+
+
 def _render_slide(
     package: OpenXmlPackage,
     part: str,
@@ -124,6 +133,9 @@ def _render_slide(
     content = bool(title)
     for element in tree.iter():
         if any(anc.tag in (f"{{{MC}}}Fallback", a("tbl")) for anc in element.iterancestors()):
+            continue
+        if any(_is_drawing(anc) for anc in element.iterancestors(p("grpSp"))):
+            # A drawing of the generator (financial chart): shapes, not text to read back.
             continue
         parent = element.getparent()
         if (

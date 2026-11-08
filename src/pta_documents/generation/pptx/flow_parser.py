@@ -26,6 +26,7 @@ from pta_documents.generation.pptx.model import (
     ColumnsBlock,
     CommentBlock,
     ConclusionBlock,
+    Diagram,
     FlowBlock,
     FlowSlide,
     ImageRowBlock,
@@ -179,6 +180,15 @@ class FlowReader:
                     target.add(ImageRowBlock(item.images))
                 case Code():
                     target.add(CodeLinesBlock(item.lines, item.spans))
+                case Diagram():
+                    raise layout_syntax.at_line(
+                        DocumentConversionError(
+                            FORMAT,
+                            f"A `{item.alt}` drawing goes on a slide of its own (with text before "
+                            "or after it); a flow slide has no place for it.",
+                        ),
+                        item.line,
+                    )
                 case Chart():
                     raise layout_syntax.at_line(
                         DocumentConversionError(

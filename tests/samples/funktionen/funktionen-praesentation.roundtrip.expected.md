@@ -821,9 +821,189 @@ Jahr, Marge
 
 ::::
 
-## PTA-Folienarten
+## Finanzdiagramme
 
 07
+
+## Finanzdiagramm: Entwicklung
+
+Monat für Monat oben, kumuliert unten; gestrichelt ist die Prognose.
+
+::: notes
+
+````
+## Finanzdiagramm: Entwicklung
+
+Monat für Monat oben, kumuliert unten; gestrichelt ist die Prognose.
+
+```financial-chart
+{
+  "type": "development",
+  "title": "Aufträge",
+  "period": "April 2026",
+  "lastActual": 3,
+  "referenceRate": 0.05,
+  "changeAtPeriod": 0.048,
+  "changeAtYearEnd": 0.035,
+  "estimates": [
+    {"month": 5, "label": "Schätzung", "value": 103}
+  ],
+  "months": [
+    {"label": "Jan", "previous": 14.2, "current": 15.0, "projection": 14.8, "previousCumulative": 14.2, "currentCumulative": 15.0, "projectionCumulative": 14.8, "reference": 14.9, "referenceCumulative": 14.9},
+    {"label": "Feb", "previous": 15.1, "current": 15.9, "projection": 15.6, "previousCumulative": 29.3, "currentCumulative": 30.9, "projectionCumulative": 30.4, "reference": 15.9, "referenceCumulative": 30.8},
+    {"label": "Mär", "previous": 17.8, "current": 18.1, "projection": 18.0, "previousCumulative": 47.1, "currentCumulative": 49.0, "projectionCumulative": 48.4, "reference": 18.7, "referenceCumulative": 49.5},
+    {"label": "Apr", "previous": 16.4, "current": 17.9, "projection": 17.5, "previousCumulative": 63.5, "currentCumulative": 66.9, "projectionCumulative": 65.9, "reference": 17.2, "referenceCumulative": 66.7},
+    {"label": "Mai", "previous": 17.0, "current": null, "projection": 18.6, "previousCumulative": 80.5, "currentCumulative": null, "projectionCumulative": 84.5, "reference": 17.9, "referenceCumulative": 84.5},
+    {"label": "Jun", "previous": 18.3, "current": null, "projection": 19.1, "previousCumulative": 98.8, "currentCumulative": null, "projectionCumulative": 103.6, "reference": 19.2, "referenceCumulative": 103.7}
+  ],
+  "options": {"unit": "Mio. EUR"}
+}
+```
+````
+
+:::
+
+## Finanzdiagramm: Wachstum je Zeile
+
+::: notes
+
+````
+## Finanzdiagramm: Wachstum je Zeile
+
+```financial-chart
+{
+  "type": "growth-by-row",
+  "title": "Wachstum je Region",
+  "period": "April 2026",
+  "rows": [
+    {"label": "Nord", "change": 0.081, "reference": 0.05},
+    {"label": "Süd", "change": 0.032, "reference": 0.05, "emphasised": true},
+    {"label": "Ost", "change": -0.021, "reference": 0.04},
+    {"label": "West", "change": 0.124, "reference": 0.06}
+  ],
+  "overall": {"change": 0.052, "reference": 0.05},
+  "options": {"width": 600}
+}
+```
+````
+
+:::
+
+## Finanzdiagramm: Ist gegen Plan
+
+::: notes
+
+````
+## Finanzdiagramm: Ist gegen Plan
+
+```financial-chart
+{
+  "type": "actual-vs-reference",
+  "title": "Ist gegen Plan",
+  "period": "April 2026",
+  "display": "growth",
+  "rows": [
+    {"label": "Alle Regionen", "aggregate": true, "measures": [{"series": "auftraege", "label": "Aufträge (Monat)", "yearToDate": false, "current": 18.4, "change": 0.031, "reference": 0.05, "referenceValue": 18.0}, {"series": "auftraege", "label": "Aufträge (lfd. J.)", "yearToDate": true, "current": 66.9, "change": 0.052, "reference": 0.05, "referenceValue": 66.0}, {"series": "umsatz", "label": "Umsatz (Monat)", "yearToDate": false, "current": 16.2, "change": 0.044, "reference": 0.06, "referenceValue": 16.0}, {"series": "umsatz", "label": "Umsatz (lfd. J.)", "yearToDate": true, "current": 60.3, "change": 0.061, "reference": 0.06, "referenceValue": 61.0}]},
+    {"label": "Nord", "aggregate": false, "measures": [{"series": "auftraege", "label": "Aufträge (Monat)", "yearToDate": false, "current": 18.4, "change": 0.12, "reference": 0.05, "referenceValue": 18.0}, {"series": "auftraege", "label": "Aufträge (lfd. J.)", "yearToDate": true, "current": 66.9, "change": 0.081, "reference": 0.05, "referenceValue": 66.0}, {"series": "umsatz", "label": "Umsatz (Monat)", "yearToDate": false, "current": 16.2, "change": 0.09, "reference": 0.06, "referenceValue": 16.0}, {"series": "umsatz", "label": "Umsatz (lfd. J.)", "yearToDate": true, "current": 60.3, "change": 0.07, "reference": 0.06, "referenceValue": 61.0}]},
+    {"label": "Süd", "aggregate": false, "measures": [{"series": "auftraege", "label": "Aufträge (Monat)", "yearToDate": false, "current": 18.4, "change": -0.04, "reference": 0.05, "referenceValue": 18.0}, {"series": "auftraege", "label": "Aufträge (lfd. J.)", "yearToDate": true, "current": 66.9, "change": 0.032, "reference": 0.05, "referenceValue": 66.0}, {"series": "umsatz", "label": "Umsatz (Monat)", "yearToDate": false, "current": 16.2, "change": 0.4, "reference": 0.06, "referenceValue": 16.0}, {"series": "umsatz", "label": "Umsatz (lfd. J.)", "yearToDate": true, "current": 60.3, "change": 0.05, "reference": 0.06, "referenceValue": 61.0}]}
+  ]
+}
+```
+````
+
+:::
+
+## Finanzdiagramm: Wachstumstrend
+
+Mit "culture": "en" stehen Zahlen und Beschriftungen auf Englisch.
+
+::: notes
+
+````
+## Finanzdiagramm: Wachstumstrend
+
+```financial-chart
+{
+  "type": "growth-trend",
+  "title": "Wachstum Aufträge",
+  "period": "April 2026",
+  "lastActual": 3,
+  "reference": 0.05,
+  "months": [
+    {"label": "Jan", "change": 0.056},
+    {"label": "Feb", "change": 0.054},
+    {"label": "Mär", "change": 0.04},
+    {"label": "Apr", "change": 0.048},
+    {"label": "Mai", "change": 0.042},
+    {"label": "Jun", "change": 0.035}
+  ],
+  "options": {"culture": "en", "labels": {"reference": "Target"}}
+}
+```
+
+Mit `"culture": "en"` stehen Zahlen und Beschriftungen auf Englisch.
+````
+
+:::
+
+## Finanzdiagramm: zwei Jahre
+
+::: notes
+
+````
+## Finanzdiagramm: zwei Jahre
+
+```financial-chart
+{
+  "type": "two-year",
+  "title": "Umsatz je Produktlinie",
+  "previousYear": "2025",
+  "currentYear": "2026",
+  "months": ["J", "F", "M", "A", "M", "J", "J", "F", "M", "A", "M", "J"],
+  "series": [
+    {"label": "Maschinen", "values": [42000, 45000, 47000, 44000, 40000, 41000, 44000, 48000, 50000, null, null, null]},
+    {"label": "Ersatzteile", "values": [18000, 17000, 19000, 21000, 20000, 18000, 19000, 18000, 20000, null, null, null]},
+    {"label": "Service", "values": [25000, 26000, 24000, 27000, 29000, 28000, 27000, 29000, 30000, null, null, null]}
+  ],
+  "options": {"scale": 1000, "unit": "Tsd. EUR"}
+}
+```
+````
+
+:::
+
+## Finanzdiagramm: Übersichtstabelle
+
+::: notes
+
+````
+## Finanzdiagramm: Übersichtstabelle
+
+```financial-chart
+{
+  "type": "summary-table",
+  "title": "Übersicht",
+  "period": "April 2026",
+  "columns": [
+    {"label": "Gesamt", "total": true},
+    {"label": "Maschinen"},
+    {"label": "Service"},
+    {"label": "Sonstige", "rest": true}
+  ],
+  "blocks": [
+    {"metric": "Aufträge", "reference": 0.05, "cells": [{"current": 118.3, "previous": 112.5, "change": 0.052, "reference": 0.05}, {"current": 94.7, "previous": 91.3, "change": 0.037, "reference": 0.05}, {"current": 23.4, "previous": 21.0, "change": 0.114, "reference": 0.06}, {"current": 0.2, "previous": 0.2, "change": 0.0, "reference": 0.05}]},
+    {"metric": "Marge", "reference": 0.01, "rateOf": "Umsatz", "cells": [{"current": 46.6, "previous": 44.9, "change": 0.038, "reference": 0, "rate": 0.427, "previousRate": 0.428, "referenceRate": 0.438}, {"current": 37.5, "previous": 36.7, "change": 0.022, "reference": 0, "rate": 0.432, "previousRate": 0.441, "referenceRate": 0.451}, {"current": 9.1, "previous": 8.2, "change": 0.11, "reference": 0, "rate": 0.414, "previousRate": 0.402, "referenceRate": 0.412}, {"current": 0.0, "previous": 0.0, "change": 0, "reference": 0}]}
+  ],
+  "options": {"unit": "Mio. EUR", "tolerance": 0.01, "restShare": 0.01}
+}
+```
+````
+
+:::
+
+## PTA-Folienarten
+
+08
 
 ## Agenda
 

@@ -2,24 +2,31 @@
 
 A ``chart`` block (language without regard to case) becomes a ``ChartGraphic``: PowerPoint and
 Word write it as a native, editable chart with its data in an embedded workbook, PDF draws
-``ChartGraphic.drawing``. Part of the core: no extra needed.
+``ChartGraphic.drawing``. A ``financial-chart`` block (JSON, E06-S02) becomes a
+``DrawingGraphic``: a financial chart of ``charts.financial``, shapes on slides. Part of the
+core: no extra needed.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Final
 
-from pta_documents.charts import drawing, parser
+from pta_documents.charts import drawing, financial, parser
+from pta_documents.charts.financial import json_block
 from pta_documents.design import colors
+from pta_documents.design.chart_colors import FINANCIAL
+from pta_documents.design.variants import Language
 from pta_documents.errors import DocumentFormat
 from pta_documents.generation.common.renderers import (
     ChartGraphic,
     CodeBlockGraphic,
     CodeBlockRequest,
+    DrawingGraphic,
 )
 
 LANGUAGE: Final = "chart"
+FINANCIAL_LANGUAGE: Final = json_block.LANGUAGE
 
 AUTHORING_GUIDE: Final = """## Charts
 
@@ -58,12 +65,54 @@ Mär, 125, 140
 - **Word:** Das Diagramm steht über die Satzspiegelbreite, mit einem Titel darunter die
   Beschriftung „Abbildung n: Titel".
 - Ein Fehler in Einstellungen oder Daten bricht mit der Zeile ab, in der er steht.
+
+### Finanzdiagramme
+
+Ein Codeblock mit der Sprache `financial-chart` enthält eines der Diagramme einer
+Ergebnisübersicht als JSON: `development` (Entwicklung über das Jahr), `growth-by-row`
+(Wachstum je Zeile), `actual-vs-reference` (Ist gegen Plan), `growth-trend` (Wachstumstrend),
+`two-year` (zwei Jahre Monat für Monat) oder `summary-table` (Übersichtstabelle). Die Schlüssel
+sind englisch, weil solche Blöcke meist ein Programm schreibt. Wachstumsraten und Anteile sind
+Brüche (`0.05` sind 5 %), `lastActual` zählt die Monate ab 0.
+
+````markdown
+```financial-chart
+{
+  "type": "growth-trend",
+  "title": "Wachstum Aufträge",
+  "period": "Mai 2026",
+  "lastActual": 2,
+  "reference": 0.05,
+  "months": [
+    { "label": "Jan", "change": 0.056 }, { "label": "Feb", "change": 0.054 },
+    { "label": "Mär", "change": 0.04 }, { "label": "Apr", "change": 0.045 },
+    { "label": "Mai", "change": 0.05 }
+  ],
+  "options": { "labels": { "reference": "Ziel" } }
+}
+```
+````
+
+- **Sprache:** Zahlen und Beschriftungen folgen `sprache:` (deutsch: `5,2 %`, *Vorjahr*, *Ist*,
+  *Plan*, *Prognose*); `"culture": "en"` (oder `de`, `de-DE`, `en-US`, `en-GB`) stellt um.
+- **Optionen** (`options`): `culture`, `scale` und `unit` (`1000000` und `Mio. EUR`), `labels`
+  über denen der Sprache (`previous`, `current`, `reference`, `projection`, `estimate`,
+  `change`, `overall`, `value`), `tolerance` (ab wann eine Zahl vorn oder hinten liegt, Standard
+  `0.005`), `restShare` und `width` (Breite in Pixeln, Standard 560).
+- **Regeln:** Eine Farbe bedeutet eine Reihe, Grün und Rot stehen nur an Zahlen, gestrichelt
+  heißt Prognose, jede Werteachse enthält null.
+- **Folien:** Das Diagramm steht als Gruppe bearbeitbarer Formen in der Inhaltsfläche von
+  `Nur Titel` (mit Text davor auf `Titel und Text`), nie größer als gezeichnet. Word kann
+  Finanzdiagramme noch nicht setzen (folgt mit E03-S04).
+- Ein unbekannter Schlüssel, ein falscher Typ oder ungültiges JSON bricht mit der Zeile ab;
+  Kommentare (`//`) und ein Komma nach dem letzten Eintrag sind erlaubt.
 """
 
 
 @dataclass(frozen=True, slots=True)
 class ChartRenderer:
-    """Renders ``chart`` blocks as bar, line and area charts in the PTA accents."""
+    """Renders ``chart`` blocks as bar, line and area charts in the PTA accents, and
+    ``financial-chart`` blocks as the financial charts of ``charts.financial``."""
 
     @property
     def authoring_guide(self) -> str | None:
@@ -76,6 +125,8 @@ class ChartRenderer:
         ``DocumentConversionError``) when the block is malformed.
         """
         words = request.info.split()
+        if words and words[0].lower() == FINANCIAL_LANGUAGE:
+            return _financial(request, words)
         if not words or words[0].lower() != LANGUAGE:
             return None
         if len(words) > 1:
@@ -87,6 +138,26 @@ class ChartRenderer:
             )
         spec = parser.parse(request.code, request.line)
         return ChartGraphic(spec, drawing.draw(spec, request.language, _palette(request)))
+
+
+def _financial(request: CodeBlockRequest, words: list[str]) -> DrawingGraphic:
+    """A ``DrawingGraphic`` of a ``financial-chart`` block; ``FinancialChartError`` when it is
+    malformed or its data does not fit together."""
+    if len(words) > 1:
+        raise json_block.error(
+            request.line,
+            f"'{' '.join(words[1:])}' after ```{FINANCIAL_LANGUAGE} is not read; write settings "
+            'in the block, under "options".',
+        )
+    culture = "en" if request.language is Language.EN else None
+    chart, options = json_block.parse(request.code, request.line, culture)
+    # Slides take their own text colour; the chart keeps its white surface on dark slides.
+    text = colors.TEXT_SLIDES if request.format is DocumentFormat.PPTX else FINANCIAL.text
+    options = replace(options, colors=replace(options.colors, text=text))
+    try:
+        return DrawingGraphic(financial.draw(chart, options))
+    except ValueError as failure:
+        raise json_block.error(request.line, str(failure)) from None
 
 
 def _palette(request: CodeBlockRequest) -> drawing.ChartColors:

@@ -195,22 +195,13 @@ def test_a_document_conversion_error_passes_unchanged(
     assert error.value is original
 
 
-@pytest.mark.parametrize(
-    ("generate", "format", "graphic"),
-    [
-        (generate_docx, DocumentFormat.DOCX, DrawingGraphic(Drawing(1, 1, ()))),
-        (generate_pptx, DocumentFormat.PPTX, DrawingGraphic(Drawing(1, 1, ()))),
-    ],
-    ids=["docx-drawing", "pptx-drawing"],
-)
-def test_drawings_are_not_supported_yet(
-    generate: Generate, format: DocumentFormat, graphic: CodeBlockGraphic
-) -> None:
-    """Placing drawings follows with E06-S02 (PowerPoint) and E03-S04 (Word); charts are placed
-    natively in both (``tests/charts/test_native.py``)."""
+def test_word_does_not_place_drawings_yet() -> None:
+    """Placing drawings in Word follows with E03-S04; PowerPoint sets them as shapes since
+    E06-S02 (``tests/generation/pptx/test_drawing.py``), charts are native in both."""
+    graphic = DrawingGraphic(Drawing(1, 1, ()))
     with pytest.raises(DocumentConversionError) as error:
-        generate(DECK, (Recorder(graphic=graphic),))
-    assert error.value.format is format
+        generate_docx(DECK, (Recorder(graphic=graphic),))
+    assert error.value.format is DocumentFormat.DOCX
     assert error.value.reason.startswith("Line 6: The `testbild` block was rendered as a ")
     assert "does not support yet" in error.value.reason
 

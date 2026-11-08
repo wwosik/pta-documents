@@ -1,8 +1,9 @@
 # Verwendung
 
 Stand nach Meilenstein M01: Markdown → Word und PowerPoint auf den PTA-Vorlagen, Word und
-PowerPoint → Markdown; seit E06-S01 native Diagramme aus `chart`-Blöcken in beiden Formaten.
-PDF, Mermaid und Finanzdiagramme folgen (E05, E06).
+PowerPoint → Markdown; seit E06-S01 native Diagramme aus `chart`-Blöcken in beiden Formaten,
+seit E06-S02 Finanzdiagramme (`financial-chart`) als Formengruppe in PowerPoint und als SVG.
+PDF, Mermaid und Finanzdiagramme in Word folgen (E05, E06-S03, E03-S04).
 
 ## Einrichten
 
@@ -152,9 +153,18 @@ ohne anderes (auch als einzige Teile eines `::: columns`) → `Titel und zwei Di
 Quellenangabe (leere entfallen), der Titel nicht zusätzlich im Diagramm. Ein Chart neben einer
 Tabelle oder einem Bild bekommt eine eigene Folie; auf einer Flow-Folie ist er ein Fehler. Mit
 `layout="…"` geht ein Chart in den nächsten Diagrammplatzhalter des Layouts, dann mit Titel und
-Einheit im Diagramm selbst. Renderer und PTA-Diagrammstil: [Charts](#charts-e06-s01);
-Zeichnungen (`DrawingGraphic`) werfen in beiden Formaten „does not support yet" bis
-E06-S02/E03-S04.
+Einheit im Diagramm selbst. Renderer und PTA-Diagrammstil: [Charts](#charts-e06-s01).
+
+**Zeichnungen** (`DrawingGraphic`, z. B. [Finanzdiagramme](#finanzdiagramme-e06-s02)) setzt
+PowerPoint als Gruppe bearbeitbarer Formen (`generation/pptx/drawing.py`, Port von DocLibs
+`DrawingWriter.cs`): Rechteck, abgerundetes Rechteck und Ellipse als Vorlagenformen, alles
+andere als `custGeom`, je Textzeile ein Textfeld ohne Ränder in Segoe UI (Code: Consolas),
+Hotspots entfallen. Die Gruppe heißt `Drawing <id>` mit dem Info-String als Alternativtext und
+steht wie eine Tabelle in der Inhaltsfläche von `Nur Titel` (Text davor → `Titel und Text`,
+Text danach als Textfeld darunter), oben mittig, auf den Platz verkleinert, nie vergrößert
+(1 px = 9525 EMU). Auf Flow-Folien und benannten Layouts ist eine Zeichnung ein Fehler; Word
+wirft für Zeichnungen noch „does not support yet" (folgt mit E03-S04). Der PPTX-Konverter lässt
+`Drawing`-Gruppen weg.
 
 ### Sprechernotizen (E09-S01)
 
@@ -307,8 +317,8 @@ options = DocxOptions(code_block_renderers=(Testbild(),), image_converters=(SvgN
   PowerPoint wie ein Bild allein auf einer Folie. `DrawingGraphic(drawing)` und
   `ChartGraphic(chart, drawing)` (Daten in `pta_documents.charts.ChartSpec`, `drawing` ist ein
   `Drawing` aus [`pta_documents.drawing`](#zeichenmodell-und-svg-e02-s03)): Charts setzen
-  beide Generatoren nativ ([Charts](#charts-e06-s01)); Zeichnungen ergeben noch einen Fehler
-  „… does not support yet" (Zeichnen folgt mit E03-S04 und E06-S02).
+  beide Generatoren nativ ([Charts](#charts-e06-s01)); Zeichnungen setzt PowerPoint als
+  Formengruppe, Word ergibt noch einen Fehler „… does not support yet" (folgt mit E03-S04).
 - **Konverter** (`generation/common/images.py`, `ImageConverter`) bekommen jedes Bild, dessen
   Format der Generator nicht setzt (alles außer PNG, JPEG, GIF, BMP, TIFF, z. B. SVG), mit
   `scale = 2`; der erste mit Ergebnis gewinnt. Word setzt das Ergebnis in der natürlichen Größe
@@ -372,6 +382,66 @@ drawing = draw(spec)  # Drawing 640 × 380 px, Zahlen deutsch („1.250,5")
   Titel der Werteachse; mit `title` danach „Abbildung n: Titel", `source` als Absatz in
   „Beschriftung" ohne Nummer. Die Konverter (Word/PowerPoint → Markdown) lassen Diagramme bisher
   weg.
+
+## Finanzdiagramme (E06-S02)
+
+Die sechs Diagramme einer Ergebnisübersicht (Port von DocLibs `DocumentGeneration.Charts`):
+`DevelopmentChart` (Jahr Monat für Monat: Balken oben, kumuliert oder Wachstumsrate unten),
+`GrowthByRowChart` (Wachstum je Zeile), `ActualVsReferenceChart` (Ist gegen Plan, Wachstum oder
+Werte), `GrowthTrendChart` (Wachstumstrend), `TwoYearChart` (zwei Jahre, höchstens sechs
+Kategorien) und `SummaryTable` (Übersichtstabelle) — aus Python-Daten oder einem
+```` ```financial-chart ````-Block (JSON), gezeichnet als `Drawing`.
+
+```python
+from pta_documents.charts import financial
+from pta_documents.charts.financial import FinancialChartOptions, GrowthTrendChart, TrendMonth
+
+chart = GrowthTrendChart(title="Wachstum", last_actual=1, reference=0.05,
+                         months=(TrendMonth("Jan", 0.06), TrendMonth("Feb", 0.04)))
+options = FinancialChartOptions(culture="de-DE", scale=1_000_000, unit="Mio. EUR")
+drawing = financial.draw(chart, options)   # Drawing, 560 px breit (options.width)
+svg = financial.to_svg(chart, options)     # eigenständiges SVG mit Tooltips, ohne Skript
+block = financial.to_json(chart, options)  # Inhalt eines financial-chart-Blocks
+chart, options = financial.parse(block, line=12)  # FinancialChartError (ValueError) mit Zeile
+```
+
+- **Daten** (`charts/financial/model.py`): Frozen Dataclasses mit Tupeln; Wachstumsraten und
+  Anteile sind Brüche (`0.052` = 5,2 %), `last_actual` ist ein Index ab 0. Fehlende oder
+  unpassende Daten (keine Monate, Zeilen verschiedener Länge, mehr als sechs Kategorien) sind
+  `ValueError`.
+- **Block** (`charts/financial/json_block.py`): ein JSON-Objekt mit `type` (`development`,
+  `growth-by-row`, `actual-vs-reference`, `growth-trend`, `two-year`, `summary-table`), den
+  Feldern in camelCase (`lastActual`, `projectionComparedFrom`, `yearToDate`, `rateOf` …) und
+  optional `options` (`culture`, `scale`, `unit`, `labels`, `tolerance`, `restShare`, `width`).
+  Eigener kleiner JSON-Leser: Kommentare `//` und `/* */` und ein Komma nach dem letzten Eintrag
+  sind erlaubt; unbekannte Schlüssel, doppelte Schlüssel, falsche Typen (eine Ganzzahl muss
+  ganz sein, `true`/`false` ist keine Zahl), fehlende Pflichtfelder (die Felder ohne
+  Standardwert, z. B. `label` und `change` eines Monats) und ungültiges JSON sind Fehler
+  `Line N: The financial-chart block cannot be drawn: …` mit der Zeile im Dokument (Zeile des
+  Zauns + Zeile im Block); Fehler in den Daten selbst tragen die Zeile des Zauns.
+- **Optionen** (`charts/financial/options.py`): `culture` ist `de`, `de-DE`, `en`, `en-US` oder
+  `en-GB` (Standard: im Renderer die Dokumentsprache, sonst `de-DE`); deutsch `5,2 %`,
+  `1.250,5`, `-1,2 Pp.`, englisch `5.2%`, `1,250.5`, `-1.2pp`, gerundet kaufmännisch.
+  Beschriftungen `FinancialChartLabels` (deutsch *Vorjahr, Ist, Plan, Prognose, Schätzung,
+  Veränderung, Gesamt, Wert*, englisch *Previous, Current, Reference, Projection, Estimate,
+  Change, Overall, Value*), `labels` im Block legt sich über die der Sprache.
+- **Farben** (`design/chart_colors.py`, `FinancialChartColors`): Reihen `PTA_BLUE`, `DARK_BLUE`,
+  `LIGHT_BLUE` je in vier Abstufungen über `colors.tint` (Füllung 18 %, blass 8 %, kräftig 65 %,
+  Linie 100 %); Kategorien der Zwei-Jahres-Linien die Akzente der Reihe nach, verteilt nach
+  Höhe der Linie (`financial.category_colors`); Referenz `GREY_DARK`, Referenzfläche und Gitter
+  `GREY_LIGHT`, Achse `GREY_MID`, Band `tint(GREY_LIGHT, 0.5)`; vorn `SIGNAL_GREEN`, gleichauf
+  `GREY_DARK`, hinten `SIGNAL_RED` (nur an Zahlen); Hervorhebung die kräftige erste Reihe;
+  Tabellenkopf `PTA_BLUE`, Gesamtspalte `DARK_BLUE` mit `tint(PTA_BLUE, 0.1)`; Fläche und
+  Schreibgrund weiß; Text `TEXT_WORD` (im Renderer für PowerPoint `TEXT_SLIDES`); Tooltip
+  `TEXT_SLIDES` mit weißer Schrift. Keine dunkle Variante: auf `{.dark}` steht ein Diagramm
+  ohnehin nicht (Flow-Folie).
+- **SVG:** `to_svg` über `drawing.to_svg` in `Segoe UI, Selawik, sans-serif`; jeder Balken,
+  Punkt und jede Linie hat einen Tooltip (Klassen `chart-hoverable`/`chart-tooltip`, siehe
+  [Zeichenmodell](#zeichenmodell-und-svg-e02-s03)).
+- **Renderer:** Der `ChartRenderer` nimmt neben `chart` auch `financial-chart` (ohne Groß/Klein,
+  nichts dahinter) und liefert `DrawingGraphic`; seine `authoring_guide` hat dazu den Abschnitt
+  `### Finanzdiagramme`. PowerPoint setzt es als Formengruppe (siehe
+  [PTA-Folienarten](#pta-folienarten-und-diagramm-layouts-e04-s04)), Word noch nicht.
 
 ## Schriften für PDF und SVG (E01-S03)
 

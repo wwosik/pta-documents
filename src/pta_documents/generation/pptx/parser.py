@@ -28,7 +28,11 @@ from pta_documents.generation.common import (
     layout_tokens,
 )
 from pta_documents.generation.common.images import GENERATOR_SCALE, convert_image, refusal_hint
-from pta_documents.generation.common.renderers import ChartGraphic, ImageGraphic
+from pta_documents.generation.common.renderers import (
+    ChartGraphic,
+    CodeBlockGraphic,
+    DrawingGraphic,
+)
 from pta_documents.generation.common.result import Notes
 from pta_documents.generation.pptx import flow_parser, kind_parser
 from pta_documents.generation.pptx.model import (
@@ -41,6 +45,7 @@ from pta_documents.generation.pptx.model import (
     ClosingSlide,
     Code,
     ContentSlide,
+    Diagram,
     Image,
     Images,
     Item,
@@ -439,6 +444,8 @@ class DeckParser:
                 graphic = self._draw(token) if token.type == "fence" else None
                 if isinstance(graphic, ChartGraphic):
                     out.append(Chart(graphic, self.line(token)))
+                elif isinstance(graphic, DrawingGraphic):
+                    out.append(Diagram(graphic.drawing, token.info.strip(), self.line(token)))
                 elif graphic is not None:
                     image = Image(graphic.image, token.info.strip(), self.line(token))
                     out.append(Images((self._placeable(image, token),)))
@@ -528,10 +535,10 @@ class DeckParser:
             raise self._error(f"The image '{source}' is not among the document's resources", inline)
         return resource
 
-    def _draw(self, fence: Token) -> ImageGraphic | ChartGraphic | None:
-        """The image or chart the code-block renderers make of ``fence``; None: it stays code.
-        Drawings raise until slides place them (E06-S02, E06-S03)."""
-        graphic = code_blocks.render_graphic(
+    def _draw(self, fence: Token) -> CodeBlockGraphic | None:
+        """The image, drawing or chart the code-block renderers make of ``fence``; None: it
+        stays code."""
+        return code_blocks.render_graphic(
             self.options.code_block_renderers,
             self.notes,
             fence.info,
@@ -541,9 +548,6 @@ class DeckParser:
             self.options.language,
             self.dark,
         )
-        if graphic is None or isinstance(graphic, ImageGraphic | ChartGraphic):
-            return graphic
-        raise code_blocks.unsupported(graphic, fence.info, self.line(fence), FORMAT)
 
     def image(self, child: Token, inline: Token) -> Image:
         """The image of an ``image`` child of ``inline``, in a format slides take."""

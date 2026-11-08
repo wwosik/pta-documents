@@ -5,7 +5,7 @@ bekommst daraus ein Word-Dokument oder eine PowerPoint-Präsentation **auf den o
 PTA-Vorlagen** — mit Deckblatt, Logo, Kopf- und Fußzeile, PTA-Formatvorlagen und PTA-Layouts.
 Umgekehrt macht es aus vorhandenen Word- und PowerPoint-Dateien Markdown.
 
-Noch nicht möglich (geplant): PDF, Diagramme aus Mermaid, Finanzdiagramme, farbige
+Noch nicht möglich (geplant): PDF, Diagramme aus Mermaid, Finanzdiagramme in Word, farbige
 Hinweisboxen und Kartenlayouts auf Folien.
 
 ## 1. Einmal einrichten
@@ -342,6 +342,42 @@ Q3, 12.5, 14
 - Ein Fehler (unbekannte Einstellung, Text statt Zahl, zu viele Werte in einer Zeile) bricht mit
   der Zeilennummer ab, z. B. `Line 12: The chart block cannot be drawn: 'viel' in row 3 of the
   data is not a number; …`.
+
+### Finanzdiagramme
+
+Für Ergebnisübersichten gibt es sechs fertige Diagramme, als Codeblock `financial-chart` mit
+JSON (die Blöcke schreibt meist ein Programm): `development` (das Jahr Monat für Monat und
+kumuliert, Prognose gestrichelt), `growth-by-row` (Wachstum je Region o. Ä. gegen Plan),
+`actual-vs-reference` (Ist gegen Plan je Zeile), `growth-trend` (Wachstum über die Monate),
+`two-year` (zwei Jahre Monat für Monat, bis sechs Linien) und `summary-table`
+(Übersichtstabelle).
+
+````markdown
+```financial-chart
+{
+  "type": "growth-trend",
+  "title": "Wachstum Aufträge",
+  "period": "Mai 2026",
+  "lastActual": 2,
+  "reference": 0.05,
+  "months": [
+    { "label": "Jan", "change": 0.056 }, { "label": "Feb", "change": 0.054 },
+    { "label": "Mär", "change": 0.04 }, { "label": "Apr", "change": 0.045 }
+  ]
+}
+```
+````
+
+- Raten sind Brüche (`0.05` = 5 %), `lastActual` zählt ab 0 (Monat 3 = April). Alle Felder je
+  Diagramm zeigt `samples/funktionen/funktionen-praesentation.md`.
+- Zahlen und Beschriftungen folgen `sprache:` (*Vorjahr, Ist, Plan, Prognose*, `5,2 %`); unter
+  `"options"` stellen `culture` (`de`, `en` …), `scale` und `unit` (`1000000` und `Mio. EUR`),
+  `labels` (eigene Wörter, z. B. `{"reference": "Ziel"}`), `tolerance`, `restShare` und `width`
+  um.
+- **Folien:** das Diagramm steht als Gruppe bearbeitbarer Formen in der Inhaltsfläche (Text davor
+  oder danach geht), nicht auf Flow-Folien. **Word** kann Finanzdiagramme noch nicht setzen.
+- Ein Tippfehler im Schlüssel, ein Text statt einer Zahl oder kaputtes JSON bricht mit der
+  Zeilennummer ab.
 
 ## 6. Aus Python aufrufen (optional)
 

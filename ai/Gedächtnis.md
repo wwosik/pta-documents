@@ -30,7 +30,8 @@ weil ihm vertraut wird.
   eingebettete Vorlagen. PDF, Diagramme/Charts und PDF-Konverter sind nur geplant; die
   Folien-Syntax wird seit E02-S02 gelesen und geprüft, PowerPoint zeichnet sie seit E04-S03 als
   Flow-Folien, seit E04-S04 auch Agenda, Zwischenfazit, Zitat, Kontakt und Charts in den
-  Diagrammlayouts (`chart`-Blöcke seit E06-S01, auch nativ in Word); Word zeigt sie seit
+  Diagrammlayouts (`chart`-Blöcke seit E06-S01, auch nativ in Word; Finanzdiagramme seit
+  E06-S02 als Formengruppe, nur PowerPoint); Word zeigt sie seit
   E03-S03 schlicht in eigenen Formatvorlagen. Bedienung:
   `docs/verwendung.md`.
 - **Zweite Referenz:** `~/mvv/vt-tools-libs` (Schwesterbibliothek von DocLibs für die MVV,
@@ -247,3 +248,18 @@ weil ihm vertraut wird.
   `chart`-Block). `test_funktionen.py` verlangt jede Art, jede Einstellung und beide
   Trennzeichen in `samples/funktionen/`. Wer einen Test mit ```` ```chart ```` ohne gültige
   Daten schreibt, muss die Renderer abschalten (`code_block_renderers=()`).
+- **Finanzdiagramme** (E06-S02): `pta_documents.charts.financial` (Port von DocLibs
+  `Financial*.cs` aus `~/mvv/vt-tools-libs`, DocLibs selbst liegt nicht lokal): `model`
+  (Dataclasses, `CHART_TYPES`), `options` (Kultur `de`/`de-DE`/`en`/`en-US`/`en-GB`, eigenes
+  Zahlenformat `format_decimal`, deutsch mit Leerzeichen vor `%`: `5,2 %`), `canvas` (Achse,
+  Urteilsfarben, Endbeschriftungen), je Diagramm ein Modul, `json_block` (**eigener JSON-Leser**
+  mit Zeilen, Kommentaren und Komma am Ende; Schlüssel = Feldname in camelCase, Pflichtfeld =
+  Feld ohne Standardwert; `to_json` schreibt, was `parse` gleich zurückliest). Farbrollen in
+  `design/chart_colors.py` (nur `colors`-Werte und `colors.tint`). Der `ChartRenderer` nimmt
+  auch `financial-chart` → `DrawingGraphic`; Kultur-Standard = `sprache:`. PowerPoint setzt
+  `DrawingGraphic` über `generation/pptx/drawing.py` als Gruppe `Drawing <id>` (Modell-Visual
+  `Diagram`, Inhaltsfläche wie Tabellen, nie vergrößert) — E06-S03 (Mermaid) nutzt denselben
+  Schreiber; der PPTX-Konverter überspringt `Drawing`-Gruppen. Word wirft für Zeichnungen
+  weiter „does not support yet" (E03-S04). Schnappschüsse
+  `tests/charts/financial/samples/*.expected.svg` (Testdaten `figures.py`, deutsch);
+  `test_funktionen.py` verlangt im Deck jeden Typ und jede Option.
